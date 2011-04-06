@@ -1,6 +1,6 @@
 include settings.mk
 
-CXXFLAGS =	-O2 -g -Wall -fmessage-length=0
+
 
 OBJS =		runtime.o
 
