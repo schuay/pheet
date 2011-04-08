@@ -9,12 +9,35 @@
 #define SYNCHRONEOUSMIXEDMODESCHEDULER_H_
 
 #include "SynchroneousMixedModeTask.h"
-#include "SynchroneousMixedModeTaskExecutionContext.h"
+//#include "SynchroneousMixedModeSchedulerTaskExecutionContext.h"
+
+class SynchroneousMixedModeScheduler;
+
+class SynchroneousMixedModeSchedulerTaskExecutionContext {
+public:
+	SynchroneousMixedModeSchedulerTaskExecutionContext(SynchroneousMixedModeScheduler *sched);
+	virtual ~SynchroneousMixedModeSchedulerTaskExecutionContext();
+
+	template<class CallTaskType, typename ... TaskParams>
+		void finish(TaskParams ... params);
+
+	template<class CallTaskType, typename ... TaskParams>
+		void call(TaskParams ... params);
+
+	template<class CallTaskType, typename ... TaskParams>
+		void spawn(TaskParams ... params);
+
+	template<class CallTaskType, typename ... TaskParams>
+		void local_finish(TaskParams ... params);
+
+private:
+	SynchroneousMixedModeScheduler *sched;
+};
 
 class SynchroneousMixedModeScheduler {
 public:
-	typedef typename SynchroneousMixedModeTask<SynchroneousMixedModeScheduler> Task;
-	typedef typename SynchroneousMixedModeTaskExecutionContext TaskExecutionContext;
+	typedef SynchroneousMixedModeTask<SynchroneousMixedModeScheduler> Task;
+	typedef SynchroneousMixedModeSchedulerTaskExecutionContext TaskExecutionContext;
 
 	SynchroneousMixedModeScheduler();
 	virtual ~SynchroneousMixedModeScheduler();
@@ -23,7 +46,7 @@ public:
 	void finish(TaskParams ... params);
 
 private:
-	TaskExecutionContextType tec;
+	TaskExecutionContext tec;
 };
 
 SynchroneousMixedModeScheduler::SynchroneousMixedModeScheduler()
@@ -39,6 +62,27 @@ template<class CallTaskType, typename ... TaskParams>
 void SynchroneousMixedModeScheduler::finish(TaskParams ... params) {
 	CallTaskType task(params ...);
 	task.execute(tec);
+}
+
+
+template<class CallTaskType, typename ... TaskParams>
+void SynchroneousMixedModeSchedulerTaskExecutionContext::finish(TaskParams ... params) {
+	sched->finish<CallTaskType>(params ...);
+}
+
+template<class CallTaskType, typename ... TaskParams>
+void SynchroneousMixedModeSchedulerTaskExecutionContext::call(TaskParams ... params) {
+	sched->finish<CallTaskType>(params ...);
+}
+
+template<class CallTaskType, typename ... TaskParams>
+void SynchroneousMixedModeSchedulerTaskExecutionContext::spawn(TaskParams ... params) {
+	sched->finish<CallTaskType>(params ...);
+}
+
+template<class CallTaskType, typename ... TaskParams>
+void SynchroneousMixedModeSchedulerTaskExecutionContext::local_finish(TaskParams ... params) {
+	sched->finish<CallTaskType>(params ...);
 }
 
 #endif /* SYNCHRONEOUSMIXEDMODESCHEDULER_H_ */

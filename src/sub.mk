@@ -1,3 +1,3 @@
 
 
-include test/sub.mk
+include src/test/sub.mk

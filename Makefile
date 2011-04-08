@@ -2,11 +2,19 @@ include settings.mk
 
 
 
-OBJS =		lib/test/runtime_tests.o lib/test/Test.o lib/test/sorting/SortingTests.o lib/test/sorting/Reference/ReferenceSTLSort.o
+OBJS =		
 
 LIBS =		
 
-TARGET =	bin/runtime_test
+TARGET =	bin/runtime
+
+TEST_OBJS = 
+
+TEST_LIBS =	
+
+TEST_TARGET = bin/runtime_test
+
+include src/sub.mk
 
 lib/%.o : src/%.cpp
 	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) -o $@ $<
@@ -14,7 +22,12 @@ lib/%.o : src/%.cpp
 $(TARGET):	$(OBJS)
 	$(CXX) -o $(TARGET) $(OBJS) $(LIBS)
 
-all:	$(TARGET)
+$(TEST_TARGET):	$(TEST_OBJS)
+	$(CXX) -o $(TEST_TARGET) $(TEST_OBJS) $(TEST_LIBS)
+	
+all:	$(TEST_TARGET)
+
+test:	$(TEST_TARGET)
 
 clean:
-	rm -f $(OBJS) $(TARGET)
+	rm -f $(OBJS) $(TARGET) $(TEST_OBJS) $(TEST_TARGET)

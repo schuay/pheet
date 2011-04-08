@@ -10,38 +10,39 @@
 
 #include "../../../misc/types.h"
 
-template <class Scheduler>
+template <class Sched>
 class SynchroneousMixedModeTask {
 public:
+	typedef Sched Scheduler;
+
 	SynchroneousMixedModeTask();
 	virtual ~SynchroneousMixedModeTask();
 
 	procs_t get_num_threads();
 
-protected:
-	virtual void execute(Scheduler::TaskExecutionContextType &tec);
+	virtual void execute(typename Scheduler::TaskExecutionContext &tec);
 
 private:
 };
 
-template <class Scheduler>
-SynchroneousMixedModeTask<Scheduler>::SynchroneousMixedModeTask() {
+template <class Sched>
+SynchroneousMixedModeTask<Sched>::SynchroneousMixedModeTask() {
 
 }
 
-template <class Scheduler>
-SynchroneousMixedModeTask<Scheduler>::~SynchroneousMixedModeTask() {
+template <class Sched>
+SynchroneousMixedModeTask<Sched>::~SynchroneousMixedModeTask() {
 
 }
 
 
-template <class Scheduler>
-procs_t SynchroneousMixedModeTask<Scheduler>::get_num_threads() {
+template <class Sched>
+procs_t SynchroneousMixedModeTask<Sched>::get_num_threads() {
 	return 1;
 }
 
-template <class Scheduler>
-void SynchroneousMixedModeTask<Scheduler>::execute(Scheduler::TaskExecutionContextType &tec) {
+template <class Sched>
+void SynchroneousMixedModeTask<Sched>::execute(typename Sched::TaskExecutionContext &tec) {
 
 }
 

@@ -10,6 +10,11 @@
 
 #include "SynchroneousMixedModeTask.h"
 
+class SynchroneousMixedModeScheduler;
+/*
+template<class CallTaskType, typename ... TaskParams>
+void SynchroneousMixedModeScheduler::finish(TaskParams ... params);*/
+
 class SynchroneousMixedModeSchedulerTaskExecutionContext {
 public:
 	SynchroneousMixedModeSchedulerTaskExecutionContext(SynchroneousMixedModeScheduler *sched);
@@ -31,32 +36,33 @@ private:
 	SynchroneousMixedModeScheduler *sched;
 };
 
-SynchroneousMixedModeScheduler::SynchroneousMixedModeScheduler(SynchroneousMixedModeScheduler *sched)
+SynchroneousMixedModeSchedulerTaskExecutionContext::SynchroneousMixedModeSchedulerTaskExecutionContext(SynchroneousMixedModeScheduler *sched)
 : sched(sched){
 
 }
 
-SynchroneousMixedModeScheduler::~SynchroneousMixedModeScheduler() {
+SynchroneousMixedModeSchedulerTaskExecutionContext::~SynchroneousMixedModeSchedulerTaskExecutionContext() {
 
 }
 
 template<class CallTaskType, typename ... TaskParams>
-void SynchroneousMixedModeScheduler::finish(TaskParams ... params) {
+void SynchroneousMixedModeSchedulerTaskExecutionContext::finish(TaskParams ... params) {
 	sched->finish<CallTaskType>(params ...);
 }
 
 template<class CallTaskType, typename ... TaskParams>
-void SynchroneousMixedModeScheduler::call(TaskParams ... params) {
+void SynchroneousMixedModeSchedulerTaskExecutionContext::call(TaskParams ... params) {
 	sched->finish<CallTaskType>(params ...);
 }
 
 template<class CallTaskType, typename ... TaskParams>
-void SynchroneousMixedModeScheduler::spawn(TaskParams ... params) {
+void SynchroneousMixedModeSchedulerTaskExecutionContext::spawn(TaskParams ... params) {
 	sched->finish<CallTaskType>(params ...);
 }
 
 template<class CallTaskType, typename ... TaskParams>
-void SynchroneousMixedModeScheduler::local_finish(TaskParams ... params) {
+void SynchroneousMixedModeSchedulerTaskExecutionContext::local_finish(TaskParams ... params) {
 	sched->finish<CallTaskType>(params ...);
 }
+
 #endif /* SYNCHRONEOUSMIXEDMODESCHEDULERTASKEXECUTIONCONTEXT_H_ */
