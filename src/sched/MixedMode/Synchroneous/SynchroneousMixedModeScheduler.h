@@ -49,14 +49,6 @@ private:
 	TaskExecutionContext tec;
 };
 
-SynchroneousMixedModeScheduler::SynchroneousMixedModeScheduler()
-: tec(this){
-
-}
-
-SynchroneousMixedModeScheduler::~SynchroneousMixedModeScheduler() {
-
-}
 
 template<class CallTaskType, typename ... TaskParams>
 void SynchroneousMixedModeScheduler::finish(TaskParams ... params) {

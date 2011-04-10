@@ -45,8 +45,8 @@ void MixedModeForkJoinQuicksortTask<Task>::execute(typename Task::Scheduler::Tas
 	size_t pivot = middle - data;
 	swap(*(data + length - 1), *middle);    // move pivot to middle
 
-	tec.spawn(data, pivot);
-	tec.spawn(data + pivot + 1, length - pivot - 1);
+	tec.template spawn<MixedModeForkJoinQuicksortTask>(data, pivot);
+	tec.template spawn<MixedModeForkJoinQuicksortTask>(data + pivot + 1, length - pivot - 1);
 }
 
 #endif /* MIXEDMODEFORKJOINQUICKSORTTASK_H_ */

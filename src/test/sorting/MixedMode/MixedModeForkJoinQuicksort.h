@@ -31,6 +31,12 @@ private:
 };
 
 template <class Scheduler>
+const procs_t MixedModeForkJoinQuicksort<Scheduler>::max_cpus = 1;
+
+template <class Scheduler>
+const char MixedModeForkJoinQuicksort<Scheduler>::name[] = "MixedMode Fork-Join Quicksort";
+
+template <class Scheduler>
 MixedModeForkJoinQuicksort<Scheduler>::MixedModeForkJoinQuicksort(unsigned int *data, size_t length)
 : data(data), length(length), scheduler() {
 
@@ -42,17 +48,8 @@ MixedModeForkJoinQuicksort<Scheduler>::~MixedModeForkJoinQuicksort() {
 }
 
 template <class Scheduler>
-class LuluTask {
-	void execute(typename Scheduler::TaskExecutionContext &tec);
-};
-
-template <class Scheduler>
 void MixedModeForkJoinQuicksort<Scheduler>::sort() {
-//	scheduler.finish<MixedModeForkJoinQuicksortTask<typename Scheduler::Task> >(data, length);
-	scheduler.finish<
-		LuluTask
-		<Scheduler>
-	>();
+	scheduler.template finish<MixedModeForkJoinQuicksortTask<typename Scheduler::Task> >(data, length);
 }
 
 

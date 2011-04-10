@@ -1,0 +1,1 @@
+include src/sched/MixedMode/Synchroneous/sub.mk

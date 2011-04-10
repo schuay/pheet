@@ -22,8 +22,8 @@ lib/%.o : src/%.cpp
 $(TARGET):	$(OBJS)
 	$(CXX) -o $(TARGET) $(OBJS) $(LIBS)
 
-$(TEST_TARGET):	$(TEST_OBJS)
-	$(CXX) -o $(TEST_TARGET) $(TEST_OBJS) $(TEST_LIBS)
+$(TEST_TARGET):	$(TEST_OBJS) $(OBJS)
+	$(CXX) -o $(TEST_TARGET) $(TEST_OBJS) $(OBJS) $(TEST_LIBS)
 	
 all:	$(TEST_TARGET)
 
