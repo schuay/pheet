@@ -13,6 +13,8 @@
 //#include "../../../sched/MixedMode/Synchroneous/SynchroneousMixedModeScheduler.h"
 //#include "../../../sched/MixedMode/Synchroneous/SynchroneousMixedModeTask.h"
 
+namespace pheet {
+
 template <class Scheduler>
 class MixedModeForkJoinQuicksort {
 public:
@@ -52,6 +54,6 @@ void MixedModeForkJoinQuicksort<Scheduler>::sort() {
 	scheduler.template finish<MixedModeForkJoinQuicksortTask<typename Scheduler::Task> >(data, length);
 }
 
-
+}
 
 #endif /* MIXEDMODEFORKJOINQUICKSORT_H_ */

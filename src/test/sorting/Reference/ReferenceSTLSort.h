@@ -11,6 +11,8 @@
 #include <algorithm>
 #include "../../../misc/types.h"
 
+namespace pheet {
+
 class ReferenceSTLSort {
 public:
 	ReferenceSTLSort(unsigned int* data, size_t length);
@@ -26,5 +28,6 @@ private:
 	unsigned int* end;
 };
 
+}
 
 #endif /* REFERENCESTLSORT_H_ */

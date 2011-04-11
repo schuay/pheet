@@ -14,6 +14,8 @@
 
 #include <iostream>
 
+namespace pheet {
+
 SortingTests::SortingTests() {
 
 }
@@ -28,4 +30,6 @@ void SortingTests::run_test() {
 
 	this->run_sorter<MixedModeForkJoinQuicksort<SynchroneousMixedModeScheduler> >();
 	this->run_sorter<ReferenceSTLSort>();
+}
+
 }

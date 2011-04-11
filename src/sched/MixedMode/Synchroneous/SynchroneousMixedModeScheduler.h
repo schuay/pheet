@@ -11,6 +11,8 @@
 #include "SynchroneousMixedModeTask.h"
 //#include "SynchroneousMixedModeSchedulerTaskExecutionContext.h"
 
+namespace pheet {
+
 class SynchroneousMixedModeScheduler;
 
 class SynchroneousMixedModeSchedulerTaskExecutionContext {
@@ -75,6 +77,8 @@ void SynchroneousMixedModeSchedulerTaskExecutionContext::spawn(TaskParams ... pa
 template<class CallTaskType, typename ... TaskParams>
 void SynchroneousMixedModeSchedulerTaskExecutionContext::local_finish(TaskParams ... params) {
 	sched->finish<CallTaskType>(params ...);
+}
+
 }
 
 #endif /* SYNCHRONEOUSMIXEDMODESCHEDULER_H_ */

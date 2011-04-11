@@ -10,6 +10,10 @@
 
 #include <stddef.h>
 
+namespace pheet {
+
 typedef size_t procs_t;
+
+}
 
 #endif /* TYPES_H_ */

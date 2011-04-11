@@ -7,6 +7,8 @@
 
 #include "sorting/SortingTests.h"
 
+using namespace pheet;
+
 int main(int argc, char *argv[]) {
 
 	SortingTests st;

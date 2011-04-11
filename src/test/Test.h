@@ -11,6 +11,8 @@
 #include <sys/time.h>
 #include <stdlib.h>
 
+namespace pheet {
+
 class Test {
 public:
 	typedef struct timeval Time;
@@ -23,6 +25,8 @@ public:
 	void check_time(Time & time);
 	double calculate_seconds(const Time & start, const Time & end);
 };
+
+}
 
 
 #endif /* TEST_H_ */

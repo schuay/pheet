@@ -7,6 +7,8 @@
 
 #include "SynchroneousMixedModeScheduler.h"
 
+namespace pheet {
+
 SynchroneousMixedModeScheduler::SynchroneousMixedModeScheduler()
 : tec(this){
 
@@ -23,5 +25,7 @@ SynchroneousMixedModeSchedulerTaskExecutionContext::SynchroneousMixedModeSchedul
 }
 
 SynchroneousMixedModeSchedulerTaskExecutionContext::~SynchroneousMixedModeSchedulerTaskExecutionContext() {
+
+}
 
 }

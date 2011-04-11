@@ -7,6 +7,8 @@
 
 #include "Test.h"
 
+namespace pheet {
+
 Test::Test() {
 	// TODO Auto-generated constructor stub
 
@@ -25,4 +27,5 @@ double Test::calculate_seconds(const Time & start, const Time & end) {
 	double dStop = (end.tv_sec - start.tv_sec) + 1.0e-6 * end.tv_usec;
 
 	return dStop - dStart;
+}
 }

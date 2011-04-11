@@ -13,6 +13,9 @@
 #include "bitops_x86.h"
 
 #else
+
+namespace pheet {
+
 static inline int
 find_last_bit_set(unsigned int x)
 {
@@ -23,6 +26,9 @@ find_last_bit_set(unsigned int x)
 	}
 	return result;
 }
+
+}
+
 #endif
 
 #define HIGHEST_BIT_POS(V)	(find_last_bit_set(V))

@@ -12,6 +12,8 @@
 #include "../../../test_settings.h"
 #include "SortingTest.h"
 
+namespace pheet {
+
 class SortingTests : Test {
 public:
 	SortingTests();
@@ -41,5 +43,6 @@ void SortingTests::run_sorter() {
 	}
 }
 
+}
 
 #endif /* SORTINGTESTS_H_ */

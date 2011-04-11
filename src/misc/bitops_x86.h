@@ -8,6 +8,8 @@
 #ifndef BITOPS_X86_H_
 #define BITOPS_X86_H_
 
+namespace pheet {
+
 /* find last bit set */
 static inline unsigned int find_last_bit_set(unsigned int x) {
 int r;
@@ -23,6 +25,8 @@ __asm__("bsrl %1,%0\n\t"
 "1:" : "=r" (r) : "g" (x));
 */
 return r;
+}
+
 }
 
 #endif /* BITOPS_X86_H_ */

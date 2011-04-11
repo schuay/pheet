@@ -16,6 +16,8 @@
 
 using namespace std;
 
+namespace pheet {
+
 template <class Sorter>
 class SortingTest : Test {
 public:
@@ -178,4 +180,7 @@ size_t SortingTest<Sorter>::get_number_of_runs(unsigned int* data) {
 	}
 	return runs;
 }
+
+}
+
 #endif /* SORTINGTEST_H_ */

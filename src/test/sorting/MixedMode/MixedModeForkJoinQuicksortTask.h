@@ -10,6 +10,8 @@
 
 #include <algorithm>
 
+namespace pheet {
+
 template <class Task>
 class MixedModeForkJoinQuicksortTask : Task {
 public:
@@ -47,6 +49,8 @@ void MixedModeForkJoinQuicksortTask<Task>::execute(typename Task::Scheduler::Tas
 
 	tec.template spawn<MixedModeForkJoinQuicksortTask>(data, pivot);
 	tec.template spawn<MixedModeForkJoinQuicksortTask>(data + pivot + 1, length - pivot - 1);
+}
+
 }
 
 #endif /* MIXEDMODEFORKJOINQUICKSORTTASK_H_ */

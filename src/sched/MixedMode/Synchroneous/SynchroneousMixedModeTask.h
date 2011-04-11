@@ -10,6 +10,8 @@
 
 #include "../../../misc/types.h"
 
+namespace pheet {
+
 template <class Sched>
 class SynchroneousMixedModeTask {
 public:
@@ -43,6 +45,8 @@ procs_t SynchroneousMixedModeTask<Sched>::get_num_threads() {
 
 template <class Sched>
 void SynchroneousMixedModeTask<Sched>::execute(typename Sched::TaskExecutionContext &tec) {
+
+}
 
 }
 
