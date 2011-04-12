@@ -19,7 +19,7 @@ template <class Scheduler>
 class MixedModeForkJoinQuicksort {
 public:
 	MixedModeForkJoinQuicksort(unsigned int* data, size_t length);
-	virtual ~MixedModeForkJoinQuicksort();
+	~MixedModeForkJoinQuicksort();
 
 	void sort();
 

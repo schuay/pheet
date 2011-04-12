@@ -8,6 +8,9 @@
 #ifndef SETTINGS_H_
 #define SETTINGS_H_
 
+#define NDEBUG
+
+
 #define ENV_LINUX_GCC	1
 //#define ENV_LINUX_ICC	1
 //#define_ENV_SOLARIS_SUNCC	1

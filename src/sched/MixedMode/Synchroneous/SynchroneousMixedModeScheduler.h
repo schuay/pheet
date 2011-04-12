@@ -18,7 +18,7 @@ class SynchroneousMixedModeScheduler;
 class SynchroneousMixedModeSchedulerTaskExecutionContext {
 public:
 	SynchroneousMixedModeSchedulerTaskExecutionContext(SynchroneousMixedModeScheduler *sched);
-	virtual ~SynchroneousMixedModeSchedulerTaskExecutionContext();
+	~SynchroneousMixedModeSchedulerTaskExecutionContext();
 
 	template<class CallTaskType, typename ... TaskParams>
 		void finish(TaskParams ... params);

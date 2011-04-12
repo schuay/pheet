@@ -16,7 +16,7 @@ namespace pheet {
 class ReferenceSTLSort {
 public:
 	ReferenceSTLSort(unsigned int* data, size_t length);
-	virtual ~ReferenceSTLSort();
+	~ReferenceSTLSort();
 
 	void sort();
 
