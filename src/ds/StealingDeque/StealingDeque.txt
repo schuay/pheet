@@ -41,5 +41,9 @@ May only by called by the thread allowed to push elements.
 Checks whether more elements can be pushed to the queue.
 
 ----------------------------------------------------------------------------------------------
-In future versions of the interface will most certainly add functionality to find out how many 
-elements may at least be pushed to the queue without it running full.
+In future versions of the interface might add functionality to find out how many elements may 
+at least be pushed to the queue without it running full. We still evaluate whether such a
+functionality is necessary.
+
+Same for a multi_push operation that pushes more than one element at the same time to reduce 
+overhead
