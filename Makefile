@@ -6,13 +6,13 @@ OBJS =
 
 LIBS =		
 
-TARGET =	bin/runtime
+TARGET =	lib/libpheet.o
 
 TEST_OBJS = 
 
 TEST_LIBS =	
 
-TEST_TARGET = bin/runtime_test
+TEST_TARGET = bin/pheet_test
 
 include src/sub.mk
 
@@ -20,7 +20,7 @@ lib/%.o : src/%.cpp
 	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) -o $@ $<
 
 $(TARGET):	$(OBJS)
-	$(CXX) -o $(TARGET) $(OBJS) $(LIBS)
+	$(CXX) -c $(TARGET) $(OBJS) $(LIBS)
 
 $(TEST_TARGET):	$(TEST_OBJS) $(OBJS)
 	$(CXX) -o $(TEST_TARGET) $(TEST_OBJS) $(OBJS) $(TEST_LIBS)
