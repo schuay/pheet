@@ -2,7 +2,8 @@
  * CPUThreadExecutor.h
  *
  *  Created on: 13.04.2011
- *      Author: mwimmer
+ *      Author: Martin Wimmer
+ *     License: Pheet license
  */
 
 #ifndef CPUTHREADEXECUTOR_H_
@@ -13,7 +14,7 @@
 namespace pheet {
 
 template <class Executor>
-void *execute_cpu_thread(void *param);
+void* execute_cpu_thread(void *param);
 
 template <class HWDescriptor, class T>
 class CPUThreadExecutor {
@@ -32,7 +33,7 @@ private:
 	pthread_t thread;
 
 	template <class Executor>
-	friend void *execute_cpu_thread(Executor *param);
+	friend void* execute_cpu_thread(Executor *param);
 };
 
 template <class HWDescriptor, class T>

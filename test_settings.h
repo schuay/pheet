@@ -2,7 +2,8 @@
  * test_settings.h
  *
  *  Created on: 07.04.2011
- *      Author: mwimmer
+ *      Author: Martin Wimmer
+ *     License: Pheet license
  */
 
 #ifndef TEST_SETTINGS_H_

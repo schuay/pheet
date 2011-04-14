@@ -2,7 +2,8 @@
  * bitops_x86.h
  *
  *  Created on: 28.03.2011
- *      Author: mwimmer
+ *      Author: Martin Wimmer
+ *     License: Pheet license
  */
 
 #ifndef BITOPS_X86_H_

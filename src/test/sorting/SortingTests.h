@@ -2,7 +2,8 @@
  * QuicksortTest.h
  *
  *  Created on: 07.04.2011
- *      Author: mwimmer
+ *      Author: Martin Wimmer
+ *     License: Pheet license
  */
 
 #ifndef SORTINGTESTS_H_

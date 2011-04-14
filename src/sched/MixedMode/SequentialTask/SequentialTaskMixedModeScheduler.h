@@ -2,7 +2,8 @@
  * SequentialTaskMixedModeScheduler.h
  *
  *  Created on: 13.04.2011
- *      Author: mwimmer
+ *      Author: Martin Wimmer
+ *     License: Pheet license
  */
 
 #ifndef SEQUENTIALTASKMIXEDMODESCHEDULER_H_
@@ -12,21 +13,20 @@
 
 namespace pheet {
 
-template <class CPUHierarchy>
+template <class CPUHierarchy, bool PRE_INITIALIZE>
 class SequentialTaskMixedModeScheduler {
 public:
 	typedef SynchroneousMixedModeTask<SequentialTaskMixedModeScheduler> Task;
-	typedef SequentialTaskMixedModeSchedulerTaskExecutionContext TaskExecutionContext;
+	typedef SequentialTaskMixedModeSchedulerTaskExecutionContext<CPUHierarchy, PRE_INITIALIZE> TaskExecutionContext;
 
-	SequentialTaskMixedModeScheduler();
+	SequentialTaskMixedModeScheduler(CPUHierarchy& cpus);
 	~SequentialTaskMixedModeScheduler();
 
 	template<class CallTaskType, typename ... TaskParams>
 	void finish(TaskParams ... params);
 
 private:
-
-
+	bool finished;
 	TaskExecutionContext *threads;
 };
 

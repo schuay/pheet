@@ -2,7 +2,8 @@
  * MixedModeForkJoinQuicksort.h
  *
  *  Created on: 08.04.2011
- *      Author: mwimmer
+ *      Author: Martin Wimmer
+ *     License: Pheet license
  */
 
 #ifndef MIXEDMODEFORKJOINQUICKSORT_H_

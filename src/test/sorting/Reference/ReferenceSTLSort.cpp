@@ -2,7 +2,8 @@
  * ReferenceSTLSort
  *
  *  Created on: 07.04.2011
- *      Author: mwimmer
+ *      Author: Martin Wimmer
+ *     License: Pheet license
  */
 
 #include "ReferenceSTLSort.h"

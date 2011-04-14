@@ -2,7 +2,8 @@
  * CircularArrayStealingDeque.h
  *
  *  Created on: 12.04.2011
- *      Author: mwimmer
+ *      Author: Martin Wimmer
+ *     License: Pheet license
  */
 
 #ifndef CIRCULARARRAYSTEALINGDEQUE_H_

@@ -2,7 +2,8 @@
  * types.h
  *
  *  Created on: 06.04.2011
- *      Author: mwimmer
+ *      Author: Martin Wimmer
+ *     License: Pheet license
  */
 
 #ifndef TYPES_H_

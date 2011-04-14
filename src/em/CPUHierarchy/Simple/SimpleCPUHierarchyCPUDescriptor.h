@@ -2,7 +2,8 @@
  * SimpleCPUHierarchyCPUDescriptor.h
  *
  *  Created on: 13.04.2011
- *      Author: mwimmer
+ *      Author: Martin Wimmer
+ *     License: Pheet license
  */
 
 #ifndef SIMPLECPUHIERARCHYCPUDESCRIPTOR_H_

@@ -2,7 +2,8 @@
  * SortingTestBase.h
  *
  *  Created on: 07.04.2011
- *      Author: mwimmer
+ *      Author: Martin Wimmer
+ *     License: Pheet license
  */
 
 #ifndef SORTINGTEST_H_
@@ -35,11 +36,11 @@ private:
 	size_t size;
 	unsigned int seed;
 
-	static const char* types[];
+	static char const* const types[];
 };
 
 template <class Sorter>
-const char* SortingTest<Sorter>::types[] = {"random", "gauss", "equal", "bucket", "staggered"};
+char const* const SortingTest<Sorter>::types[] = {"random", "gauss", "equal", "bucket", "staggered"};
 
 template <class Sorter>
 SortingTest<Sorter>::SortingTest(procs_t cpus, int type, size_t size, unsigned int seed)

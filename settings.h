@@ -2,7 +2,8 @@
  * settings.h
  *
  *  Created on: 28.03.2011
- *      Author: mwimmer
+ *      Author: Martin Wimmer
+ *     License: Pheet license
  */
 
 #ifndef SETTINGS_H_

@@ -2,7 +2,8 @@
  * fast.h
  *
  *  Created on: 11.04.2011
- *      Author: mwimmer
+ *      Author: Martin Wimmer
+ *     License: Pheet license
  */
 
 #ifndef FAST_H_

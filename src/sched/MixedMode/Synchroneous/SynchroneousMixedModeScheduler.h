@@ -2,7 +2,8 @@
  * SynchroneousMixedModeScheduler.h
  *
  *  Created on: 06.04.2011
- *      Author: mwimmer
+ *      Author: Martin Wimmer
+ *     License: Pheet license
  */
 
 #ifndef SYNCHRONEOUSMIXEDMODESCHEDULER_H_
@@ -33,7 +34,7 @@ public:
 		void local_finish(TaskParams ... params);
 
 private:
-	SynchroneousMixedModeScheduler *sched;
+	SynchroneousMixedModeScheduler* sched;
 };
 
 class SynchroneousMixedModeScheduler {

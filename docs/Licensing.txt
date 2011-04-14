@@ -1,0 +1,26 @@
+We (the authors) provide PHEET under a variety of licenses depending on the 
+usage scenario.
+
+By default, we provide PHEET under the terms of LGPL 3 or later.
+
+If you need to use PHEET under the terms of a license incompatible with 
+LGPL 3 or later, please contact the authors for permission.
+
+Please be aware that we also provide versions of PHEET including contributions 
+licensed under the terms of LGPL 3 or later or GPL 3 or later. If you need to 
+use those contributions with PHEET under a different license, you need to 
+contact the contributors for permission.
+
+Contributors should decide on one of the following licenses:
+- Boost Software License - Recommended for small contributions.
+- Pheet license - Requires the contributor to sign a copyright assignment
+	or a contributor license agreement (CLA). This allows us to provide
+	your code as part of the PHEET library under the licenses we want to use
+- LGPL 3 or later - Allows us to use your code in GPL and LGPL licensed 
+	versions of	PHEET, but we have to exclude your code when publishing it
+	under some other license.
+- GPL 3 or later - Allows us to use your code in GPL licensed versions of
+	PHEET, but we have to exclude your code when publishing it under some 
+	other license.
+
+The terms of the BSL, LGPL and GPL licenses can be found under docs/licenses

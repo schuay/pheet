@@ -2,7 +2,8 @@
  * type_traits.h
  *
  *  Created on: 12.04.2011
- *      Author: mwimmer
+ *      Author: Martin Wimmer
+ *     License: Pheet license
  */
 
 #ifndef TYPE_TRAITS_H_

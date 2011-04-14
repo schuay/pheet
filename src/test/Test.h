@@ -2,7 +2,8 @@
  * Test.h
  *
  *  Created on: 07.04.2011
- *      Author: mwimmer
+ *      Author: Martin Wimmer
+ *     License: Pheet license
  */
 
 #ifndef TEST_H_
@@ -22,8 +23,8 @@ public:
 
 	virtual void run_test() = 0;
 
-	void check_time(Time & time);
-	double calculate_seconds(const Time & start, const Time & end);
+	void check_time(Time& time);
+	double calculate_seconds(Time const& start, Time const& end);
 };
 
 }

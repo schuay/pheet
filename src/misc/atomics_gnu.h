@@ -2,7 +2,8 @@
  * atomics_gnu.h
  *
  *  Created on: 28.03.2011
- *      Author: mwimmer
+ *      Author: Martin Wimmer
+ *     License: Pheet license
  */
 
 #ifndef ATOMICS_GNU_H_

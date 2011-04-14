@@ -2,7 +2,8 @@
  * SequentialTaskMixedModeScheduler.cpp
  *
  *  Created on: 13.04.2011
- *      Author: mwimmer
+  *      Author: Martin Wimmer
+ *     License: Pheet license
  */
 
 #include "SequentialTaskMixedModeScheduler.h"
