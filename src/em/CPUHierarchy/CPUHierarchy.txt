@@ -13,7 +13,9 @@ The initialization should work in a drill-down manner, which allows for initiali
 a divide and conquer manner. A single thread starts operating on the top node of the 
 hierarchy and drills down through the tree until a single processing unit is reached.
 On the way, threads are created for all other nodes met on the way (where the drill-down
-procedure starts again)
+procedure starts again) - Currently the drill-down is actually always implemented in a
+sequential manner, therefore support for concurrency is not required. This is an idea for
+future improvements.
 
 A processing unit might map to more than one physical processors. How processing units are
 used is dependent on the implementation of the scheduler. In general one can assume that a

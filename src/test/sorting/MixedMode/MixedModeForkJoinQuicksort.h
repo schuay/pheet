@@ -24,8 +24,9 @@ public:
 
 	void sort();
 
-	static const procs_t max_cpus;
-	static const char name[];
+	static procs_t const max_cpus;
+	static char const name[];
+	static char const * const scheduler_name;
 
 private:
 	unsigned int* data;
@@ -34,10 +35,13 @@ private:
 };
 
 template <class Scheduler>
-const procs_t MixedModeForkJoinQuicksort<Scheduler>::max_cpus = 1;
+procs_t const MixedModeForkJoinQuicksort<Scheduler>::max_cpus = 1;
 
 template <class Scheduler>
-const char MixedModeForkJoinQuicksort<Scheduler>::name[] = "MixedMode Fork-Join Quicksort";
+char const MixedModeForkJoinQuicksort<Scheduler>::name[] = "MixedMode Fork-Join Quicksort";
+
+template <class Scheduler>
+char const * const MixedModeForkJoinQuicksort<Scheduler>::scheduler_name = Scheduler::name;
 
 template <class Scheduler>
 MixedModeForkJoinQuicksort<Scheduler>::MixedModeForkJoinQuicksort(unsigned int *data, size_t length)

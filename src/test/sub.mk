@@ -1,4 +1,4 @@
 
-TEST_OBJS += lib/test/runtime_tests.o lib/test/Test.o
+TEST_OBJS += lib/test/pheet_tests.o lib/test/Test.o
 
 include src/test/sorting/sub.mk

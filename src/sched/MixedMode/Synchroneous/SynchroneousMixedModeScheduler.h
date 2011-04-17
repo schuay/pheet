@@ -48,6 +48,8 @@ public:
 	template<class CallTaskType, typename ... TaskParams>
 	void finish(TaskParams ... params);
 
+	static char const name[];
+
 private:
 	TaskExecutionContext tec;
 };

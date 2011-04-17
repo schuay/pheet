@@ -27,7 +27,7 @@ SortingTests::~SortingTests() {
 
 void SortingTests::run_test() {
 	std::cout << "----" << std::endl;
-	std::cout << "test\tsorter\ttype\tsize\tseed\tcpus\ttime\truns" << std::endl;
+	std::cout << "test\tsorter\tscheduler\ttype\tsize\tseed\tcpus\ttime\truns" << std::endl;
 
 	this->run_sorter<MixedModeForkJoinQuicksort<SynchroneousMixedModeScheduler> >();
 	this->run_sorter<ReferenceSTLSort>();

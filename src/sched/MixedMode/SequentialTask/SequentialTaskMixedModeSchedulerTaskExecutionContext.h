@@ -39,7 +39,7 @@ class SequentialTaskMixedModeSchedulerTaskExecutionContextInitializer {
 	SequentialTaskMixedModeSchedulerTaskExecutionContextInitializer(CPUHierarchy& cpus, Task *startup_task);
 };
 
-template <class CPUHierarchy>
+template <class CPUHierarchy, class StealingDeque>
 class SequentialTaskMixedModeSchedulerTaskExecutionContext {
 public:
 	SequentialTaskMixedModeSchedulerTaskExecutionContext(CPUHierarchy& cpus, Task *startup_task);
@@ -75,11 +75,11 @@ private:
 	Task* startup_task;
 };
 
-template <class CPUHierarchy>
-size_t const SequentialTaskMixedModeSchedulerTaskExecutionContext<CPUHierarchy>::stack_size = 64;
+template <class CPUHierarchy, class StealingDeque>
+size_t const SequentialTaskMixedModeSchedulerTaskExecutionContext<CPUHierarchy, StealingDeque>::stack_size = 64;
 
-template <class CPUHierarchy>
-SequentialTaskMixedModeSchedulerTaskExecutionContext<CPUHierarchy>::SequentialTaskMixedModeSchedulerTaskExecutionContext()
+template <class CPUHierarchy, class StealingDeque>
+SequentialTaskMixedModeSchedulerTaskExecutionContext<CPUHierarchy, StealingDeque>::SequentialTaskMixedModeSchedulerTaskExecutionContext()
 : stack_filled(0), startup_task(startup_task) {
 
 	if(PRE_INITIALIZE) {
@@ -88,24 +88,24 @@ SequentialTaskMixedModeSchedulerTaskExecutionContext<CPUHierarchy>::SequentialTa
 	}
 }
 
-template <class CPUHierarchy>
-SequentialTaskMixedModeSchedulerTaskExecutionContext<CPUHierarchy>::~SequentialTaskMixedModeSchedulerTaskExecutionContext() {
+template <class CPUHierarchy, class StealingDeque>
+SequentialTaskMixedModeSchedulerTaskExecutionContext<CPUHierarchy, StealingDeque>::~SequentialTaskMixedModeSchedulerTaskExecutionContext() {
 
 }
 
-template <class CPUHierarchy>
-void SequentialTaskMixedModeSchedulerTaskExecutionContext<CPUHierarchy>::run() {
+template <class CPUHierarchy, class StealingDeque>
+void SequentialTaskMixedModeSchedulerTaskExecutionContext<CPUHierarchy, StealingDeque>::run() {
 
 }
 
-template <class CPUHierarchy>
-void SequentialTaskMixedModeSchedulerTaskExecutionContext<CPUHierarchy>::join() {
+template <class CPUHierarchy, class StealingDeque>
+void SequentialTaskMixedModeSchedulerTaskExecutionContext<CPUHierarchy, StealingDeque>::join() {
 
 }
 
 
-template <class CPUHierarchy>
-void SequentialTaskMixedModeSchedulerTaskExecutionContext<CPUHierarchy>::initialize(CPUHierarchy& cpus, Task *startup_task) {
+template <class CPUHierarchy, class StealingDeque>
+void SequentialTaskMixedModeSchedulerTaskExecutionContext<CPUHierarchy, StealingDeque>::initialize(CPUHierarchy& cpus, Task *startup_task) {
 
 }
 

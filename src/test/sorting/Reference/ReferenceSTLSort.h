@@ -23,6 +23,7 @@ public:
 
 	static const procs_t max_cpus;
 	static const char name[];
+	static const char scheduler_name[];
 
 private:
 	unsigned int* start;

@@ -12,6 +12,7 @@ namespace pheet {
 
 const procs_t ReferenceSTLSort::max_cpus = 1;
 const char ReferenceSTLSort::name[] = "ReferenceSTLSort";
+const char ReferenceSTLSort::scheduler_name[] = "none";
 
 
 ReferenceSTLSort::ReferenceSTLSort(unsigned int* data, size_t length)

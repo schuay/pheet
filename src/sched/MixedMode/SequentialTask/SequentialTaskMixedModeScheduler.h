@@ -13,11 +13,11 @@
 
 namespace pheet {
 
-template <class CPUHierarchy, bool PRE_INITIALIZE>
+template <class CPUHierarchy, class StealingDeque>
 class SequentialTaskMixedModeScheduler {
 public:
 	typedef SynchroneousMixedModeTask<SequentialTaskMixedModeScheduler> Task;
-	typedef SequentialTaskMixedModeSchedulerTaskExecutionContext<CPUHierarchy, PRE_INITIALIZE> TaskExecutionContext;
+	typedef SequentialTaskMixedModeSchedulerTaskExecutionContext<CPUHierarchy, StealingDeque> TaskExecutionContext;
 
 	SequentialTaskMixedModeScheduler(CPUHierarchy& cpus);
 	~SequentialTaskMixedModeScheduler();
@@ -25,10 +25,15 @@ public:
 	template<class CallTaskType, typename ... TaskParams>
 	void finish(TaskParams ... params);
 
+	static char const name[];
+
 private:
 	bool finished;
 	TaskExecutionContext *threads;
 };
+
+template <class CPUHierarchy, class StealingDeque>
+char const SequentialTaskMixedModeScheduler<CPUHierarchy, StealingDeque>::name[] = "SequentialTaskMixedModeScheduler";
 
 }
 

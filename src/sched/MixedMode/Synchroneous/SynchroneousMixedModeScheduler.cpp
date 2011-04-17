@@ -10,6 +10,9 @@
 
 namespace pheet {
 
+char const SynchroneousMixedModeScheduler::name[] = "SynchroneousMixedModeScheduler";
+
+
 SynchroneousMixedModeScheduler::SynchroneousMixedModeScheduler()
 : tec(this){
 
