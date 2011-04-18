@@ -25,8 +25,8 @@ SimpleCPUHierarchy::SimpleCPUHierarchy(procs_t* levels, procs_t num_levels)
 	memcpy(this->levels, levels, sizeof(procs_t) * num_levels);
 }
 
-SimpleCPUHierarchy::SimpleCPUHierarchy(SimpleCPUHierarchy& parent, procs_t offset)
-: num_levels(root.num_levels - 1), offset(offset), levels(parent.levels + 1) {
+SimpleCPUHierarchy::SimpleCPUHierarchy(SimpleCPUHierarchy* parent, procs_t offset)
+: num_levels(parent->num_levels - 1), offset(offset), levels(parent->levels + 1) {
 
 }
 
@@ -34,38 +34,42 @@ SimpleCPUHierarchy::~SimpleCPUHierarchy() {
 	if(level == 0) {
 		delete []levels;
 	}
+	for(index_type i = 0; i < subsets.size(); i++) {
+		delete subsets[i];
+	}
+	for(index_type i = 0; i < subsets.size(); i++) {
+		delete cpus[i];
+	}
 }
 
 procs_t get_size() {
 	return levels[0];
 }
 
-vector<SimpleCPUHierarchy> get_subsets() {
-	vector<SimpleCPUHierarchy> ret;
-	if(num_levels == 1) {
-		return ret;
-	}
+vector<SimpleCPUHierarchy*> const* get_subsets() {
+	if(num_levels > 1 && subsets.size() == 0) {
+		assert((levels[0] % levels[1]) == 0);
+		procs_t groups = levels[0] / levels[1];
+		subsets.reserve(groups);
 
-	assert((levels[0] % levels[1]) == 0);
-	procs_t groups = levels[0] / levels[1];
-	ret.reserve(groups);
-
-	for(procs_t i = 0; i < groups; i++) {
-		SimpleCPUHierarchy sub(*this, offset + i*levels[1]);
-		ret.push_back(sub);
+		for(procs_t i = 0; i < groups; i++) {
+			SimpleCPUHierarchy* sub = new SimpleCPUHierarchy(this, offset + i*levels[1]);
+			subsets.push_back(sub);
+		}
 	}
-	return ret;
+	return &subsets;
 }
 
-vector<CPUDescriptor> get_cpus() {
-	vector<CPUDescriptor> ret;
-	ret.reserve(get_size());
+vector<CPUDescriptor*> const* get_cpus() {
+	if(cpus.size() == 0) {
+		cpus.reserve(get_size());
 
-	for(procs_t i = 0; i < get_size(); i++) {
-		CPUDescriptor desc(i + offset);
-		ret.push_back(desc);
+		for(procs_t i = 0; i < get_size(); i++) {
+			CPUDescriptor desc = new CPUDescriptor(i + offset);
+			cpus.push_back(desc);
+		}
 	}
-	return ret;
+	return &cpus;
 }
 
 }

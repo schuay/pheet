@@ -16,10 +16,10 @@ namespace pheet {
 template <class Executor>
 void* execute_cpu_thread(void *param);
 
-template <class HWDescriptor, class T>
+template <class CPUDescriptor, class T>
 class CPUThreadExecutor {
 public:
-	CPUThreadExecutor(HWDescriptor *desc, T* work);
+	CPUThreadExecutor(CPUDescriptor *desc, T* work);
 	~CPUThreadExecutor();
 
 	void run();
@@ -28,7 +28,7 @@ public:
 private:
 	void execute();
 
-	HWDescriptor* desc;
+	CPUDescriptor* desc;
 	T* work;
 	pthread_t thread;
 
@@ -36,29 +36,29 @@ private:
 	friend void* execute_cpu_thread(Executor *param);
 };
 
-template <class HWDescriptor, class T>
-CPUThreadExecutor<HWDescriptor, T>::CPUThreadExecutor(HWDescriptor *desc, T* work)
+template <class CPUDescriptor, class T>
+CPUThreadExecutor<CPUDescriptor, T>::CPUThreadExecutor(CPUDescriptor *desc, T* work)
 : desc(desc), work(work) {
 
 }
 
-template <class HWDescriptor, class T>
-CPUThreadExecutor<HWDescriptor, T>::~CPUThreadExecutor() {
+template <class CPUDescriptor, class T>
+CPUThreadExecutor<CPUDescriptor, T>::~CPUThreadExecutor() {
 
 }
 
-template <class HWDescriptor, class T>
-void CPUThreadExecutor<HWDescriptor, T>::run() {
+template <class CPUDescriptor, class T>
+void CPUThreadExecutor<CPUDescriptor, T>::run() {
 	pthread_create(&thread, NULL, executeSchedulerThread, this);
 }
 
-template <class HWDescriptor, class T>
-void CPUThreadExecutor<HWDescriptor, T>::join() {
+template <class CPUDescriptor, class T>
+void CPUThreadExecutor<CPUDescriptor, T>::join() {
 	pthread_join(thread, NULL);
 }
 
-template <class HWDescriptor, class T>
-void CPUThreadExecutor<HWDescriptor, T>::execute() {
+template <class CPUDescriptor, class T>
+void CPUThreadExecutor<CPUDescriptor, T>::execute() {
 	int err;
 
 	#ifdef ENV_LINUX_GCC

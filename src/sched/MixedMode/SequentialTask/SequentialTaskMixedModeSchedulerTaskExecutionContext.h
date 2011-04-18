@@ -42,7 +42,9 @@ class SequentialTaskMixedModeSchedulerTaskExecutionContextInitializer {
 template <class CPUHierarchy, class StealingDeque>
 class SequentialTaskMixedModeSchedulerTaskExecutionContext {
 public:
-	SequentialTaskMixedModeSchedulerTaskExecutionContext(CPUHierarchy& cpus, Task *startup_task);
+	typedef SequentialTaskMixedModeSchedulerTaskExecutionContextLevelDescription<SequentialTaskMixedModeSchedulerTaskExecutionContext> LevelDescription;
+
+	SequentialTaskMixedModeSchedulerTaskExecutionContext(vector<LevelDescription*>* levels, vector<CPUHierarchy::CPUDescriptor*>* cpus, SequentialTaskMixedModeScheduler::State* state);
 	~SequentialTaskMixedModeSchedulerTaskExecutionContext();
 
 	void run();

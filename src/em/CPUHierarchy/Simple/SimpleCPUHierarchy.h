@@ -27,14 +27,17 @@ public:
 	~SimpleCPUHierarchy();
 
 	procs_t get_size();
-	vector<SimpleCPUHierarchy> get_subsets();
-	vector<CPUDescriptor> get_cpus();
+	vector<SimpleCPUHierarchy*> const* get_subsets();
+	vector<CPUDescriptor*> const* get_cpus();
+
 private:
-	SimpleCPUHierarchy(SimpleCPUHierarchy& parent, procs_t offset);
+	SimpleCPUHierarchy(SimpleCPUHierarchy* parent, procs_t offset);
 
 	procs_t num_levels;
 	procs_t offset;
 	procs_t* levels;
+	vector<SimpleCPUHierarchy*> subsets;
+	vector<CPUDescriptor*> cpus;
 };
 
 }

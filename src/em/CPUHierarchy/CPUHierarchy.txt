@@ -25,6 +25,8 @@ guarantee, but only an observation of typical scheduler behaviour)
 If the Hierarchy is not represented as a binary tree, and the implementation requires a
 binary tree, it is responsible to refine the hierarchy further.
 
+The hierarchy object should be lightweight as it is often copied.
+
 Methods:
 procs_t get_size()
 Returns the number of processing units contained in this set.
