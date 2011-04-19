@@ -14,9 +14,12 @@
 #include "../../../em/CPUHierarchy/BinaryTree/BinaryTreeCPUHierarchy.h"
 
 #include <stdint.h>
+#include <limits>
+#include <vector>
 
 namespace pheet {
 
+template <class Task, class Barrier>
 struct SequentialTaskMixedModeSchedulerState {
 	SequentialTaskMixedModeSchedulerState();
 
@@ -25,16 +28,22 @@ struct SequentialTaskMixedModeSchedulerState {
 	Task *startup_task;
 };
 
+template <class Task, class Barrier>
+SequentialTaskMixedModeSchedulerState<Task, Barrier>::SequentialTaskMixedModeSchedulerState()
+: current_state(0), startup_task(NULL) {
+
+}
+
 /*
  * May only be used once
  */
-template <class CPUHierarchy, template <typename T> class StealingDeque, class Barrier, class Backoff>
+template <class CPUHierarchy, template <typename T> class StealingDeque, class Barrier, class BackoffT>
 class SequentialTaskMixedModeScheduler {
 public:
+	typedef BackoffT Backoff;
 	typedef SynchroneousMixedModeTask<SequentialTaskMixedModeScheduler<CPUHierarchy, StealingDeque, Barrier, Backoff> > Task;
 	typedef SequentialTaskMixedModeSchedulerTaskExecutionContext<SequentialTaskMixedModeScheduler<CPUHierarchy, StealingDeque, Barrier, Backoff>, StealingDeque> TaskExecutionContext;
-	typedef SequentialTaskMixedModeSchedulerState State;
-	typedef Backoff Backoff;
+	typedef SequentialTaskMixedModeSchedulerState<Task, Barrier> State;
 
 	/*
 	 * CPUHierarchy must be accessible throughout the lifetime of the scheduler
@@ -47,9 +56,10 @@ public:
 	void finish(TaskParams ... params);
 
 	static char const name[];
+	static procs_t const max_cpus;
 
 private:
-	void initialize_tecs(CPUHierarchy* cpus, size_t offset);
+	void initialize_tecs(CPUHierarchy* cpus, size_t offset, vector<typename TaskExecutionContext::LevelDescription*>* levels);
 
 	BinaryTreeCPUHierarchy<CPUHierarchy> cpu_hierarchy;
 	TaskExecutionContext** threads;
@@ -58,38 +68,40 @@ private:
 	State state;
 };
 
-template <class CPUHierarchy, template <typename T> class StealingDeque, class Barrier, class Backoff>
-char const SequentialTaskMixedModeScheduler<CPUHierarchy, StealingDeque, Barrier, Backoff>::name[] = "SequentialTaskMixedModeScheduler";
+template <class CPUHierarchy, template <typename T> class StealingDeque, class Barrier, class BackoffT>
+char const SequentialTaskMixedModeScheduler<CPUHierarchy, StealingDeque, Barrier, BackoffT>::name[] = "SequentialTaskMixedModeScheduler";
 
+template <class CPUHierarchy, template <typename T> class StealingDeque, class Barrier, class BackoffT>
+procs_t const SequentialTaskMixedModeScheduler<CPUHierarchy, StealingDeque, Barrier, BackoffT>::max_cpus = std::numeric_limits<procs_t>::max() >> 1;
 
-template <class CPUHierarchy, template <typename T> class StealingDeque, class Barrier, class Backoff>
-SequentialTaskMixedModeScheduler<CPUHierarchy, StealingDeque, Barrier, Backoff>::SequentialTaskMixedModeScheduler(CPUHierarchy* cpus)
-: cpu_hierarchy(cpus), num_threads(cpus.get_size()), state_barrier_i(0) {
+template <class CPUHierarchy, template <typename T> class StealingDeque, class Barrier, class BackoffT>
+SequentialTaskMixedModeScheduler<CPUHierarchy, StealingDeque, Barrier, BackoffT>::SequentialTaskMixedModeScheduler(CPUHierarchy* cpus)
+: cpu_hierarchy(cpus), num_threads(cpus.get_size()) {
 
 	threads = new TaskExecutionContext*[num_threads];
 
-	vector<TaskExecutionContext::LevelDescription*> levels;
+	vector<typename TaskExecutionContext::LevelDescription*> levels;
 	initialize_tecs(&cpu_hierarchy, 0, &levels);
 }
 
-template <class CPUHierarchy, template <typename T> class StealingDeque, class Barrier, class Backoff>
-SequentialTaskMixedModeScheduler<CPUHierarchy, StealingDeque, Barrier, Backoff>::~SequentialTaskMixedModeScheduler() {
+template <class CPUHierarchy, template <typename T> class StealingDeque, class Barrier, class BackoffT>
+SequentialTaskMixedModeScheduler<CPUHierarchy, StealingDeque, Barrier, BackoffT>::~SequentialTaskMixedModeScheduler() {
 	for(procs_t i = 0; i < num_threads; i++) {
 		delete threads[i];
 	}
 	delete[] threads;
 }
 
-template <class CPUHierarchy, template <typename T> class StealingDeque, class Barrier, class Backoff>
-void SequentialTaskMixedModeScheduler<CPUHierarchy, StealingDeque, Barrier, Backoff>::initialize_tecs(CPUHierarchy* ch, size_t offset, vector<TaskExecutionContext::LevelDescription*>* levels) {
+template <class CPUHierarchy, template <typename T> class StealingDeque, class Barrier, class BackoffT>
+void SequentialTaskMixedModeScheduler<CPUHierarchy, StealingDeque, Barrier, BackoffT>::initialize_tecs(CPUHierarchy* ch, size_t offset, vector<typename TaskExecutionContext::LevelDescription*>* levels) {
 	if(ch->get_size() > 1) {
-		vector<BinaryTreeCPUHierarchy*>* sub = ch->get_subsets();
+		vector<BinaryTreeCPUHierarchy<CPUHierarchy>*>* sub = ch->get_subsets();
 
 		if(sub.size() == 2) {
-			BinaryTreeCPUHierarchy* sub0 = (*sub)[0];
-			BinaryTreeCPUHierarchy* sub1 = (*sub)[1];
+			BinaryTreeCPUHierarchy<CPUHierarchy>* sub0 = (*sub)[0];
+			BinaryTreeCPUHierarchy<CPUHierarchy>* sub1 = (*sub)[1];
 
-			TaskExecutionContext::LevelDescription ld;
+			typename TaskExecutionContext::LevelDescription ld;
 			ld.total_size = ch->get_size();
 			ld.local_id = 0;
 			ld.num_partners = sub1->get_size();
@@ -104,13 +116,13 @@ void SequentialTaskMixedModeScheduler<CPUHierarchy, StealingDeque, Barrier, Back
 			levels->pop_back();
 		}
 		else {
-			BinaryTreeCPUHierarchy* sub0 = (*sub)[0];
+			BinaryTreeCPUHierarchy<CPUHierarchy>* sub0 = (*sub)[0];
 
 			initialize_tecs(sub0, offset, levels);
 		}
 	}
 	else {
-		TaskExecutionContext::LevelDescription ld;
+		typename TaskExecutionContext::LevelDescription ld;
 		ld.total_size = 1;
 		ld.local_id = 0;
 		ld.num_partners = 0;
@@ -123,9 +135,9 @@ void SequentialTaskMixedModeScheduler<CPUHierarchy, StealingDeque, Barrier, Back
 	}
 }
 
+template <class CPUHierarchy, template <typename T> class StealingDeque, class Barrier, class BackoffT>
 template<class CallTaskType, typename ... TaskParams>
-template <class CPUHierarchy, template <typename T> class StealingDeque, class Barrier, class Backoff>
-void SequentialTaskMixedModeScheduler<CPUHierarchy, StealingDeque, Barrier, Backoff>::finish(TaskParams ... params) {
+void SequentialTaskMixedModeScheduler<CPUHierarchy, StealingDeque, Barrier, BackoffT>::finish(TaskParams ... params) {
 	CallTaskType task(params ...);
 	state.startup_task = &task;
 	state.current_state = 1;

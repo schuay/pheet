@@ -6,7 +6,10 @@
  *     License: Pheet license
  */
 
+#include "../../../../settings.h"
 #include "ReferenceSTLSort.h"
+
+#include <assert.h>
 
 namespace pheet {
 
@@ -15,9 +18,9 @@ const char ReferenceSTLSort::name[] = "ReferenceSTLSort";
 const char ReferenceSTLSort::scheduler_name[] = "none";
 
 
-ReferenceSTLSort::ReferenceSTLSort(unsigned int* data, size_t length)
+ReferenceSTLSort::ReferenceSTLSort(procs_t cpus, unsigned int* data, size_t length)
 : start(data), end(data + length) {
-
+	assert(cpus == 1);
 }
 
 ReferenceSTLSort::~ReferenceSTLSort() {

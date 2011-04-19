@@ -28,19 +28,19 @@ public:
 
 	void grow(size_t bottom, size_t top);
 private:
-	const size_t capacity;
-	T data[capacity];
+	size_t const capacity;
+	T* data;
 };
 
 template <typename T>
 FixedSizeCircularArray<T>::FixedSizeCircularArray(size_t initial_capacity)
 : capacity(initial_capacity) {
-
+	data = new T[capacity];
 }
 
 template <typename T>
 FixedSizeCircularArray<T>::~FixedSizeCircularArray() {
-
+	delete[] data;
 }
 
 template <typename T>
@@ -59,8 +59,8 @@ T FixedSizeCircularArray<T>::get(size_t i) {
 }
 
 template <typename T>
-void FixedSizeCircularArray<T>::put(size_t i, T) {
-	data[i % capacity] = T;
+void FixedSizeCircularArray<T>::put(size_t i, T item) {
+	data[i % capacity] = item;
 }
 
 template <typename T>

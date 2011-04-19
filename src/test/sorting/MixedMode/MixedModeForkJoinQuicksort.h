@@ -10,6 +10,7 @@
 #define MIXEDMODEFORKJOINQUICKSORT_H_
 
 #include "../../../misc/types.h"
+#include "../../../misc/atomics.h"
 #include "MixedModeForkJoinQuicksortTask.h"
 //#include "../../../sched/MixedMode/Synchroneous/SynchroneousMixedModeScheduler.h"
 //#include "../../../sched/MixedMode/Synchroneous/SynchroneousMixedModeTask.h"
@@ -19,7 +20,7 @@ namespace pheet {
 template <class Scheduler>
 class MixedModeForkJoinQuicksort {
 public:
-	MixedModeForkJoinQuicksort(unsigned int* data, size_t length);
+	MixedModeForkJoinQuicksort(procs_t cpus, unsigned int* data, size_t length);
 	~MixedModeForkJoinQuicksort();
 
 	void sort();
@@ -31,11 +32,12 @@ public:
 private:
 	unsigned int* data;
 	size_t length;
+	typename Scheduler::CPUHierarchy cpu_hierarchy;
 	Scheduler scheduler;
 };
 
 template <class Scheduler>
-procs_t const MixedModeForkJoinQuicksort<Scheduler>::max_cpus = 1;
+procs_t const MixedModeForkJoinQuicksort<Scheduler>::max_cpus = Scheduler::max_cpus;
 
 template <class Scheduler>
 char const MixedModeForkJoinQuicksort<Scheduler>::name[] = "MixedMode Fork-Join Quicksort";
@@ -44,8 +46,8 @@ template <class Scheduler>
 char const * const MixedModeForkJoinQuicksort<Scheduler>::scheduler_name = Scheduler::name;
 
 template <class Scheduler>
-MixedModeForkJoinQuicksort<Scheduler>::MixedModeForkJoinQuicksort(unsigned int *data, size_t length)
-: data(data), length(length), scheduler() {
+MixedModeForkJoinQuicksort<Scheduler>::MixedModeForkJoinQuicksort(procs_t cpus, unsigned int *data, size_t length)
+: data(data), length(length), cpu_hierarchy(cpus), scheduler(&cpu_hierarchy) {
 
 }
 

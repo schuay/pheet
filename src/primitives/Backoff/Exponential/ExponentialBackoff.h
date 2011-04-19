@@ -23,6 +23,7 @@ public:
 	ExponentialBackoff();
 	~ExponentialBackoff();
 
+	void backoff();
 private:
 	unsigned int limit;
 };

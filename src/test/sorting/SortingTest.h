@@ -57,7 +57,7 @@ template <class Sorter>
 void SortingTest<Sorter>::run_test() {
 	unsigned int* data = generate_data();
 
-	Sorter s(data, size);
+	Sorter s(cpus, data, size);
 
 	Time start, end;
 	check_time(start);

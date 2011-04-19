@@ -10,13 +10,16 @@
 #define CIRCULARARRAYSTEALINGDEQUE_H_
 
 #include "../../../misc/type_traits.h"
+#include "../../../misc/atomics.h"
+
+#include <limits>
 
 namespace pheet {
 
-template <typename T, template <typename S> class CircularArray>
+template <typename TT, template <typename S> class CircularArray>
 class CircularArrayStealingDeque {
 public:
-	typedef T T;
+	typedef TT T;
 	CircularArrayStealingDeque(size_t initial_capacity);
 	~CircularArrayStealingDeque();
 
@@ -25,8 +28,7 @@ public:
 	T peek();
 	T steal();
 
-	template <class StealingDeque>
-	T steal_append(StealingDeque &other);
+	T steal_append(CircularArrayStealingDeque<TT, CircularArray> &other);
 
 	size_t get_length();
 	bool is_empty();
@@ -46,34 +48,34 @@ private:
 };
 
 // Upper 4th of size_t is reserved for stamp. The rest is for the actual content
-template <typename T, template <typename S> class CircularArray>
-const size_t CircularArrayStealingDeque<T, CircularArray>::top_mask =
-		(numeric_limits<size_t>::max() >> (numeric_limits<size_t>::digits >> 2));
+template <typename TT, template <typename S> class CircularArray>
+const size_t CircularArrayStealingDeque<TT, CircularArray>::top_mask =
+		(std::numeric_limits<size_t>::max() >> (std::numeric_limits<size_t>::digits >> 2));
 
-template <typename T, template <typename S> class CircularArray>
-const size_t CircularArrayStealingDeque<T, CircularArray>::top_stamp_mask =
-		(numeric_limits<size_t>::max() ^ CircularArrayStealingDeque<T, CircularArray>::top_mask);
+template <typename TT, template <typename S> class CircularArray>
+const size_t CircularArrayStealingDeque<TT, CircularArray>::top_stamp_mask =
+		(std::numeric_limits<size_t>::max() ^ CircularArrayStealingDeque<TT, CircularArray>::top_mask);
 
-template <typename T, template <typename S> class CircularArray>
-const size_t CircularArrayStealingDeque<T, CircularArray>::top_stamp_add =
-		(((size_t)1) << (numeric_limits<size_t>::digits - (numeric_limits<size_t>::digits >> 2)));
+template <typename TT, template <typename S> class CircularArray>
+const size_t CircularArrayStealingDeque<TT, CircularArray>::top_stamp_add =
+		(((size_t)1) << (std::numeric_limits<size_t>::digits - (std::numeric_limits<size_t>::digits >> 2)));
 
-template <typename T, template <typename S> class CircularArray>
-const T CircularArrayStealingDeque<T, CircularArray>::null_element = nullable_traits<T>::null_value;
+template <typename TT, template <typename S> class CircularArray>
+const TT CircularArrayStealingDeque<TT, CircularArray>::null_element = nullable_traits<T>::null_value;
 
-template <typename T, template <typename S> class CircularArray>
-CircularArrayStealingDeque<T, CircularArray>::CircularArrayStealingDeque(size_t initial_capacity)
+template <typename TT, template <typename S> class CircularArray>
+CircularArrayStealingDeque<TT, CircularArray>::CircularArrayStealingDeque(size_t initial_capacity)
 : data(initial_capacity), top(0), bottom(0) {
 
 }
 
-template <typename T, template <typename S> class CircularArray>
-CircularArrayStealingDeque<T, CircularArray>::~CircularArrayStealingDeque() {
+template <typename TT, template <typename S> class CircularArray>
+CircularArrayStealingDeque<TT, CircularArray>::~CircularArrayStealingDeque() {
 
 }
 
-template <typename T, template <typename S> class CircularArray>
-void CircularArrayStealingDeque<T, CircularArray>::push(T item) {
+template <typename TT, template <typename S> class CircularArray>
+void CircularArrayStealingDeque<TT, CircularArray>::push(T item) {
 	if((bottom - (top & top_mask)) >= (data.get_capacity() - 1))
 	{
 		data.grow(bottom, top & top_mask);
@@ -82,10 +84,10 @@ void CircularArrayStealingDeque<T, CircularArray>::push(T item) {
 		// after resizing we have to make sure no thread can succeed that read from the old indices
 		// We do this by incrementing the stamp of top
 		size_t old_top = top;
-		int new_top = old_top + top_stamp_add;
+		size_t new_top = old_top + top_stamp_add;
 
 		// We don't care if we succeed as long as some thread succeeded to change the stamp
-		UINT_CAS(&top, oldTop, newTop);
+		SIZET_CAS(&top, old_top, new_top);
 	}
 
 	data.put(bottom, item);
@@ -95,8 +97,8 @@ void CircularArrayStealingDeque<T, CircularArray>::push(T item) {
 	bottom++;
 }
 
-template <typename T, template <typename S> class CircularArray>
-T CircularArrayStealingDeque<T, CircularArray>::pop() {
+template <typename TT, template <typename S> class CircularArray>
+TT CircularArrayStealingDeque<TT, CircularArray>::pop() {
 	if(bottom == (top & top_stamp_add))
 		return NULL;
 
@@ -110,16 +112,16 @@ T CircularArrayStealingDeque<T, CircularArray>::pop() {
 
 	size_t old_top = top;
 	size_t masked_top = old_top & top_mask;
-	if(bottom > maskedTop)
+	if(bottom > masked_top)
 	{
 		return ret;
 	}
-	if(bottom == maskedTop)
+	if(bottom == masked_top)
 	{
 		// Increment stamp (should wrap around)
 		size_t new_top = old_top + top_stamp_add;
 
-		if(UINT_CAS(&top, old_top, new_top))
+		if(SIZET_CAS(&top, old_top, new_top))
 		{
 			return ret;
 		}
@@ -131,8 +133,8 @@ T CircularArrayStealingDeque<T, CircularArray>::pop() {
 	return null_element;
 }
 
-template <typename T, template <typename S> class CircularArray>
-T CircularArrayStealingDeque<T, CircularArray>::steal() {
+template <typename TT, template <typename S> class CircularArray>
+TT CircularArrayStealingDeque<TT, CircularArray>::steal() {
 	int old_top = top;
 	MEMORY_FENCE();
 
@@ -154,11 +156,38 @@ T CircularArrayStealingDeque<T, CircularArray>::steal() {
 	return null_element;
 }
 
-template <class StealingDeque>
-template <typename T, template <typename S> class CircularArray>
-T CircularArrayStealingDeque<T, CircularArray>::steal_append(StealingDeque &other) {
+template <typename TT, template <typename S> class CircularArray>
+TT CircularArrayStealingDeque<TT, CircularArray>::steal_append(CircularArrayStealingDeque<TT, CircularArray> &other) {
 	T prev = NULL;
-	T curr
+	T curr = NULL;
+	size_t max_steal = get_length() / 3;
+
+	for(size_t i = 0; i < max_steal; i++) {
+		curr = steal();
+		if(curr == NULL) {
+			return prev;
+		}
+		else if(prev != NULL) {
+			other.push(prev);
+			prev = curr;
+		}
+	}
+	return prev;
+}
+
+template <typename TT, template <typename S> class CircularArray>
+size_t CircularArrayStealingDeque<TT, CircularArray>::get_length() {
+	return (bottom - (top & top_mask));
+}
+
+template <typename TT, template <typename S> class CircularArray>
+bool CircularArrayStealingDeque<TT, CircularArray>::is_empty() {
+	return get_length() == 0;
+}
+
+template <typename TT, template <typename S> class CircularArray>
+bool CircularArrayStealingDeque<TT, CircularArray>::is_full() {
+	return (!data.is_growable()) && (get_length() >= data.get_capacity());
 }
 
 }

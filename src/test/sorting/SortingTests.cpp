@@ -9,9 +9,18 @@
 #include "SortingTests.h"
 
 #include "../../sched/MixedMode/Synchroneous/SynchroneousMixedModeScheduler.h"
+#include "../../sched/MixedMode/SequentialTask/SequentialTaskMixedModeScheduler.h"
 
 #include "Reference/ReferenceSTLSort.h"
 #include "MixedMode/MixedModeForkJoinQuicksort.h"
+
+#include "../../em/CPUHierarchy/Simple/SimpleCPUHierarchy.h"
+
+#include "../../ds/CircularArray/FixedSize/FixedSizeCircularArray.h"
+#include "../../ds/StealingDeque/CircularArray/CircularArrayStealingDeque.h"
+
+#include "../../primitives/Backoff/Exponential/ExponentialBackoff.h"
+#include "../../primitives/Barrier/Simple/SimpleBarrier.h"
 
 #include <iostream>
 
@@ -25,11 +34,18 @@ SortingTests::~SortingTests() {
 
 }
 
+template <typename T>
+struct FixedSizeCircularArrayStealingDequeWrapper {
+	typedef CircularArrayStealingDeque<T, FixedSizeCircularArray > Type;
+};
+//using FixedSizeCircularArrayStealingDeque = CircularArrayStealingDeque<T, FixedSizeCircularArray<T> >;
+
 void SortingTests::run_test() {
 	std::cout << "----" << std::endl;
 	std::cout << "test\tsorter\tscheduler\ttype\tsize\tseed\tcpus\ttime\truns" << std::endl;
 
-	this->run_sorter<MixedModeForkJoinQuicksort<SynchroneousMixedModeScheduler> >();
+	this->run_sorter<MixedModeForkJoinQuicksort<SequentialTaskMixedModeScheduler<SimpleCPUHierarchy, FixedSizeCircularArrayStealingDequeWrapper::Type, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff> > >();
+	this->run_sorter<MixedModeForkJoinQuicksort<SynchroneousMixedModeScheduler<SimpleCPUHierarchy> > >();
 	this->run_sorter<ReferenceSTLSort>();
 }
 

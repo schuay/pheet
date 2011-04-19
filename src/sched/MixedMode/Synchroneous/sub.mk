@@ -1,2 +1,2 @@
 
-OBJS += lib/sched/MixedMode/Synchroneous/SynchroneousMixedModeScheduler.o
+#OBJS += lib/sched/MixedMode/Synchroneous/SynchroneousMixedModeScheduler.o

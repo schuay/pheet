@@ -28,7 +28,7 @@ public:
 private:
 	void execute();
 
-	CPUDescriptor** desc;
+	CPUDescriptor** cpus;
 	procs_t num_cpus;
 	T* work;
 	pthread_t thread;
@@ -64,13 +64,12 @@ void CPUThreadExecutor<CPUDescriptor, T>::join() {
 
 template <class CPUDescriptor, class T>
 void CPUThreadExecutor<CPUDescriptor, T>::execute() {
-	int err;
-
 	#ifdef ENV_LINUX_GCC
+	int err;
 	cpu_set_t cpu_affinity;
 	CPU_ZERO(&cpu_affinity);
 	for(size_t i = 0; i < num_cpus; i++) {
-		CPU_SET(cpus[i]->get_cpu_id(), &cpu_affinity);
+		CPU_SET(cpus[i]->get_physical_id(), &cpu_affinity);
 	}
 	if((err = pthread_setaffinity_np(pthread_self(), sizeof(cpu_affinity),
 			&cpu_affinity)) != 0)
@@ -92,7 +91,7 @@ void CPUThreadExecutor<CPUDescriptor, T>::execute() {
 			break;
 		}
 		*/
-		cerr << "Failed to bind cpu thread to cpu " << desc->get_cpu_id() << endl;
+		cerr << "Failed to bind scheduler thread to cpu(s)" << endl;
 	}
 /*	#else
 	#ifdef ENV_SOLARIS_SUNCC
@@ -101,8 +100,8 @@ void CPUThreadExecutor<CPUDescriptor, T>::execute() {
 		cerr << "Failed to bind cpu thread to cpu " << desc->get_cpu_id() << endl;
 	}
 
-	#endif
 	#endif*/
+	#endif
 
 	work->run();
 }

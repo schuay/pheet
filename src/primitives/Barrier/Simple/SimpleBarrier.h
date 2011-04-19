@@ -10,6 +10,7 @@
 #define SIMPLEBARRIER_H_
 
 #include "../../../misc/types.h"
+#include "../../../misc/atomics.h"
 
 /*
  *

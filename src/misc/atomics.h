@@ -9,6 +9,8 @@
 #ifndef ATOMICS_H_
 #define ATOMICS_H_
 
+#include "../../settings.h"
+
 #ifdef ENV_LINUX_GCC
 
 #include "atomics_gnu.h"
