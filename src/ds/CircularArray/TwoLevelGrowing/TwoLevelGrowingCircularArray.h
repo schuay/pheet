@@ -43,6 +43,7 @@ template <typename T, size_t MAX_BUCKETS>
 TwoLevelGrowingCircularArray<T, MAX_BUCKETS>::TwoLevelGrowingCircularArray(size_t initial_capacity)
 : initial_buckets(find_last_bit_set(initial_capacity - 1) + 1), buckets(initial_buckets), capacity(1 << (buckets - 1)) {
 	assert(buckets <= MAX_BUCKETS);
+	assert(initial_capacity > 0);
 
 	T* ptr = new T[capacity];
 	data[0] = ptr;

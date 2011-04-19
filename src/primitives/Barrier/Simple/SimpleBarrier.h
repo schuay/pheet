@@ -25,6 +25,7 @@ public:
 	void wait(size_t i, procs_t p);
 	void signal(size_t i);
 	void barrier(size_t i, procs_t p);
+	void reset();
 
 private:
 	procs_t barriers[4];
@@ -32,10 +33,7 @@ private:
 
 template <class Backoff>
 SimpleBarrier<Backoff>::SimpleBarrier() {
-	barriers[0] = 0;
-	barriers[1] = 0;
-	barriers[2] = 0;
-	barriers[3] = 0;
+	reset();
 }
 
 template <class Backoff>
@@ -61,6 +59,14 @@ template <class Backoff>
 void SimpleBarrier<Backoff>::barrier(size_t i, procs_t p) {
 	signal(i);
 	wait(i, p);
+}
+
+template <class Backoff>
+void SimpleBarrier<Backoff>::reset() {
+	barriers[0] = 0;
+	barriers[1] = 0;
+	barriers[2] = 0;
+	barriers[3] = 0;
 }
 
 }

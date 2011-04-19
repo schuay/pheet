@@ -10,13 +10,9 @@
 
 namespace pheet {
 
-SequentialTaskMixedModeScheduler::SequentialTaskMixedModeScheduler() {
-	// TODO Auto-generated constructor stub
+SequentialTaskMixedModeSchedulerState::SequentialTaskMixedModeSchedulerState()
+: current_state(0), startup_task(NULL) {
 
-}
-
-SequentialTaskMixedModeScheduler::~SequentialTaskMixedModeScheduler() {
-	// TODO Auto-generated destructor stub
 }
 
 }

@@ -16,3 +16,6 @@ A signal also acts as a memory_fence.
 
 void barrier(size_t i, procs_t p)
 First performs a signal and then a wait operation for iteration i.
+
+void reset()
+resets the barrier so that it can be used regardless of the starting i

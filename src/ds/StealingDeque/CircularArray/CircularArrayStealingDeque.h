@@ -13,10 +13,10 @@
 
 namespace pheet {
 
-template <class CircularArray>
+template <typename T, template <typename S> class CircularArray>
 class CircularArrayStealingDeque {
 public:
-	typedef CircularArray::T T;
+	typedef T T;
 	CircularArrayStealingDeque(size_t initial_capacity);
 	~CircularArrayStealingDeque();
 
@@ -42,38 +42,38 @@ private:
 
 	static const T null_element;
 
-	CircularArray data;
+	CircularArray<T> data;
 };
 
 // Upper 4th of size_t is reserved for stamp. The rest is for the actual content
-template <class CircularArray>
-const size_t CircularArrayStealingDeque<CircularArray>::top_mask =
+template <typename T, template <typename S> class CircularArray>
+const size_t CircularArrayStealingDeque<T, CircularArray>::top_mask =
 		(numeric_limits<size_t>::max() >> (numeric_limits<size_t>::digits >> 2));
 
-template <class CircularArray>
-const size_t CircularArrayStealingDeque<CircularArray>::top_stamp_mask =
-		(numeric_limits<size_t>::max() ^ CircularArrayStealingDeque<CircularArray>::top_mask);
+template <typename T, template <typename S> class CircularArray>
+const size_t CircularArrayStealingDeque<T, CircularArray>::top_stamp_mask =
+		(numeric_limits<size_t>::max() ^ CircularArrayStealingDeque<T, CircularArray>::top_mask);
 
-template <class CircularArray>
-const size_t CircularArrayStealingDeque<CircularArray>::top_stamp_add =
+template <typename T, template <typename S> class CircularArray>
+const size_t CircularArrayStealingDeque<T, CircularArray>::top_stamp_add =
 		(((size_t)1) << (numeric_limits<size_t>::digits - (numeric_limits<size_t>::digits >> 2)));
 
-template <class CircularArray>
-const T CircularArrayStealingDeque<CircularArray>::null_element = nullable_traits<T>::null_value;
+template <typename T, template <typename S> class CircularArray>
+const T CircularArrayStealingDeque<T, CircularArray>::null_element = nullable_traits<T>::null_value;
 
-template <class CircularArray>
-CircularArrayStealingDeque<CircularArray>::CircularArrayStealingDeque(size_t initial_capacity)
+template <typename T, template <typename S> class CircularArray>
+CircularArrayStealingDeque<T, CircularArray>::CircularArrayStealingDeque(size_t initial_capacity)
 : data(initial_capacity), top(0), bottom(0) {
 
 }
 
-template <class CircularArray>
-CircularArrayStealingDeque<CircularArray>::~CircularArrayStealingDeque() {
+template <typename T, template <typename S> class CircularArray>
+CircularArrayStealingDeque<T, CircularArray>::~CircularArrayStealingDeque() {
 
 }
 
-template <class CircularArray>
-void CircularArrayStealingDeque<CircularArray>::push(T item) {
+template <typename T, template <typename S> class CircularArray>
+void CircularArrayStealingDeque<T, CircularArray>::push(T item) {
 	if((bottom - (top & top_mask)) >= (data.get_capacity() - 1))
 	{
 		data.grow(bottom, top & top_mask);
@@ -95,8 +95,8 @@ void CircularArrayStealingDeque<CircularArray>::push(T item) {
 	bottom++;
 }
 
-template <class CircularArray>
-T CircularArrayStealingDeque<CircularArray>::pop() {
+template <typename T, template <typename S> class CircularArray>
+T CircularArrayStealingDeque<T, CircularArray>::pop() {
 	if(bottom == (top & top_stamp_add))
 		return NULL;
 
@@ -131,8 +131,8 @@ T CircularArrayStealingDeque<CircularArray>::pop() {
 	return null_element;
 }
 
-template <class CircularArray>
-T CircularArrayStealingDeque<CircularArray>::steal() {
+template <typename T, template <typename S> class CircularArray>
+T CircularArrayStealingDeque<T, CircularArray>::steal() {
 	int old_top = top;
 	MEMORY_FENCE();
 
@@ -154,9 +154,9 @@ T CircularArrayStealingDeque<CircularArray>::steal() {
 	return null_element;
 }
 
-template <class CircularArray>
 template <class StealingDeque>
-T CircularArrayStealingDeque<CircularArray>::steal_append(StealingDeque &other) {
+template <typename T, template <typename S> class CircularArray>
+T CircularArrayStealingDeque<T, CircularArray>::steal_append(StealingDeque &other) {
 	T prev = NULL;
 	T curr
 }

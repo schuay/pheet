@@ -23,21 +23,25 @@
 #define UINT_ATOMIC_ADD(p, val)		(__sync_fetch_and_add(p, val))
 #define LONG_ATOMIC_ADD(p, val)		(__sync_fetch_and_add(p, val))
 #define ULONG_ATOMIC_ADD(p, val)	(__sync_fetch_and_add(p, val))
+#define SIZET_ATOMIC_ADD(p, val)	(__sync_fetch_and_add(p, val))
 
 #define INT_FETCH_AND_ADD(p, val)		(__sync_fetch_and_add(p, val))
 #define UINT_FETCH_AND_ADD(p, val)		(__sync_fetch_and_add(p, val))
 #define LONG_FETCH_AND_ADD(p, val)		(__sync_fetch_and_add(p, val))
 #define ULONG_FETCH_AND_ADD(p, val)		(__sync_fetch_and_add(p, val))
+#define SIZET_FETCH_AND_ADD(p, val)		(__sync_fetch_and_add(p, val))
 
 #define INT_ATOMIC_SUB(p, val)		(__sync_fetch_and_sub(p, val))
 #define UINT_ATOMIC_SUB(p, val)		(__sync_fetch_and_sub(p, val))
 #define LONG_ATOMIC_SUB(p, val)		(__sync_fetch_and_sub(p, val))
 #define ULONG_ATOMIC_SUB(p, val)	(__sync_fetch_and_sub(p, val))
+#define SIZET_ATOMIC_SUB(p, val)	(__sync_fetch_and_sub(p, val))
 
 #define INT_FETCH_AND_SUB(p, val)		(__sync_fetch_and_sub(p, val))
 #define UINT_FETCH_AND_SUB(p, val)		(__sync_fetch_and_sub(p, val))
 #define LONG_FETCH_AND_SUB(p, val)		(__sync_fetch_and_sub(p, val))
 #define ULONG_FETCH_AND_SUB(p, val)		(__sync_fetch_and_sub(p, val))
+#define SIZET_FETCH_AND_SUB(p, val)		(__sync_fetch_and_sub(p, val))
 
 #define MEMORY_FENCE()				(__sync_synchronize())
 
