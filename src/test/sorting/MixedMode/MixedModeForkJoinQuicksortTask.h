@@ -14,7 +14,7 @@
 
 namespace pheet {
 
-template <class Task>
+template <class Task, size_t CUTOFF_LENGTH = 512>
 class MixedModeForkJoinQuicksortTask : public Task {
 public:
 	MixedModeForkJoinQuicksortTask(unsigned int* data, size_t length);
@@ -27,19 +27,19 @@ private:
 	size_t length;
 };
 
-template <class Task>
-MixedModeForkJoinQuicksortTask<Task>::MixedModeForkJoinQuicksortTask(unsigned int* data, size_t length)
+template <class Task, size_t CUTOFF_LENGTH>
+MixedModeForkJoinQuicksortTask<Task, CUTOFF_LENGTH>::MixedModeForkJoinQuicksortTask(unsigned int* data, size_t length)
 : data(data), length(length) {
 
 }
 
-template <class Task>
-MixedModeForkJoinQuicksortTask<Task>::~MixedModeForkJoinQuicksortTask() {
+template <class Task, size_t CUTOFF_LENGTH>
+MixedModeForkJoinQuicksortTask<Task, CUTOFF_LENGTH>::~MixedModeForkJoinQuicksortTask() {
 
 }
 
-template <class Task>
-void MixedModeForkJoinQuicksortTask<Task>::operator()(typename Task::Scheduler::TaskExecutionContext &tec) {
+template <class Task, size_t CUTOFF_LENGTH>
+void MixedModeForkJoinQuicksortTask<Task, CUTOFF_LENGTH>::operator()(typename Task::Scheduler::TaskExecutionContext &tec) {
 	if(length <= 1)
 		return;
 
@@ -48,8 +48,13 @@ void MixedModeForkJoinQuicksortTask<Task>::operator()(typename Task::Scheduler::
 	size_t pivot = middle - data;
 	swap(*(data + length - 1), *middle);    // move pivot to middle
 
-	tec.template spawn<MixedModeForkJoinQuicksortTask>(data, pivot);
-	tec.template call<MixedModeForkJoinQuicksortTask>(data + pivot + 1, length - pivot - 1);
+	if(pivot > CUTOFF_LENGTH) {
+		tec.template spawn<MixedModeForkJoinQuicksortTask<Task, CUTOFF_LENGTH> >(data, pivot);
+	}
+	else {
+		tec.template call<MixedModeForkJoinQuicksortTask<Task, CUTOFF_LENGTH>>(data, pivot);
+	}
+	tec.template call<MixedModeForkJoinQuicksortTask<Task, CUTOFF_LENGTH>>(data + pivot + 1, length - pivot - 1);
 }
 
 }
