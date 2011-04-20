@@ -106,12 +106,12 @@ void SequentialTaskMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, Bac
 			ld.total_size = ch->get_size();
 			ld.local_id = 0;
 			ld.num_partners = sub1->get_size();
-			ld.partners = threads + offset;
+			ld.partners = threads + offset + sub0->get_size();
 			levels->push_back(&ld);
 			initialize_tecs(sub0, offset, levels);
 			ld.local_id = sub0->get_size();
 			ld.num_partners = ld.local_id;
-			ld.partners += ld.local_id;
+			ld.partners = threads + offset;
 			initialize_tecs(sub1, offset + ld.local_id, levels);
 
 			levels->pop_back();

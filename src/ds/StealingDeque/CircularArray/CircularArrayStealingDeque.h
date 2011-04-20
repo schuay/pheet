@@ -29,7 +29,7 @@ public:
 	T peek();
 	T steal();
 
-	T steal_append(CircularArrayStealingDeque<TT, CircularArray> &other);
+	T steal_push(CircularArrayStealingDeque<TT, CircularArray> &other);
 
 	size_t get_length();
 	bool is_empty();
@@ -159,7 +159,7 @@ TT CircularArrayStealingDeque<TT, CircularArray>::steal() {
 }
 
 template <typename TT, template <typename S> class CircularArray>
-TT CircularArrayStealingDeque<TT, CircularArray>::steal_append(CircularArrayStealingDeque<TT, CircularArray> &other) {
+TT CircularArrayStealingDeque<TT, CircularArray>::steal_push(CircularArrayStealingDeque<TT, CircularArray> &other) {
 	T prev = null_element;
 	T curr = null_element;
 	size_t max_steal = get_length() / 3;
@@ -171,8 +171,8 @@ TT CircularArrayStealingDeque<TT, CircularArray>::steal_append(CircularArrayStea
 		}
 		else if(prev != null_element) {
 			other.push(prev);
-			prev = curr;
 		}
+		prev = curr;
 	}
 	return prev;
 }

@@ -201,7 +201,6 @@ void SequentialTaskMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeq
 			while(true) {
 				// Finalize elements in stack
 				empty_stack(0);
-
 				procs_t next_rand = random();
 
 				// We do not steal from the last level as there are no partners
@@ -210,8 +209,9 @@ void SequentialTaskMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeq
 					level--;
 					// For all except the last level we assume num_partners > 0
 					assert(levels[level].num_partners > 0);
-
-					di = levels[level].partners[next_rand % levels[level].num_partners]->stealing_deque.steal_append(this->stealing_deque);
+					assert(levels[level].partners[next_rand % levels[level].num_partners] != this);
+					di = levels[level].partners[next_rand % levels[level].num_partners]->stealing_deque.steal_push(this->stealing_deque);
+				//	di = levels[level].partners[next_rand % levels[level].num_partners]->stealing_deque.steal();
 
 					if(di.task != NULL) {
 						break;

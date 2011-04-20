@@ -24,7 +24,7 @@ Dequeues a single element from the deque (queue usage).
 Returns nullable_traits<T>::null_value if stealing fails.
 Stealing might fail even though the queue is not empty. (Allowing for wait-free access)
 
-T steal_append(WorkStealingDeque &other)
+T steal_push(WorkStealingDeque &other)
 Steals multiple elements and pushes all except for the last stolen element to the given deque.
 The amount of elements stolen is implementation dependent.
 Deque usage, and stack usage for other queue.
