@@ -9,7 +9,7 @@
 #ifndef SETTINGS_H_
 #define SETTINGS_H_
 
-#define NDEBUG
+//#define NDEBUG
 
 
 #define ENV_LINUX_GCC	1

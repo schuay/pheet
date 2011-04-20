@@ -9,8 +9,6 @@
 #ifndef ATOMICS_GNU_H_
 #define ATOMICS_GNU_H_
 
-#define HIGHEST_BIT_POS(V)	(myfls(V)+1)
-
 #define PTR_CAS(p, old_v, new_v)	(__sync_bool_compare_and_swap(p, old_v, new_v))
 #define INT_CAS(p, old_v, new_v)	(__sync_bool_compare_and_swap(p, old_v, new_v))
 #define INT32_CAS(p, old_v, new_v)	(__sync_bool_compare_and_swap(p, old_v, new_v))

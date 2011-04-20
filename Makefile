@@ -4,13 +4,13 @@ include settings.mk
 
 OBJS =		
 
-LIBS =		
+LIBS =		-lpthread
 
 TARGET =	lib/libpheet.o
 
 TEST_OBJS = 
 
-TEST_LIBS =	
+TEST_LIBS =	$(LIBS)
 
 TEST_TARGET = bin/pheet_test
 

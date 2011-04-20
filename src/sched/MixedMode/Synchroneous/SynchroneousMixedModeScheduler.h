@@ -91,7 +91,7 @@ template <class CPUHierarchyT>
 template<class CallTaskType, typename ... TaskParams>
 void SynchroneousMixedModeScheduler<CPUHierarchyT>::finish(TaskParams ... params) {
 	CallTaskType task(params ...);
-	task.execute(tec);
+	task(tec);
 }
 
 }

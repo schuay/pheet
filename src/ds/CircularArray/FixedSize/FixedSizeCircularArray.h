@@ -65,7 +65,7 @@ void FixedSizeCircularArray<T>::put(size_t i, T item) {
 
 template <typename T>
 void FixedSizeCircularArray<T>::grow(size_t bottom, size_t top) {
-	assert(true);
+	assert(false);
 }
 
 }

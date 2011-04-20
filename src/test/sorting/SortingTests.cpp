@@ -34,17 +34,24 @@ SortingTests::~SortingTests() {
 
 }
 
-template <typename T>
-struct FixedSizeCircularArrayStealingDequeWrapper {
-	typedef CircularArrayStealingDeque<T, FixedSizeCircularArray > Type;
-};
 //using FixedSizeCircularArrayStealingDeque = CircularArrayStealingDeque<T, FixedSizeCircularArray<T> >;
+template <typename T>
+class FixedSizeCircularArrayStealingDeque : public CircularArrayStealingDeque<T, FixedSizeCircularArray > {
+public:
+	FixedSizeCircularArrayStealingDeque(size_t initial_capacity);
+};
+
+template <typename T>
+FixedSizeCircularArrayStealingDeque<T>::FixedSizeCircularArrayStealingDeque(size_t initial_capacity)
+: CircularArrayStealingDeque<T, FixedSizeCircularArray >(initial_capacity){
+
+}
 
 void SortingTests::run_test() {
 	std::cout << "----" << std::endl;
 	std::cout << "test\tsorter\tscheduler\ttype\tsize\tseed\tcpus\ttime\truns" << std::endl;
 
-	this->run_sorter<MixedModeForkJoinQuicksort<SequentialTaskMixedModeScheduler<SimpleCPUHierarchy, FixedSizeCircularArrayStealingDequeWrapper::Type, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff> > >();
+	this->run_sorter<MixedModeForkJoinQuicksort<SequentialTaskMixedModeScheduler<SimpleCPUHierarchy, FixedSizeCircularArrayStealingDeque, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff> > >();
 	this->run_sorter<MixedModeForkJoinQuicksort<SynchroneousMixedModeScheduler<SimpleCPUHierarchy> > >();
 	this->run_sorter<ReferenceSTLSort>();
 }

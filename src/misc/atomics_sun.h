@@ -17,8 +17,6 @@
 int
 solaris_fls(long mask);
 
-#define HIGHEST_BIT_POS(V)	(solaris_fls(V))
-
 #define PTR_CAS(p, old_v, new_v)	(atomic_cas_ptr(p, old_v, new_v) == old_v)
 #define INT_CAS(p, old_v, new_v)	(atomic_cas_uint((unsigned*)p, old_v, new_v) == old_v)
 #define INT32_CAS(p, old_v, new_v)	(atomic_cas_32((unsigned*)p, old_v, new_v) == old_v)

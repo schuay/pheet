@@ -23,7 +23,7 @@ public:
 
 	procs_t get_num_threads();
 
-	virtual void execute(typename Scheduler::TaskExecutionContext &tec);
+	virtual void operator()(typename Scheduler::TaskExecutionContext &tec) = 0;
 
 private:
 };
@@ -42,11 +42,6 @@ SynchroneousMixedModeTask<Sched>::~SynchroneousMixedModeTask() {
 template <class Sched>
 procs_t SynchroneousMixedModeTask<Sched>::get_num_threads() {
 	return 1;
-}
-
-template <class Sched>
-void SynchroneousMixedModeTask<Sched>::execute(typename Sched::TaskExecutionContext &tec) {
-
 }
 
 }

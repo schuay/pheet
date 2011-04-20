@@ -13,6 +13,7 @@
 #include "../../../misc/atomics.h"
 
 #include <limits>
+#include <iostream>
 
 namespace pheet {
 
@@ -65,7 +66,7 @@ const TT CircularArrayStealingDeque<TT, CircularArray>::null_element = nullable_
 
 template <typename TT, template <typename S> class CircularArray>
 CircularArrayStealingDeque<TT, CircularArray>::CircularArrayStealingDeque(size_t initial_capacity)
-: data(initial_capacity), top(0), bottom(0) {
+: top(0), bottom(0), data(initial_capacity) {
 
 }
 
@@ -76,7 +77,7 @@ CircularArrayStealingDeque<TT, CircularArray>::~CircularArrayStealingDeque() {
 
 template <typename TT, template <typename S> class CircularArray>
 void CircularArrayStealingDeque<TT, CircularArray>::push(T item) {
-	if((bottom - (top & top_mask)) >= (data.get_capacity() - 1))
+	if((bottom - (top & top_mask)) >= (data.get_capacity()))
 	{
 		data.grow(bottom, top & top_mask);
 		MEMORY_FENCE ();
@@ -99,8 +100,8 @@ void CircularArrayStealingDeque<TT, CircularArray>::push(T item) {
 
 template <typename TT, template <typename S> class CircularArray>
 TT CircularArrayStealingDeque<TT, CircularArray>::pop() {
-	if(bottom == (top & top_stamp_add))
-		return NULL;
+	if(bottom == (top & top_mask))
+		return null_element;
 
 	bottom--;
 
@@ -123,6 +124,7 @@ TT CircularArrayStealingDeque<TT, CircularArray>::pop() {
 
 		if(SIZET_CAS(&top, old_top, new_top))
 		{
+		//	std::cout << "pop " << bottom << std::endl;
 			return ret;
 		}
 		else {
@@ -135,10 +137,10 @@ TT CircularArrayStealingDeque<TT, CircularArray>::pop() {
 
 template <typename TT, template <typename S> class CircularArray>
 TT CircularArrayStealingDeque<TT, CircularArray>::steal() {
-	int old_top = top;
+	size_t old_top = top;
 	MEMORY_FENCE();
 
-	int masked_top = old_top & top_mask;
+	size_t masked_top = old_top & top_mask;
 	if(bottom <= masked_top) {
 		return null_element;
 	}
@@ -158,16 +160,16 @@ TT CircularArrayStealingDeque<TT, CircularArray>::steal() {
 
 template <typename TT, template <typename S> class CircularArray>
 TT CircularArrayStealingDeque<TT, CircularArray>::steal_append(CircularArrayStealingDeque<TT, CircularArray> &other) {
-	T prev = NULL;
-	T curr = NULL;
+	T prev = null_element;
+	T curr = null_element;
 	size_t max_steal = get_length() / 3;
 
 	for(size_t i = 0; i < max_steal; i++) {
 		curr = steal();
-		if(curr == NULL) {
+		if(curr == null_element) {
 			return prev;
 		}
-		else if(prev != NULL) {
+		else if(prev != null_element) {
 			other.push(prev);
 			prev = curr;
 		}

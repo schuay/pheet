@@ -10,17 +10,17 @@
 #define MIXEDMODEFORKJOINQUICKSORTTASK_H_
 
 #include <algorithm>
+#include <iostream>
 
 namespace pheet {
 
 template <class Task>
-class MixedModeForkJoinQuicksortTask : Task {
+class MixedModeForkJoinQuicksortTask : public Task {
 public:
-	typedef MixedModeForkJoinQuicksortTask<Task> bla;
 	MixedModeForkJoinQuicksortTask(unsigned int* data, size_t length);
 	virtual ~MixedModeForkJoinQuicksortTask();
 
-	void execute(typename Task::Scheduler::TaskExecutionContext &tec);
+	virtual void operator()(typename Task::Scheduler::TaskExecutionContext &tec);
 
 private:
 	unsigned int* data;
@@ -39,7 +39,7 @@ MixedModeForkJoinQuicksortTask<Task>::~MixedModeForkJoinQuicksortTask() {
 }
 
 template <class Task>
-void MixedModeForkJoinQuicksortTask<Task>::execute(typename Task::Scheduler::TaskExecutionContext &tec) {
+void MixedModeForkJoinQuicksortTask<Task>::operator()(typename Task::Scheduler::TaskExecutionContext &tec) {
 	if(length <= 1)
 		return;
 
@@ -49,7 +49,7 @@ void MixedModeForkJoinQuicksortTask<Task>::execute(typename Task::Scheduler::Tas
 	swap(*(data + length - 1), *middle);    // move pivot to middle
 
 	tec.template spawn<MixedModeForkJoinQuicksortTask>(data, pivot);
-	tec.template spawn<MixedModeForkJoinQuicksortTask>(data + pivot + 1, length - pivot - 1);
+	tec.template call<MixedModeForkJoinQuicksortTask>(data + pivot + 1, length - pivot - 1);
 }
 
 }

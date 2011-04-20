@@ -12,10 +12,12 @@
 #include "../../../../settings.h"
 #include "../../common/CPUThreadExecutor.h"
 #include "../../../misc/atomics.h"
+#include "../../../misc/bitops.h"
 #include "../../../misc/type_traits.h"
 
 #include <vector>
 #include <assert.h>
+#include <iostream>
 
 namespace pheet {
 
@@ -32,7 +34,7 @@ struct SequentialTaskMixedModeSchedulerTaskExecutionContextStackElement {
 
 template <class TaskExecutionContext>
 struct SequentialTaskMixedModeSchedulerTaskExecutionContextLevelDescription {
-	TaskExecutionContext* partners;
+	TaskExecutionContext** partners;
 	procs_t num_partners;
 	procs_t local_id;
 	procs_t total_size;
@@ -44,6 +46,9 @@ struct SequentialTaskMixedModeSchedulerTaskExecutionContextDequeItem {
 
 	typename TaskExecutionContext::Task* task;
 	typename TaskExecutionContext::StackElement* stack_element;
+
+	bool operator==(SequentialTaskMixedModeSchedulerTaskExecutionContextDequeItem<TaskExecutionContext> const& other) const;
+	bool operator!=(SequentialTaskMixedModeSchedulerTaskExecutionContextDequeItem<TaskExecutionContext> const& other) const;
 };
 
 template <class TaskExecutionContext>
@@ -53,7 +58,19 @@ SequentialTaskMixedModeSchedulerTaskExecutionContextDequeItem<TaskExecutionConte
 }
 
 template <class TaskExecutionContext>
+bool SequentialTaskMixedModeSchedulerTaskExecutionContextDequeItem<TaskExecutionContext>::operator==(SequentialTaskMixedModeSchedulerTaskExecutionContextDequeItem<TaskExecutionContext> const& other) const {
+	return other.task == task;
+}
+
+template <class TaskExecutionContext>
+bool SequentialTaskMixedModeSchedulerTaskExecutionContextDequeItem<TaskExecutionContext>::operator!=(SequentialTaskMixedModeSchedulerTaskExecutionContextDequeItem<TaskExecutionContext> const& other) const {
+	return other.task != task;
+}
+
+
+template <class TaskExecutionContext>
 class nullable_traits<SequentialTaskMixedModeSchedulerTaskExecutionContextDequeItem<TaskExecutionContext> > {
+public:
 	static SequentialTaskMixedModeSchedulerTaskExecutionContextDequeItem<TaskExecutionContext> const null_value;
 };
 
@@ -70,7 +87,7 @@ public:
 	typedef SequentialTaskMixedModeSchedulerTaskExecutionContextStackElement StackElement;
 	typedef SequentialTaskMixedModeSchedulerTaskExecutionContextDequeItem<SequentialTaskMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque> > DequeItem;
 
-	SequentialTaskMixedModeSchedulerTaskExecutionContext(vector<LevelDescription*>* levels, vector<typename CPUHierarchy::CPUDescriptor*>* cpus, typename Scheduler::State* scheduler_state);
+	SequentialTaskMixedModeSchedulerTaskExecutionContext(vector<LevelDescription*> const* levels, vector<typename CPUHierarchy::CPUDescriptor*> const* cpus, typename Scheduler::State* scheduler_state);
 	~SequentialTaskMixedModeSchedulerTaskExecutionContext();
 
 	void join();
@@ -88,7 +105,7 @@ public:
 		void local_finish(TaskParams ... params);
 private:
 	void run();
-	void execute_task(Task* task, size_t* parent);
+	void execute_task(Task* task, StackElement* parent);
 	void main_loop();
 	void process_queue();
 	void empty_stack(size_t limit);
@@ -111,21 +128,20 @@ private:
 };
 
 template <class Scheduler, template <typename T> class StealingDeque>
-size_t const SequentialTaskMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::stack_size = 64;
+size_t const SequentialTaskMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::stack_size = 256;
 
 template <class Scheduler, template <typename T> class StealingDeque>
-SequentialTaskMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::SequentialTaskMixedModeSchedulerTaskExecutionContext(vector<LevelDescription*>* levels, vector<typename CPUHierarchy::CPUDescriptor*>* cpus, typename Scheduler::State* scheduler_state)
-: stack_filled(0), num_levels(levels.size()), thread_executor(cpus, this), scheduler_state(scheduler_state), max_queue_length(find_last_bit_set(levels[0]->total_size - 1) << 4), stealing_deque(max_queue_length) {
+SequentialTaskMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::SequentialTaskMixedModeSchedulerTaskExecutionContext(vector<LevelDescription*> const* levels, vector<typename CPUHierarchy::CPUDescriptor*> const* cpus, typename Scheduler::State* scheduler_state)
+: stack_filled(0), num_levels(levels->size()), thread_executor(cpus, this), scheduler_state(scheduler_state), max_queue_length(find_last_bit_set((*levels)[0]->total_size - 1) << 4), stealing_deque(max_queue_length) {
 	stack = new StackElement[stack_size];
-
 	this->levels = new LevelDescription[num_levels];
 	procs_t local_id = 0;
 	for(ptrdiff_t i = num_levels - 1; i >= 0; i--) {
-		this->levels[i].partners = levels[i]->partners;
-		this->levels[i].num_partners = levels[i]->num_partners;
-		local_id += levels[i]->local_id;
+		this->levels[i].partners = (*levels)[i]->partners;
+		this->levels[i].num_partners = (*levels)[i]->num_partners;
+		local_id += (*levels)[i]->local_id;
 		this->levels[i].local_id = local_id;
-		this->levels[i].total_size = levels[i]->total_size;
+		this->levels[i].total_size = (*levels)[i]->total_size;
 	}
 
 	thread_executor.run();
@@ -153,15 +169,15 @@ void SequentialTaskMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeq
 			execute_task(startup_task, NULL);
 		}
 	}
-
 	main_loop();
 
 	scheduler_state->state_barrier.barrier(1, levels[0].total_size);
+
 	// Now we can safely finish execution
 }
 
 template <class Scheduler, template <typename T> class StealingDeque>
-void SequentialTaskMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::execute_task(Task* task, size_t* parent) {
+void SequentialTaskMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::execute_task(Task* task, StackElement* parent) {
 	assert(stack_filled < stack_size);
 
 	stack[stack_filled].num_finished_remote = 0;
@@ -170,7 +186,7 @@ void SequentialTaskMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeq
 
 	stack_filled++;
 
-	task->execute(*this);
+	(*task)(*this);
 }
 
 template <class Scheduler, template <typename T> class StealingDeque>
@@ -181,7 +197,7 @@ void SequentialTaskMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeq
 
 		{	// Local scope so we have a new backoff object
 			Backoff bo;
-			DequeItem di = NULL;
+			DequeItem di;
 			while(true) {
 				// Finalize elements in stack
 				empty_stack(0);
@@ -195,7 +211,7 @@ void SequentialTaskMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeq
 					// For all except the last level we assume num_partners > 0
 					assert(levels[level].num_partners > 0);
 
-					di = levels[level].partners[next_rand % levels[level].num_partners].stealing_deque.steal_append(this->stealing_deque);
+					di = levels[level].partners[next_rand % levels[level].num_partners]->stealing_deque.steal_append(this->stealing_deque);
 
 					if(di.task != NULL) {
 						break;
@@ -226,6 +242,7 @@ void SequentialTaskMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeq
 		// which is bad for balancing
 		execute_task(di.task, di.stack_element);
 		delete di.task;
+		empty_stack(0);
 		di = stealing_deque.pop();
 	}
 }
@@ -301,7 +318,7 @@ template <class Scheduler, template <typename T> class StealingDeque>
 template<class CallTaskType, typename ... TaskParams>
 void SequentialTaskMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::call(TaskParams ... params) {
 	CallTaskType task(params ...);
-	task.execute(*this);
+	task(*this);
 }
 
 template <class Scheduler, template <typename T> class StealingDeque>

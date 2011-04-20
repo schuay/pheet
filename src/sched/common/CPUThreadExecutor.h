@@ -19,7 +19,7 @@ void* execute_cpu_thread(void *param);
 template <class CPUDescriptor, class T>
 class CPUThreadExecutor {
 public:
-	CPUThreadExecutor(vector<CPUDescriptor*>* cpus, T* work);
+	CPUThreadExecutor(vector<CPUDescriptor*> const* cpus, T* work);
 	~CPUThreadExecutor();
 
 	void run();
@@ -34,16 +34,16 @@ private:
 	pthread_t thread;
 
 	template <class Executor>
-	friend void* execute_cpu_thread(Executor *param);
+	friend void* execute_cpu_thread(void* param);
 };
 
 template <class CPUDescriptor, class T>
-CPUThreadExecutor<CPUDescriptor, T>::CPUThreadExecutor(vector<CPUDescriptor*>* cpus, T* work)
-: num_cpus(cpus.size()), work(work) {
+CPUThreadExecutor<CPUDescriptor, T>::CPUThreadExecutor(vector<CPUDescriptor*> const* cpus, T* work)
+: num_cpus(cpus->size()), work(work) {
 	this->cpus = new CPUDescriptor*[num_cpus];
 
 	for(size_t i = 0; i < num_cpus; i++) {
-		this->cpus[i] = cpus[i];
+		this->cpus[i] = (*cpus)[i];
 	}
 }
 
@@ -54,7 +54,8 @@ CPUThreadExecutor<CPUDescriptor, T>::~CPUThreadExecutor() {
 
 template <class CPUDescriptor, class T>
 void CPUThreadExecutor<CPUDescriptor, T>::run() {
-	pthread_create(&thread, NULL, execute_cpu_thread, this);
+//	std::cout << "calling run" << std::endl;
+	pthread_create(&thread, NULL, execute_cpu_thread<CPUThreadExecutor<CPUDescriptor, T> >, this);
 }
 
 template <class CPUDescriptor, class T>
@@ -64,7 +65,7 @@ void CPUThreadExecutor<CPUDescriptor, T>::join() {
 
 template <class CPUDescriptor, class T>
 void CPUThreadExecutor<CPUDescriptor, T>::execute() {
-	#ifdef ENV_LINUX_GCC
+#ifdef ENV_LINUX_GCC
 	int err;
 	cpu_set_t cpu_affinity;
 	CPU_ZERO(&cpu_affinity);
@@ -101,15 +102,16 @@ void CPUThreadExecutor<CPUDescriptor, T>::execute() {
 	}
 
 	#endif*/
-	#endif
-
+#endif
 	work->run();
 }
 
 template <class Executor>
 void *execute_cpu_thread(void *param) {
+//	std::cout << "exec cpu thread " << param << std::endl;
 	Executor* exec = (Executor*) param;
-	exec->run();
+	exec->execute();
+	return NULL;
 }
 
 }
