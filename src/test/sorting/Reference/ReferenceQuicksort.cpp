@@ -16,7 +16,7 @@
 namespace pheet {
 
 const procs_t ReferenceQuicksort::max_cpus = 1;
-const char ReferenceQuicksort::name[] = "ReferenceSTLSort";
+const char ReferenceQuicksort::name[] = "ReferenceQuicksort";
 const char ReferenceQuicksort::scheduler_name[] = "none";
 
 ReferenceQuicksort::ReferenceQuicksort(procs_t cpus, unsigned int* data, size_t length)
