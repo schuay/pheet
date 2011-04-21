@@ -14,7 +14,7 @@
 #include "Reference/ReferenceSTLSort.h"
 #include "MixedMode/MixedModeForkJoinQuicksort.h"
 
-#include "../../em/CPUHierarchy/Simple/SimpleCPUHierarchy.h"
+#include "../../em/CPUHierarchy/Oversubscribed/OversubscribedSimpleCPUHierarchy.h"
 
 #include "../../ds/CircularArray/FixedSize/FixedSizeCircularArray.h"
 #include "../../ds/StealingDeque/CircularArray/CircularArrayStealingDeque.h"
@@ -51,8 +51,8 @@ void SortingTests::run_test() {
 	std::cout << "----" << std::endl;
 	std::cout << "test\tsorter\tscheduler\ttype\tsize\tseed\tcpus\ttime\truns" << std::endl;
 
-	this->run_sorter<MixedModeForkJoinQuicksort<SequentialTaskMixedModeScheduler<SimpleCPUHierarchy, FixedSizeCircularArrayStealingDeque, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff> > >();
-	this->run_sorter<MixedModeForkJoinQuicksort<SynchroneousMixedModeScheduler<SimpleCPUHierarchy> > >();
+	this->run_sorter<MixedModeForkJoinQuicksort<SequentialTaskMixedModeScheduler<OversubscribedSimpleCPUHierarchy, FixedSizeCircularArrayStealingDeque, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff> > >();
+	this->run_sorter<MixedModeForkJoinQuicksort<SynchroneousMixedModeScheduler<OversubscribedSimpleCPUHierarchy> > >();
 	this->run_sorter<ReferenceSTLSort>();
 }
 

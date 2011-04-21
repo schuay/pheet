@@ -9,7 +9,11 @@
 #ifndef SETTINGS_H_
 #define SETTINGS_H_
 
+#include "src/misc/types.h"
+
 #define NDEBUG
+
+const pheet::procs_t system_max_cpus = 2;
 
 
 #define ENV_LINUX_GCC	1

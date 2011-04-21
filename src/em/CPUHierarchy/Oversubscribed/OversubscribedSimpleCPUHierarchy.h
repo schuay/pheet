@@ -14,8 +14,24 @@ namespace pheet {
 
 class OversubscribedSimpleCPUHierarchy {
 public:
-	OversubscribedSimpleCPUHierarchy();
+	typedef SimpleCPUHierarchy::CPUDescriptor CPUDescriptor;
+
+	OversubscribedSimpleCPUHierarchy(procs_t np);
 	~OversubscribedSimpleCPUHierarchy();
+
+	procs_t get_size();
+	std::vector<OversubscribedSimpleCPUHierarchy*> const* get_subsets();
+	std::vector<CPUDescriptor*> const* get_cpus();
+
+private:
+	OversubscribedSimpleCPUHierarchy(SimpleCPUHierarchy* simple_hierarchy);
+
+	procs_t np;
+	SimpleCPUHierarchy* simple_hierarchy;
+	bool allocated_simple_hierarchy;
+
+	std::vector<OversubscribedSimpleCPUHierarchy*> subsets;
+	std::vector<CPUDescriptor*> cpus;
 };
 
 }
