@@ -13,10 +13,8 @@
 
 namespace pheet {
 
-const procs_t system_max_cpus = 2;
-
 const bool sorting_test = true;
-const procs_t sorting_test_cpus[] = {/*1,*/ 2, 4, 8, 16};
+const procs_t sorting_test_cpus[] = {1, 2, 4, 8, 16};
 const unsigned int sorting_test_seeds[] = {0, 1, 2, 3, 4};
 const size_t sorting_test_n[] = {10000000, 100000000, 8388607, 33554431};
 const int sorting_test_types[] = {0, 1};
