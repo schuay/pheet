@@ -9,8 +9,8 @@
 #ifndef MIXEDMODEFORKJOINQUICKSORTTASK_H_
 #define MIXEDMODEFORKJOINQUICKSORTTASK_H_
 
+#include <functional>
 #include <algorithm>
-#include <iostream>
 
 namespace pheet {
 
@@ -46,7 +46,7 @@ void MixedModeForkJoinQuicksortTask<Task, CUTOFF_LENGTH>::operator()(typename Ta
 	unsigned int * middle = std::partition(data, data + length - 1,
 		std::bind2nd(std::less<unsigned int>(), *(data + length - 1)));
 	size_t pivot = middle - data;
-	swap(*(data + length - 1), *middle);    // move pivot to middle
+	std::swap(*(data + length - 1), *middle);    // move pivot to middle
 
 	if(pivot > CUTOFF_LENGTH) {
 		tec.template spawn<MixedModeForkJoinQuicksortTask<Task, CUTOFF_LENGTH> >(data, pivot);

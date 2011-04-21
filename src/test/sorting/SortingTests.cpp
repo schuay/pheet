@@ -12,6 +12,7 @@
 #include "../../sched/MixedMode/SequentialTask/SequentialTaskMixedModeScheduler.h"
 
 #include "Reference/ReferenceSTLSort.h"
+#include "Reference/ReferenceQuicksort.h"
 #include "MixedMode/MixedModeForkJoinQuicksort.h"
 
 #include "../../em/CPUHierarchy/Oversubscribed/OversubscribedSimpleCPUHierarchy.h"
@@ -53,6 +54,7 @@ void SortingTests::run_test() {
 
 	this->run_sorter<MixedModeForkJoinQuicksort<SequentialTaskMixedModeScheduler<OversubscribedSimpleCPUHierarchy, FixedSizeCircularArrayStealingDeque, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff> > >();
 	this->run_sorter<MixedModeForkJoinQuicksort<SynchroneousMixedModeScheduler<OversubscribedSimpleCPUHierarchy> > >();
+	this->run_sorter<ReferenceQuicksort>();
 	this->run_sorter<ReferenceSTLSort>();
 }
 
