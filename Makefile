@@ -19,13 +19,16 @@ include src/sub.mk
 lib/%.o : src/%.cpp
 	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) -o $@ $<
 
-$(TARGET):	$(OBJS)
-	$(CXX) -c $(TARGET) $(OBJS) $(LIBS)
+#$(TARGET):	$(OBJS)
+#	$(CXX) -c $(TARGET) $(OBJS) $(LIBS)
 
-$(TEST_TARGET):	$(TEST_OBJS) $(OBJS)
-	$(CXX) -o $(TEST_TARGET) $(TEST_OBJS) $(OBJS) $(TEST_LIBS)
+$(TARGET):	$(OBJS)
+	ld -r -o $(TARGET) $(OBJS)
+
+$(TEST_TARGET):	$(TEST_OBJS) $(OBJS) $(TARGET)
+	$(CXX) -o $(TEST_TARGET) $(TEST_OBJS) $(TARGET) $(TEST_LIBS)
 	
-all:	$(TEST_TARGET)
+all:	$(TARGET) $(TEST_TARGET)
 
 test:	$(TEST_TARGET)
 

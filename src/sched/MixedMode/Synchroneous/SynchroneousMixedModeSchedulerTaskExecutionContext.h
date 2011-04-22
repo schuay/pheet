@@ -2,7 +2,8 @@
  * SynchroneousMixedModeSchedulerTaskExecutionContext.h
  *
  *  Created on: 19.04.2011
- *      Author: mwimmer
+ *      Author: Martin Wimmer
+ *     License: Pheet License
  */
 
 #ifndef SYNCHRONEOUSMIXEDMODESCHEDULERTASKEXECUTIONCONTEXT_H_
