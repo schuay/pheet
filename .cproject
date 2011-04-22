@@ -15,7 +15,7 @@
 </extensions>
 </storageModule>
 <storageModule moduleId="cdtBuildSystem" version="4.0.0">
-<configuration artifactName="runtime" buildProperties="" id="cdt.managedbuild.toolchain.gnu.base.414508193" name="Default" parent="org.eclipse.cdt.build.core.emptycfg">
+<configuration artifactName="pheet" buildProperties="" id="cdt.managedbuild.toolchain.gnu.base.414508193" name="Default" parent="org.eclipse.cdt.build.core.emptycfg">
 <folderInfo id="cdt.managedbuild.toolchain.gnu.base.414508193.139944522" name="/" resourcePath="">
 <toolChain id="cdt.managedbuild.toolchain.gnu.base.1352169187" name="cdt.managedbuild.toolchain.gnu.base" superClass="cdt.managedbuild.toolchain.gnu.base">
 <targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.target.gnu.platform.base.1864024454" name="Debug Platform" osList="linux,hpux,aix,qnx" superClass="cdt.managedbuild.target.gnu.platform.base"/>
@@ -117,6 +117,6 @@
 </cconfiguration>
 </storageModule>
 <storageModule moduleId="cdtBuildSystem" version="4.0.0">
-<project id="runtime.null.1634436129" name="runtime"/>
+<project id="pheet.null.1634436129" name="pheet"/>
 </storageModule>
 </cproject>
