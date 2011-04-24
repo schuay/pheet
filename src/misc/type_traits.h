@@ -15,7 +15,7 @@ namespace pheet {
 
 template <typename T>
 class nullable_traits {
-	static const T null_value;
+	static T const null_value;
 };
 
 template <typename T>
