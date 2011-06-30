@@ -136,6 +136,14 @@ TT CircularArrayStealingDeque<TT, CircularArray>::pop() {
 }
 
 template <typename TT, template <typename S> class CircularArray>
+TT CircularArrayStealingDeque<TT, CircularArray>::peek() {
+	if(bottom == (top & top_mask))
+		return null_element;
+
+	return data.get(bottom);
+}
+
+template <typename TT, template <typename S> class CircularArray>
 TT CircularArrayStealingDeque<TT, CircularArray>::steal() {
 	size_t old_top = top;
 	MEMORY_FENCE();

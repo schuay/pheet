@@ -26,6 +26,7 @@ template <class Task, class Barrier>
 struct BasicMixedModeSchedulerState {
 	BasicMixedModeSchedulerState();
 
+	procs_t team_size;
 	uint8_t current_state;
 	Barrier state_barrier;
 	Task *startup_task;
@@ -58,6 +59,9 @@ public:
 
 	template<class CallTaskType, typename ... TaskParams>
 	void finish(TaskParams ... params);
+
+	template<class CallTaskType, typename ... TaskParams>
+	void finish_nt(procs_t nt, TaskParams ... params);
 
 	static char const name[];
 	static procs_t const max_cpus;
@@ -141,7 +145,14 @@ void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::i
 template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
 template<class CallTaskType, typename ... TaskParams>
 void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::finish(TaskParams ... params) {
+	finish_nt(1, params ...);
+}
+
+template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
+template<class CallTaskType, typename ... TaskParams>
+void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::finish_nt(procs_t nt, TaskParams ... params) {
 	CallTaskType task(params ...);
+	state.team_size = nt;
 	state.startup_task = &task;
 	state.current_state = 1;
 

@@ -24,7 +24,18 @@
  */
 namespace pheet {
 
+template <class TaskExecutionContext>
 struct BasicMixedModeSchedulerTaskExecutionContextStackElement {
+	// coordinator for the task being executed
+	TaskExecutionContext* coordinator;
+
+	// size of the team
+	procs_t team_size;
+	procs_t local_id;
+
+	// whether the team had to be built for this task (otherwise we reused a team of a parent task)
+	bool new_team;
+
 	// Modified by local thread. Incremented when task is spawned, decremented when finished
 	size_t num_spawned;
 
@@ -47,8 +58,8 @@ union registration {
 	uint64_t complete;
 	struct {
 		uint16_t c;	// counter
-		uint16_t r;	// required threads
-		uint16_t t;	// teamed threads
+		uint16_t r;	// required threads - 1 bit used to mark rebuilding
+		uint16_t t;	// teamed threads - 1 bit used to mark a team able to process an rebuilt
 		uint16_t a;	// acquired threads
 	} parts;
 };
@@ -125,31 +136,31 @@ public:
 	template<class CallTaskType, typename ... TaskParams>
 		void spawn_nt(procs_t nt_size, TaskParams ... params);
 
-	void rebuild_team();
+	void sync_team();
 
 private:
 	void run();
 	void execute_task(Task* task, StackElement* parent);
+	void execute_task_nt(procs_t team_size, Task* task, StackElement* parent);
 	void main_loop();
 	void process_queue();
 	void empty_stack(size_t limit);
 
 	void build_team(procs_t nt_size);
-	void resize_team(procs_t nt_size);
 
 	procs_t get_level_for_num_threads(procs_t num_threads);
 
+	// Stack is maintained locally by each thread (even in a team)
 	static size_t const stack_size;
 	StackElement* stack;
 	size_t stack_filled;
 
+	// machine hierarchy
 	LevelDescription* levels;
 	procs_t num_levels;
 
-	// Information about current team (local)
+	// Information needed for team-building process (accessed remotely)
 	TaskExecutionContext* coordinator;
-	procs_t local_id;
-	procs_t team_size;
 
 	// Information whether current team is in sync (local)
 	bool in_sync;
@@ -213,7 +224,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::run(
 	Task* startup_task = scheduler_state->startup_task;
 	if(startup_task != NULL) {
 		if(PTR_CAS(&(scheduler_state->startup_task), startup_task, NULL)) {
-			execute_task(startup_task, NULL);
+			execute_task_nt(scheduler_state->team_size, startup_task, NULL);
 		}
 	}
 	main_loop();
@@ -281,16 +292,16 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::main
 
 template <class Scheduler, template <typename T> class StealingDeque>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::process_queue() {
-	DequeItem di = stealing_deque.pop();
+	DequeItem di = stealing_deque.peek();
 	while(di.task != NULL) {
 		// Warning, no distinction between locally spawned tasks and remote tasks
 		// But this makes it easier with the finish construct, etc.
 		// Otherwise we would have to empty our deque on the next finish call
 		// which is bad for balancing
-		execute_task(di.task, di.stack_element);
+		execute_task_nt(di.team_size, di.task, di.stack_element);
 		delete di.task;
 		empty_stack(0);
-		di = stealing_deque.pop();
+		di = stealing_deque.peek();
 	}
 }
 
@@ -303,6 +314,11 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::empt
 		size_t se = stack_filled - 1;
 		if(stack[se].num_spawned == stack[se].num_finished_remote) {
 			stack_filled = se;
+
+			// this currently prevents reusing a team for the next task in the queue if it created a new team
+			// needs to be improved (maybe use second variable for this?)
+			in_sync &= !stack[se].new_team;
+
 			StackElement * parent = stack[stack_filled].parent;
 			if(parent == NULL) {
 				if(stack_filled == 0) {
@@ -332,7 +348,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::empt
 }
 
 template <class Scheduler, template <typename T> class StealingDeque>
-void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::rebuild_team() {
+void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::sync_team() {
 	if(!in_sync) {
 		build_team(team_size);
 	}
@@ -348,11 +364,15 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::resi
  */
 template <class Scheduler, template <typename T> class StealingDeque>
 procs_t BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::get_level_for_num_threads(procs_t num_threads) {
-	procs_t candidate = find_last_bit_set(num_threads);
+	procs_t candidate = num_levels;
+	while(candidate > 0 && levels[candidate - 1].total_size < num_threads) {
+		--candidate;
+	}
+/*	procs_t candidate = find_last_bit_set(num_threads);
 	while(candidate < num_levels && levels[candidate].total_size < num_threads) {
 		++candidate;
-	}
-	return candidate;
+	}*/
+	return candidate - 1;
 }
 
 template <class Scheduler, template <typename T> class StealingDeque>
