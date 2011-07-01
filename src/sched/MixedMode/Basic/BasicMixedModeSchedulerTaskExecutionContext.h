@@ -24,18 +24,17 @@
  */
 namespace pheet {
 
-template <class TaskExecutionContext>
+union BasicMixedModeSchedulerTaskExecutionContextRegistration {
+	uint64_t complete;
+	struct {
+		uint16_t c;	// counter
+		uint16_t r;	// required threads - 1 bit used to mark rebuilding
+		uint16_t t;	// teamed threads - 1 bit used to mark a team able to process an rebuilt
+		uint16_t a;	// acquired threads
+	} parts;
+};
+
 struct BasicMixedModeSchedulerTaskExecutionContextStackElement {
-	// coordinator for the task being executed
-	TaskExecutionContext* coordinator;
-
-	// size of the team
-	procs_t team_size;
-	procs_t local_id;
-
-	// whether the team had to be built for this task (otherwise we reused a team of a parent task)
-	bool new_team;
-
 	// Modified by local thread. Incremented when task is spawned, decremented when finished
 	size_t num_spawned;
 
@@ -46,22 +45,52 @@ struct BasicMixedModeSchedulerTaskExecutionContextStackElement {
 	BasicMixedModeSchedulerTaskExecutionContextStackElement* parent;
 };
 
+/*
+ * Information about the next task to execute
+ *
+ * after retrieving the TeamTaskData element, countdown has to be atomically decremented
+ * the last thread to decrement countdown has to either:
+ * - set the pointer on the team-stack to NULL, signalling, that all threads in the team have started execution, or
+ * - delete the previous task and decrement num_finished_remote in the parent stack element
+ *
+ * As long as the next pointer is NULL, there is more to come. (Other threads just have to wait.
+ * 	If out of sync they can execute other tasks in the meantime)
+ * A TeamTaskData element with a task pointer set to NULL is the last in the series. There, countdown
+ * 	also has to be decremented, to make sure the previous task is finished correctly
+ */
+//
+template <class Task, class StackElement>
+struct BasicMixedModeSchedulerTaskExecutionContextTeamTaskData {
+	Task* task;
+	BasicMixedModeSchedulerTaskExecutionContextTeamTaskData<Task>* next;
+	StackElement* parent;
+	procs_t countdown;
+};
+
+template <class TeamTaskData>
+struct BasicMixedModeSchedulerTaskExecutionContextTeamStackElement {
+	BasicMixedModeSchedulerTaskExecutionContextRegistration reg;
+	procs_t team_level;
+	procs_t team_size;
+	TeamTaskData* task;
+};
+
+template <class TaskExecutionContext>
+struct BasicMixedModeSchedulerTaskExecutionContextLocalTeamStackElement {
+	// coordinator for the task being executed
+	TaskExecutionContext* coordinator;
+
+	// size of the team
+	procs_t team_size;
+	procs_t local_id;
+};
+
 template <class TaskExecutionContext>
 struct BasicMixedModeSchedulerTaskExecutionContextLevelDescription {
 	TaskExecutionContext** partners;
 	procs_t num_partners;
 	procs_t local_id;
 	procs_t total_size;
-};
-
-union registration {
-	uint64_t complete;
-	struct {
-		uint16_t c;	// counter
-		uint16_t r;	// required threads - 1 bit used to mark rebuilding
-		uint16_t t;	// teamed threads - 1 bit used to mark a team able to process an rebuilt
-		uint16_t a;	// acquired threads
-	} parts;
 };
 
 template <class TaskExecutionContext>
@@ -105,6 +134,7 @@ BasicMixedModeSchedulerTaskExecutionContextDequeItem<TaskExecutionContext> const
 template <class Scheduler, template <typename T> class StealingDeque>
 class BasicMixedModeSchedulerTaskExecutionContext {
 public:
+	typedef BasicMixedModeSchedulerTaskExecutionContextRegistration Registration;
 	typedef BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque> TaskExecutionContext;
 	typedef BasicMixedModeSchedulerTaskExecutionContextLevelDescription<BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque> > LevelDescription;
 	typedef typename Scheduler::Backoff Backoff;
@@ -112,6 +142,9 @@ public:
 	typedef typename Scheduler::Task Task;
 	typedef BasicMixedModeSchedulerTaskExecutionContextStackElement StackElement;
 	typedef BasicMixedModeSchedulerTaskExecutionContextDequeItem<BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque> > DequeItem;
+	typedef BasicMixedModeSchedulerTaskExecutionContextTeamTaskData<Task, StackElement> TeamTaskData;
+	typedef BasicMixedModeSchedulerTaskExecutionContextTeamStackElement<TeamTaskData> TeamStackElement;
+	typedef BasicMixedModeSchedulerTaskExecutionContextLocalTeamStackElement<TaskExecutionContext> LocalTeamStackElement;
 
 	BasicMixedModeSchedulerTaskExecutionContext(vector<LevelDescription*> const* levels, vector<typename CPUHierarchy::CPUDescriptor*> const* cpus, typename Scheduler::State* scheduler_state);
 	~BasicMixedModeSchedulerTaskExecutionContext();
@@ -141,7 +174,6 @@ public:
 private:
 	void run();
 	void execute_task(Task* task, StackElement* parent);
-	void execute_task_nt(procs_t team_size, Task* task, StackElement* parent);
 	void main_loop();
 	void process_queue();
 	void empty_stack(size_t limit);
@@ -150,30 +182,28 @@ private:
 
 	procs_t get_level_for_num_threads(procs_t num_threads);
 
-	// Stack is maintained locally by each thread (even in a team)
+	// Stack is only used by the coordinator (first item is always a 1-thread team)
 	static size_t const stack_size;
 	StackElement* stack;
 	size_t stack_filled;
+
+	// Stack of teams coordinated by this thread (first item is always its own bottom 1-thread team)
+	static size_t const team_stack_size;
+	TeamStackElement* team_stack;
+	size_t team_stack_filled;
+	size_t team_stack_built;
+
+	// Stack of all teams - contains information like coordinator and local_id
+	LocalTeamStackElement* local_team_stack;
+	size_t local_team_stack_filled;
+	size_t local_team_stack_built;
 
 	// machine hierarchy
 	LevelDescription* levels;
 	procs_t num_levels;
 
-	// Information needed for team-building process (accessed remotely)
-	TaskExecutionContext* coordinator;
-
 	// Information whether current team is in sync (local)
 	bool in_sync;
-
-	// Each thread counts the tasks it has executed in this team (needed for barrier, etc.) (local)
-	size_t num_executed_team_tasks;
-
-	// All non-coordinators signal task start
-	Barrier taskExecutionBarrier;
-
-	// Next task to execute. null means we have finished executing the last task. (how do we distinguish it from cases where it hasn't been set yet. is this possible?)
-	// Last task to finish executing the given task is responsible for updating num_finished_remote? (what are the implications. what if it is a "local" task)
-	DequeItem* nextTask;
 
 
 	CPUThreadExecutor<typename CPUHierarchy::CPUDescriptor, BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque> > thread_executor;
@@ -189,8 +219,14 @@ template <class Scheduler, template <typename T> class StealingDeque>
 size_t const BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::stack_size = 256;
 
 template <class Scheduler, template <typename T> class StealingDeque>
+size_t const BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::team_stack_size = 256;
+
+template <class Scheduler, template <typename T> class StealingDeque>
+size_t const BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::local_team_stack_size = 256;
+
+template <class Scheduler, template <typename T> class StealingDeque>
 BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::BasicMixedModeSchedulerTaskExecutionContext(vector<LevelDescription*> const* levels, vector<typename CPUHierarchy::CPUDescriptor*> const* cpus, typename Scheduler::State* scheduler_state)
-: stack_filled(0), num_levels(levels->size()), thread_executor(cpus, this), scheduler_state(scheduler_state), stealing_deque(find_last_bit_set((*levels)[0]->total_size - 1) << 4), coordinator(this), local_id(0), team_size(1), in_sync(true) {
+: stack_filled(0), num_levels(levels->size()), thread_executor(cpus, this), scheduler_state(scheduler_state), stealing_deque(find_last_bit_set((*levels)[0]->total_size - 1) << 4), in_sync(true) {
 	stack = new StackElement[stack_size];
 	this->levels = new LevelDescription[num_levels];
 	procs_t local_id = 0;
@@ -202,12 +238,32 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::BasicMixe
 		this->levels[i].total_size = (*levels)[i]->total_size;
 	}
 
+	team_stack = new TeamStackElement[team_stack_size];
+	team_stack[0].team_level = num_levels - 1;
+	team_stack[0].team_size = 1;
+	team_stack[0].task = NULL;
+	team_stack[0].reg.c = 0;
+	team_stack[0].reg.r = 1;
+	team_stack[0].reg.t = 1;
+	team_stack[0].reg.a = 1;
+	team_stack_built = 1;
+	team_stack_filled = 1;
+
+	local_team_stack = new LocalTeamStackElement[local_team_stack_size];
+	local_team_stack[0].coordinator = this;
+	local_team_stack[0].local_id = 0;
+	local_team_stack[0].team_size = 1;
+	local_team_stack_built = 1;
+	local_team_stack_filled = 1;
+
 	thread_executor.run();
 }
 
 template <class Scheduler, template <typename T> class StealingDeque>
 BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::~BasicMixedModeSchedulerTaskExecutionContext() {
 	delete[] stack;
+	delete[] team_stack;
+	delete[] local_team_stack;
 	delete[] levels;
 }
 
