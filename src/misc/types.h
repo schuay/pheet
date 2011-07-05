@@ -14,6 +14,7 @@
 namespace pheet {
 
 typedef size_t procs_t;
+#define PROCST_FETCH_AND_SUB(p, val)		(SIZET_FETCH_AND_SUB(p, val))
 
 }
 
