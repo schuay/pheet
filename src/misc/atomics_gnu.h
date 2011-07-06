@@ -13,6 +13,7 @@
 #define INT_CAS(p, old_v, new_v)	(__sync_bool_compare_and_swap(p, old_v, new_v))
 #define INT32_CAS(p, old_v, new_v)	(__sync_bool_compare_and_swap(p, old_v, new_v))
 #define INT64_CAS(p, old_v, new_v)	(__sync_bool_compare_and_swap(p, old_v, new_v))
+#define UINT64_CAS(p, old_v, new_v)	(__sync_bool_compare_and_swap(p, old_v, new_v))
 #define UINT_CAS(p, old_v, new_v)	(__sync_bool_compare_and_swap(p, old_v, new_v))
 #define LONG_CAS(p, old_v, new_v)	(__sync_bool_compare_and_swap(p, old_v, new_v))
 #define ULONG_CAS(p, old_v, new_v)	(__sync_bool_compare_and_swap(p, old_v, new_v))

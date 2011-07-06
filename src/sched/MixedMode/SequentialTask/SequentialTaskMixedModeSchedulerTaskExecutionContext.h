@@ -101,8 +101,6 @@ public:
 	template<class CallTaskType, typename ... TaskParams>
 		void spawn(TaskParams ... params);
 
-	template<class CallTaskType, typename ... TaskParams>
-		void local_finish(TaskParams ... params);
 private:
 	void run();
 	void execute_task(Task* task, StackElement* parent);
@@ -295,6 +293,8 @@ void SequentialTaskMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeq
 	// Create a new stack element for new task
 	// num_finished_remote is not required as this stack element blocks lower ones from finishing anyway
 	execute_task(&task, NULL);
+
+	// TODO: process other tasks until this task is finished
 }
 
 template <class Scheduler, template <typename T> class StealingDeque>
@@ -319,12 +319,6 @@ template<class CallTaskType, typename ... TaskParams>
 void SequentialTaskMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::call(TaskParams ... params) {
 	CallTaskType task(params ...);
 	task(*this);
-}
-
-template <class Scheduler, template <typename T> class StealingDeque>
-template<class CallTaskType, typename ... TaskParams>
-void SequentialTaskMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::local_finish(TaskParams ... params) {
-	finish<CallTaskType>(params ...);
 }
 
 }
