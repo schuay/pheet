@@ -331,6 +331,12 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::call
 	// Execute task
 	(*task)(*this);
 
+	// Do some other work in the team until the top stack element has been finished (which means we should exit execution)
+	// No stealing! No execution of tasks > team level.
+	// Processing of unrelated tasks may postpone continuation of parent task.
+	// When either queue is empty, or the top stack element is finished, this method terminates
+	coordinate_team_until_finished(&(stack[stack_filled-1]));
+
 	// Close down team
 	disband_team();
 }
@@ -490,8 +496,172 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::proc
 	}
 }
 
+template <class Scheduler, template <typename T> class StealingDeque>
+void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::follow_coordinator() {
+	TaskExecutionContext* coordinator = team->coordinator;
+
+	procs_t team_level = team->team_level;
+	assert(team_level < (num_levels - 1));
+	procs_t sub_team_size = coordinator->levels[team_level + 1].total_size;
+	procs_t max_team_size = levels[team_level].total_size;
+	procs_t local_id = levels[team_level].local_id;
+	procs_t coordinator_id = coordinator->levels[team_level].local_id;
+	procs_t team_size = current_task_data->team_size;
+	if(coordinator_id >= (max_team_size - sub_team_size)) {
+		// Reverse ids if coordinator is in the right sub-team
+		coordinator_id = max_team_size - coordinator_id - 1;
+		local_id = max_team_size - local_id - 1;
+	}
+
+	// First task should always exist
+	assert(current_task_data->task != NULL);
+
+	while(true) {
+		if(team_size <= local_id) {
+			// Thread not needed for next task, but still in team
+			in_sync = false;
+		}
+		else {
+			// Execute task
+			(*(current_task_data->task))(*this);
+		}
+
+		// Wait for next task to be ready
+		Backoff bo;
+		if(in_sync) {
+			while(current_task_data->next == NULL) {
+				// make sure we stay in sync, so only back off
+				bo.backoff();
+			}
+		}
+		else {
+			// We are out of sync. Do something different until we proceed
+			while(current_task_data->next == NULL) {
+				if(!process_queue_task(team_level + 1)) {
+					if(!visit_team_partners(team_level)) {
+						bo.backoff();
+					}
+				}
+			}
+		}
+
+		// Signal that we have moved on to next task
+		TeamTaskData* next_task = current_task_data->next;
+		if((PROCST_FETCH_AND_SUB(&(next_task->countdown), 1)) == 1) {
+			// Last thread to find next task - do some cleanup
+
+			FinishStackElement* parent = current_task->parent;
+
+			assert(parent != NULL);
+			// Note: coordinator will never do this as it always executes all tasks first so it can never be last
+			// (except for single-threaded tasks)
+
+			signal_task_completion(parent);
+
+			if(current_task_data->free_memory) {
+				// TODO: Maybe we can drop this flag in task data, as this delete routine is only called by teams?
+				// And for teams we have to always use dynamic memory allocation anyway...
+				delete current_task_data->task;
+				delete current_task_data;
+			}
+		}
+		current_task_data = next_task;
+		if(next_task->task == NULL) {
+			// Signals last team task - exit
+			break;
+		}
+
+		// Update team_size etc...
+		assert(current_task_data->team_size <= max_team_size);
+		if(team_size < next_task->team_size) {
+			in_sync = false;
+		}
+
+		team_size = current_task_data->team_size;
+		while(team_size <= sub_team_size) {
+			// Team is resized to a smaller team
+			if(local_id >= sub_team_size) {
+				// Thread not needed for team any more as team has been resized
+				break;
+			}
+			++team_level;
+			max_team_size = sub_team_size;
+			sub_team_size = coordinator->levels[team_level + 1].total_size;
+			local_id = levels[team_level].local_id;
+			coordinator_id = coordinator->levels[team_level].local_id;
+
+			if(coordinator_id >= (max_team_size - sub_team_size)) {
+				// Reverse ids if coordinator is in the right sub-team
+				coordinator_id = max_team_size - coordinator_id - 1;
+				local_id = max_team_size - local_id - 1;
+			}
+		}
+	}
+}
+
+template <class Scheduler, template <typename T> class StealingDeque>
+void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::coordinate_team_until_finished(FinishStackElement* to_finish) {
+	// Do some other work in the team until the stack element has been finished
+	// No stealing! No execution of tasks > team level.
+	// Processing of unrelated tasks may postpone continuation of parent task.
+	// When either queue is empty, or stack element is finished, this method terminates
+
+	// calculate ids, etc.
+	procs_t team_level = team->team_level;
+	assert(team_level < (num_levels - 1));
+	procs_t sub_team_size = levels[team_level + 1].total_size;
+	procs_t max_team_size = levels[team_level].total_size;
+	procs_t coordinator_id = levels[team_level].local_id;
+	procs_t team_size;
+	if(coordinator_id >= (max_team_size - sub_team_size)) {
+		// Reverse ids if coordinator is in the right sub-team
+		coordinator_id = max_team_size - coordinator_id - 1;
+	}
+	procs_t local_id = coordinator_id;
+
+	while(to_finish->num_spawned != to_finish_num_finished_remote) {
+		// Get new queue item
+		DequeItem di = get_next_local_task(team_level);
+		if(di == NULL) {
+			// out of work. we can exit
+			break;
+		}
 
 
+		TeamTaskData* task_data = new TeamTaskData();
+		task_data->team_size = di.team_size;
+		task_data->free_memory = true;
+		task_data->countdown = max_team_size - 1;
+		task_data->next = NULL;
+		task_data->parent = di.stack_element;
+		task_data->next = di.task;
+
+		// Make sure all changes to task_data are visible before the pointer is available
+		MEMORY_FENCE();
+		current_task_data->next = task_data;
+
+		// Check if team has been resized
+		while(team_size <= sub_team_size) {
+			// Team is resized to a smaller team
+			if(local_id >= sub_team_size) {
+				// Thread not needed for team any more as team has been resized
+				break;
+			}
+			++team_level;
+			max_team_size = sub_team_size;
+			sub_team_size = levels[team_level + 1].total_size;
+			coordinator_id = levels[team_level].local_id;
+
+			if(coordinator_id >= (max_team_size - sub_team_size)) {
+				// Reverse ids if coordinator is in the right sub-team
+				coordinator_id = max_team_size - coordinator_id - 1;
+			}
+			local_id = coordinator_id;
+		}
+
+		(*(di.task))(this);
+	}
+}
 
 
 
