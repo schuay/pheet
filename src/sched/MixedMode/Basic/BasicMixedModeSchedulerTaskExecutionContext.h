@@ -593,6 +593,12 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::foll
 	// First task should always exist
 	assert(current_task_data->task != NULL);
 
+	if((PROCST_FETCH_AND_SUB(&(current_task_data->countdown), 1)) == 1) {
+		// Last thread to find first task - do some cleanup
+
+		// TODO: set current_task_data pointer at coordinator to NULL
+	}
+
 	while(true) {
 		if(team_size <= local_id) {
 			// Thread not needed for next task, but still in team
@@ -626,9 +632,9 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::foll
 			FinishStackElement* parent = current_task->parent;
 
 			assert(parent != NULL);
+
 			// Note: coordinator will never do this as it always executes all tasks first so it can never be last
 			// (except for single-threaded tasks)
-
 			signal_task_completion(parent);
 
 			if(current_task_data->free_memory) {
@@ -675,6 +681,11 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::foll
 			}
 		}
 	}
+
+	// TODO: make sure we don't exit coordination until current_task_data at coor has been set to NULL
+	// (or we might end up reexecuting the task)
+	// Alternative: coordinator only reuses the team information structure after current_task_data has been set to NULL => maybe even better solution
+	// but: some threads might encounter old team pointers from threads in the team
 }
 
 template <class Scheduler, template <typename T> class StealingDeque>
@@ -1023,7 +1034,71 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::call
 	}
 }
 
+template <class Scheduler, template <typename T> class StealingDeque>
+template<class CallTaskType, typename ... TaskParams>
+void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::finish_nt(procs_t nt_size, TaskParams ... params) {
+	if(is_coordinator()) {
+		assert(stack_filled > 0);
 
+		if(nt_size == 1) {
+			// Create task
+			CallTaskType task(params ...);
+
+			// Create a new stack element for new task
+			// num_finished_remote is not required as this stack element blocks lower ones from finishing anyway
+			finish_team_task(&task, NULL);
+		}
+		else {
+			CallTaskType* task = new CallTaskType(params ...);
+
+			// Create a new stack element for new task
+			// num_finished_remote is not required as this stack element blocks lower ones from finishing anyway
+			finish_task(nt_size, task, NULL);
+		}
+	}
+	else {
+		join_coordinator_subteam(nt_size);
+	}
+}
+
+template <class Scheduler, template <typename T> class StealingDeque>
+template<class CallTaskType, typename ... TaskParams>
+void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::spawn_nt(procs_t nt_size, TaskParams ... params) {
+	// TODO: optimization to use call in some cases to prevent the stack from growing too large
+
+	// TODO: let tasks be spawned by multiple threads
+
+	if(is_coordinator()) {
+		CallTaskType* task = new CallTaskType(params ...);
+		assert(stack_filled > 0);
+		stack[stack_filled - 1].num_spawned++;
+		DequeItem di;
+		di.task = task;
+		di.stack_element = &(stack[stack_filled - 1]);
+		di.team_size = nt_size;
+		stealing_deque.push(di);
+	}
+}
+
+template <class Scheduler, template <typename T> class StealingDeque>
+template<class CallTaskType, typename ... TaskParams>
+void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::call_nt(procs_t nt_size, TaskParams ... params) {
+	if(is_coordinator()) {
+		assert(stack_filled > 0);
+
+		if(team_size == 1) {
+			CallTaskType task(params ...);
+			call_team_task(&task);
+		}
+		else {
+			CallTaskType* task = new CallTaskType(params ...);
+			call_task(team_size, task, &(stack[stack_filled - 1]));
+		}
+	}
+	else {
+		join_coordinator_subteam(nt_size);
+	}
+}
 
 
 
