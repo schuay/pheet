@@ -286,7 +286,7 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::BasicMixe
 	last_team_task->team_size = 1;
 	last_team_task->executed_countdown = 0;
 
-	current_task_data = NULL;
+	current_team_task = NULL;
 
 	thread_executor.run();
 }
@@ -354,7 +354,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::fini
 		parent = start_finish_region(parent);
 
 		// announce team
-		TeamTaskData* tt = announce_team_task(nt_size, task, parent);
+		current_team_task = announce_team_task(nt_size, task, parent);
 
 		// Execute task
 		call_announced_task(task);
@@ -363,7 +363,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::fini
 		signal_current_team_task_completion();
 
 		// Send task to memory reclamation
-		reclamation_queue.push(tt);
+		reclamation_queue.push(current_team_task);
 
 		// Do some other work until the stack element has been finished
 		process_tasks_until_finished(parent);
@@ -380,7 +380,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::call
 	}
 	else {
 		// announce team
-		TeamTaskData* tt = announce_team_task(nt_size, task, parent);
+		current_team_task = announce_team_task(nt_size, task, parent);
 
 		// Execute task
 		call_announced_task(task);
@@ -389,7 +389,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::call
 		signal_current_team_task_completion();
 
 		// Send task to memory reclamation
-		reclamation_queue.push(tt);
+		reclamation_queue.push(current_team_task);
 	}
 }
 
@@ -423,9 +423,6 @@ template <class Scheduler, template <typename T> class StealingDeque>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::call_announced_task(Task* task) {
 	// Execute task
 	(*task)(*this);
-
-	// Bookkeeping - needed for correct cleanup etc.
-	last_executed_task_size = team_size;
 }
 
 template <class Scheduler, template <typename T> class StealingDeque>
@@ -479,6 +476,19 @@ TeamTaskData* BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeq
 	last_team_task->next = team_task;
 
 	return team_task;
+}
+
+/*
+ * Used to notify other threads of a team_finish, so all threads get back to executing the parent task
+ */
+template <class Scheduler, template <typename T> class StealingDeque>
+void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::reannounce_team_task(TeamTaskData* old_team_task) {
+	last_team_task->next_team_level = old_team_task->team_level;
+
+	// Memory fence needed to ensure everything has been written before we set the next pointer
+	MEMORY_FENCE();
+
+	last_team_task->next = old_team_task;
 }
 
 template <class Scheduler, template <typename T> class StealingDeque>
@@ -535,14 +545,20 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::proc
 
 template <class Scheduler, template <typename T> class StealingDeque>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::process_tasks_until_coordinator_resumes(TeamTaskData* parent_team_task) {
-	process_queue();
+	// We are only allowed to execute tasks on lower levels - this ensures we don't accidentally reexecute the task
+	// TODO: What happens if the tiny sub-task calls finish on a larger task?
+	// How do we get other threads to execute this task?
+	// We might do this symmetric. All threads go into this routine. Executed on the next level (like wait_for_team_joins)
+	// But: Sounds expensive - might be an implicit sync-team actually
+	procs_t level = parent_team_task->team_level;
+	process_queue(level);
 
 	while(parent_team_task->next == NULL) {
 		// Try to join teams or steal tasks
-		visit_partners();
+		visit_partners(level);
 
 		// Make sure our queue is empty
-		process_queue();
+		process_queue(level);
 	}
 }
 
@@ -550,7 +566,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::proc
  * Stealing routine for idle threads
  */
 template <class Scheduler, template <typename T> class StealingDeque>
-void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visit_partners() {
+void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visit_partners(procs_t min_level) {
 	Backoff bo;
 	DequeItem di;
 	while(true) {
@@ -558,7 +574,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visi
 
 		// We do not steal from the last level as there are no partners
 		procs_t level = num_levels - 1;
-		while(level > 0) {
+		while(level > min_level) {
 			--level;
 			// For all except the last level we assume num_partners > 0
 			assert(levels[level].num_partners > 0);
@@ -662,7 +678,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::empt
 
 template <class Scheduler, template <typename T> class StealingDeque>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::signal_current_team_task_completion() {
-	if((PROCST_FETCH_AND_SUB(&(current_task_data->countdown), 1)) == 1) {
+	if((PROCST_FETCH_AND_SUB(&(current_team_task->countdown), 1)) == 1) {
 		// Last thread to finish execution - do some cleanup
 
 		assert(current_task->parent != NULL);
@@ -672,7 +688,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::sign
 		signal_task_completion(current_task->parent);
 
 		// For teams we have to always use dynamic memory allocation anyway, so we can always delete the task
-		delete current_task_data->task;
+		delete current_team_task->task;
 	}
 }
 
@@ -713,13 +729,17 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::fina
 }
 
 template <class Scheduler, template <typename T> class StealingDeque>
-void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::process_queue() {
-	DequeItem di = get_next_local_task();
+void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::process_queue(procs_t min_level) {
+	DequeItem di = get_next_local_task(min_level);
 	while(di.task != NULL) {
 		execute_queue_task(di.team_size, di.task, di.stack_element);
 
-	//	empty_stack(0);
-		di = get_next_local_task();
+		di = get_next_local_task(min_level);
+	}
+
+	// Disband team as we ran out of work
+	if(last_team_task->team_size > 1) {
+		announce_solo_task();
 	}
 }
 
@@ -734,8 +754,12 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::proc
 			break;
 		}
 
-	//	empty_stack(0);
 		di = get_next_local_task();
+	}
+
+	// Disband team as we ran out of work
+	if(last_team_task->team_size > 1) {
+		announce_solo_task();
 	}
 }
 
@@ -745,24 +769,11 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::join
 	TaskExecutionContext* prev_coor = announced_coordinators[team_announcement_index];
 	announced_coordinators[team_announcement_index] = coor;
 
-/*	procs_t team_level = team->team_level;
-	assert(team_level < (num_levels - 1));
-	procs_t sub_team_size = coordinator->levels[team_level + 1].total_size;
-	procs_t max_team_size = levels[team_level].total_size;
-	procs_t local_id = levels[team_level].local_id;
-	procs_t coordinator_id = coordinator->levels[team_level].local_id;
-	procs_t team_size = current_task_data->team_size;
-	if(coordinator_id >= (max_team_size - sub_team_size)) {
-		// Reverse ids if coordinator is in the right sub-team
-		coordinator_id = max_team_size - coordinator_id - 1;
-		local_id = max_team_size - local_id - 1;
-	}*/
-
 	TeamInfo ti;
 	team_info = &ti;
 
-	current_task_data = coor->announced_team_tasks[team_announcement_index];
-	prepare_team_info(coor, current_task_data->team_level, current_task_data->team_size);
+	current_team_task = coor->announced_team_tasks[team_announcement_index];
+	prepare_team_info(coor, current_team_task->team_level, current_team_task->team_size);
 
 	// Calculate the team_level at which we have to drop out
 	{
@@ -787,9 +798,9 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::join
 	}
 
 	// First task should always exist
-	assert(current_task_data->task != NULL);
+	assert(current_team_task->task != NULL);
 
-	procs_t ctd = PROCST_FETCH_AND_SUB(&(current_task_data->newcomer_start_countdown), 1);
+	procs_t ctd = PROCST_FETCH_AND_SUB(&(current_team_task->newcomer_start_countdown), 1);
 	// It should never happen that we have more newcomers than relevant
 	assert(ctd != 0);
 	if(ctd == 1) {
@@ -797,81 +808,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::join
 		coor->announced_team_tasks[team_announcement_index] = NULL;
 	}
 
-	while(true) {
-		// Need to do this before
-		if(ti.team_size <= ti.local_id) {
-			// Thread not needed for next task, but still in team
-			in_sync = false;
-		}
-		else {
-			// Execute task
-			call_announced_task(current_task_data->task);
-		}
-		// signal that we finished execution of the task
-		signal_current_team_task_completion();
-
-		// Wait for next task to be ready
-		Backoff bo;
-		if(in_sync) {
-			while(current_task_data->next == NULL) {
-				// make sure we stay in sync, so only back off
-				bo.backoff();
-			}
-		}
-		else {
-			// We are out of sync. Do something different until we proceed
-			if(current_task_data->next == NULL) {
-				process_tasks_until_coordinator_resumes(current_task_data);
-			}
-		}
-
-		// Signal that we have moved on to next task
-		TeamTaskData* next_task = current_task_data->next;
-		procs_t next_team_level = current_task_data->next_team_level;
-
-		if(next_team_level > max_team_level) {
-			// This thread isn't needed for the team any more
-			break;
-		}
-		if(next_task->team_size > ti.team_size) {
-			in_sync = false;
-		}
-
-		current_task_data = next_task;
-
-/*		// Update team_size etc...
-		assert(current_task_data->team_size <= max_team_size);
-		if(team_size < next_task->team_size) {
-			in_sync = false;
-		}
-
-		team_size = current_task_data->team_size;
-		if(team_size <= sub_team_size) {
-			do{
-				// Team is resized to a smaller team
-				++team_level;
-				sub_team_size = coordinator->levels[team_level + 1].total_size;
-			}while(team_size <= sub_team_size);
-
-			max_team_size = coordinator->levels[team_level].total_size;
-
-			local_id = levels[team_level].local_id;
-			coordinator_id = coordinator->levels[team_level].local_id;
-
-			if(coordinator_id >= (max_team_size - sub_team_size)) {
-				// Reverse ids if coordinator is in the right sub-team
-				coordinator_id = max_team_size - coordinator_id - 1;
-				local_id = max_team_size - local_id - 1;
-			}
-
-			if(local_id >= sub_team_size) {
-				// Thread not needed for team any more as team has been resized
-				break;
-			}
-		}*/
-
-		prepare_team_info(coor, next_team_level, current_task_data->team_size);
-	}
+	follow_coordinator();
 
 	// Make sure we don't exit coordination after team_announcement has been set to NULL
 	// (or we might end up reexecuting the task)
@@ -885,119 +822,77 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::join
 }
 
 template <class Scheduler, template <typename T> class StealingDeque>
+void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::follow_coordinator() {
+	while(true) {
+		// Need to do this before
+		if(team_info->team_size <= team_info->local_id) {
+			// Thread not needed for next task, but still in team
+			in_sync = false;
+		}
+		else {
+			// Execute task - last_team_task might change during execution (current_team_task will stay the same)
+			call_announced_task(current_team_task->task);
+		}
+		// signal that we finished execution of the task
+		signal_current_team_task_completion();
+
+		wait_for_next_coordinator_task();
+
+		// Signal that we have moved on to next task
+		TeamTaskData* next_task = last_team_task->next;
+		procs_t next_team_level = last_team_task->next_team_level;
+
+		if(next_team_level > max_team_level) {
+			// This thread isn't needed for the team any more
+			break;
+		}
+		if(next_task->team_size > team_info->team_size) {
+			in_sync = false;
+		}
+
+		current_team_task = next_task;
+		last_team_task = next_task;
+
+		prepare_team_info(coor, next_team_level, current_team_task->team_size);
+	}
+}
+
+
+template <class Scheduler, template <typename T> class StealingDeque>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::follow_coordinator_finish() {
 	TeamInfo* old_team_info = team_info;
 	TeamInfo ti = *old_team_info;
 	team_info = &ti;
 
-	{
-		// Wait for next task to be ready
-		Backoff bo;
-		if(in_sync) {
-			while(current_task_data->next == NULL) {
-				// make sure we stay in sync, so only back off
-				bo.backoff();
-			}
-		}
-		else {
-			// We are out of sync. Do something different until we proceed
-			if(current_task_data->next == NULL) {
-				process_tasks_until_coordinator_resumes(current_task_data);
-			}
-		}
-	}
+	wait_for_next_coordinator_task();
 
-	while(true) {
-		Task* task = current_task_data->task;
+	while(coordinator not finished) {
+		follow_coordinator();
 
-		// Need to do this before
-		FinishStackElement* parent = current_task->parent;
-		if(team_size <= local_id) {
-			// Thread not needed for next task, but still in team
-			in_sync = false;
-		}
-		else {
-			// Execute task
-			call_announced_task(task);
-		}
-		// current_task_data might change after execution, so make sure you have read anything you need beforehand
-
-		// Wait for next task to be ready
-		Backoff bo;
-		if(in_sync) {
-			while(current_task_data->next == NULL) {
-				// make sure we stay in sync, so only back off
-				bo.backoff();
-			}
-		}
-		else {
-			// We are out of sync. Do something different until we proceed
-			if(current_task_data->next == NULL) {
-				process_tasks_until_coordinator_resumes(current_task_data);
-			}
-		}
-
-		// Signal that we have moved on to next task
-		TeamTaskData* next_task = current_task_data->next;
-		if((PROCST_FETCH_AND_SUB(&(next_task->countdown), 1)) == 1) {
-			// Last thread to find next task - do some cleanup
-			// TeamTaskData might already have been reused at this point, so don't access it any more!
-
-			assert(parent != NULL);
-
-			// Note: coordinator will never do this as it always executes all tasks first so it can never be last
-			// (except for single-threaded tasks)
-			signal_task_completion(parent);
-
-			// For teams we have to always use dynamic memory allocation anyway, so we can always delete the task
-			delete task;
-		}
-		current_task_data = next_task;
-
-/*		// Update team_size etc...
-		assert(current_task_data->team_size <= max_team_size);
-		if(team_size < next_task->team_size) {
-			in_sync = false;
-		}
-
-		team_size = current_task_data->team_size;
-		if(team_size <= sub_team_size) {
-			do{
-				// Team is resized to a smaller team
-				++team_level;
-				sub_team_size = coordinator->levels[team_level + 1].total_size;
-			}while(team_size <= sub_team_size);
-
-			max_team_size = coordinator->levels[team_level].total_size;
-
-			local_id = levels[team_level].local_id;
-			coordinator_id = coordinator->levels[team_level].local_id;
-
-			if(coordinator_id >= (max_team_size - sub_team_size)) {
-				// Reverse ids if coordinator is in the right sub-team
-				coordinator_id = max_team_size - coordinator_id - 1;
-				local_id = max_team_size - local_id - 1;
-			}
-
-			if(local_id >= sub_team_size) {
-				// Thread not needed for team any more as team has been resized
-				break;
-			}
-		}*/
-		if(current_task_data->task == NULL) {
-			// Used to signal finish
-			break;
-		}
-
-		if(!prepare_team_info(coor)) {
-			// If this thread is not needed for execution anymore
-			// TODO: make sure we notice a finish
-			break;
-		}
+		process_tasks_for_coordinator_finish();
 	}
 
 	team_info = old_team_info;
 }
+
+template <class Scheduler, template <typename T> class StealingDeque>
+void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::wait_for_next_coordinator_task() {
+	// Wait for next task to be ready
+	Backoff bo;
+	if(in_sync) {
+		while(last_team_task->next == NULL) {
+			// make sure we stay in sync, so only back off
+			bo.backoff();
+		}
+	}
+	else {
+		// We are out of sync. Do something different until we proceed
+		if(last_team_task->next == NULL) {
+			process_tasks_until_coordinator_resumes(last_team_task);
+		}
+	}
+}
+
 
 template <class Scheduler, template <typename T> class StealingDeque>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::prepare_team_info(TaskExecutionContext* coor, procs_t level, procs_t size) {
@@ -1053,7 +948,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::coor
 
 		// Make sure all changes to task_data are visible before the pointer is available
 		MEMORY_FENCE();
-		current_task_data->next = task_data;
+		current_team_task->next = task_data;
 
 		// Check if team has been resized
 		if(team_size <= sub_team_size) {
@@ -1086,8 +981,8 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::coor
 	task_data->task = NULL;
 
 	MEMORY_FENCE();
-	current_task_data->next = task_data;
-	current_task_data = task_data;
+	current_team_task->next = task_data;
+	current_team_task = task_data;
 }
 */
 
@@ -1474,9 +1369,9 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::exec
 		else {
 			// Needed to check termination of previous task
 			next_task->countdown = team_size - 1;
-			current_task_data->next = next_task;
+			current_team_task->next = next_task;
 		}
-		current_task_data = next_task;
+		current_team_task = next_task;
 
 		(*task)(*this);
 	}
@@ -1519,7 +1414,7 @@ procs_t BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::g
 
 template <class Scheduler, template <typename T> class StealingDeque>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::follow_coordinator(RemoteTeamAnnouncement* team) {
-//	TeamTaskData* current_task_data;
+//	TeamTaskData* current_team_task;
 	Task* task;
 
 	TeamInfo team_info;
@@ -1545,10 +1440,10 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::foll
 		while(team_data->task_data == NULL) {
 			bo.backoff();
 		}
-		current_task_data = team_data->task_data;
+		current_team_task = team_data->task_data;
 
-		task = current_task_data->task;
-		if((PROCST_FETCH_AND_SUB(&(current_task_data->countdown), 1)) == 1) {
+		task = current_team_task->task;
+		if((PROCST_FETCH_AND_SUB(&(current_team_task->countdown), 1)) == 1) {
 			// Last task to follow coordinator - do some cleanup
 			team_data->task_data = NULL;
 
@@ -1561,7 +1456,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::foll
 
 		// Needed for team shrinking
 		// Member var team_size (accessible to task)
-		team_info.team_size = current_task_data->team_size;
+		team_info.team_size = current_team_task->team_size;
 		while(team_info.team_size <= team_info.sub_team_size) {
 			if(team_info.local_id >= team_info.sub_team_size) {
 				// Thread not needed for team any more
@@ -1588,19 +1483,19 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::foll
 		local_team_info = &team_info;
 
 		// Execute task
-		(*(current_task_data->task))(*this);
+		(*(current_team_task->task))(*this);
 
 		{// New environment to get a new backoff object
 			Backoff bo;
 			TeamTaskData* next_task;
 			if(in_sync) {
-				while((next_task = current_task_data->next) == NULL) {
+				while((next_task = current_team_task->next) == NULL) {
 					// Spin until next task is available
 					bo.backoff();
 				}
 			}
 			else {
-				while((next_task = current_task_data->next) == NULL) {
+				while((next_task = current_team_task->next) == NULL) {
 					if(!process_queue_task(team_info.team_level + 1)) {
 						if(!visit_partners(team_info.team_level)) {
 							bo.backoff();
@@ -1626,13 +1521,13 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::foll
 						SIZET_ATOMIC_ADD(&(parent->num_finished_remote), 1);
 					}
 				}
-				if(current_task_data->free_memory) {
-					delete current_task_data->task;
-					delete current_task_data;
+				if(current_team_task->free_memory) {
+					delete current_team_task->task;
+					delete current_team_task;
 				}
 			}
-			current_task_data = next_task;
-			task = current_task_data->task;
+			current_team_task = next_task;
+			task = current_team_task->task;
 		}
 	}
 }
