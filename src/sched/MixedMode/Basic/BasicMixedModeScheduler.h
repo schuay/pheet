@@ -115,6 +115,7 @@ void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::i
 			ld.num_partners = sub1->get_size();
 			ld.partners = threads + offset + sub0->get_size();
 			ld.reverse_ids = false;
+
 			levels->push_back(&ld);
 			initialize_tecs(sub0, offset, levels);
 			ld.local_id = sub0->get_size();
@@ -137,6 +138,7 @@ void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::i
 		ld.local_id = 0;
 		ld.num_partners = 0;
 		ld.partners = NULL;
+		ld.reverse_ids = false;
 		levels->push_back(&ld);
 		TaskExecutionContext *tec = new TaskExecutionContext(levels, ch->get_cpus(), &state);
 		threads[offset] = tec;
