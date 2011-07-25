@@ -10,7 +10,7 @@
 #define SYNCHRONEOUSMIXEDMODESCHEDULER_H_
 
 #include "../../../../settings.h"
-#include "SynchroneousMixedModeTask.h"
+#include "../../common/SchedulerTask.h"
 #include "SynchroneousMixedModeSchedulerTaskExecutionContext.h"
 
 #include <assert.h>
@@ -25,7 +25,7 @@ namespace pheet {
 template <class CPUHierarchyT>
 class SynchroneousMixedModeScheduler {
 public:
-	typedef SynchroneousMixedModeTask<SynchroneousMixedModeScheduler> Task;
+	typedef SchedulerTask<SynchroneousMixedModeScheduler> Task;
 	typedef SynchroneousMixedModeSchedulerTaskExecutionContext<SynchroneousMixedModeScheduler> TaskExecutionContext;
 	typedef CPUHierarchyT CPUHierarchy;
 

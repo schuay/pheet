@@ -9,6 +9,7 @@
 #ifndef BASICMIXEDMODESCHEDULER_H_
 #define BASICMIXEDMODESCHEDULER_H_
 
+#include "../../common/SchedulerTask.h"
 #include "BasicMixedModeSchedulerTaskExecutionContext.h"
 #include "../../common/CPUThreadExecutor.h"
 #include "../../../em/CPUHierarchy/BinaryTree/BinaryTreeCPUHierarchy.h"
@@ -46,7 +47,7 @@ class BasicMixedModeScheduler {
 public:
 	typedef BackoffT Backoff;
 	typedef CPUHierarchyT CPUHierarchy;
-	typedef BasicMixedModeTask<BasicMixedModeScheduler<CPUHierarchy, StealingDeque, Barrier, Backoff> > Task;
+	typedef SchedulerTask<BasicMixedModeScheduler<CPUHierarchy, StealingDeque, Barrier, Backoff> > Task;
 	typedef BasicMixedModeSchedulerTaskExecutionContext<BasicMixedModeScheduler<CPUHierarchy, StealingDeque, Barrier, Backoff>, StealingDeque> TaskExecutionContext;
 	typedef BasicMixedModeSchedulerState<Task, Barrier> State;
 
@@ -149,15 +150,15 @@ void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::i
 template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
 template<class CallTaskType, typename ... TaskParams>
 void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::finish(TaskParams ... params) {
-	finish_nt(1, params ...);
+	finish_nt<CallTaskType, TaskParams ...>((procs_t)1, params ...);
 }
 
 template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
 template<class CallTaskType, typename ... TaskParams>
 void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::finish_nt(procs_t nt, TaskParams ... params) {
-	CallTaskType task(params ...);
+	CallTaskType* task = new CallTaskType(params ...);
 	state.team_size = nt;
-	state.startup_task = &task;
+	state.startup_task = task;
 	state.current_state = 1;
 
 	// signal scheduler threads that execution may start

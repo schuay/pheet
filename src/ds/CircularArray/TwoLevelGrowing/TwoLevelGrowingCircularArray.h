@@ -16,10 +16,10 @@
 
 namespace pheet {
 
-template <typename T, size_t MAX_BUCKETS>
+template <typename TT, size_t MAX_BUCKETS = 24>
 class TwoLevelGrowingCircularArray {
 public:
-	typedef T T;
+	typedef TT T;
 
 	TwoLevelGrowingCircularArray(size_t initial_capacity);
 	~TwoLevelGrowingCircularArray();

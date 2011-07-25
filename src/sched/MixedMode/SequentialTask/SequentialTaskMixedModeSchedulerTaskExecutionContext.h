@@ -223,6 +223,7 @@ void SequentialTaskMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeq
 				}
 				else {
 					execute_task(di.task, di.stack_element);
+					delete di.task;
 					break;
 				}
 			}

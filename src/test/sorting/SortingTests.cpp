@@ -10,6 +10,7 @@
 
 #include "../../sched/MixedMode/Synchroneous/SynchroneousMixedModeScheduler.h"
 #include "../../sched/MixedMode/SequentialTask/SequentialTaskMixedModeScheduler.h"
+#include "../../sched/MixedMode/Basic/BasicMixedModeScheduler.h"
 
 #include "Reference/ReferenceSTLSort.h"
 #include "Reference/ReferenceQuicksort.h"
@@ -18,6 +19,7 @@
 #include "../../em/CPUHierarchy/Oversubscribed/OversubscribedSimpleCPUHierarchy.h"
 
 #include "../../ds/CircularArray/FixedSize/FixedSizeCircularArray.h"
+#include "../../ds/CircularArray/TwoLevelGrowing/TwoLevelGrowingCircularArray.h"
 #include "../../ds/StealingDeque/CircularArray/CircularArrayStealingDeque.h"
 
 #include "../../primitives/Backoff/Exponential/ExponentialBackoff.h"
@@ -48,10 +50,35 @@ FixedSizeCircularArrayStealingDeque<T>::FixedSizeCircularArrayStealingDeque(size
 
 }
 
+template <typename T>
+class MyTwoLevelGrowingCircularArray : public TwoLevelGrowingCircularArray<T> {
+public:
+	MyTwoLevelGrowingCircularArray(size_t initial_capacity);
+};
+
+template <typename T>
+MyTwoLevelGrowingCircularArray<T>::MyTwoLevelGrowingCircularArray(size_t initial_capacity)
+: TwoLevelGrowingCircularArray<T>(initial_capacity){
+
+}
+
+template <typename T>
+class TwoLevelGrowingCircularArrayStealingDeque : public CircularArrayStealingDeque<T, MyTwoLevelGrowingCircularArray > {
+public:
+	TwoLevelGrowingCircularArrayStealingDeque(size_t initial_capacity);
+};
+
+template <typename T>
+TwoLevelGrowingCircularArrayStealingDeque<T>::TwoLevelGrowingCircularArrayStealingDeque(size_t initial_capacity)
+: CircularArrayStealingDeque<T, MyTwoLevelGrowingCircularArray >(initial_capacity){
+
+}
+
 void SortingTests::run_test() {
 	std::cout << "----" << std::endl;
 	std::cout << "test\tsorter\tscheduler\ttype\tsize\tseed\tcpus\ttime\truns" << std::endl;
 
+	this->run_sorter<MixedModeForkJoinQuicksort<BasicMixedModeScheduler<OversubscribedSimpleCPUHierarchy, TwoLevelGrowingCircularArrayStealingDeque, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff> > >();
 	this->run_sorter<MixedModeForkJoinQuicksort<SequentialTaskMixedModeScheduler<OversubscribedSimpleCPUHierarchy, FixedSizeCircularArrayStealingDeque, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff> > >();
 	this->run_sorter<MixedModeForkJoinQuicksort<SynchroneousMixedModeScheduler<OversubscribedSimpleCPUHierarchy> > >();
 	this->run_sorter<ReferenceQuicksort>();
