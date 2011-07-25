@@ -1,1 +1,1 @@
-include src/sched/MixedMode/sub.mk
+include src/sched/Basic/sub.mk
