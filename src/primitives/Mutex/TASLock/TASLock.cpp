@@ -22,7 +22,7 @@ void TASLock::lock() {
 	while(!INT_CAS(&locked, 0, 1)) {};
 }
 
-void TASLock::try_lock(long int time_ms) {
+bool TASLock::try_lock(long int time_ms) {
 	struct timeval begin;
 	gettimeofday(&begin, NULL);
 	long int begin_ms = (begin.tv_usec / 1000) + (begin.tv_sec * 1000);

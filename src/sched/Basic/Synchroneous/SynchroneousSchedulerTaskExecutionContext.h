@@ -26,11 +26,13 @@ public:
 	template<class CallTaskType, typename ... TaskParams>
 		void spawn(TaskParams ... params);
 
-	template<class CallTaskType, typename ... TaskParams>
-		void local_finish(TaskParams ... params);
+	void start_finish_region();
+	void end_finish_region();
 
 private:
 	Scheduler* sched;
+
+	friend class Scheduler::Finish;
 };
 
 template <class Scheduler>
@@ -42,6 +44,16 @@ SynchroneousSchedulerTaskExecutionContext<Scheduler>::SynchroneousSchedulerTaskE
 template <class Scheduler>
 SynchroneousSchedulerTaskExecutionContext<Scheduler>::~SynchroneousSchedulerTaskExecutionContext() {
 
+}
+
+template <class Scheduler>
+void SynchroneousSchedulerTaskExecutionContext<Scheduler>::start_finish_region() {
+	// Nothing to do here
+}
+
+template <class Scheduler>
+void SynchroneousSchedulerTaskExecutionContext<Scheduler>::end_finish_region() {
+	// Nothing to do here
 }
 
 template <class Scheduler>
@@ -61,13 +73,6 @@ template<class CallTaskType, typename ... TaskParams>
 void SynchroneousSchedulerTaskExecutionContext<Scheduler>::spawn(TaskParams ... params) {
 	sched->finish<CallTaskType>(params ...);
 }
-
-template <class Scheduler>
-template<class CallTaskType, typename ... TaskParams>
-void SynchroneousSchedulerTaskExecutionContext<Scheduler>::local_finish(TaskParams ... params) {
-	sched->finish<CallTaskType>(params ...);
-}
-
 
 }
 

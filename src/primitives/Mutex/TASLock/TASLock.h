@@ -17,7 +17,7 @@ public:
 	~TASLock();
 
 	void lock();
-	bool try_lock(unsigned int time);
+	bool try_lock(long int time_ms);
 
 	void unlock();
 private:

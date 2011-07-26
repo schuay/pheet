@@ -11,7 +11,7 @@
 
 #include "src/misc/types.h"
 
-#define NDEBUG
+//#define NDEBUG
 
 const pheet::procs_t system_max_cpus = 2;
 

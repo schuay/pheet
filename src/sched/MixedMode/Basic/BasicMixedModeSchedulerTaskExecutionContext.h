@@ -3,7 +3,7 @@
  *
  *  Created on: 16.06.2011
  *   Author(s): Martin Wimmer
- *     License: Ask author
+ *     License: Pheet license
  */
 
 #ifndef BASICMIXEDMODESCHEDULERTASKEXECUTIONCONTEXT_H_
@@ -11,6 +11,7 @@
 
 #include "../../../../settings.h"
 #include "../../common/CPUThreadExecutor.h"
+#include "../../common/FinishRegion.h"
 #include "../../../misc/atomics.h"
 #include "../../../misc/bitops.h"
 #include "../../../misc/type_traits.h"
@@ -212,7 +213,7 @@ private:
 	TeamTaskData* create_solo_team_task(DequeItem di);
 	void announce_first_team_task(TeamTaskData* team_task);
 	void announce_next_team_task(TeamTaskData* team_task);
-	FinishStackElement* start_finish_region(FinishStackElement* parent);
+	FinishStackElement* create_finish_block(FinishStackElement* parent);
 	void empty_finish_stack();
 	void signal_task_completion(FinishStackElement* finish_stack_element);
 	void finalize_finish_stack_element(FinishStackElement* element, FinishStackElement* parent);
@@ -229,6 +230,9 @@ private:
 	DequeItem get_next_queue_task();
 	DequeItem steal_tasks_from_partner(TaskExecutionContext* partner, procs_t min_level);
 	void store_item_in_deque(DequeItem di, procs_t level);
+
+	void start_finish_region();
+	void end_finish_region();
 
 	// Stack is only used by the coordinator
 	static size_t const finish_stack_size;
@@ -279,6 +283,7 @@ private:
 	typename Scheduler::State* scheduler_state;
 
 	friend class CPUThreadExecutor<typename CPUHierarchy::CPUDescriptor, BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>>;
+	friend class Scheduler::Finish;
 };
 
 template <class Scheduler, template <typename T> class StealingDeque>
@@ -394,7 +399,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::run(
 
 	Task* startup_task = scheduler_state->startup_task;
 	if(startup_task != NULL && PTR_CAS(&(scheduler_state->startup_task), startup_task, NULL)) {
-		FinishStackElement* root = start_finish_region(NULL);
+		FinishStackElement* root = create_finish_block(NULL);
 
 		DequeItem di;
 		di.finish_stack_element = root;
@@ -650,9 +655,9 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::crea
 
 			current_team->next_team = team;
 			announced_teams[team_announcement_index] = NULL;
-
-			current_team = team;
 		}
+		current_team = team;
+		current_deque = stealing_deques + num_levels - 1;
 	}
 	else {
 		procs_t level = get_level_for_num_threads(team_size);
@@ -711,6 +716,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::crea
 			announced_teams[team_announcement_index] = team;
 		}
 		current_team = team;
+		current_deque = stealing_deques + level;
 
 		prepare_team_info(team);
 	}
@@ -748,7 +754,7 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::create_te
 		empty_finish_stack();
 
 		// Create new stack element for finish
-		parent = start_finish_region(parent);
+		parent = create_finish_block(parent);
 	}
 
 	team_task->team_level = current_team->level;
@@ -786,7 +792,7 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::create_so
 		empty_finish_stack();
 
 		// Create new stack element for finish
-		parent = start_finish_region(parent);
+		parent = create_finish_block(parent);
 	}
 
 	team_task->task = di.task;
@@ -809,7 +815,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::anno
 
 template <class Scheduler, template <typename T> class StealingDeque>
 typename BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::FinishStackElement*
-BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::start_finish_region(FinishStackElement* parent) {
+BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::create_finish_block(FinishStackElement* parent) {
 	assert(finish_stack_filled < finish_stack_size);
 
 	finish_stack[finish_stack_filled].num_finished_remote = 0;
@@ -884,6 +890,9 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::fina
  */
 template <class Scheduler, template <typename T> class StealingDeque>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visit_partners() {
+	// If we still have local work, this might never terminate
+	assert(!has_local_work());
+
 	Backoff bo;
 	DequeItem di;
 	while(true) {
@@ -932,6 +941,9 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visi
  */
 template <class Scheduler, template <typename T> class StealingDeque>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visit_partners_until_finished(FinishStackElement* parent) {
+	// If we still have local work, this might never terminate
+	assert(!has_local_work());
+
 	Backoff bo;
 	DequeItem di;
 	while(true) {
@@ -1193,6 +1205,16 @@ procs_t BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::g
 }
 
 template <class Scheduler, template <typename T> class StealingDeque>
+void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::start_finish_region() {
+	// TODO
+}
+
+template <class Scheduler, template <typename T> class StealingDeque>
+void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::end_finish_region() {
+	// TODO
+}
+
+template <class Scheduler, template <typename T> class StealingDeque>
 template<class CallTaskType, typename ... TaskParams>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::spawn(TaskParams ... params) {
 	// TODO: optimization to use call in some cases to prevent the deque from growing too large
@@ -1261,7 +1283,11 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::call
 template <class Scheduler, template <typename T> class StealingDeque>
 template<class CallTaskType, typename ... TaskParams>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::finish(TaskParams ... params) {
-	// TODO
+	start_finish_region();
+
+	call<CallTaskType>(params ...);
+
+	end_finish_region();
 
 /*	if(is_coordinator()) {
 		assert(finish_stack_filled > 0);
@@ -1344,7 +1370,12 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::call
 template <class Scheduler, template <typename T> class StealingDeque>
 template<class CallTaskType, typename ... TaskParams>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::finish_nt(procs_t nt_size, TaskParams ... params) {
-	// TODO
+	start_finish_region();
+
+	call_nt<CallTaskType>(nt_size, params ...);
+
+	end_finish_region();
+
 		/*
 	if(is_coordinator()) {
 		assert(finish_stack_filled > 0);
@@ -1452,7 +1483,16 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::steal_tas
 	my_queue = stealing_deques + num_levels - (partner->stealing_deques + partner->num_levels - partner_queue);
 	while(partner_queue >= partner_min) {
 		if(!(*partner_queue)->is_empty()) {
-			return (*partner_queue)->steal_push(**my_queue);
+			DequeItem ret = (*partner_queue)->steal_push(**my_queue);
+			if(ret.task != NULL) {
+				assert(smallest_deque == NULL || smallest_deque > my_queue);
+				current_deque = my_queue;
+				smallest_deque = my_queue;
+				if(largest_deque == NULL) {
+					largest_deque = my_queue;
+				}
+			}
+			return ret;
 		}
 		--partner_queue;
 		--my_queue;

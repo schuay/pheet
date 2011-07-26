@@ -3,7 +3,7 @@
  *
  *  Created on: 16.06.2011
  *   Author(s): Martin Wimmer
- *     License: Ask author
+ *     License: Pheet license
  */
 
 #ifndef BASICMIXEDMODESCHEDULER_H_
@@ -50,6 +50,7 @@ public:
 	typedef SchedulerTask<BasicMixedModeScheduler<CPUHierarchy, StealingDeque, Barrier, Backoff> > Task;
 	typedef BasicMixedModeSchedulerTaskExecutionContext<BasicMixedModeScheduler<CPUHierarchy, StealingDeque, Barrier, Backoff>, StealingDeque> TaskExecutionContext;
 	typedef BasicMixedModeSchedulerState<Task, Barrier> State;
+	typedef FinishRegion<BasicMixedModeScheduler<CPUHierarchy, StealingDeque, Barrier, Backoff> > Finish;
 
 	/*
 	 * CPUHierarchyT must be accessible throughout the lifetime of the scheduler

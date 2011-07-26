@@ -11,6 +11,7 @@
 
 #include "../../../../settings.h"
 #include "../../common/CPUThreadExecutor.h"
+#include "../../common/FinishRegion.h"
 #include "../../../misc/atomics.h"
 #include "../../../misc/bitops.h"
 #include "../../../misc/type_traits.h"
@@ -106,11 +107,21 @@ private:
 	void execute_task(Task* task, StackElement* parent);
 	void main_loop();
 	void process_queue();
-	void empty_stack(size_t limit);
+	void wait_for_finish(StackElement* parent);
+
+	void empty_stack();
+	StackElement* create_finish_block(StackElement* parent);
+	void signal_task_completion(StackElement* stack_element);
+	void finalize_stack_element(StackElement* element, StackElement* parent);
+
+	void start_finish_region();
+	void end_finish_region();
 
 	static size_t const stack_size;
 	StackElement* stack;
+	StackElement* current_task_parent;
 	size_t stack_filled;
+	size_t stack_block;
 
 	LevelDescription* levels;
 	procs_t num_levels;
@@ -123,6 +134,7 @@ private:
 	StealingDeque<DequeItem> stealing_deque;
 
 	friend class CPUThreadExecutor<typename CPUHierarchy::CPUDescriptor, BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>>;
+	friend class Scheduler::Finish;
 };
 
 template <class Scheduler, template <typename T> class StealingDeque>
@@ -130,7 +142,7 @@ size_t const BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::stack
 
 template <class Scheduler, template <typename T> class StealingDeque>
 BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::BasicSchedulerTaskExecutionContext(vector<LevelDescription*> const* levels, vector<typename CPUHierarchy::CPUDescriptor*> const* cpus, typename Scheduler::State* scheduler_state)
-: stack_filled(0), num_levels(levels->size()), thread_executor(cpus, this), scheduler_state(scheduler_state), max_queue_length(find_last_bit_set((*levels)[0]->total_size - 1) << 4), stealing_deque(max_queue_length) {
+: stack_filled(0), stack_block(0), num_levels(levels->size()), thread_executor(cpus, this), scheduler_state(scheduler_state), max_queue_length(find_last_bit_set((*levels)[0]->total_size - 1) << 4), stealing_deque(max_queue_length) {
 	stack = new StackElement[stack_size];
 	this->levels = new LevelDescription[num_levels];
 	procs_t local_id = 0;
@@ -176,15 +188,24 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::run() {
 
 template <class Scheduler, template <typename T> class StealingDeque>
 void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::execute_task(Task* task, StackElement* parent) {
-	assert(stack_filled < stack_size);
+	if(parent < stack || (parent >= (stack + stack_size))) {
+		// to prevent thrashing on the parent finish block (owned by another thread), we create a new finish block local to the thread
 
-	stack[stack_filled].num_finished_remote = 0;
-	stack[stack_filled].num_spawned = 0;
-	stack[stack_filled].parent = parent;
+		// Perform cleanup on finish stack
+		empty_stack();
 
-	stack_filled++;
+		// Create new stack element for finish
+		parent = create_finish_block(parent);
+	}
 
+	// Store parent (needed for spawns inside the task)
+	current_task_parent = parent;
+
+	// Execute task
 	(*task)(*this);
+
+	// Signal that we finished executing this task
+	signal_task_completion(parent);
 }
 
 template <class Scheduler, template <typename T> class StealingDeque>
@@ -198,7 +219,6 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::main_loop() {
 			DequeItem di;
 			while(true) {
 				// Finalize elements in stack
-				empty_stack(0);
 				procs_t next_rand = random();
 
 				// We do not steal from the last level as there are no partners
@@ -232,6 +252,55 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::main_loop() {
 }
 
 template <class Scheduler, template <typename T> class StealingDeque>
+void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::wait_for_finish(StackElement* parent) {
+	size_t old_stack_block = stack_block;
+	stack_block = parent - stack + 1;
+	while(true) {
+		// TODO: try a policy where we do not need to empty our queues before we notice the finish
+		// (currently not implemented for simplicity)
+
+		// Make sure our queue is empty
+		process_queue();
+
+		{	// Local scope so we have a new backoff object
+			Backoff bo;
+			DequeItem di;
+			while(true) {
+				// Finalize elements in stack
+				procs_t next_rand = random();
+
+				// We do not steal from the last level as there are no partners
+				procs_t level = num_levels - 1;
+				while(level > 0) {
+					level--;
+					// For all except the last level we assume num_partners > 0
+					assert(levels[level].num_partners > 0);
+					assert(levels[level].partners[next_rand % levels[level].num_partners] != this);
+					di = levels[level].partners[next_rand % levels[level].num_partners]->stealing_deque.steal_push(this->stealing_deque);
+				//	di = levels[level].partners[next_rand % levels[level].num_partners]->stealing_deque.steal();
+
+					if(di.task != NULL) {
+						break;
+					}
+				}
+				if(di.task == NULL) {
+					if(parent->num_finished_remote == parent->num_spawned) {
+						stack_block = old_stack_block;
+						return;
+					}
+					bo.backoff();
+				}
+				else {
+					execute_task(di.task, di.stack_element);
+					delete di.task;
+					break;
+				}
+			}
+		}
+	}
+}
+
+template <class Scheduler, template <typename T> class StealingDeque>
 void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::process_queue() {
 	DequeItem di = stealing_deque.pop();
 	while(di.task != NULL) {
@@ -241,41 +310,39 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::process_queue
 		// which is bad for balancing
 		execute_task(di.task, di.stack_element);
 		delete di.task;
-		empty_stack(0);
 		di = stealing_deque.pop();
 	}
+}
+
+template <class Scheduler, template <typename T> class StealingDeque>
+typename BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::StackElement*
+BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::create_finish_block(StackElement* parent) {
+	assert(stack_filled < stack_size);
+
+	stack[stack_filled].num_finished_remote = 0;
+	// As we create it out of a parent region that is waiting for completion of a single task, we can already add this one task here
+	stack[stack_filled].num_spawned = 1;
+	stack[stack_filled].parent = parent;
+
+	++stack_filled;
+
+	return &(stack[stack_filled - 1]);
 }
 
 /*
  * empty stack but not below limit
  */
 template <class Scheduler, template <typename T> class StealingDeque>
-void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::empty_stack(size_t limit) {
-	while(stack_filled > limit) {
+void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::empty_stack() {
+	while(stack_filled > stack_block) {
 		size_t se = stack_filled - 1;
 		if(stack[se].num_spawned == stack[se].num_finished_remote) {
+			finalize_stack_element(&(stack[se]), stack[se].parent);
+
 			stack_filled = se;
-			StackElement * parent = stack[stack_filled].parent;
-			if(parent == NULL) {
-				if(stack_filled == 0) {
-					// We have finished the root task
-					scheduler_state->current_state = 2; // finished
-					return;
-				}
-				else {
-					// some non-root task finished
-				}
-			}
-			else {
-				if(parent >= stack && (parent < (stack + stack_size))) {
-					// Parent is actually local. No need for atomics
-					parent->num_spawned--;
-				}
-				else {
-					// Increment num_finished_remote of parent
-					SIZET_ATOMIC_ADD(&(parent->num_finished_remote), 1);
-				}
-			}
+
+			// When parent is set to NULL, some thread is finalizing/has finalized this stack element (otherwise we would have an error)
+			assert(stack[stack_filled].parent == NULL);
 		}
 		else {
 			break;
@@ -284,18 +351,77 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::empty_stack(s
 }
 
 template <class Scheduler, template <typename T> class StealingDeque>
+void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::signal_task_completion(StackElement* stack_element) {
+	StackElement* parent = stack_element->parent;
+
+	if(stack_element >= stack && (stack_element < (stack + stack_size))) {
+		--(stack_element->num_spawned);
+
+		// Memory fence is unfortunately required to guarantee that some thread finalizes the stack_element
+		// TODO: prove that the fence is enough
+		MEMORY_FENCE();
+	}
+	else {
+		// Increment num_finished_remote of parent
+		SIZET_ATOMIC_ADD(&(stack_element->num_finished_remote), 1);
+	}
+	if(stack_element->num_spawned == stack_element->num_finished_remote) {
+		finalize_stack_element(stack_element, parent);
+	}
+}
+
+template <class Scheduler, template <typename T> class StealingDeque>
+void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::finalize_stack_element(StackElement* element, StackElement* parent) {
+	if(parent != NULL) {
+		if(element->num_spawned == 0) {
+			// No tasks processed remotely - no need for atomic ops
+			element->parent = NULL;
+			signal_task_completion(parent);
+		}
+		else {
+			if(PTR_CAS(&(element->parent), parent, NULL)) {
+				signal_task_completion(parent);
+			}
+		}
+	}
+	else {
+		// Root element - we can shut down the scheduler
+		scheduler_state->current_state = 2;
+	}
+}
+
+template <class Scheduler, template <typename T> class StealingDeque>
+void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::start_finish_region() {
+	// Perform cleanup on finish stack
+	empty_stack();
+
+	// Create new stack element for finish
+	current_task_parent = create_finish_block(current_task_parent);
+}
+
+template <class Scheduler, template <typename T> class StealingDeque>
+void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::end_finish_region() {
+	// Retrieve old parent (before the pointer is set to NULL)
+	StackElement* old_parent = current_task_parent->parent;
+
+	// Signal that we finished executing this task
+	signal_task_completion(current_task_parent);
+
+	// Process other tasks until this task has been finished
+	wait_for_finish(current_task_parent);
+
+	// Restore old parent
+	current_task_parent = old_parent;
+}
+
+template <class Scheduler, template <typename T> class StealingDeque>
 template<class CallTaskType, typename ... TaskParams>
 void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::finish(TaskParams ... params) {
-	assert(stack_filled > 0);
+	start_finish_region();
 
-	// Create task
-	CallTaskType task(params ...);
+	call<CallTaskType>(params ...);
 
-	// Create a new stack element for new task
-	// num_finished_remote is not required as this stack element blocks lower ones from finishing anyway
-	execute_task(&task, NULL);
-
-	// TODO: process other tasks until this task is finished
+	end_finish_region();
 }
 
 template <class Scheduler, template <typename T> class StealingDeque>
@@ -310,7 +436,7 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::spawn(TaskPar
 		stack[stack_filled - 1].num_spawned++;
 		DequeItem di;
 		di.task = task;
-		di.stack_element = &(stack[stack_filled - 1]);
+		di.stack_element = current_task_parent;
 		stealing_deque.push(di);
 	}
 }
@@ -318,7 +444,9 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::spawn(TaskPar
 template <class Scheduler, template <typename T> class StealingDeque>
 template<class CallTaskType, typename ... TaskParams>
 void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::call(TaskParams ... params) {
+	// Create task
 	CallTaskType task(params ...);
+	// Execute task
 	task(*this);
 }
 

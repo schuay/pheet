@@ -3,7 +3,7 @@
  *
  *  Created on: 25.07.2011
  *   Author(s): Martin Wimmer
- *     License: Ask author
+ *     License: Pheet license
  */
 
 #ifndef SCHEDULERTASK_H_

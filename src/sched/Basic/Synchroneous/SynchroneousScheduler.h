@@ -11,6 +11,7 @@
 
 #include "../../../../settings.h"
 #include "../../common/SchedulerTask.h"
+#include "../../common/FinishRegion.h"
 #include "SynchroneousSchedulerTaskExecutionContext.h"
 
 #include <assert.h>
@@ -28,6 +29,7 @@ public:
 	typedef SchedulerTask<SynchroneousScheduler> Task;
 	typedef SynchroneousSchedulerTaskExecutionContext<SynchroneousScheduler> TaskExecutionContext;
 	typedef CPUHierarchyT CPUHierarchy;
+	typedef FinishRegion<SynchroneousScheduler> Finish;
 
 	SynchroneousScheduler(CPUHierarchy* cpus);
 	virtual ~SynchroneousScheduler();

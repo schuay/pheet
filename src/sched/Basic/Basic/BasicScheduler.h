@@ -10,6 +10,7 @@
 #define BASICSCHEDULER_H_
 
 #include "../../common/SchedulerTask.h"
+#include "../../common/FinishRegion.h"
 #include "BasicSchedulerTaskExecutionContext.h"
 #include "../../common/CPUThreadExecutor.h"
 #include "../../../em/CPUHierarchy/BinaryTree/BinaryTreeCPUHierarchy.h"
@@ -46,6 +47,7 @@ public:
 	typedef SchedulerTask<BasicScheduler<CPUHierarchy, StealingDeque, Barrier, Backoff> > Task;
 	typedef BasicSchedulerTaskExecutionContext<BasicScheduler<CPUHierarchy, StealingDeque, Barrier, Backoff>, StealingDeque> TaskExecutionContext;
 	typedef BasicSchedulerState<Task, Barrier> State;
+	typedef FinishRegion<BasicScheduler<CPUHierarchy, StealingDeque, Barrier, Backoff> > Finish;
 
 	/*
 	 * CPUHierarchyT must be accessible throughout the lifetime of the scheduler
