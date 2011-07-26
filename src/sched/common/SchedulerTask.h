@@ -18,6 +18,7 @@ template <class Sched>
 class SchedulerTask {
 public:
 	typedef Sched Scheduler;
+	typedef typename Scheduler::Finish Finish;
 
 	SchedulerTask();
 	virtual ~SchedulerTask();
