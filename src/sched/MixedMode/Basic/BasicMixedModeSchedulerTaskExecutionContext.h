@@ -1454,12 +1454,12 @@ bool BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::has_
 		if(!(*smallest_deque)->is_empty()) {
 			return true;
 		}
-		++smallest_deque;
-		if(smallest_deque > largest_deque) {
+		if(smallest_deque >= largest_deque) {
 			smallest_deque = NULL;
 			largest_deque = NULL;
 			return false;
 		}
+		++smallest_deque;
 	}
 	return false;
 }
@@ -1521,6 +1521,7 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::steal_tas
 	partner_min = partner->stealing_deques + min_level;
 
 	partner_queue = partner->smallest_deque;
+	assert(partner_queue >= partner->stealing_deques && partner_queue < partner->stealing_deques + partner->num_levels);
 	if(partner_queue < partner_min) {
 		return nullable_traits<DequeItem>::null_value;
 	}
