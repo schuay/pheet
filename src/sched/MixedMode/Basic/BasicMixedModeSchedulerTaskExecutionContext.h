@@ -1521,10 +1521,10 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::steal_tas
 	partner_min = partner->stealing_deques + min_level;
 
 	partner_queue = partner->smallest_deque;
-	assert(partner_queue >= partner->stealing_deques && partner_queue < partner->stealing_deques + partner->num_levels);
-	if(partner_queue < partner_min) {
+	if(partner_queue < partner_min || partner_queue == NULL /* actually not really necessary, but just in case NULL is not 0... */) {
 		return nullable_traits<DequeItem>::null_value;
 	}
+	assert(partner_queue >= partner->stealing_deques && partner_queue < partner->stealing_deques + partner->num_levels);
 	my_queue = stealing_deques + num_levels - (partner->stealing_deques + partner->num_levels - partner_queue);
 	while(partner_queue >= partner_min) {
 		if(!(*partner_queue)->is_empty()) {
