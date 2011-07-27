@@ -1265,7 +1265,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::spaw
 
 	if(is_coordinator()) {
 		CallTaskType* task = new CallTaskType(params ...);
-		assert(finish_stack_filled_left > 0);
+		assert(current_team_task->parent != NULL);
 		current_team_task->parent->num_spawned++;
 		DequeItem di;
 		di.task = task;
