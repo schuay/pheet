@@ -402,6 +402,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::run(
 	if(startup_task != NULL && PTR_CAS(&(scheduler_state->startup_task), startup_task, NULL)) {
 		start_finish_region();
 
+		++finish_stack[finish_stack_filled_right].num_spawned;
 		DequeItem di;
 		di.finish_stack_element = &(finish_stack[finish_stack_filled_right]);
 		di.task = startup_task;
@@ -463,7 +464,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::wait
  */
 template <class Scheduler, template <typename T> class StealingDeque>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::wait_for_finish(FinishStackElement* parent) {
-	while(parent->num_finished_remote + 1 != parent->num_spawned) {
+	while(parent->num_finished_remote != parent->num_spawned) {
 		// TODO: try a policy where we do not need to empty our queues before we notice the finish
 		// (currently not implemented for simplicity)
 
@@ -473,7 +474,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::wait
 				// Coordinate the current team if existing until it's empty
 				coordinate_team(); // TODO: coordinate_team_until_finished();
 
-				if(parent->num_finished_remote + 1 != parent->num_spawned) {
+				if(parent->num_finished_remote != parent->num_spawned) {
 					return;
 				}
 			}
@@ -854,6 +855,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::sign
 	FinishStackElement* parent = finish_stack_element->parent;
 
 	if(finish_stack_element >= finish_stack && (finish_stack_element < (finish_stack + finish_stack_size))) {
+		assert(finish_stack_element->num_spawned > 0);
 		--(finish_stack_element->num_spawned);
 
 		// Memory fence is unfortunately required to guarantee that some thread finalizes the finish_stack_element
@@ -980,7 +982,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visi
 				return;
 			}
 		}
-		if(parent->num_finished_remote + 1 == parent->num_spawned) {
+		if(parent->num_finished_remote == parent->num_spawned) {
 			return;
 		}
 		bo.backoff();
@@ -1239,7 +1241,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::end_
 
 		}
 		if(current_team == NULL || current_team->level != my_team_task->team_level) {
-			create_team(my_team_task->team_level);
+			create_team(my_team_task->team_size);
 			if(my_team_task->team_size > 1) {
 				announce_first_team_task(my_team_task);
 			}
