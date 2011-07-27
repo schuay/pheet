@@ -352,6 +352,8 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::BasicMixe
 	solo_team_info->team_level = num_levels - 1;
 	solo_team_info->team_size = 1;
 
+	team_info = solo_team_info;
+
 	// Run thread
 	thread_executor.run();
 }
