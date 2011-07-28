@@ -63,9 +63,6 @@ struct BasicMixedModeSchedulerTaskExecutionContextTeamTaskData {
 
 	// Threads count down as soon as they finish executing the task.
 	// The last thread to count down is responsible for cleanup of the task (signal finish, delete task)
-	// (Warning: after the last countdown it is not guaranteed that the TeamData hasn't been reused,
-	// so even the deleting thread should get the task beforehand)
-	// TODO: How do we know when all threads have read the next pointer? There is no real signal for that
 	procs_t executed_countdown;
 
 	// Size of the team to execute the task
@@ -101,6 +98,7 @@ struct BasicMixedModeSchedulerTaskExecutionContextLevelDescription {
 	procs_t num_partners;
 	procs_t local_id;
 	procs_t total_size;
+	procs_t spawn_same_size_threshold;
 	bool reverse_ids;
 };
 
@@ -198,6 +196,8 @@ public:
 
 private:
 	void run();
+	void init();
+
 	void wait_for_shutdown();
 	void wait_for_finish(FinishStackElement* parent);
 	void wait_for_sync();
@@ -205,6 +205,7 @@ private:
 	void coordinate_team();
 	void disband_team();
 	bool execute_next_queue_task();
+	bool execute_next_queue_task(procs_t min_level);
 	void execute_queue_task(DequeItem const& di);
 	void execute_solo_queue_task(DequeItem const& di);
 	void execute_team_task(TeamTaskData* team_task);
@@ -219,20 +220,28 @@ private:
 	void finalize_finish_stack_element(FinishStackElement* element, FinishStackElement* parent);
 	void visit_partners();
 	void visit_partners_until_finished(FinishStackElement* parent);
+	void visit_partners_until_synced(TeamAnnouncement* team);
 	TeamAnnouncement* find_partner_team(TaskExecutionContext* partner, procs_t level);
 	void join_team(TeamAnnouncement* team);
+	void tie_break_team(TeamAnnouncement* my_team, TeamAnnouncement* other_team);
 	void follow_team();
 	void prepare_team_info(TeamAnnouncement* team);
 	void prepare_solo_team_info();
 	procs_t get_level_for_num_threads(procs_t num_threads);
 	bool has_local_work();
+	bool has_local_work(procs_t min_level);
 	DequeItem get_next_team_task();
 	DequeItem get_next_queue_task();
+	DequeItem get_next_queue_task(procs_t min_level);
 	DequeItem steal_tasks_from_partner(TaskExecutionContext* partner, procs_t min_level);
+	DequeItem steal_for_sync(TeamAnnouncement* my_team, TaskExecutionContext* partner, procs_t min_level);
 	void store_item_in_deque(DequeItem di, procs_t level);
 
 	void start_finish_region();
 	void end_finish_region();
+
+	void register_for_team(TeamAnnouncement* team);
+	bool deregister_from_team(TeamAnnouncement* team);
 
 	// Stack is only used by the coordinator
 	static size_t const finish_stack_size;
@@ -248,9 +257,8 @@ private:
 	// Team task information
 	TeamTaskData* current_team_task;
 	TeamAnnouncement* current_team;
-	TeamAnnouncement** announced_teams;
-
-	procs_t team_announcement_index;
+//	TeamAnnouncement** announced_teams;
+//	procs_t team_announcement_index;
 
 	// Information needed for task reclamation scheme
 	queue<TeamTaskData*> team_task_reclamation_queue;
@@ -292,9 +300,8 @@ size_t const BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDequ
 template <class Scheduler, template <typename T> class StealingDeque>
 BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::BasicMixedModeSchedulerTaskExecutionContext(vector<LevelDescription*> const* levels, vector<typename CPUHierarchy::CPUDescriptor*> const* cpus, typename Scheduler::State* scheduler_state)
 : finish_stack_filled_left(0), finish_stack_filled_right(finish_stack_size), num_levels(levels->size()), current_team_task(NULL), current_team(NULL),
-  team_announcement_index(0), waiting_for_finish(NULL), team_info(NULL), max_team_level(num_levels), smallest_deque(NULL),
+  /*team_announcement_index(0),*/ waiting_for_finish(NULL), team_info(NULL), max_team_level(num_levels), smallest_deque(NULL),
   largest_deque(NULL), current_deque(NULL), thread_executor(cpus, this), scheduler_state(scheduler_state) {
-	finish_stack = new FinishStackElement[finish_stack_size];
 	this->levels = new LevelDescription[num_levels];
 	procs_t local_id = 0;
 	for(ptrdiff_t i = num_levels - 1; i >= 0; i--) {
@@ -306,53 +313,7 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::BasicMixe
 		this->levels[i].reverse_ids = (*levels)[i]->reverse_ids;
 	}
 
-	// Create map for simple lookup of levels in the hierarchy (if we have a number of threads)
-	procs_t max_levels = find_last_bit_set(this->levels[0].total_size - 1) + 1;
-	level_map = new procs_t[max_levels];
-	procs_t lvl = num_levels - 1;
-	level_map[0] = num_levels - 1;
-	for(procs_t i = 1; i < max_levels - 1; i++) {
-		procs_t min_size = (1 << (i - 1)) + 1;
-		procs_t lvl_size = this->levels[lvl].total_size;
-		while(min_size > lvl_size) {
-			--lvl;
-			lvl_size = this->levels[lvl].total_size;
-		}
-		level_map[i] = lvl;
-	}
-	level_map[max_levels - 1] = 0;
-
-	// Initialize stuff for memory reuse
-	announced_teams = new TeamAnnouncement*[num_levels];
-	team_task_reuse = new TeamTaskData*[num_levels];
-	team_announcement_reuse = new TeamAnnouncement*[num_levels];
-	for(procs_t i = 0; i < num_levels; ++i) {
-		announced_teams[i] = NULL;
-
-		team_task_reuse[i] = new TeamTaskData();
-		team_announcement_reuse[i] = new TeamAnnouncement();
-	}
-	team_task_reuse[num_levels - 1]->team_level = num_levels - 1;
-	team_task_reuse[num_levels - 1]->team_size = 1;
-	team_task_reuse[num_levels - 1]->next = NULL;
-	team_task_reuse[num_levels - 1]->executed_countdown = 0;
-	team_announcement_reuse[num_levels - 1]->level = num_levels - 1;
-
-	stealing_deques = new StealingDeque<DequeItem>*[num_levels];
-	for(procs_t i = 0; i < num_levels; ++i) {
-		stealing_deques[i] = new StealingDeque<DequeItem>(find_last_bit_set(this->levels[num_levels - i - 1].total_size) << 4);
-	}
-
-	// Initialize team_info structure
-	default_team_info = new TeamInfo();
-
-	solo_team_info = new TeamInfo();
-	solo_team_info->coordinator_id = 0;
-	solo_team_info->local_id = 0;
-	solo_team_info->team_level = num_levels - 1;
-	solo_team_info->team_size = 1;
-
-	team_info = solo_team_info;
+	// All other initializations can be done in parallel
 
 	// Run thread
 	thread_executor.run();
@@ -363,7 +324,7 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::~BasicMix
 	delete[] finish_stack;
 	delete[] levels;
 	delete[] level_map;
-	delete[] announced_teams;
+//	delete[] announced_teams;
 
 	delete default_team_info;
 	delete solo_team_info;
@@ -393,11 +354,72 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::join
 	thread_executor.join();
 }
 
+/*
+ * Initialization of stuff that can be done in parallel
+ */
+template <class Scheduler, template <typename T> class StealingDeque>
+void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::init() {
+	finish_stack = new FinishStackElement[finish_stack_size];
+
+	// Create map for simple lookup of levels in the hierarchy (if we have a number of threads)
+	procs_t max_levels = find_last_bit_set(this->levels[0].total_size - 1) + 1;
+	level_map = new procs_t[max_levels];
+	procs_t lvl = num_levels - 1;
+	level_map[0] = num_levels - 1;
+	for(procs_t i = 1; i < max_levels - 1; i++) {
+		procs_t min_size = (1 << (i - 1)) + 1;
+		procs_t lvl_size = this->levels[lvl].total_size;
+		while(min_size > lvl_size) {
+			--lvl;
+			lvl_size = this->levels[lvl].total_size;
+		}
+		level_map[i] = lvl;
+	}
+	level_map[max_levels - 1] = 0;
+
+	// Initialize stuff for memory reuse
+//	announced_teams = new TeamAnnouncement*[num_levels];
+	team_task_reuse = new TeamTaskData*[num_levels];
+	team_announcement_reuse = new TeamAnnouncement*[num_levels];
+	for(procs_t i = 0; i < num_levels; ++i) {
+//		announced_teams[i] = NULL;
+
+		team_task_reuse[i] = new TeamTaskData();
+		team_announcement_reuse[i] = new TeamAnnouncement();
+	}
+	team_task_reuse[num_levels - 1]->team_level = num_levels - 1;
+	team_task_reuse[num_levels - 1]->team_size = 1;
+	team_task_reuse[num_levels - 1]->next = NULL;
+	team_task_reuse[num_levels - 1]->executed_countdown = 0;
+	team_announcement_reuse[num_levels - 1]->level = num_levels - 1;
+
+	stealing_deques = new StealingDeque<DequeItem>*[num_levels];
+	for(procs_t i = 0; i < num_levels; ++i) {
+		procs_t size = find_last_bit_set(this->levels[num_levels - i - 1].total_size) << 4;
+		stealing_deques[i] = new StealingDeque<DequeItem>(size);
+		levels[i].spawn_same_size_threshold = size;
+	}
+
+	// Initialize team_info structure
+	default_team_info = new TeamInfo();
+
+	solo_team_info = new TeamInfo();
+	solo_team_info->coordinator_id = 0;
+	solo_team_info->local_id = 0;
+	solo_team_info->team_level = num_levels - 1;
+	solo_team_info->team_size = 1;
+
+	team_info = solo_team_info;
+}
 
 template <class Scheduler, template <typename T> class StealingDeque>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::run() {
+	init();
+
+	// Wait until all threads are initialized
 	scheduler_state->state_barrier.wait(0, 1);
 
+	// Start execution
 	Task* startup_task = scheduler_state->startup_task;
 	if(startup_task != NULL && PTR_CAS(&(scheduler_state->startup_task), startup_task, NULL)) {
 		start_finish_region();
@@ -493,7 +515,58 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::wait
  */
 template <class Scheduler, template <typename T> class StealingDeque>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::wait_for_sync() {
-	// TODO
+	// TODO: make this work if a finish is invoced inside sync with thread requirement >= this
+
+	// TODO: Let threads find the big team even though it is shadowed by a temporary team - (presumably higher performance)
+
+	procs_t min_level = current_team->level + 1;
+	TeamAnnouncement* my_team = current_team;
+	TeamTaskData* my_team_task = current_team_task;
+	TeamInfo* my_team_info = team_info;
+	TeamInfo sub_team_info;
+	team_info = &sub_team_info;
+	while(my_team->reg.parts.a != my_team->reg.parts.r) {
+		if(has_local_work(min_level)) {
+			deregister_from_team(my_team);
+
+		//	++team_announcement_index;
+			do {
+				// Execute a single task. This will create a team if there was a task
+				if(execute_next_queue_task(min_level)) {
+					// Coordinate the current team if existing until it's empty
+					coordinate_team();
+				}
+			} while(has_local_work(min_level));
+			// If we executed something, make sure we drop the team
+
+			if(current_team != my_team && current_team != NULL && current_team->level != num_levels - 1) {
+				disband_team();
+			}
+
+			register_for_team(my_team);
+		//	--team_announcement_index;
+
+			if(my_team->reg.parts.a == my_team->reg.parts.r) {
+				break;
+			}
+		}
+
+		// steal tasks from partners or join partner teams
+		visit_partners_until_synced(my_team);
+
+		if(current_team != my_team) {
+			// Coordinate the current team if existing until it's empty
+			coordinate_team();
+			if(current_team != NULL && current_team->level != num_levels - 1) {
+				disband_team();
+			}
+
+			register_for_team(my_team);
+		}
+	}
+	team_info = my_team_info;
+	current_team = my_team;
+	current_team_task = my_team_task;
 }
 
 /*
@@ -586,6 +659,27 @@ bool BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::exec
 }
 
 /*
+ * Finds a single task, creates a team for it and executes the task
+ */
+template <class Scheduler, template <typename T> class StealingDeque>
+bool BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::execute_next_queue_task(procs_t min_level) {
+	DequeItem di = get_next_queue_task(min_level);
+
+	if(di.task != NULL) {
+		create_team(di.team_size);
+
+		if(di.team_size == 1) {
+			execute_solo_queue_task(di);
+		}
+		else {
+			execute_queue_task(di);
+		}
+		return true;
+	}
+	return false;
+}
+
+/*
  * executes the given task (if it is a team task, it is announced for the team
  */
 template <class Scheduler, template <typename T> class StealingDeque>
@@ -655,7 +749,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::crea
 			sync_team();
 
 			current_team->next_team = team;
-			announced_teams[team_announcement_index] = NULL;
+//			announced_teams[team_announcement_index] = NULL;
 		}
 		current_team = team;
 		current_deque = stealing_deques + num_levels - 1;
@@ -702,7 +796,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::crea
 		MEMORY_FENCE();
 
 		if(current_team != NULL) {
-			if(current_team->level > team->level) {
+		/*	if(current_team->level > team->level) {
 				// We now need more threads so we need to reannounce.
 				announced_teams[team_announcement_index] = team;
 			}
@@ -710,12 +804,12 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::crea
 				assert(current_team->level != team->level);
 				// This team is smaller so no need for reannouncement
 				announced_teams[team_announcement_index] = NULL;
-			}
+			}*/
 			current_team->next_team = team;
 		}
-		else {
+	/*	else {
 			announced_teams[team_announcement_index] = team;
-		}
+		}*/
 		current_team = team;
 		current_deque = stealing_deques + level;
 
@@ -990,13 +1084,66 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visi
 }
 
 /*
+ * Stealing routine for (coordinating) threads waiting for all threads to join a team
+ */
+template <class Scheduler, template <typename T> class StealingDeque>
+void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visit_partners_until_synced(TeamAnnouncement* my_team_announcement) {
+	procs_t min_level = my_team_announcement->level;
+	// If we still have local work, this might never terminate
+	assert(!has_local_work());
+
+	Backoff bo;
+	DequeItem di;
+	while(true) {
+		procs_t next_rand = random();
+
+		// We do not steal from the last level as there are no partners
+		procs_t level = num_levels - 1;
+		while(level > min_level) {
+			--level;
+			// For all except the last level we assume num_partners > 0
+			assert(levels[level].num_partners > 0);
+			TaskExecutionContext* partner = levels[level].partners[next_rand % levels[level].num_partners];
+			assert(partner != this);
+
+			TeamAnnouncement* team = find_partner_team(partner, level);
+			if(team != NULL) {
+				// Joins the other team if it wins the tie-breaking scheme and executes all tasks. Only returns after the team has been disbanded
+				tie_break_team(my_team_announcement, team);
+				return;
+			}
+
+			// includes deregistration mechanism and stealing can only work if deregistration was successful
+			// and we stay registered if nothing was stolen
+			di = steal_for_sync(my_team_announcement, partner, level + 1);
+
+			if(di.task != NULL) {
+				create_team(di.team_size);
+
+				if(di.team_size == 1) {
+					execute_solo_queue_task(di);
+				}
+				else {
+					execute_queue_task(di);
+				}
+				return;
+			}
+		}
+		if(my_team_announcement->reg.parts.a == my_team_announcement->reg.parts.r) {
+			return;
+		}
+		bo.backoff();
+	}
+}
+
+/*
  * Checks if the partner has a relevant team for this thread
  * This method assumes we are not bound to a team, another more complex method (with tie-breaking, etc.) is used during team sync
  */
 template <class Scheduler, template <typename T> class StealingDeque>
 typename BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::TeamAnnouncement*
 BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::find_partner_team(TaskExecutionContext* partner, procs_t level) {
-	TeamAnnouncement* team = partner->announced_teams[team_announcement_index];
+	TeamAnnouncement* team = partner->current_team;
 	if(team != NULL && team->level <= level) {
 		// Make sure we haven't found an old announcement (in that case the team must already be fully synced)
 		if(team->reg.parts.a == team->reg.parts.r) {
@@ -1010,28 +1157,14 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::find_part
 
 /*
  * Joins the team and executes all tasks. Only returns after the team has been disbanded
- *
- * TODO: Does not take into account conflicting team announcements, etc.
  */
 template <class Scheduler, template <typename T> class StealingDeque>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::join_team(TeamAnnouncement* team) {
 	// Announce the team so it is visible to others
-	announced_teams[team_announcement_index] = team;
+//	announced_teams[team_announcement_index] = team;
+	current_team = team;
 
-	// Registration
-	{
-		Registration reg, old_reg;
-		Backoff bo;
-		reg.complete = team->reg.complete;
-		old_reg.complete = reg.complete;
-		++reg.parts.a;
-		while(!UINT64_CAS(&(team->reg.complete), old_reg.complete, reg.complete)) {
-			bo.backoff();
-			reg.complete = team->reg.complete;
-			old_reg.complete = reg.complete;
-			++reg.parts.a;
-		}
-	}
+	register_for_team(team);
 
 	// Calculate the team_level at which we have to drop out
 	{
@@ -1055,7 +1188,6 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::join
 		max_team_level = lvl - 1;
 	}
 
-	current_team = team;
 	assert(current_team->level <= max_team_level);
 
 	follow_team();
@@ -1063,8 +1195,30 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::join
 
 /*
  * Joins the team and executes all tasks. Only returns after the team has been disbanded
- *
- * TODO: Does not take into account conflicting team announcements, etc.
+ */
+template <class Scheduler, template <typename T> class StealingDeque>
+void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::tie_break_team(TeamAnnouncement* my_team, TeamAnnouncement* other_team) {
+	if(my_team->level == other_team->level && my_team <= other_team) {
+		// If both teams are the same or if they are at same level and this pointer is smaller - ignore the other
+		return;
+	}
+	if(my_team->level > other_team->level) {
+		// Teams at higher levels are executed first
+		return;
+	}
+	// Tie breaking complete now switch to the new team
+	bool dereg = deregister_from_team(my_team);
+	// deregistration should never fail in this case, as my_team can't be completed if other_team wins (at least 1 thread would never join my_team)
+	// TODO: This might change if we allow tasks with higher thread requirements to win over smaller ones in certain cases. Recheck it then
+	assert(dereg);
+
+	join_team(other_team);
+
+	register_for_team(my_team);
+}
+
+/*
+ * Joins the team and executes all tasks. Only returns after the team has been disbanded
  */
 template <class Scheduler, template <typename T> class StealingDeque>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::follow_team() {
@@ -1107,12 +1261,12 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::foll
 				bo.backoff();
 			}
 			// Announce new team if necessary
-			if(current_team->level > current_team->next_team->level) {
+		/*	if(current_team->level > current_team->next_team->level) {
 				announced_teams[team_announcement_index] = current_team->next_team;
 			}
 			else {
 				announced_teams[team_announcement_index] = NULL;
-			}
+			}*/
 
 			// Put the old team into memory reclamation (as soon as it will be retrieved from reclamation,
 			// it is guaranteed that no other (relevant) threads still have a reference to this
@@ -1159,7 +1313,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::prep
  */
 template <class Scheduler, template <typename T> class StealingDeque>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::sync_team() {
-	// TODO
+	wait_for_sync();
 }
 
 /**
@@ -1261,13 +1415,50 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::end_
 template <class Scheduler, template <typename T> class StealingDeque>
 template<class CallTaskType, typename ... TaskParams>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::spawn(TaskParams ... params) {
-	// TODO: optimization to use call in some cases to prevent the deque from growing too large
-
-	// TODO: let tasks be spawned by multiple threads
-
 	if(is_coordinator()) {
+		if(team_info->team_size == 1) {
+			// Special treatment of solo tasks - less synchronization needed for switch to synchroneous calls
+			procs_t level = team_info->team_level;
+			if(stealing_deques[level]->get_length() >= levels[level].spawn_same_size_threshold) {
+				// There are enough tasks in our queue - make a synchroneous call instead
+				call<CallTaskType>(params ...);
+			}
+			else {
+				CallTaskType* task = new CallTaskType(params ...);
+				assert(current_team_task->parent != NULL);
+				current_team_task->parent->num_spawned++;
+				DequeItem di;
+				di.task = task;
+				di.finish_stack_element = current_team_task->parent;
+				di.team_size = team_info->team_size;
+				store_item_in_deque(di, level);
+			}
+		}
+		else {
+			// TODO: optimization to use call in some cases to prevent the deque from growing too large
+			CallTaskType* task = new CallTaskType(params ...);
+			assert(current_team_task->parent != NULL);
+			current_team_task->parent->num_spawned++;
+			DequeItem di;
+			di.task = task;
+			di.finish_stack_element = current_team_task->parent;
+			di.team_size = team_info->team_size;
+			store_item_in_deque(di, team_info->team_level);
+		}
+	}
+}
+
+template <class Scheduler, template <typename T> class StealingDeque>
+template<class CallTaskType, typename ... TaskParams>
+void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::local_spawn(TaskParams ... params) {
+	if(team_info->team_size == 1) {
+		// Use the optimized synchroneous version instead
+		spawn<CallTaskType, TaskParams ...>(params ...);
+	}
+	else {
+		// We are out of sync, so calls instead of spawns are not possible
 		CallTaskType* task = new CallTaskType(params ...);
-		assert(current_team_task->parent != NULL);
+		assert(finish_stack_filled_left > 0);
 		current_team_task->parent->num_spawned++;
 		DequeItem di;
 		di.task = task;
@@ -1275,19 +1466,6 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::spaw
 		di.team_size = team_info->team_size;
 		store_item_in_deque(di, team_info->team_level);
 	}
-}
-
-template <class Scheduler, template <typename T> class StealingDeque>
-template<class CallTaskType, typename ... TaskParams>
-void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::local_spawn(TaskParams ... params) {
-	CallTaskType* task = new CallTaskType(params ...);
-	assert(finish_stack_filled_left > 0);
-	current_team_task->parent->num_spawned++;
-	DequeItem di;
-	di.task = task;
-	di.finish_stack_element = current_team_task->parent;
-	di.team_size = team_info->team_size;
-	store_item_in_deque(di, team_info->team_level);
 }
 
 template <class Scheduler, template <typename T> class StealingDeque>
@@ -1360,11 +1538,37 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::fini
 template <class Scheduler, template <typename T> class StealingDeque>
 template<class CallTaskType, typename ... TaskParams>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::spawn_nt(procs_t nt_size, TaskParams ... params) {
-	// TODO: optimization to use call in some cases to prevent the finish_stack from growing too large
+	procs_t level = get_level_for_num_threads(nt_size);
+	if(level == team_info->team_level) {
+		// If we stay at the same level use the optimized method for same-size spawns
+		spawn<CallTaskType, TaskParams ...>(params ...);
+	}
+	else {
+		// TODO: optimization to use call in some cases to prevent the finish_stack from growing too large
 
-	// TODO: let tasks be spawned by multiple threads
+		// TODO: let tasks be spawned by multiple threads
 
-	if(is_coordinator()) {
+		if(is_coordinator()) {
+			CallTaskType* task = new CallTaskType(params ...);
+			assert(finish_stack_filled_left > 0);
+			current_team_task->parent.num_spawned++;
+			DequeItem di;
+			di.task = task;
+			di.finish_stack_element = current_team_task->parent;
+			di.team_size = nt_size;
+			store_item_in_deque(di, level);
+		}
+	}
+}
+
+template <class Scheduler, template <typename T> class StealingDeque>
+template<class CallTaskType, typename ... TaskParams>
+void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::local_spawn_nt(procs_t nt_size, TaskParams ... params) {
+	if(team_info->team_size == 1) {
+		// Use the optimized synchroneous version instead
+		spawn_nt<CallTaskType, TaskParams ...>(nt_size, params ...);
+	}
+	else {
 		CallTaskType* task = new CallTaskType(params ...);
 		assert(finish_stack_filled_left > 0);
 		current_team_task->parent.num_spawned++;
@@ -1374,19 +1578,6 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::spaw
 		di.team_size = nt_size;
 		store_item_in_deque(di, get_level_for_num_threads(nt_size));
 	}
-}
-
-template <class Scheduler, template <typename T> class StealingDeque>
-template<class CallTaskType, typename ... TaskParams>
-void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::local_spawn_nt(procs_t nt_size, TaskParams ... params) {
-	CallTaskType* task = new CallTaskType(params ...);
-	assert(finish_stack_filled_left > 0);
-	current_team_task->parent.num_spawned++;
-	DequeItem di;
-	di.task = task;
-	di.finish_stack_element = current_team_task->parent;
-	di.team_size = nt_size;
-	store_item_in_deque(di, get_level_for_num_threads(nt_size));
 }
 
 template <class Scheduler, template <typename T> class StealingDeque>
@@ -1465,6 +1656,26 @@ bool BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::has_
 }
 
 /*
+ * Checks whether there is still some local work that we can execute
+ */
+template <class Scheduler, template <typename T> class StealingDeque>
+bool BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::has_local_work(procs_t min_level) {
+	StealingDeque<DequeItem>** limit_deque = stealing_deques + min_level;
+	while(smallest_deque != NULL && smallest_deque >= limit_deque) {
+		if(!(*smallest_deque)->is_empty()) {
+			return true;
+		}
+		if(smallest_deque >= largest_deque) {
+			smallest_deque = NULL;
+			largest_deque = NULL;
+			return false;
+		}
+		++smallest_deque;
+	}
+	return false;
+}
+
+/*
  * Get a task from the local queues that is suited for the current team
  */
 template <class Scheduler, template <typename T> class StealingDeque>
@@ -1494,6 +1705,30 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::get_next_
 			smallest_deque = NULL;
 			largest_deque = NULL;
 			return ret;
+		}
+		++smallest_deque;
+	}
+	current_deque = smallest_deque;
+	return ret;
+}
+
+/*
+ * Get any task from the local queues
+ */
+template <class Scheduler, template <typename T> class StealingDeque>
+typename BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::DequeItem
+BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::get_next_queue_task(procs_t min_level) {
+	StealingDeque<DequeItem>** limit_deque = stealing_deques + min_level;
+	DequeItem ret;
+	while((ret = (*smallest_deque)->pop()).task == NULL) {
+		if(largest_deque == smallest_deque) {
+			smallest_deque = NULL;
+			largest_deque = NULL;
+			return ret;
+		}
+		++smallest_deque;
+		if(smallest_deque < limit_deque) {
+			return nullable_traits<DequeItem>::null_value;
 		}
 	}
 	current_deque = smallest_deque;
@@ -1546,6 +1781,60 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::steal_tas
 	return nullable_traits<DequeItem>::null_value;
 }
 
+/*
+ * Steal tasks from the given partner, but only those where the level is larger than the given level
+ * The current implementation makes some reasonable assumptions about the CPU hierarchy (expects some symmetry)
+ * If those assumptions are not met, tasks might sometimes be executed with less threads than requested.
+ * Other than that, it shouldn't create any other problems.
+ */
+template <class Scheduler, template <typename T> class StealingDeque>
+typename BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::DequeItem
+BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::steal_for_sync(TeamAnnouncement* my_team, TaskExecutionContext* partner, procs_t min_level) {
+	StealingDeque<DequeItem>** my_queue;
+	StealingDeque<DequeItem>** partner_queue;
+	StealingDeque<DequeItem>** partner_min;
+
+	if(partner->num_levels < num_levels) {
+		min_level += num_levels - partner->num_levels;
+
+		assert(min_level < num_levels);
+	}
+	partner_min = partner->stealing_deques + min_level;
+
+	partner_queue = partner->smallest_deque;
+	if(partner_queue < partner_min || partner_queue == NULL /* actually not really necessary, but just in case NULL is not 0... */) {
+		return nullable_traits<DequeItem>::null_value;
+	}
+	assert(partner_queue >= partner->stealing_deques && partner_queue < partner->stealing_deques + partner->num_levels);
+	my_queue = stealing_deques + num_levels - (partner->stealing_deques + partner->num_levels - partner_queue);
+	while(partner_queue >= partner_min) {
+		if(!(*partner_queue)->is_empty()) {
+			// try to deregister before stealing
+			if(!deregister_from_team(my_team)) {
+				return nullable_traits<DequeItem>::null_value;
+			}
+
+			// try steal
+			DequeItem ret = (*partner_queue)->steal_push(**my_queue);
+			if(ret.task != NULL) {
+				assert(smallest_deque == NULL || smallest_deque > my_queue);
+				current_deque = my_queue;
+				smallest_deque = my_queue;
+				if(largest_deque == NULL) {
+					largest_deque = my_queue;
+				}
+				return ret;
+			}
+			// stealing failed - reregister and continue
+			register_for_team(my_team);
+		}
+		--partner_queue;
+		--my_queue;
+	}
+
+	return nullable_traits<DequeItem>::null_value;
+}
+
 template <class Scheduler, template <typename T> class StealingDeque>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::store_item_in_deque(DequeItem di, procs_t level) {
 	stealing_deques[level]->push(di);
@@ -1559,6 +1848,52 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::stor
 	else if(largest_deque < stealing_deques + level) {
 		largest_deque = stealing_deques + level;
 	}
+}
+
+template <class Scheduler, template <typename T> class StealingDeque>
+void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::register_for_team(TeamAnnouncement* team) {
+	current_team = team;
+
+	// Registration
+	Registration reg, old_reg;
+	Backoff bo;
+	reg.complete = team->reg.complete;
+	old_reg.complete = reg.complete;
+	assert(reg.parts.a != reg.parts.r);
+	++reg.parts.a;
+	while(!UINT64_CAS(&(team->reg.complete), old_reg.complete, reg.complete)) {
+		bo.backoff();
+		reg.complete = team->reg.complete;
+		old_reg.complete = reg.complete;
+		++reg.parts.a;
+	}
+}
+
+template <class Scheduler, template <typename T> class StealingDeque>
+bool BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::deregister_from_team(TeamAnnouncement* team) {
+	// Deregistration
+	Registration reg, old_reg;
+	Backoff bo;
+	reg.complete = team->reg.complete;
+	old_reg.complete = reg.complete;
+	if(reg.parts.a == reg.parts.r) {
+		return false;
+	}
+	assert(reg.parts.a != 0);
+	--reg.parts.a;
+	while(!UINT64_CAS(&(team->reg.complete), old_reg.complete, reg.complete)) {
+		bo.backoff();
+		reg.complete = team->reg.complete;
+		if(reg.parts.a == reg.parts.r) {
+			return false;
+		}
+		old_reg.complete = reg.complete;
+		assert(reg.parts.a != 0);
+		--reg.parts.a;
+	}
+
+	current_team = NULL;
+	return true;
 }
 
 // -------------------------------- old code -----------------------------------------------
