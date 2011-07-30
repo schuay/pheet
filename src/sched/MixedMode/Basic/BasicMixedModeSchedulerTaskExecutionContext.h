@@ -193,6 +193,7 @@ public:
 	procs_t get_local_id();
 	procs_t get_coordinator_id();
 	procs_t get_team_size();
+	procs_t get_max_team_size();
 
 private:
 	void run();
@@ -1358,6 +1359,11 @@ procs_t BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::g
 template <class Scheduler, template <typename T> class StealingDeque>
 procs_t BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::get_team_size() {
 	return team_info->team_size;
+}
+
+template <class Scheduler, template <typename T> class StealingDeque>
+procs_t BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::get_max_team_size() {
+	return levels[0].total_size;
 }
 
 template <class Scheduler, template <typename T> class StealingDeque>

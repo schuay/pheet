@@ -12,8 +12,6 @@
 #include "../../../misc/types.h"
 #include "../../../misc/atomics.h"
 #include "DagQuicksortTask.h"
-//#include "../../../sched/MixedMode/Synchroneous/SynchroneousMixedModeScheduler.h"
-//#include "../../../sched/MixedMode/Synchroneous/SynchroneousMixedModeTask.h"
 
 namespace pheet {
 

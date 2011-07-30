@@ -65,9 +65,10 @@ public:
 	template<class CallTaskType, typename ... TaskParams>
 	void finish_nt(procs_t nt, TaskParams ... params);
 
+	procs_t get_max_team_size();
+
 	static char const name[];
 	static procs_t const max_cpus;
-
 private:
 	void initialize_tecs(BinaryTreeCPUHierarchy<CPUHierarchy>* cpus, size_t offset, vector<typename TaskExecutionContext::LevelDescription*>* levels);
 
@@ -168,6 +169,11 @@ void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::f
 	for(procs_t i = 0; i < num_threads; i++) {
 		threads[i]->join();
 	}
+}
+
+template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
+void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::get_max_team_size() {
+	return num_threads;
 }
 
 
