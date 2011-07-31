@@ -18,6 +18,7 @@
 #define LONG_CAS(p, old_v, new_v)	(__sync_bool_compare_and_swap(p, old_v, new_v))
 #define ULONG_CAS(p, old_v, new_v)	(__sync_bool_compare_and_swap(p, old_v, new_v))
 #define SIZET_CAS(p, old_v, new_v)	(__sync_bool_compare_and_swap(p, old_v, new_v))
+#define PTRDIFFT_CAS(p, old_v, new_v)	(__sync_bool_compare_and_swap(p, old_v, new_v))
 
 #define INT_ATOMIC_ADD(p, val)		(__sync_fetch_and_add(p, val))
 #define UINT_ATOMIC_ADD(p, val)		(__sync_fetch_and_add(p, val))

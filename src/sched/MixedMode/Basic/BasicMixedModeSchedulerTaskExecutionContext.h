@@ -523,9 +523,9 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::wait
 	procs_t min_level = current_team->level + 1;
 	TeamAnnouncement* my_team = current_team;
 	TeamTaskData* my_team_task = current_team_task;
-	TeamInfo* my_team_info = team_info;
+	TeamInfo* my_team_info = default_team_info;
 	TeamInfo sub_team_info;
-	team_info = &sub_team_info;
+	default_team_info = &sub_team_info;
 	while(my_team->reg.parts.a != my_team->reg.parts.r) {
 		if(has_local_work(min_level)) {
 			deregister_from_team(my_team);
@@ -565,6 +565,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::wait
 			register_for_team(my_team);
 		}
 	}
+	default_team_info = my_team_info;
 	team_info = my_team_info;
 	current_team = my_team;
 	current_team_task = my_team_task;
@@ -741,7 +742,8 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::exec
 
 template <class Scheduler, template <typename T> class StealingDeque>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::create_team(procs_t team_size) {
-	if(team_size == 1) {
+	procs_t level = get_level_for_num_threads(team_size);
+	if(level == num_levels - 1) {
 		TeamAnnouncement* team = team_announcement_reuse[num_levels - 1];
 		prepare_solo_team_info();
 		if(current_team != NULL) {
@@ -756,7 +758,6 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::crea
 		current_deque = stealing_deques + num_levels - 1;
 	}
 	else {
-		procs_t level = get_level_for_num_threads(team_size);
 		TeamAnnouncement* team;
 
 		if(!team_announcement_reclamation_queue.empty() && team_announcement_reclamation_queue.front()->reg.parts.r == team_announcement_reclamation_queue.front()->reg.parts.a) {
@@ -774,7 +775,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::crea
 		team->last_task = NULL;
 		team->level = level;
 		team->next_team = NULL;
-		team->reg.parts.r = team_size;
+		team->reg.parts.r = levels[level].total_size;
 		if(current_team == NULL) {
 			team->reg.parts.a = 1;
 		}
@@ -1191,6 +1192,8 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::join
 
 	assert(current_team->level <= max_team_level);
 
+	prepare_team_info(team);
+
 	follow_team();
 }
 
@@ -1289,6 +1292,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::prep
 	assert(team->level != num_levels - 1);
 	team_info = default_team_info;
 	team_info->team_level = team->level;
+	team_info->team_size = levels[team->level].total_size;
 	if(team->coordinator->levels[team->level].reverse_ids) {
 		procs_t offset = team->coordinator->levels[team->level].total_size - 1;
 		team_info->coordinator_id = offset - team->coordinator->levels[team->level].local_id;
@@ -1556,13 +1560,13 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::spaw
 
 		if(is_coordinator()) {
 			CallTaskType* task = new CallTaskType(params ...);
-			assert(finish_stack_filled_left > 0);
-			current_team_task->parent.num_spawned++;
+			assert(current_team_task->parent != NULL);
+			current_team_task->parent->num_spawned++;
 			DequeItem di;
 			di.task = task;
 			di.finish_stack_element = current_team_task->parent;
-			di.team_size = nt_size;
-			store_item_in_deque(di, level);
+			di.team_size = team_info->team_size;
+			store_item_in_deque(di, team_info->team_level);
 		}
 	}
 }

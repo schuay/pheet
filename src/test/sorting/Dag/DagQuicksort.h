@@ -38,7 +38,7 @@ template <class Scheduler>
 procs_t const DagQuicksort<Scheduler>::max_cpus = Scheduler::max_cpus;
 
 template <class Scheduler>
-char const DagQuicksort<Scheduler>::name[] = "MixedMode Fork-Join Quicksort";
+char const DagQuicksort<Scheduler>::name[] = "Dag Quicksort";
 
 template <class Scheduler>
 char const * const DagQuicksort<Scheduler>::scheduler_name = Scheduler::name;

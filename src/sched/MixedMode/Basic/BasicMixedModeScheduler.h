@@ -172,7 +172,7 @@ void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::f
 }
 
 template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
-void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::get_max_team_size() {
+procs_t BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::get_max_team_size() {
 	return num_threads;
 }
 
