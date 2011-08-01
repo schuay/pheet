@@ -56,7 +56,7 @@ MixedModeQuicksort<Scheduler, BLOCK_SIZE>::~MixedModeQuicksort() {
 
 template <class Scheduler, size_t BLOCK_SIZE>
 void MixedModeQuicksort<Scheduler, BLOCK_SIZE>::sort() {
-	scheduler.template finish_nt<MixedModeQuicksortTask<typename Scheduler::Task, BLOCK_SIZE> >(((length / BLOCK_SIZE) / 4) + 1, data, length);
+	scheduler.template finish_nt<MixedModeQuicksortTask<typename Scheduler::Task, BLOCK_SIZE> >(((length / BLOCK_SIZE) / 8) + 1, data, length);
 }
 
 }

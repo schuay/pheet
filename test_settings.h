@@ -9,6 +9,6 @@
 #ifndef TEST_SETTINGS_H_
 #define TEST_SETTINGS_H_
 
-#include "test_variants/debug.h"
+#include "test_variants/fast.h"
 
 #endif /* TEST_SETTINGS_H_ */

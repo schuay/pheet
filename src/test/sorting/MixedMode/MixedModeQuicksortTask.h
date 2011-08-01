@@ -11,6 +11,7 @@
 
 #include "../MixedMode/MixedModeQuicksortTask.h"
 #include "../../../primitives/Backoff/Exponential/ExponentialBackoff.h"
+#include "../../../primitives/Barrier/Simple/SimpleBarrier.h"
 
 namespace pheet {
 
@@ -27,12 +28,13 @@ public:
 private:
 	void partition(typename Task::Scheduler::TaskExecutionContext &tec);
 	void neutralize(ptrdiff_t &leftPos, ptrdiff_t &leftEnd, ptrdiff_t &rightPos, ptrdiff_t &rightEnd);
+	bool is_partitioned();
 
 	unsigned int* data;
 	size_t length;
 
 	unsigned int pivot;
-	int pivotPosition;
+	size_t pivotPosition;
 
 	// Aligned starting positions in the array
 	ptrdiff_t leftStart;
@@ -50,6 +52,8 @@ private:
 
 	ptrdiff_t remainingLeft;
 	ptrdiff_t remainingRight;
+
+	SimpleBarrier<Backoff> barrier;
 };
 
 template <class Task, size_t BLOCK_SIZE>
@@ -93,7 +97,8 @@ MixedModeQuicksortTask<Task, BLOCK_SIZE>::~MixedModeQuicksortTask() {
 
 template <class Task, size_t BLOCK_SIZE>
 void MixedModeQuicksortTask<Task, BLOCK_SIZE>::operator()(typename Task::Scheduler::TaskExecutionContext &tec) {
-	if(tec.get_team_size() == 1) {
+	procs_t team_size = tec.get_team_size();
+	if(team_size == 1) {
 		// For np == 1 switch to dag quicksort
 		tec.template call<DagQuicksortTask<Task>>(data, length);
 		return;
@@ -101,9 +106,16 @@ void MixedModeQuicksortTask<Task, BLOCK_SIZE>::operator()(typename Task::Schedul
 
 	partition(tec);
 
-	tec.template spawn_nt<MixedModeQuicksortTask<Task, BLOCK_SIZE> >(((length / BLOCK_SIZE) / 4) + 1, data, pivotPosition);
-	size_t len = length - pivotPosition - 1;
-	tec.template spawn_nt<MixedModeQuicksortTask<Task, BLOCK_SIZE>>(((length / BLOCK_SIZE) / 4) + 1, data + pivotPosition + 1, len);
+	barrier.barrier(0, team_size);
+	assert(is_partitioned());
+	size_t len = pivotPosition;
+	procs_t procs = (len * team_size) / length;
+	if(procs == 0) {
+		procs = 1;
+	}
+	tec.template spawn_nt<MixedModeQuicksortTask<Task, BLOCK_SIZE> >(procs, data, len);
+	len = length - pivotPosition - 1;
+	tec.template spawn_nt<MixedModeQuicksortTask<Task, BLOCK_SIZE>>(team_size - procs, data + pivotPosition + 1, len);
 }
 
 template <class Task, size_t BLOCK_SIZE>
@@ -216,10 +228,7 @@ void MixedModeQuicksortTask<Task, BLOCK_SIZE>::partition(typename Task::Schedule
 						if(leftPos >= rightPos || rightPos == rightEnd) {
 							INT_ATOMIC_ADD(&threads_finished_right, 1);
 
-							if(threads_finished_right == team_size)
-								break;
-
-							while(true) {
+							while(threads_finished_right != team_size) {
 								rightPos = remainingRight;
 								if(rightPos != (ptrdiff_t)length) {
 									remainingRight = (ptrdiff_t)length;
@@ -230,6 +239,8 @@ void MixedModeQuicksortTask<Task, BLOCK_SIZE>::partition(typename Task::Schedule
 									bo.backoff();
 								}
 							}
+							if(threads_finished_right == team_size)
+								break;
 						}
 						else {
 						/*	if(leftPos >= rightPos || leftPos < 0 || rightPos >= (length - 1)) {
@@ -298,12 +309,9 @@ void MixedModeQuicksortTask<Task, BLOCK_SIZE>::partition(typename Task::Schedule
 							}
 						}
 						if(leftPos >= rightPos || leftPos == leftEnd) {
-							INT_ATOMIC_SUB(&threads_finished_left, 1);
+							INT_ATOMIC_ADD(&threads_finished_left, 1);
 
-							if(threads_finished_left == team_size)
-								break;
-
-							while(true) {
+							while(threads_finished_left != team_size) {
 								leftPos = remainingLeft;
 								if(leftPos != (ptrdiff_t)length) {
 									remainingLeft = length;
@@ -314,6 +322,9 @@ void MixedModeQuicksortTask<Task, BLOCK_SIZE>::partition(typename Task::Schedule
 									bo.backoff();
 								}
 							}
+
+							if(threads_finished_left == team_size)
+								break;
 						}
 						else {
 						/*	if(leftPos >= rightPos || leftPos < 0 || rightPos >= (length - 1)) {
@@ -427,6 +438,33 @@ void MixedModeQuicksortTask<Task, BLOCK_SIZE>::neutralize(ptrdiff_t &leftPos, pt
 		assert(leftPos < rightPos && leftPos >= 0 && rightPos < (((ptrdiff_t)length) - 1));
 		swap(data[leftPos], data[rightPos]);
 	}
+}
+
+template <class Task, size_t BLOCK_SIZE>
+bool MixedModeQuicksortTask<Task, BLOCK_SIZE>::is_partitioned() {
+	for(size_t i = 0; i < length; i++) {
+		if(i < pivotPosition && data[i] > pivot) {
+			return false;
+		//	cout << "data too large! " << i << endl;
+		}
+		else if(i > pivotPosition && data[i] < pivot) {
+			return false;
+		//	cout << "data too small! " << i << endl;
+		}
+		else if(i == pivotPosition && data[i] != pivot) {
+			return false;
+		/*	cout << "wrong pivot at " << data << " "<< (data + i) << ": " << i << " (" << (leftStart + leftBlock * BLOCK_SIZE) << ") " << pivot << " [" << data[i - 1] << "," << data[i] << "," << data[i+1] << "] " << data[length - 1] << " [" << leftPos << "," << rightPos << "] " << length << endl;
+			cout << "tmp " << tmp << " tmp2 " << tmp2 << endl;
+			cout << "right start " << rightStart << " length " << length << endl;
+			for(int j = 0; j < length; j++) {
+				if(data[j] == pivot) {
+					cout << "pivot at " << j << endl;
+				}
+			}
+			*/
+		}
+	}
+	return true;
 }
 
 }
