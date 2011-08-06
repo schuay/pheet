@@ -109,13 +109,19 @@ void MixedModeQuicksortTask<Task, BLOCK_SIZE>::operator()(typename Task::Schedul
 	barrier.barrier(0, team_size);
 	assert(is_partitioned());
 	size_t len = pivotPosition;
-	procs_t procs = (len * team_size) / length;
+	procs_t procs = min((len * team_size) / length, ((len / BLOCK_SIZE) / 8) + 1);
 	if(procs == 0) {
 		procs = 1;
 	}
+	assert(procs == 1 || (len / procs) > BLOCK_SIZE * 2);
 	tec.template spawn_nt<MixedModeQuicksortTask<Task, BLOCK_SIZE> >(procs, data, len);
 	len = length - pivotPosition - 1;
-	tec.template spawn_nt<MixedModeQuicksortTask<Task, BLOCK_SIZE>>(team_size - procs, data + pivotPosition + 1, len);
+	procs = min(team_size - procs, ((len / BLOCK_SIZE) / 8) + 1);
+	if(procs == 0) {
+		procs = 1;
+	}
+	assert(procs == 1 || (len / procs) > BLOCK_SIZE * 2);
+	tec.template spawn_nt<MixedModeQuicksortTask<Task, BLOCK_SIZE>>(procs, data + pivotPosition + 1, len);
 }
 
 template <class Task, size_t BLOCK_SIZE>
@@ -265,8 +271,8 @@ void MixedModeQuicksortTask<Task, BLOCK_SIZE>::partition(typename Task::Schedule
 				break;
 			}
 			else {
-				if(remainingLeft != (ptrdiff_t)length) {
-					ptrdiff_t tmp = remainingLeft;
+				ptrdiff_t tmp = remainingLeft;
+				if(tmp != (ptrdiff_t)length) {
 					if((PTRDIFFT_CAS(&(remainingLeft), tmp, length))) {
 						leftPos = tmp;
 						leftEnd = leftPos - ((leftPos - leftStart) % BLOCK_SIZE) + BLOCK_SIZE;
@@ -349,8 +355,8 @@ void MixedModeQuicksortTask<Task, BLOCK_SIZE>::partition(typename Task::Schedule
 				break;
 			}
 			else {
-				if(remainingRight != (ptrdiff_t)length) {
-					ptrdiff_t tmp = remainingRight;
+				ptrdiff_t tmp = remainingRight;
+				if(tmp != (ptrdiff_t)length) {
 					if((PTRDIFFT_CAS(&(remainingRight), tmp, length))) {
 						rightPos = tmp;
 						rightEnd = (rightPos - ((rightPos - leftStart) % BLOCK_SIZE)) - 1;

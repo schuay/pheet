@@ -225,7 +225,7 @@ private:
 	void visit_partners_until_synced(TeamAnnouncement* team);
 	TeamAnnouncement* find_partner_team(TaskExecutionContext* partner, procs_t level);
 	void join_team(TeamAnnouncement* team);
-	void tie_break_team(TeamAnnouncement* my_team, TeamAnnouncement* other_team);
+	bool tie_break_team(TeamAnnouncement* my_team, TeamAnnouncement* other_team);
 	void follow_team();
 	void prepare_team_info(TeamAnnouncement* team);
 	void prepare_solo_team_info();
@@ -1149,8 +1149,10 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visi
 			TeamAnnouncement* team = find_partner_team(partner, level);
 			if(team != NULL) {
 				// Joins the other team if it wins the tie-breaking scheme and executes all tasks. Only returns after the team has been disbanded
-				tie_break_team(my_team_announcement, team);
-				return;
+				if(tie_break_team(my_team_announcement, team)) {
+					// True means the other team won (false means we are still stuck with our team)
+					return;
+				}
 			}
 
 			// includes deregistration mechanism and stealing can only work if deregistration was successful
@@ -1239,14 +1241,14 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::join
  * Joins the team and executes all tasks. Only returns after the team has been disbanded
  */
 template <class Scheduler, template <typename T> class StealingDeque>
-void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::tie_break_team(TeamAnnouncement* my_team, TeamAnnouncement* other_team) {
+bool BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::tie_break_team(TeamAnnouncement* my_team, TeamAnnouncement* other_team) {
 	if(my_team->level == other_team->level && my_team <= other_team) {
 		// If both teams are the same or if they are at same level and this pointer is smaller - ignore the other
-		return;
+		return false;
 	}
 	if(my_team->level > other_team->level) {
 		// Teams at higher levels are executed first
-		return;
+		return false;
 	}
 	// Tie breaking complete now switch to the new team
 	bool dereg = deregister_from_team(my_team);
@@ -1257,6 +1259,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::tie_
 	join_team(other_team);
 
 	register_for_team(my_team);
+	return true;
 }
 
 /*
