@@ -27,7 +27,7 @@ public:
 	size_t get_capacity();
 	bool is_growable();
 
-	T get(size_t i);
+	T const& get(size_t i);
 	void put(size_t i, T value);
 
 	void grow(size_t bottom, size_t top);
@@ -73,7 +73,7 @@ bool TwoLevelGrowingCircularArray<T, MAX_BUCKETS>::is_growable() {
 }
 
 template <typename T, size_t MAX_BUCKETS>
-T& TwoLevelGrowingCircularArray<T, MAX_BUCKETS>::get(size_t i) {
+T const& TwoLevelGrowingCircularArray<T, MAX_BUCKETS>::get(size_t i) {
 	i = i % capacity;
 	size_t hb = find_last_bit_set(i);
 	return data[hb][i ^ ((1 << (hb)) >> 1)];
