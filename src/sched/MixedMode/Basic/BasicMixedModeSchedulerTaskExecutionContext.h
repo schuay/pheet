@@ -1207,6 +1207,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::join
 	current_team = team;
 
 	register_for_team(team);
+	assert(team->coordinator->levels[team->level].partners[0] == levels[team->level].partners[0]);
 
 	// Calculate the team_level at which we have to drop out
 	{
