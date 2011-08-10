@@ -107,6 +107,7 @@ void MixedModeQuicksortTask<Task, BLOCK_SIZE>::operator()(typename Task::Schedul
 	partition(tec);
 
 	barrier.barrier(0, team_size);
+	MEMORY_FENCE();
 	assert(is_partitioned());
 	size_t len = pivotPosition;
 	procs_t procs = min((len * team_size) / length, ((len / BLOCK_SIZE) / 8) + 1);

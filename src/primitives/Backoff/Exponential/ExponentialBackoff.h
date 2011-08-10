@@ -17,7 +17,7 @@
  */
 namespace pheet {
 
-template <unsigned int MIN_BACKOFF, unsigned int MAX_BACKOFF>
+template <unsigned int MIN_BACKOFF = 100, unsigned int MAX_BACKOFF = 100000>
 class ExponentialBackoff {
 public:
 	ExponentialBackoff();
