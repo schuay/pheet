@@ -32,6 +32,11 @@ public:
 	SumReducer();
 	~SumReducer();
 
+	void incr();
+	void decr();
+	void add(T value);
+	void sub(T value);
+
 private:
 	typedef OrderedReducer<T, SumOperation> Reducer;
 	Reducer reducer;
@@ -51,6 +56,26 @@ SumReducer<T>::SumReducer(SumReducer<T> const& other)
 template <typename T>
 SumReducer<T>::~SumReducer() {
 
+}
+
+template <typename T>
+void SumReducer<T>::add(T value) {
+	reducer.add_data(value);
+}
+
+template <typename T>
+void SumReducer<T>::sub(T value) {
+	reducer.add_data(-value);
+}
+
+template <typename T>
+void SumReducer<T>::incr() {
+	reducer.add_data(1);
+}
+
+template <typename T>
+void SumReducer<T>::decr() {
+	reducer.add_data(-1);
 }
 
 }
