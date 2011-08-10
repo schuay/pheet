@@ -26,7 +26,7 @@ public:
 	~OrderedReducer();
 
 	void add_data(T data);
-	T get_value();
+	T get_data();
 private:
 	typedef OrderedReducerView<T> View;
 	typedef ExponentialBackoff Backoff;
@@ -67,7 +67,7 @@ void OrderedReducer<T, Operation>::add_data(T data) {
 }
 
 template <typename T, template <typename S> class Operation>
-T OrderedReducer<T, Operation>::get_value() {
+T OrderedReducer<T, Operation>::get_data() {
 	Backoff bo;
 	if(!my_view->is_reduced()) {
 		while(true) {

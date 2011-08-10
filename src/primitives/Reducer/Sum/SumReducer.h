@@ -30,6 +30,7 @@ template <typename T>
 class SumReducer {
 public:
 	SumReducer();
+	SumReducer(SumReducer<T> const& other);
 	~SumReducer();
 
 	void incr();
@@ -37,6 +38,7 @@ public:
 	void add(T value);
 	void sub(T value);
 
+	T get_sum();
 private:
 	typedef OrderedReducer<T, SumOperation> Reducer;
 	Reducer reducer;
@@ -78,6 +80,10 @@ void SumReducer<T>::decr() {
 	reducer.add_data(-1);
 }
 
+template <typename T>
+T SumReducer<T>::get_sum() {
+	return redurcer.get_data();
+}
 }
 
 #endif /* SUMREDUCER_H_ */

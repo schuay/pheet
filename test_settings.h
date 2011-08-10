@@ -11,4 +11,8 @@
 
 #include "test_variants/fast.h"
 
+namespace pheet {
+
+}
+
 #endif /* TEST_SETTINGS_H_ */
