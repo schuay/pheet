@@ -1104,7 +1104,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visi
 			if(team != NULL) {
 				// Joins the team and executes all tasks. Only returns after the team has been disbanded
 				join_team(team);
-				assert(current_team != NULL && current_team_task == waiting_for_finish);
+				assert(current_team == NULL);
 				return;
 			}
 
@@ -1244,7 +1244,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::join
 
 	follow_team();
 
-	assert(current_team == NULL || current_team_task == waiting_for_finish);
+	assert(current_team == NULL);
 }
 
 /*
