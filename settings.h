@@ -23,5 +23,6 @@ const pheet::procs_t system_max_cpus = 2;
 #define ENV_X86		1
 //#define ENV_SPARC	1
 
+#include "performance_settings.h"
 
 #endif /* SETTINGS_H_ */

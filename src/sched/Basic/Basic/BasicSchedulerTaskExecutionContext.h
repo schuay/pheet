@@ -15,12 +15,25 @@
 #include "../../../misc/atomics.h"
 #include "../../../misc/bitops.h"
 #include "../../../misc/type_traits.h"
+#include "../../../primitives/PerformanceCounter/Basic/BasicPerformanceCounter.h"
 
 #include <vector>
 #include <assert.h>
 #include <iostream>
 
 namespace pheet {
+
+struct BasicSchedulerPerformanceCounters {
+	BasicSchedulerPerformanceCounters() {}
+	BasicSchedulerPerformanceCounters(BasicSchedulerPerformanceCounters& other)
+		: num_spawns(other.num_spawns), num_spawns_to_call(other.num_spawns_to_call),
+		  num_calls(other.num_calls), num_finishes(other.num_finishes) {}
+
+	BasicPerformanceCounter<scheduler_count_spawns> num_spawns;
+	BasicPerformanceCounter<scheduler_count_spawns_to_call> num_spawns_to_call;
+	BasicPerformanceCounter<scheduler_count_calls> num_calls;
+	BasicPerformanceCounter<scheduler_count_finishes> num_finishes;
+};
 
 struct BasicSchedulerTaskExecutionContextStackElement {
 	// Modified by local thread. Incremented when task is spawned, decremented when finished
@@ -88,7 +101,7 @@ public:
 	typedef BasicSchedulerTaskExecutionContextStackElement StackElement;
 	typedef BasicSchedulerTaskExecutionContextDequeItem<BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque> > DequeItem;
 
-	BasicSchedulerTaskExecutionContext(vector<LevelDescription*> const* levels, vector<typename CPUHierarchy::CPUDescriptor*> const* cpus, typename Scheduler::State* scheduler_state);
+	BasicSchedulerTaskExecutionContext(vector<LevelDescription*> const* levels, vector<typename CPUHierarchy::CPUDescriptor*> const* cpus, typename Scheduler::State* scheduler_state, BasicSchedulerPerformanceCounters& perf_count);
 	~BasicSchedulerTaskExecutionContext();
 
 	void join();
@@ -133,6 +146,8 @@ private:
 	size_t max_queue_length;
 	StealingDeque<DequeItem> stealing_deque;
 
+	BasicSchedulerPerformanceCounters performance_counters;
+
 	friend class CPUThreadExecutor<typename CPUHierarchy::CPUDescriptor, BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>>;
 	friend class Scheduler::Finish;
 };
@@ -141,8 +156,8 @@ template <class Scheduler, template <typename T> class StealingDeque>
 size_t const BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::stack_size = 256;
 
 template <class Scheduler, template <typename T> class StealingDeque>
-BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::BasicSchedulerTaskExecutionContext(vector<LevelDescription*> const* levels, vector<typename CPUHierarchy::CPUDescriptor*> const* cpus, typename Scheduler::State* scheduler_state)
-: stack_filled_left(0), stack_filled_right(stack_size), num_levels(levels->size()), thread_executor(cpus, this), scheduler_state(scheduler_state), max_queue_length(find_last_bit_set((*levels)[0]->total_size - 1) << 4), stealing_deque(max_queue_length) {
+BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::BasicSchedulerTaskExecutionContext(vector<LevelDescription*> const* levels, vector<typename CPUHierarchy::CPUDescriptor*> const* cpus, typename Scheduler::State* scheduler_state, BasicSchedulerPerformanceCounters& perf_count)
+: stack_filled_left(0), stack_filled_right(stack_size), num_levels(levels->size()), thread_executor(cpus, this), scheduler_state(scheduler_state), max_queue_length(find_last_bit_set((*levels)[0]->total_size - 1) << 4), stealing_deque(max_queue_length), performance_counters(perf_count) {
 	stack = new StackElement[stack_size];
 	this->levels = new LevelDescription[num_levels];
 	procs_t local_id = 0;
@@ -424,6 +439,8 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::end_finish_re
 template <class Scheduler, template <typename T> class StealingDeque>
 template<class CallTaskType, typename ... TaskParams>
 void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::finish(TaskParams ... params) {
+	performance_counters.num_finishes.incr();
+
 	start_finish_region();
 
 	call<CallTaskType>(params ...);
@@ -434,7 +451,10 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::finish(TaskPa
 template <class Scheduler, template <typename T> class StealingDeque>
 template<class CallTaskType, typename ... TaskParams>
 void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::spawn(TaskParams ... params) {
+	performance_counters.num_spawns.incr();
+
 	if(stealing_deque.get_length() >= max_queue_length) {
+		performance_counters.num_spawns_to_call.incr();
 		call<CallTaskType>(params ...);
 	}
 	else {
@@ -450,6 +470,7 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::spawn(TaskPar
 template <class Scheduler, template <typename T> class StealingDeque>
 template<class CallTaskType, typename ... TaskParams>
 void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::call(TaskParams ... params) {
+	performance_counters.num_calls.incr();
 	// Create task
 	CallTaskType task(params ...);
 	// Execute task

@@ -22,14 +22,14 @@ template <typename T, template <typename S> class Operation>
 class OrderedReducer {
 public:
 	OrderedReducer();
-	OrderedReducer(OrderedReducer const& other);
+	OrderedReducer(OrderedReducer& other);
 	~OrderedReducer();
 
 	void add_data(T data);
 	T get_data();
 private:
-	typedef OrderedReducerView<T> View;
-	typedef ExponentialBackoff Backoff;
+	typedef OrderedReducerView<T, Operation> View;
+	typedef ExponentialBackoff<> Backoff;
 	View* my_view;
 	bool root;
 };
@@ -41,7 +41,7 @@ OrderedReducer<T, Operation>::OrderedReducer()
 }
 
 template <typename T, template <typename S> class Operation>
-OrderedReducer<T, Operation>::OrderedReducer(OrderedReducer const& other)
+OrderedReducer<T, Operation>::OrderedReducer(OrderedReducer& other)
 : root(false) {
 	my_view = other.my_view;
 	other.my_view = my_view->create_parent_view();
@@ -52,7 +52,7 @@ OrderedReducer<T, Operation>::~OrderedReducer() {
 	my_view->reduce();
 	my_view->notify_parent();
 	if(root) {
-		assert(is_reduced());
+		assert(my_view->is_reduced());
 		delete my_view;
 	}
 	else {
@@ -71,7 +71,7 @@ T OrderedReducer<T, Operation>::get_data() {
 	Backoff bo;
 	if(!my_view->is_reduced()) {
 		while(true) {
-			my_view->fold();
+			my_view = my_view->fold();
 			my_view->reduce();
 			if(my_view->is_reduced()) {
 				break;

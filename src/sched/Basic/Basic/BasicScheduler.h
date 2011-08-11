@@ -70,6 +70,8 @@ private:
 	procs_t num_threads;
 
 	State state;
+
+	BasicSchedulerPerformanceCounters performance_counters;
 };
 
 template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
@@ -90,10 +92,7 @@ BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::BasicScheduler(
 
 template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
 BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::~BasicScheduler() {
-	for(procs_t i = 0; i < num_threads; i++) {
-		delete threads[i];
-	}
-	delete[] threads;
+
 }
 
 template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
@@ -132,7 +131,7 @@ void BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::initialize
 		ld.num_partners = 0;
 		ld.partners = NULL;
 		levels->push_back(&ld);
-		TaskExecutionContext *tec = new TaskExecutionContext(levels, ch->get_cpus(), &state);
+		TaskExecutionContext *tec = new TaskExecutionContext(levels, ch->get_cpus(), &state, performance_counters);
 		threads[offset] = tec;
 		levels->pop_back();
 	}
@@ -151,6 +150,16 @@ void BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::finish(Tas
 	for(procs_t i = 0; i < num_threads; i++) {
 		threads[i]->join();
 	}
+
+	for(procs_t i = 0; i < num_threads; i++) {
+		delete threads[i];
+	}
+	delete[] threads;
+
+	performance_counters.num_spawns.output("Num spawns: %d\n");
+	performance_counters.num_calls.output("Num calls: %d\n");
+	performance_counters.num_spawns_to_call.output("Num spawns converted to call: %d\n");
+	performance_counters.num_finishes.output("Num finishes: %d\n");
 }
 
 }

@@ -9,6 +9,8 @@
 #ifndef BASICPERFORMANCECOUNTER_H_
 #define BASICPERFORMANCECOUNTER_H_
 
+#include <stdio.h>
+
 #include "../../../../settings.h"
 #include "../../Reducer/Sum/SumReducer.h"
 
@@ -23,29 +25,30 @@ template <>
 class BasicPerformanceCounter<false> {
 public:
 	BasicPerformanceCounter();
-	BasicPerformanceCounter(BasicPerformanceCounter const& other);
+	BasicPerformanceCounter(BasicPerformanceCounter<false> const& other);
 	~BasicPerformanceCounter();
 
 	void incr();
+	void output(char const* const formatting_string);
 };
 
-template <>
 BasicPerformanceCounter<false>::BasicPerformanceCounter() {
 
 }
 
-template <>
-BasicPerformanceCounter<false>::BasicPerformanceCounter(BasicPerformanceCounter const& other) {
+BasicPerformanceCounter<false>::BasicPerformanceCounter(BasicPerformanceCounter<false> const& other) {
 
 }
 
-template <>
 BasicPerformanceCounter<false>::~BasicPerformanceCounter() {
 
 }
 
-template <>
 void BasicPerformanceCounter<false>::incr() {
+
+}
+
+void BasicPerformanceCounter<false>::output(char const* const formatting_string) {
 
 }
 
@@ -53,34 +56,36 @@ template <>
 class BasicPerformanceCounter<true> {
 public:
 	BasicPerformanceCounter();
-	BasicPerformanceCounter(BasicPerformanceCounter<true> const& other);
+	BasicPerformanceCounter(BasicPerformanceCounter<true>& other);
 	~BasicPerformanceCounter();
 
 	void incr();
+	void output(char const* formatting_string);
 private:
 	SumReducer<size_t> reducer;
 };
 
-template <>
 BasicPerformanceCounter<true>::BasicPerformanceCounter() {
 
 }
 
-template <>
-BasicPerformanceCounter<true>::BasicPerformanceCounter(BasicPerformanceCounter<true> const& other)
+BasicPerformanceCounter<true>::BasicPerformanceCounter(BasicPerformanceCounter<true>& other)
 : reducer(other.reducer) {
 
 }
 
-template <>
 BasicPerformanceCounter<true>::~BasicPerformanceCounter() {
 
 }
 
-template <>
 void BasicPerformanceCounter<true>::incr() {
 	reducer.incr();
 }
+
+void BasicPerformanceCounter<true>::output(char const* const formatting_string) {
+	printf(formatting_string, reducer.get_sum());
+}
+
 
 }
 

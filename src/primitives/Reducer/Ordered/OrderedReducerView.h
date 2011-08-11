@@ -29,7 +29,9 @@ public:
 	void add_data(T data);
 	T get_data();
 private:
-	Operation reduce;
+	typedef OrderedReducerView<T, Operation> View;
+
+	Operation<T> reduce_op;
 
 	T data;
 	OrderedReducerView<T, Operation>* pred;
@@ -41,7 +43,7 @@ private:
 
 template <typename T, template <typename S> class Operation>
 OrderedReducerView<T, Operation>::OrderedReducerView(OrderedReducerView<T, Operation>* pred, OrderedReducerView<T, Operation>* child)
-:data(reduce.get_identity()), pred(pred), parent(NULL), reuse(NULL), state(child != NULL?0x2:0x0) {
+:data(reduce_op.get_identity()), pred(pred), parent(NULL), reuse(NULL), state(((child != NULL)?0x2u:0x0u)) {
 	assert(pred == NULL || child == NULL);
 	if(child != NULL) {
 		child->parent = this;
@@ -50,7 +52,7 @@ OrderedReducerView<T, Operation>::OrderedReducerView(OrderedReducerView<T, Opera
 
 template <typename T, template <typename S> class Operation>
 OrderedReducerView<T, Operation>::~OrderedReducerView() {
-	assert((state & 0x3) == 0x1);
+//	assert((state & 0x3) == 0x1);
 
 	if(reuse != NULL) {
 		delete reuse;
@@ -72,7 +74,7 @@ OrderedReducerView<T, Operation>* OrderedReducerView<T, Operation>::create_paren
 	OrderedReducerView<T, Operation>* ret = reuse;
 	if(ret != NULL) {
 		reuse = ret->reuse;
-		ret->data = reduce.get_identity();
+		ret->data = reduce_op.get_identity();
 		ret->pred = NULL;
 		ret->parent = NULL;
 		ret->reuse = NULL;
@@ -91,9 +93,11 @@ void OrderedReducerView<T, Operation>::reduce() {
 		state &= 0xFD;
 
 		while(pred != NULL && (pred->state & 0x3) == 0x1) {
-			data = reduce(pred->data, data);
+			data = reduce_op(pred->data, data);
+			View* tmp = pred->pred;
 			// TODO: put into memory reclamation instead
 			delete pred;
+			pred = tmp;
 		}
 	}
 }
@@ -123,7 +127,7 @@ void OrderedReducerView<T, Operation>::set_finished() {
 template <typename T, template <typename S> class Operation>
 void OrderedReducerView<T, Operation>::add_data(T data) {
 	state |= 0x4;
-	this->data = Operation(this->data, data);
+	this->data = reduce_op(this->data, data);
 }
 
 template <typename T, template <typename S> class Operation>

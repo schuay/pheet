@@ -19,18 +19,24 @@ namespace pheet {
 template <typename T>
 struct SumOperation {
 	T operator()(T x, T y);
+	T get_identity();
 };
 
 template <typename T>
-T SumOperation::operator ()(T x, T y) {
+T SumOperation<T>::operator()(T x, T y) {
 	return x + y;
+}
+
+template <typename T>
+T SumOperation<T>::get_identity() {
+	return 0;
 }
 
 template <typename T>
 class SumReducer {
 public:
 	SumReducer();
-	SumReducer(SumReducer<T> const& other);
+	SumReducer(SumReducer<T>& other);
 	~SumReducer();
 
 	void incr();
@@ -50,7 +56,7 @@ SumReducer<T>::SumReducer() {
 }
 
 template <typename T>
-SumReducer<T>::SumReducer(SumReducer<T> const& other)
+SumReducer<T>::SumReducer(SumReducer<T>& other)
 : reducer(other.reducer) {
 
 }
@@ -82,7 +88,7 @@ void SumReducer<T>::decr() {
 
 template <typename T>
 T SumReducer<T>::get_sum() {
-	return redurcer.get_data();
+	return reducer.get_data();
 }
 }
 
