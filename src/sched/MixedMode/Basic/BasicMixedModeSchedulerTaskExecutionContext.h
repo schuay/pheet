@@ -263,6 +263,7 @@ private:
 //	procs_t team_announcement_index;
 
 	// Information needed for task reclamation scheme
+	// TODO: we might get rid of the queue alltogether and use a single pointer instead as the queue never gets more than one entry (i think)
 	queue<TeamTaskData*> team_task_reclamation_queue;
 	TeamTaskData** team_task_reuse;
 
@@ -658,6 +659,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::disb
 	assert(current_team != NULL);
 	assert(current_team->level != num_levels - 1);
 	assert(current_team->coordinator == this);
+	assert(current_team->reg.parts.r == current_team->reg.parts.a);
 
 	// Put the old team into memory reclamation (as soon as it will be retrieved from reclamation,
 	// it is guaranteed that no other (relevant) threads still have a reference to this
@@ -793,11 +795,14 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::crea
 	else {
 		TeamAnnouncement* team;
 
-		if(!team_announcement_reclamation_queue.empty() && team_announcement_reclamation_queue.front()->reg.parts.r == team_announcement_reclamation_queue.front()->reg.parts.a) {
+		if(!team_announcement_reclamation_queue.empty()) {
+			assert(team_announcement_reclamation_queue.front()->reg.parts.r == team_announcement_reclamation_queue.front()->reg.parts.a);
+			assert(team_announcement_reclamation_queue.front()->level < num_levels - 1);
+
 			TeamAnnouncement* tmp = team_announcement_reclamation_queue.front();
 			team_announcement_reclamation_queue.pop();
-			team = team_announcement_reuse[level];
-			team_announcement_reuse[level] = tmp;
+			team = team_announcement_reuse[tmp->level];
+			team_announcement_reuse[tmp->level] = tmp;
 		}
 		else {
 			team = new TeamAnnouncement();
@@ -1047,6 +1052,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visi
 				// Joins the team and executes all tasks. Only returns after the team has been disbanded
 
 				join_team(team);
+				assert(current_team == NULL);
 				return;
 			}
 
@@ -1098,6 +1104,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visi
 			if(team != NULL) {
 				// Joins the team and executes all tasks. Only returns after the team has been disbanded
 				join_team(team);
+				assert(current_team != NULL && current_team_task == waiting_for_finish);
 				return;
 			}
 
@@ -1236,6 +1243,8 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::join
 	prepare_team_info(team);
 
 	follow_team();
+
+	assert(current_team == NULL || current_team_task == waiting_for_finish);
 }
 
 /*
@@ -1258,13 +1267,14 @@ bool BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::tie_
 	assert(dereg);
 
 	join_team(other_team);
+	assert(current_team == NULL);
 
 	register_for_team(my_team);
 	return true;
 }
 
 /*
- * Joins the team and executes all tasks. Only returns after the team has been disbanded
+ * Joins the team and executes all tasks. Only returns after the team has been disbanded or the task to finish has come up
  */
 template <class Scheduler, template <typename T> class StealingDeque>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::follow_team() {
