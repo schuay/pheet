@@ -211,10 +211,7 @@ void MixedModeQuicksortTask<Task, BLOCK_SIZE>::partition(typename Task::Schedule
 				if(localId == 0) {
 				//	leftEnd = rightStart + 1;
 					leftPos = leftStart + leftBlock * BLOCK_SIZE;
-					leftPos = leftStart + leftBlock * BLOCK_SIZE;
-					if(leftPos < 0) {
-						leftPos = 0;
-					}
+					assert(leftPos >= 0);
 					if(rightPos == rightEnd) {
 						// Would be incremented a second time for the same block. Therefore make sure this doesn't happen
 						INT_ATOMIC_SUB(&threads_finished_right, 1);
@@ -294,9 +291,7 @@ void MixedModeQuicksortTask<Task, BLOCK_SIZE>::partition(typename Task::Schedule
 				if(localId == 0) {
 				//	leftEnd = rightStart + 1;
 					rightPos = rightStart - rightBlock * BLOCK_SIZE;
-					if(rightPos > (((ptrdiff_t)length) - 2)) {
-						rightPos = ((ptrdiff_t)length) - 2;
-					}
+					assert(rightPos <= (((ptrdiff_t)length) - 2));
 
 					if(leftPos == leftEnd) {
 						// Would be incremented a second time for the same block. Therefore make sure this doesn't happen
@@ -393,10 +388,11 @@ void MixedModeQuicksortTask<Task, BLOCK_SIZE>::partition(typename Task::Schedule
 
 		if(data[pp] < pivot)
 			pp++;
-#ifdef PRECHECK_PARTITIONED
-		unsigned int tmp = data[length - 1];
-		unsigned int tmp2 = data[pivotPosition];
-#endif
+
+		assert(pp >= 0 && pp < (ptrdiff_t)length);
+		assert(data[pp] >= pivot);
+		assert(pp == 0 || data[pp-1] < pivot);
+
 		if(pp < (((ptrdiff_t)length) - 1)) {
 			swap(data[length - 1], data[pp]);
 		}
@@ -404,26 +400,7 @@ void MixedModeQuicksortTask<Task, BLOCK_SIZE>::partition(typename Task::Schedule
 		pivotPosition = pp;
 	//	cout << "pivot pos: " << pivotPosition << endl;
 	//	cout << "Checking results" << endl;
-#ifdef PRECHECK_PARTITIONED
-		for(int i = 0; i < length; i++) {
-			if(i < pivotPosition && data[i] > pivot) {
-				cout << "data too large! " << i << endl;
-			}
-			else if(i > pivotPosition && data[i] < pivot) {
-				cout << "data too small! " << i << endl;
-			}
-			else if(i == pivotPosition && data[i] != pivot) {
-				cout << "wrong pivot at " << data << " "<< (data + i) << ": " << i << " (" << (leftStart + leftBlock * BLOCK_SIZE) << ") " << pivot << " [" << data[i - 1] << "," << data[i] << "," << data[i+1] << "] " << data[length - 1] << " [" << leftPos << "," << rightPos << "] " << length << endl;
-				cout << "tmp " << tmp << " tmp2 " << tmp2 << endl;
-				cout << "right start " << rightStart << " length " << length << endl;
-				for(int j = 0; j < length; j++) {
-					if(data[j] == pivot) {
-						cout << "pivot at " << j << endl;
-					}
-				}
-			}
-		}
-#endif
+
 	}
 }
 
