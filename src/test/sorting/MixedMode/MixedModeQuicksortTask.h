@@ -381,13 +381,24 @@ void MixedModeQuicksortTask<Task, BLOCK_SIZE>::partition(typename Task::Schedule
 		ptrdiff_t pp = leftStart + leftBlock * BLOCK_SIZE;
 		if(leftPos > pp) {
 			pp = leftPos;
-
+			while(data[pp] < pivot) {
+				++pp;
+			}
 		}else if(rightPos < pp) {
 			pp = rightPos;
+			while(pp > 0 && data[pp - 1] >= pivot) {
+				--pp;
+			}
+		}
+		else {
+			if(data[pp] < pivot)
+				pp++;
+			else if(pp > 0 && data[pp - 1] >= pivot) {
+				--pp;
+			}
 		}
 
-		if(data[pp] < pivot)
-			pp++;
+
 
 		assert(pp >= 0 && pp < (ptrdiff_t)length);
 		assert(data[pp] >= pivot);
