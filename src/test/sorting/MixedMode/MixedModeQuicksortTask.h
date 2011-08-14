@@ -385,7 +385,7 @@ void MixedModeQuicksortTask<Task, BLOCK_SIZE>::partition(typename Task::Schedule
 				++pp;
 			}
 		}else if(rightPos < pp) {
-			pp = rightPos;
+			pp = rightPos + 1;
 			while(pp > 0 && data[pp - 1] >= pivot) {
 				--pp;
 			}
