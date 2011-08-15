@@ -29,6 +29,7 @@ private:
 	void partition(typename Task::Scheduler::TaskExecutionContext &tec);
 	void neutralize(ptrdiff_t &leftPos, ptrdiff_t &leftEnd, ptrdiff_t &rightPos, ptrdiff_t &rightEnd);
 	bool is_partitioned();
+	void assert_is_partitioned();
 
 	unsigned int* data;
 	size_t length;
@@ -108,7 +109,7 @@ void MixedModeQuicksortTask<Task, BLOCK_SIZE>::operator()(typename Task::Schedul
 
 	barrier.barrier(0, team_size);
 	MEMORY_FENCE();
-	assert(is_partitioned());
+	assert_is_partitioned();
 	size_t len = pivotPosition;
 	procs_t procs = min((len * team_size) / length, ((len / BLOCK_SIZE) / 8) + 1);
 	if(procs == 0) {
@@ -460,6 +461,15 @@ bool MixedModeQuicksortTask<Task, BLOCK_SIZE>::is_partitioned() {
 		}
 	}
 	return true;
+}
+
+template <class Task, size_t BLOCK_SIZE>
+void MixedModeQuicksortTask<Task, BLOCK_SIZE>::assert_is_partitioned() {
+	for(size_t i = 0; i < length; i++) {
+		assert(i >= pivotPosition || data[i] <= pivot);
+		assert(i <= pivotPosition && data[i] >= pivot);
+		assert(i != pivotPosition || data[i] == pivot);
+	}
 }
 
 }
