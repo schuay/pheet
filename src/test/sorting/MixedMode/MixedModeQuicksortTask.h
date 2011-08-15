@@ -467,7 +467,7 @@ template <class Task, size_t BLOCK_SIZE>
 void MixedModeQuicksortTask<Task, BLOCK_SIZE>::assert_is_partitioned() {
 	for(size_t i = 0; i < length; i++) {
 		assert(i >= pivotPosition || data[i] <= pivot);
-		assert(i <= pivotPosition && data[i] >= pivot);
+		assert(i <= pivotPosition || data[i] >= pivot);
 		assert(i != pivotPosition || data[i] == pivot);
 	}
 }
