@@ -148,9 +148,9 @@ void MixedModeQuicksortTask<Task, BLOCK_SIZE>::partition(typename Task::Schedule
 	else {
 		// No block for those
 		leftPos = 0;
-		rightPos = 0;
+		rightPos = length;
 		leftEnd = 0;
-		rightEnd = 0;
+		rightEnd = length;
 	/*	leftPos = leftStart + localLeftBlock * BLOCK_SIZE;
 		rightPos = rightStart - localRightBlock * BLOCK_SIZE;
 		leftEnd = leftPos + BLOCK_SIZE;
