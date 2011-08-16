@@ -22,6 +22,7 @@ class CircularArrayStealingDeque {
 public:
 	typedef TT T;
 	CircularArrayStealingDeque(size_t initial_capacity);
+	CircularArrayStealingDeque(size_t initial_capacity, BasicPerformanceCounter<stealing_deque_count_steals>& num_stolen, BasicPerformanceCounter<stealing_deque_count_pop_cas>& num_pop_cas);
 	~CircularArrayStealingDeque();
 
 	void push(T item);
@@ -46,6 +47,9 @@ private:
 	static const T null_element;
 
 	CircularArray<T> data;
+
+	BasicPerformanceCounter<stealing_deque_count_steals> num_stolen;
+	BasicPerformanceCounter<stealing_deque_count_steals> num_pop_cas;
 };
 
 // Upper 4th of size_t is reserved for stamp. The rest is for the actual content
@@ -67,6 +71,12 @@ const TT CircularArrayStealingDeque<TT, CircularArray>::null_element = nullable_
 template <typename TT, template <typename S> class CircularArray>
 CircularArrayStealingDeque<TT, CircularArray>::CircularArrayStealingDeque(size_t initial_capacity)
 : top(0), bottom(0), data(initial_capacity) {
+
+}
+
+template <typename TT, template <typename S> class CircularArray>
+CircularArrayStealingDeque<TT, CircularArray>::CircularArrayStealingDeque(size_t initial_capacity, BasicPerformanceCounter<stealing_deque_count_steals>& num_stolen, BasicPerformanceCounter<stealing_deque_count_pop_cas>& num_pop_cas)
+: top(0), bottom(0), data(initial_capacity), num_stolen(num_stolen), num_pop_cas(num_pop_cas) {
 
 }
 
@@ -122,6 +132,7 @@ TT CircularArrayStealingDeque<TT, CircularArray>::pop() {
 		// Increment stamp (should wrap around)
 		size_t new_top = old_top + top_stamp_add;
 
+		num_pop_cas.incr();
 		if(SIZET_CAS(&top, old_top, new_top))
 		{
 		//	std::cout << "pop " << bottom << std::endl;
@@ -158,6 +169,7 @@ TT CircularArrayStealingDeque<TT, CircularArray>::steal() {
 	size_t new_top = old_top + 1 + top_stamp_add;
 	if(UINT_CAS(&top, old_top, new_top))
 	{
+		num_stolen.incr();
 		return ret;
 	}
 
@@ -178,7 +190,11 @@ TT CircularArrayStealingDeque<TT, CircularArray>::steal_push(CircularArraySteali
 			return prev;
 		}
 		else if(prev != null_element) {
+			num_stolen.incr();
 			other.push(prev);
+		}
+		else {
+			num_stolen.incr();
 		}
 		prev = curr;
 	}

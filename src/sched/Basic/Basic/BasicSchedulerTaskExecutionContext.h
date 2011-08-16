@@ -16,6 +16,7 @@
 #include "../../../misc/bitops.h"
 #include "../../../misc/type_traits.h"
 #include "../../../primitives/PerformanceCounter/Basic/BasicPerformanceCounter.h"
+#include "../../../primitives/PerformanceCounter/Time/TimePerformanceCounter.h"
 
 #include <vector>
 #include <assert.h>
@@ -27,12 +28,26 @@ struct BasicSchedulerPerformanceCounters {
 	BasicSchedulerPerformanceCounters() {}
 	BasicSchedulerPerformanceCounters(BasicSchedulerPerformanceCounters& other)
 		: num_spawns(other.num_spawns), num_spawns_to_call(other.num_spawns_to_call),
-		  num_calls(other.num_calls), num_finishes(other.num_finishes) {}
+		  num_calls(other.num_calls), num_finishes(other.num_finishes),
+		  num_steals(other.num_steals), num_steal_calls(other.num_steal_calls),
+		  num_unsuccessful_steals(other.num_unsuccessful_steals),
+		  num_stealing_deque_pop_cas(other.num_stealing_deque_pop_cas),
+		  total_time(other.total_time), task_time(other.task_time),
+		  idle_time(other.idle_time) {}
 
 	BasicPerformanceCounter<scheduler_count_spawns> num_spawns;
 	BasicPerformanceCounter<scheduler_count_spawns_to_call> num_spawns_to_call;
 	BasicPerformanceCounter<scheduler_count_calls> num_calls;
 	BasicPerformanceCounter<scheduler_count_finishes> num_finishes;
+
+	BasicPerformanceCounter<stealing_deque_count_steals> num_steals;
+	BasicPerformanceCounter<stealing_deque_count_steal_calls> num_steal_calls;
+	BasicPerformanceCounter<stealing_deque_count_unsuccessful_steal_calls> num_unsuccessful_steal_calls;
+	BasicPerformanceCounter<stealing_deque_count_pop_cas> num_stealing_deque_pop_cas;
+
+	TimePerformanceCounter<scheduler_measure_total_time> total_time;
+	TimePerformanceCounter<scheduler_measure_task_time> task_time;
+	TimePerformanceCounter<scheduler_measure_idle_time> idle_time;
 };
 
 struct BasicSchedulerTaskExecutionContextStackElement {
@@ -130,6 +145,8 @@ private:
 	void start_finish_region();
 	void end_finish_region();
 
+	BasicSchedulerPerformanceCounters performance_counters;
+
 	static size_t const stack_size;
 	StackElement* stack;
 	StackElement* current_task_parent;
@@ -146,8 +163,6 @@ private:
 	size_t max_queue_length;
 	StealingDeque<DequeItem> stealing_deque;
 
-	BasicSchedulerPerformanceCounters performance_counters;
-
 	friend class CPUThreadExecutor<typename CPUHierarchy::CPUDescriptor, BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>>;
 	friend class Scheduler::Finish;
 };
@@ -157,7 +172,9 @@ size_t const BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::stack
 
 template <class Scheduler, template <typename T> class StealingDeque>
 BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::BasicSchedulerTaskExecutionContext(vector<LevelDescription*> const* levels, vector<typename CPUHierarchy::CPUDescriptor*> const* cpus, typename Scheduler::State* scheduler_state, BasicSchedulerPerformanceCounters& perf_count)
-: stack_filled_left(0), stack_filled_right(stack_size), num_levels(levels->size()), thread_executor(cpus, this), scheduler_state(scheduler_state), max_queue_length(find_last_bit_set((*levels)[0]->total_size - 1) << 4), stealing_deque(max_queue_length), performance_counters(perf_count) {
+: performance_counters(perf_count), stack_filled_left(0), stack_filled_right(stack_size), num_levels(levels->size()), thread_executor(cpus, this), scheduler_state(scheduler_state), max_queue_length(find_last_bit_set((*levels)[0]->total_size - 1) << 4), stealing_deque(max_queue_length, performance_counters.num_steals, performance_counters.num_stealing_deque_pop_cas) {
+	performance_counters.total_time.start_timer();
+
 	stack = new StackElement[stack_size];
 	this->levels = new LevelDescription[num_levels];
 	procs_t local_id = 0;
@@ -196,6 +213,9 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::run() {
 	}
 	main_loop();
 
+	// We need to stop here, as it isn't safe after the barrier
+	performance_counters.total_time.stop_timer();
+
 	scheduler_state->state_barrier.barrier(1, levels[0].total_size);
 
 	// Now we can safely finish execution
@@ -214,7 +234,9 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::execute_task(
 	current_task_parent = parent;
 
 	// Execute task
+	performance_counters.task_time.start_timer();
 	(*task)(*this);
+	performance_counters.task_time.stop_timer();
 
 	// Signal that we finished executing this task
 	signal_task_completion(parent);
@@ -229,6 +251,7 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::main_loop() {
 		{	// Local scope so we have a new backoff object
 			Backoff bo;
 			DequeItem di;
+			performance_counters.idle_time.start_timer();
 			while(true) {
 				// Finalize elements in stack
 				procs_t next_rand = random();
@@ -249,11 +272,13 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::main_loop() {
 				}
 				if(di.task == NULL) {
 					if(scheduler_state->current_state >= 2) {
+						performance_counters.idle_time.stop_timer();
 						return;
 					}
 					bo.backoff();
 				}
 				else {
+					performance_counters.idle_time.stop_timer();
 					execute_task(di.task, di.stack_element);
 					delete di.task;
 					break;
@@ -286,11 +311,15 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::wait_for_fini
 					// For all except the last level we assume num_partners > 0
 					assert(levels[level].num_partners > 0);
 					assert(levels[level].partners[next_rand % levels[level].num_partners] != this);
+					performance_counters.num_steal_calls.incr();
 					di = levels[level].partners[next_rand % levels[level].num_partners]->stealing_deque.steal_push(this->stealing_deque);
 				//	di = levels[level].partners[next_rand % levels[level].num_partners]->stealing_deque.steal();
 
 					if(di.task != NULL) {
 						break;
+					}
+					else {
+						performance_counters.num_unsuccessful_steal_calls.incr();
 					}
 				}
 				if(di.task == NULL) {

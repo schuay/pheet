@@ -160,6 +160,13 @@ void BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::finish(Tas
 	performance_counters.num_calls.output("Num calls: %d\n");
 	performance_counters.num_spawns_to_call.output("Num spawns converted to call: %d\n");
 	performance_counters.num_finishes.output("Num finishes: %d\n");
+	performance_counters.num_steals.output("Num stealen tasks: %d\n");
+	performance_counters.num_steal_calls.output("Num steal calls: %d\n");
+	performance_counters.num_unsuccessful_steal_calls.output("Num unsuccessful steal calls: %d\n");
+	performance_counters.num_stealing_deque_pop_cas.output("Num Stealing deque pop CAS: %d\n");
+	performance_counters.total_time.output("Total time (all threads): %f\n");
+	performance_counters.task_time.output("Task time (all threads): %f\n");
+	performance_counters.idle_time.output("Idle (stealing) time (all threads): %f\n");
 }
 
 }

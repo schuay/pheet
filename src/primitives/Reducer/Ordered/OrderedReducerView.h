@@ -17,15 +17,16 @@ namespace pheet {
 template <typename T, template <typename S> class Operation>
 class OrderedReducerView {
 public:
-	OrderedReducerView(OrderedReducerView<T, Operation>* pred, OrderedReducerView<T, Operation>* child);
+	OrderedReducerView(bool is_parent);
 	~OrderedReducerView();
 
 	OrderedReducerView<T, Operation>* fold();
 	OrderedReducerView<T, Operation>* create_parent_view();
 	void reduce();
 	bool is_reduced();
-	void notify_parent();
+//	void notify_parent();
 	void set_finished();
+	void set_predecessor(OrderedReducerView<T, Operation>* pred);
 	void add_data(T data);
 	T get_data();
 private:
@@ -35,19 +36,19 @@ private:
 
 	T data;
 	OrderedReducerView<T, Operation>* pred;
-	OrderedReducerView<T, Operation>* parent;
+//	OrderedReducerView<T, Operation>* parent;
 	OrderedReducerView<T, Operation>* reuse;
 	// Bit 0: finished, Bit 1: has unfinished child, Bit 2: has been used
 	uint8_t state;
 };
 
 template <typename T, template <typename S> class Operation>
-OrderedReducerView<T, Operation>::OrderedReducerView(OrderedReducerView<T, Operation>* pred, OrderedReducerView<T, Operation>* child)
-:data(reduce_op.get_identity()), pred(pred), parent(NULL), reuse(NULL), state(((child != NULL)?0x2u:0x0u)) {
-	assert(pred == NULL || child == NULL);
-	if(child != NULL) {
+OrderedReducerView<T, Operation>::OrderedReducerView(bool is_parent)
+:data(reduce_op.get_identity()), pred(NULL)/*, parent(NULL)*/, reuse(NULL), state(((is_parent)?0x2u:0x0u)) {
+//	assert(pred == NULL || child == NULL);
+/*	if(child != NULL) {
 		child->parent = this;
-	}
+	}*/
 }
 
 template <typename T, template <typename S> class Operation>
@@ -76,12 +77,12 @@ OrderedReducerView<T, Operation>* OrderedReducerView<T, Operation>::create_paren
 		reuse = ret->reuse;
 		ret->data = reduce_op.get_identity();
 		ret->pred = NULL;
-		ret->parent = NULL;
+	//	ret->parent = NULL;
 		ret->reuse = NULL;
 		ret->state = 0x2;
 	}
 	else {
-		ret = new View(NULL, this);
+		ret = new View(true);
 	}
 	return ret;
 }
@@ -106,13 +107,13 @@ template <typename T, template <typename S> class Operation>
 bool OrderedReducerView<T, Operation>::is_reduced() {
 	return pred == NULL && (state & 0x2) == 0;
 }
-
+/*
 template <typename T, template <typename S> class Operation>
 void OrderedReducerView<T, Operation>::notify_parent() {
 	if(parent != NULL) {
 		parent->pred = this;
 	}
-}
+}*/
 
 template <typename T, template <typename S> class Operation>
 void OrderedReducerView<T, Operation>::set_finished() {
@@ -122,6 +123,12 @@ void OrderedReducerView<T, Operation>::set_finished() {
 	else {
 		state |= 0x1;
 	}
+}
+
+template <typename T, template <typename S> class Operation>
+void OrderedReducerView<T, Operation>::set_predecessor(OrderedReducerView<T, Operation>* pred) {
+	assert(this->pred == NULL);
+	this->pred = pred;
 }
 
 template <typename T, template <typename S> class Operation>

@@ -43,11 +43,18 @@ template <typename T>
 class FixedSizeCircularArrayStealingDeque : public CircularArrayStealingDeque<T, FixedSizeCircularArray > {
 public:
 	FixedSizeCircularArrayStealingDeque(size_t initial_capacity);
+	FixedSizeCircularArrayStealingDeque(size_t initial_capacity, BasicPerformanceCounter<stealing_deque_count_steals>& num_stolen, BasicPerformanceCounter<stealing_deque_count_pop_cas>& num_pop_cas);
 };
 
 template <typename T>
 FixedSizeCircularArrayStealingDeque<T>::FixedSizeCircularArrayStealingDeque(size_t initial_capacity)
 : CircularArrayStealingDeque<T, FixedSizeCircularArray >(initial_capacity){
+
+}
+
+template <typename T>
+FixedSizeCircularArrayStealingDeque<T>::FixedSizeCircularArrayStealingDeque(size_t initial_capacity, BasicPerformanceCounter<stealing_deque_count_steals>& num_stolen, BasicPerformanceCounter<stealing_deque_count_pop_cas>& num_pop_cas)
+: CircularArrayStealingDeque<T, FixedSizeCircularArray >(initial_capacity, num_stolen, num_pop_cas){
 
 }
 
@@ -67,6 +74,7 @@ template <typename T>
 class TwoLevelGrowingCircularArrayStealingDeque : public CircularArrayStealingDeque<T, MyTwoLevelGrowingCircularArray > {
 public:
 	TwoLevelGrowingCircularArrayStealingDeque(size_t initial_capacity);
+	TwoLevelGrowingCircularArrayStealingDeque(size_t initial_capacity, BasicPerformanceCounter<stealing_deque_count_steals>& num_stolen, BasicPerformanceCounter<stealing_deque_count_pop_cas>& num_pop_cas);
 };
 
 template <typename T>
@@ -75,12 +83,18 @@ TwoLevelGrowingCircularArrayStealingDeque<T>::TwoLevelGrowingCircularArraySteali
 
 }
 
+template <typename T>
+TwoLevelGrowingCircularArrayStealingDeque<T>::TwoLevelGrowingCircularArrayStealingDeque(size_t initial_capacity, BasicPerformanceCounter<stealing_deque_count_steals>& num_stolen, BasicPerformanceCounter<stealing_deque_count_pop_cas>& num_pop_cas)
+: CircularArrayStealingDeque<T, MyTwoLevelGrowingCircularArray >(initial_capacity, num_stolen, num_pop_cas){
+
+}
+
 void SortingTests::run_test() {
 	std::cout << "----" << std::endl;
 	std::cout << "test\tsorter\tscheduler\ttype\tsize\tseed\tcpus\ttime\truns" << std::endl;
 
-	this->run_sorter<MixedModeQuicksort<BasicMixedModeScheduler<OversubscribedSimpleCPUHierarchy, TwoLevelGrowingCircularArrayStealingDeque, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff> > >();
-	this->run_sorter<DagQuicksort<BasicMixedModeScheduler<OversubscribedSimpleCPUHierarchy, TwoLevelGrowingCircularArrayStealingDeque, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff> > >();
+//	this->run_sorter<MixedModeQuicksort<BasicMixedModeScheduler<OversubscribedSimpleCPUHierarchy, TwoLevelGrowingCircularArrayStealingDeque, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff> > >();
+//	this->run_sorter<DagQuicksort<BasicMixedModeScheduler<OversubscribedSimpleCPUHierarchy, TwoLevelGrowingCircularArrayStealingDeque, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff> > >();
 	this->run_sorter<DagQuicksort<BasicScheduler<OversubscribedSimpleCPUHierarchy, FixedSizeCircularArrayStealingDeque, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff> > >();
 	this->run_sorter<DagQuicksort<SynchroneousScheduler<OversubscribedSimpleCPUHierarchy> > >();
 	this->run_sorter<ReferenceQuicksort>();
