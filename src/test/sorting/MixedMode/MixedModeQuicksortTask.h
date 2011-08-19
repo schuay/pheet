@@ -157,8 +157,7 @@ void MixedModeQuicksortTask<Task, BLOCK_SIZE>::partition(typename Task::Schedule
 		rightEnd = rightPos - BLOCK_SIZE;*/
 	}
 
-	bool standardLoop = true;
-	while(standardLoop) {
+	while(true) {
 		neutralize(leftPos, leftEnd, rightPos, rightEnd);
 
 		if(leftPos == leftEnd) {
@@ -167,17 +166,10 @@ void MixedModeQuicksortTask<Task, BLOCK_SIZE>::partition(typename Task::Schedule
 				localLeftBlock = INT_FETCH_AND_ADD(&leftBlock, 1);
 				leftPos = leftStart + localLeftBlock * BLOCK_SIZE;
 				leftEnd = leftPos + BLOCK_SIZE;
-#ifdef PARTASK_DEBUG_MODE
-				if(leftPos > rightPos) {
-					cout << "out of bounds in partitioning" << endl;
-					throw -1;
-				}
-#endif
-			//	cout << localId << " new leftEnd " << leftEnd << endl;
 			}
 			else {
-				INT_ATOMIC_ADD(&threads_finished_left, 1);
-				standardLoop = false;
+		//		INT_ATOMIC_ADD(&threads_finished_left, 1);
+				break;
 			}
 		}
 		if(rightPos == rightEnd) {
@@ -186,17 +178,10 @@ void MixedModeQuicksortTask<Task, BLOCK_SIZE>::partition(typename Task::Schedule
 				localRightBlock = INT_FETCH_AND_ADD(&rightBlock, 1);
 				rightPos = rightStart - localRightBlock * BLOCK_SIZE;
 				rightEnd = rightPos - BLOCK_SIZE;
-			//	cout << localId << " new rightEnd " << rightEnd << endl;
-#ifdef PARTASK_DEBUG_MODE
-				if(leftPos > rightPos) {
-					cout << "out of bounds in partitioning" << endl;
-					throw -1;
-				}
-#endif
 			}
 			else {
-				INT_ATOMIC_ADD(&threads_finished_right, 1);
-				standardLoop = false;
+		//		INT_ATOMIC_ADD(&threads_finished_right, 1);
+				break;
 			}
 		}
 	}
@@ -204,88 +189,76 @@ void MixedModeQuicksortTask<Task, BLOCK_SIZE>::partition(typename Task::Schedule
 	// Now we need the complete team
 	tec.sync_team();
 
-	Backoff bo;
 	while(true) {
 		if(leftPos == leftEnd) {
-			if((team_size - threads_finished_left) <= (unsigned)(localId)) {
-				// We have finished execution. Do some cleanup
-				if(localId == 0) {
-				//	leftEnd = rightStart + 1;
-					leftPos = leftStart + leftBlock * BLOCK_SIZE;
-					assert(leftPos >= 0);
-					if(rightPos == rightEnd) {
-						// Would be incremented a second time for the same block. Therefore make sure this doesn't happen
-						INT_ATOMIC_SUB(&threads_finished_right, 1);
-					}
-					while(true) {
-						while(rightPos > rightEnd) {
-							if(data[rightPos] < pivot)
-								break;
-							rightPos--;
-						}
-						if(rightPos > rightEnd) {
-							while(leftPos < rightPos) {
-								if(data[leftPos] > pivot)
-									break;
-								leftPos++;
-							}
-						}
-						if(leftPos >= rightPos || rightPos == rightEnd) {
-							INT_ATOMIC_ADD(&threads_finished_right, 1);
+			INT_ATOMIC_ADD(&threads_finished_left, 1);
 
-							while(threads_finished_right != team_size) {
-								rightPos = remainingRight;
-								if(rightPos != (ptrdiff_t)length) {
-									remainingRight = (ptrdiff_t)length;
-									rightEnd = (rightPos - ((rightPos - leftStart) % BLOCK_SIZE)) - 1;
-									break;
-								}
-								else {
-									bo.backoff();
-								}
-							}
-							if(threads_finished_right == team_size)
-								break;
-						}
-						else {
-						/*	if(leftPos >= rightPos || leftPos < 0 || rightPos >= (length - 1)) {
-								cout << "argh " << endl;
-								throw -1;
-							}*/
-							swap(data[leftPos], data[rightPos]);
-						}
-					}
-				}
-				else if(rightPos != rightEnd) {
-					while(true) {
-						if(remainingRight == (ptrdiff_t)length && (PTRDIFFT_CAS(&(remainingRight), (ptrdiff_t)length, rightPos))) {
-					//		cout << "Thread " << localId << " stored " << rightPos << " in remainingright" << endl;
-							break;
-						}
-						else {
-							bo.backoff();
-						}
-					}
-				}
-				break;
-			}
-			else {
+			Backoff bo;
+			while(true) {
 				ptrdiff_t tmp = remainingLeft;
-				if(tmp != (ptrdiff_t)length) {
-					if((PTRDIFFT_CAS(&(remainingLeft), tmp, length))) {
-						leftPos = tmp;
-						leftEnd = leftPos - ((leftPos - leftStart) % BLOCK_SIZE) + BLOCK_SIZE;
-				/*		if(leftPos > leftEnd)
-							cout << "bah" << endl;*/
+				if(tmp != (ptrdiff_t)length && PTRDIFFT_CAS(&(remainingLeft), tmp, length)) {
+					leftPos = tmp;
+					leftEnd = leftPos - ((leftPos - leftStart) % BLOCK_SIZE) + BLOCK_SIZE;
+					break;
+				}
+				else if((team_size - threads_finished_left) <= (unsigned)(localId)) {
+					if(localId == 0) {
+						break;
+					}
+					else if(rightPos == rightEnd) {
+						INT_ATOMIC_ADD(&threads_finished_right, 1);
+						break;
+					}
+					else if(remainingRight == (ptrdiff_t)length &&
+							(PTRDIFFT_CAS(&(remainingRight), (ptrdiff_t)length, rightPos))) {
+						break;
 					}
 					else {
 						bo.backoff();
 					}
 				}
-				else
-					bo.backoff();
+			}
+			if(leftPos == leftEnd) {
+				break;
 			}
 		}
+		if(rightPos == rightEnd) {
+			INT_ATOMIC_ADD(&threads_finished_right, 1);
+
+			Backoff bo;
+			while(true) {
+				ptrdiff_t tmp = remainingRight;
+				if(tmp != (ptrdiff_t)length && PTRDIFFT_CAS(&(remainingRight), tmp, length)) {
+					rightPos = tmp;
+					rightEnd = (rightPos - ((rightPos - leftStart) % BLOCK_SIZE)) - 1;
+					break;
+				}
+				else if((team_size - threads_finished_right) <= (unsigned)(localId)) {
+					if(localId == 0) {
+						break;
+					}
+					else if(leftPos == leftEnd) {
+						INT_ATOMIC_ADD(&threads_finished_left, 1);
+						break;
+					}
+					else if(remainingLeft == (ptrdiff_t)length &&
+							(PTRDIFFT_CAS(&(remainingLeft), (ptrdiff_t)length, leftPos))) {
+						break;
+					}
+					else {
+						bo.backoff();
+					}
+				}
+			}
+			if(rightPos == rightEnd) {
+				break;
+			}
+		}
+
+		neutralize(leftPos, leftEnd, rightPos, rightEnd);
+	}
+
+/*
 		else if(rightPos == rightEnd) {
 			if(team_size - threads_finished_right <= (unsigned)(localId)) {
 				// We have finished execution. Do some cleanup
@@ -330,76 +303,115 @@ void MixedModeQuicksortTask<Task, BLOCK_SIZE>::partition(typename Task::Schedule
 								break;
 						}
 						else {
-						/*	if(leftPos >= rightPos || leftPos < 0 || rightPos >= (length - 1)) {
-								cout << "argh " << endl;
-								throw -1;
-							}*/
 							swap(data[leftPos], data[rightPos]);
 						}
 					}
 				}
-				else if(leftPos != leftEnd) {
-					while(true) {
-						if(remainingLeft == (ptrdiff_t)length && (PTRDIFFT_CAS(&(remainingLeft), (ptrdiff_t)length, leftPos))) {
-						//	cout << "Thread " << localId << " stored " << leftPos << " in remainingLeft" << endl;
-							break;
-						}
-						else {
-							bo.backoff();
-						}
-					}
-				}
-				break;
-			}
-			else {
-				ptrdiff_t tmp = remainingRight;
-				if(tmp != (ptrdiff_t)length) {
-					if((PTRDIFFT_CAS(&(remainingRight), tmp, length))) {
-						rightPos = tmp;
-						rightEnd = (rightPos - ((rightPos - leftStart) % BLOCK_SIZE)) - 1;
-					}
-					else {
-						bo.backoff();
-					}
-				}
-				else
-					bo.backoff();
-			}
-		}
-		else {
-			neutralize(leftPos, leftEnd, rightPos, rightEnd);
-			if(leftPos == leftEnd) {
-				INT_ATOMIC_ADD(&threads_finished_left, 1);
-			}
-			if(rightPos == rightEnd) {
-				INT_ATOMIC_ADD(&threads_finished_right, 1);
-			}
-		}
-	}
+
+	}*/
 
 	if(localId == 0) {
-		// Calculate pivot position
-		ptrdiff_t pp = leftStart + leftBlock * BLOCK_SIZE;
-		if(leftPos > pp) {
-			pp = leftPos;
-			while(data[pp] < pivot) {
+		ptrdiff_t pp;
+		if(leftPos == leftEnd) {
+			procs_t rf = team_size;
+			pp = leftStart + leftBlock * BLOCK_SIZE;
+			assert(pp >= 0);
+
+			while(true) {
+				if(rightPos == rightEnd) {
+					--rf;
+
+					Backoff bo;
+					while(rf > threads_finished_right) {
+						ptrdiff_t tmp = remainingRight;
+						if(tmp != (ptrdiff_t)length && PTRDIFFT_CAS(&(remainingRight), tmp, length)) {
+							rightPos = tmp;
+							rightEnd = (rightPos - ((rightPos - leftStart) % BLOCK_SIZE)) - 1;
+							break;
+						}
+						bo.backoff();
+					}
+					if(rightPos == rightEnd) {
+						break;
+					}
+				}
+
+				// neutralize
+				while(true) {
+					while(rightPos > rightEnd) {
+						if(data[rightPos] < pivot)
+							break;
+						rightPos--;
+					}
+					if(rightPos > rightEnd) {
+						while(pp < rightPos) {
+							if(data[pp] > pivot)
+								break;
+							++pp;
+						}
+					}
+					if(pp >= rightPos || rightPos == rightEnd) {
+						break;
+					}
+					else {
+						swap(data[pp], data[rightPos]);
+					}
+				}
+			}
+		}
+		else { /* rightPos == rightEnd */
+			assert(rightPos == rightEnd);
+
+			procs_t lf = team_size;
+			pp = rightStart - rightBlock * BLOCK_SIZE;
+			assert(pp <= length - 2);
+
+			while(true) {
+				if(leftPos == leftEnd) {
+					--lf;
+
+					Backoff bo;
+					while(lf > threads_finished_right) {
+						ptrdiff_t tmp = remainingLeft;
+						if(tmp != (ptrdiff_t)length && PTRDIFFT_CAS(&(remainingLeft), tmp, length)) {
+							leftPos = tmp;
+							leftEnd = leftPos - ((leftPos - leftStart) % BLOCK_SIZE) + BLOCK_SIZE;
+							break;
+						}
+						bo.backoff();
+					}
+					if(leftPos == leftPos) {
+						break;
+					}
+				}
+
+				// neutralize
+				while(true) {
+					while(leftPos < leftEnd) {
+						if(data[leftPos] > pivot)
+							break;
+						leftPos++;
+					}
+					if(leftPos < leftEnd) {
+						while(leftPos < pp) {
+							if(data[pp] < pivot)
+								break;
+							--pp;
+						}
+					}
+					if(leftPos >= pp || leftPos == leftEnd) {
+						break;
+					}
+					else {
+						swap(data[leftPos], data[pp]);
+					}
+				}
+			}
+
+			if(data[pp] < pivot) {
 				++pp;
 			}
-		}else if(rightPos < pp) {
-			pp = rightPos + 1;
-			while(pp > 0 && data[pp - 1] >= pivot) {
-				--pp;
-			}
 		}
-		else {
-			if(data[pp] < pivot)
-				pp++;
-			else if(pp > 0 && data[pp - 1] >= pivot) {
-				--pp;
-			}
-		}
-
-
 
 		assert(pp >= 0 && pp < (ptrdiff_t)length);
 		assert(data[pp] >= pivot);
