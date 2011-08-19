@@ -93,8 +93,8 @@ void SortingTests::run_test() {
 	std::cout << "----" << std::endl;
 	std::cout << "test\tsorter\tscheduler\ttype\tsize\tseed\tcpus\ttime\truns" << std::endl;
 
-//	this->run_sorter<MixedModeQuicksort<BasicMixedModeScheduler<OversubscribedSimpleCPUHierarchy, TwoLevelGrowingCircularArrayStealingDeque, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff> > >();
-//	this->run_sorter<DagQuicksort<BasicMixedModeScheduler<OversubscribedSimpleCPUHierarchy, TwoLevelGrowingCircularArrayStealingDeque, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff> > >();
+	this->run_sorter<MixedModeQuicksort<BasicMixedModeScheduler<OversubscribedSimpleCPUHierarchy, TwoLevelGrowingCircularArrayStealingDeque, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff> > >();
+	this->run_sorter<DagQuicksort<BasicMixedModeScheduler<OversubscribedSimpleCPUHierarchy, TwoLevelGrowingCircularArrayStealingDeque, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff> > >();
 	this->run_sorter<DagQuicksort<BasicScheduler<OversubscribedSimpleCPUHierarchy, FixedSizeCircularArrayStealingDeque, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff> > >();
 	this->run_sorter<DagQuicksort<SynchroneousScheduler<OversubscribedSimpleCPUHierarchy> > >();
 	this->run_sorter<ReferenceQuicksort>();

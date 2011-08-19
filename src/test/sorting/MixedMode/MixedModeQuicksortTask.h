@@ -258,58 +258,6 @@ void MixedModeQuicksortTask<Task, BLOCK_SIZE>::partition(typename Task::Schedule
 		neutralize(leftPos, leftEnd, rightPos, rightEnd);
 	}
 
-/*
-		else if(rightPos == rightEnd) {
-			if(team_size - threads_finished_right <= (unsigned)(localId)) {
-				// We have finished execution. Do some cleanup
-				if(localId == 0) {
-				//	leftEnd = rightStart + 1;
-					rightPos = rightStart - rightBlock * BLOCK_SIZE;
-					assert(rightPos <= (((ptrdiff_t)length) - 2));
-
-					if(leftPos == leftEnd) {
-						// Would be incremented a second time for the same block. Therefore make sure this doesn't happen
-						INT_ATOMIC_SUB(&threads_finished_left, 1);
-					}
-					while(true) {
-						while(leftPos < leftEnd) {
-							if(data[leftPos] > pivot)
-								break;
-							leftPos++;
-						}
-						if(leftPos < leftEnd) {
-							while(leftPos < rightPos) {
-								if(data[rightPos] < pivot)
-									break;
-								rightPos--;
-							}
-						}
-						if(leftPos >= rightPos || leftPos == leftEnd) {
-							INT_ATOMIC_ADD(&threads_finished_left, 1);
-
-							while(threads_finished_left != team_size) {
-								leftPos = remainingLeft;
-								if(leftPos != (ptrdiff_t)length) {
-									remainingLeft = length;
-									leftEnd = leftPos - ((leftPos - leftStart) % BLOCK_SIZE) + BLOCK_SIZE;
-									break;
-								}
-								else {
-									bo.backoff();
-								}
-							}
-
-							if(threads_finished_left == team_size)
-								break;
-						}
-						else {
-							swap(data[leftPos], data[rightPos]);
-						}
-					}
-				}
-
-	}*/
-
 	if(localId == 0) {
 		ptrdiff_t pp;
 		if(leftPos == leftEnd) {
@@ -318,20 +266,22 @@ void MixedModeQuicksortTask<Task, BLOCK_SIZE>::partition(typename Task::Schedule
 			assert(pp >= 0);
 
 			while(true) {
-				if(rightPos == rightEnd) {
+				if(pp >= rightPos || rightPos == rightEnd) {
 					--rf;
 
 					Backoff bo;
+					bool another_pos = false;
 					while(rf > threads_finished_right) {
 						ptrdiff_t tmp = remainingRight;
 						if(tmp != (ptrdiff_t)length && PTRDIFFT_CAS(&(remainingRight), tmp, length)) {
 							rightPos = tmp;
 							rightEnd = (rightPos - ((rightPos - leftStart) % BLOCK_SIZE)) - 1;
+							another_pos = true;
 							break;
 						}
 						bo.backoff();
 					}
-					if(rightPos == rightEnd) {
+					if(!another_pos) {
 						break;
 					}
 				}
@@ -358,29 +308,35 @@ void MixedModeQuicksortTask<Task, BLOCK_SIZE>::partition(typename Task::Schedule
 					}
 				}
 			}
+
+			if(data[pp] < pivot) {
+				++pp;
+			}
 		}
 		else { /* rightPos == rightEnd */
 			assert(rightPos == rightEnd);
 
 			procs_t lf = team_size;
 			pp = rightStart - rightBlock * BLOCK_SIZE;
-			assert(pp <= length - 2);
+			assert(pp <= (ptrdiff_t)length - 2);
 
 			while(true) {
-				if(leftPos == leftEnd) {
+				if(leftPos >= pp || leftPos == leftEnd) {
 					--lf;
 
 					Backoff bo;
-					while(lf > threads_finished_right) {
+					bool another_pos = false;
+					while(lf > threads_finished_left) {
 						ptrdiff_t tmp = remainingLeft;
 						if(tmp != (ptrdiff_t)length && PTRDIFFT_CAS(&(remainingLeft), tmp, length)) {
 							leftPos = tmp;
 							leftEnd = leftPos - ((leftPos - leftStart) % BLOCK_SIZE) + BLOCK_SIZE;
+							another_pos = true;
 							break;
 						}
 						bo.backoff();
 					}
-					if(leftPos == leftPos) {
+					if(!another_pos) {
 						break;
 					}
 				}
