@@ -371,7 +371,7 @@ void MixedModeQuicksortTask<Task, BLOCK_SIZE>::partition(typename Task::Schedule
 
 		assert(pp >= 0 && pp < (ptrdiff_t)length);
 		assert(data[pp] >= pivot);
-		assert(pp == 0 || data[pp-1] < pivot);
+		assert(pp == 0 || data[pp-1] <= pivot);
 
 		if(pp < (((ptrdiff_t)length) - 1)) {
 			swap(data[length - 1], data[pp]);
