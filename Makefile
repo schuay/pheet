@@ -33,7 +33,7 @@ all:	headers $(TARGET) $(TEST_TARGET)
 test:	$(TEST_TARGET)
 
 headers:
-	rsync -av --include "*/" --include "*.h" --exclude "*" src/ inc/pheet/
+	rsync -av --exclude "test*/" --exclude "test_settings.h" --include "*/" --include "*.h" --exclude "*" src/ inc/pheet/
 
 clean:
 	rm -f $(OBJS) $(TARGET) $(TEST_OBJS) $(TEST_TARGET)

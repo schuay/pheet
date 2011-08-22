@@ -6,8 +6,8 @@
  *     License: Pheet license
  */
 
-#ifndef SETTINGS_H_
-#define SETTINGS_H_
+#ifndef PHEET_SETTINGS_H_
+#define PHEET_SETTINGS_H_
 
 #include "misc/types.h"
 
@@ -25,4 +25,4 @@ const pheet::procs_t system_max_cpus = 2;
 
 #include "performance_settings.h"
 
-#endif /* SETTINGS_H_ */
+#endif /* PHEET_SETTINGS_H_ */

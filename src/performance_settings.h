@@ -6,8 +6,8 @@
  *     License: Ask author
  */
 
-#ifndef PERFORMANCE_SETTINGS_H_
-#define PERFORMANCE_SETTINGS_H_
+#ifndef PHEET_PERFORMANCE_SETTINGS_H_
+#define PHEET_PERFORMANCE_SETTINGS_H_
 
 namespace pheet {
 
@@ -43,4 +43,4 @@ bool const scheduler_measure_idle_time = false;
 
 }
 
-#endif /* PERFORMANCE_SETTINGS_H_ */
+#endif /* PHEET_PERFORMANCE_SETTINGS_H_ */
