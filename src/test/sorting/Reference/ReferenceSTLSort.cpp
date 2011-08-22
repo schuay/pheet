@@ -6,7 +6,7 @@
  *     License: Pheet license
  */
 
-#include "../../../../settings.h"
+#include "../../../settings.h"
 #include "ReferenceSTLSort.h"
 
 #include <assert.h>

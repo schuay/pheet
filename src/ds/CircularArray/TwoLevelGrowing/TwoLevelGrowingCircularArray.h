@@ -9,7 +9,7 @@
 #ifndef TWOLEVELGROWINGCIRCULARARRAY_H_
 #define TWOLEVELGROWINGCIRCULARARRAY_H_
 
-#include "../../../../settings.h"
+#include "../../../settings.h"
 #include <assert.h>
 
 #include "../../../misc/bitops.h"

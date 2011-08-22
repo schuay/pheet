@@ -9,7 +9,7 @@
 #ifndef FAST_H_
 #define FAST_H_
 
-#include "../src/misc/types.h"
+#include "../misc/types.h"
 
 namespace pheet {
 

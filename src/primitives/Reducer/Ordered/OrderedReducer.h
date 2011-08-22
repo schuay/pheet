@@ -9,7 +9,7 @@
 #ifndef ORDEREDREDUCER_H_
 #define ORDEREDREDUCER_H_
 
-#include "../../../../settings.h"
+#include "../../../settings.h"
 #include "OrderedReducerView.h"
 #include "../../Backoff/Exponential/ExponentialBackoff.h"
 

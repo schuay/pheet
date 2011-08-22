@@ -9,7 +9,7 @@
 #ifndef MAXPERFORMANCECOUNTER_H_
 #define MAXPERFORMANCECOUNTER_H_
 
-#include "../../../../settings.h"
+#include "../../../settings.h"
 #include "../../Reducer/Max/MaxReducer.h"
 
 /*

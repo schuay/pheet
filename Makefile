@@ -28,9 +28,13 @@ $(TARGET):	$(OBJS)
 $(TEST_TARGET):	$(TEST_OBJS) $(OBJS) $(TARGET)
 	$(CXX) -o $(TEST_TARGET) $(TEST_OBJS) $(TARGET) $(TEST_LIBS)
 	
-all:	$(TARGET) $(TEST_TARGET)
+all:	headers $(TARGET) $(TEST_TARGET)
 
 test:	$(TEST_TARGET)
 
+headers:
+	rsync -av --include "*/" --include "*.h" --exclude "*" src/ inc/pheet/
+
 clean:
 	rm -f $(OBJS) $(TARGET) $(TEST_OBJS) $(TEST_TARGET)
+	rm -f -R inc/pheet/*

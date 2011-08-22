@@ -9,7 +9,7 @@
 #ifndef SETTINGS_H_
 #define SETTINGS_H_
 
-#include "src/misc/types.h"
+#include "misc/types.h"
 
 //#define NDEBUG
 

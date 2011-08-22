@@ -6,7 +6,7 @@
  *     License: Ask author
  */
 
-#include "../../../../settings.h"
+#include "../../../settings.h"
 #include "ReferenceQuicksort.h"
 
 #include <functional>

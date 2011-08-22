@@ -11,7 +11,7 @@
 
 #include <stdio.h>
 
-#include "../../../../settings.h"
+#include "../../../settings.h"
 #include "../../Reducer/Sum/SumReducer.h"
 
 /*

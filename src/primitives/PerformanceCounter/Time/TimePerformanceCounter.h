@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <sys/time.h>
 
-#include "../../../../settings.h"
+#include "../../../settings.h"
 #include "../../Reducer/Sum/SumReducer.h"
 
 /*

@@ -9,7 +9,7 @@
 #ifndef SIMPLECPUHIERARCHY_H_
 #define SIMPLECPUHIERARCHY_H_
 
-#include "../../../../settings.h"
+#include "../../../settings.h"
 #include "../../../misc/types.h"
 
 #include "SimpleCPUHierarchyCPUDescriptor.h"

@@ -9,7 +9,7 @@
 #ifndef FIXEDSIZECIRCULARARRAY_H_
 #define FIXEDSIZECIRCULARARRAY_H_
 
-#include "../../../../settings.h"
+#include "../../../settings.h"
 #include <assert.h>
 
 namespace pheet {

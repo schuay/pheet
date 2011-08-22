@@ -10,7 +10,7 @@
 #define SORTINGTESTS_H_
 
 #include "../Test.h"
-#include "../../../test_settings.h"
+#include "../../test_settings.h"
 #include "SortingTest.h"
 
 namespace pheet {

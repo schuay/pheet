@@ -9,7 +9,7 @@
 #ifndef BASICMIXEDMODESCHEDULERTASKEXECUTIONCONTEXT_H_
 #define BASICMIXEDMODESCHEDULERTASKEXECUTIONCONTEXT_H_
 
-#include "../../../../settings.h"
+#include "../../../settings.h"
 #include "../../common/CPUThreadExecutor.h"
 #include "../../common/FinishRegion.h"
 #include "../../../misc/atomics.h"

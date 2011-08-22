@@ -9,7 +9,7 @@
 #ifndef SYNCHRONEOUSSCHEDULER_H_
 #define SYNCHRONEOUSSCHEDULER_H_
 
-#include "../../../../settings.h"
+#include "../../../settings.h"
 #include "../../common/SchedulerTask.h"
 #include "../../common/FinishRegion.h"
 #include "SynchroneousSchedulerTaskExecutionContext.h"
