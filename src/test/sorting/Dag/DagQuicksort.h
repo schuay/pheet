@@ -22,6 +22,9 @@ public:
 	~DagQuicksort();
 
 	void sort();
+	void print_results();
+
+	static void print_headers();
 
 	static procs_t const max_cpus;
 	static char const name[];
@@ -57,6 +60,16 @@ DagQuicksort<Scheduler>::~DagQuicksort() {
 template <class Scheduler>
 void DagQuicksort<Scheduler>::sort() {
 	scheduler.template finish<DagQuicksortTask<typename Scheduler::Task> >(data, length);
+}
+
+template <class Scheduler>
+void DagQuicksort<Scheduler>::print_results() {
+	scheduler.print_performance_counter_values();
+}
+
+template <class Scheduler>
+void DagQuicksort<Scheduler>::print_headers() {
+	Scheduler::print_performance_counter_headers();
 }
 
 }

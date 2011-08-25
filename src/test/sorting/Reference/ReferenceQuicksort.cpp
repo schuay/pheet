@@ -45,4 +45,12 @@ void ReferenceQuicksort::sort(unsigned int* data, size_t length) {
 	sort(data + pivot + 1, length - pivot - 1);
 }
 
+void ReferenceQuicksort::print_results() {
+
+}
+
+void ReferenceQuicksort::print_headers() {
+
+}
+
 }

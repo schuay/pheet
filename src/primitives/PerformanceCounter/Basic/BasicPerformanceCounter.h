@@ -10,6 +10,7 @@
 #define BASICPERFORMANCECOUNTER_H_
 
 #include <stdio.h>
+#include <iostream>
 
 #include "../../../settings.h"
 #include "../../Reducer/Sum/SumReducer.h"
@@ -29,7 +30,8 @@ public:
 	~BasicPerformanceCounter();
 
 	void incr();
-	void output(char const* const formatting_string);
+	void print(char const* const formatting_string);
+	void print_header(char const* const string);
 };
 
 BasicPerformanceCounter<false>::BasicPerformanceCounter() {
@@ -48,7 +50,11 @@ void BasicPerformanceCounter<false>::incr() {
 
 }
 
-void BasicPerformanceCounter<false>::output(char const* const formatting_string) {
+void BasicPerformanceCounter<false>::print(char const* const formatting_string) {
+
+}
+
+void BasicPerformanceCounter<false>::print_header(char const* const string) {
 
 }
 
@@ -60,7 +66,8 @@ public:
 	~BasicPerformanceCounter();
 
 	void incr();
-	void output(char const* formatting_string);
+	void print(char const* formatting_string);
+	static void print_header(char const* const string);
 private:
 	SumReducer<size_t> reducer;
 };
@@ -82,10 +89,13 @@ void BasicPerformanceCounter<true>::incr() {
 	reducer.incr();
 }
 
-void BasicPerformanceCounter<true>::output(char const* const formatting_string) {
+void BasicPerformanceCounter<true>::print(char const* const formatting_string) {
 	printf(formatting_string, reducer.get_sum());
 }
 
+void BasicPerformanceCounter<true>::print_header(char const* const string) {
+	cout << string;
+}
 
 }
 

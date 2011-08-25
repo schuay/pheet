@@ -20,6 +20,9 @@ public:
 	~ReferenceQuicksort();
 
 	void sort();
+	void print_results();
+
+	static void print_headers();
 
 	static const procs_t max_cpus;
 	static const char name[];

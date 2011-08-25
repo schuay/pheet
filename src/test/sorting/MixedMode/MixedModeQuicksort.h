@@ -22,6 +22,9 @@ public:
 	~MixedModeQuicksort();
 
 	void sort();
+	void print_results();
+
+	static void print_headers();
 
 	static procs_t const max_cpus;
 	static char const name[];
@@ -57,6 +60,16 @@ MixedModeQuicksort<Scheduler, BLOCK_SIZE>::~MixedModeQuicksort() {
 template <class Scheduler, size_t BLOCK_SIZE>
 void MixedModeQuicksort<Scheduler, BLOCK_SIZE>::sort() {
 	scheduler.template finish_nt<MixedModeQuicksortTask<typename Scheduler::Task, BLOCK_SIZE> >(((length / BLOCK_SIZE) / 8) + 1, data, length);
+}
+
+template <class Scheduler, size_t BLOCK_SIZE>
+void MixedModeQuicksort<Scheduler, BLOCK_SIZE>::print_results() {
+	scheduler.print_performance_counter_values();
+}
+
+template <class Scheduler, size_t BLOCK_SIZE>
+void MixedModeQuicksort<Scheduler, BLOCK_SIZE>::print_headers() {
+	Scheduler::print_performance_counter_headers();
 }
 
 }

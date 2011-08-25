@@ -9,6 +9,9 @@
 #ifndef MAXPERFORMANCECOUNTER_H_
 #define MAXPERFORMANCECOUNTER_H_
 
+#include <stdio.h>
+#include <iostream>
+
 #include "../../../settings.h"
 #include "../../Reducer/Max/MaxReducer.h"
 
@@ -27,6 +30,8 @@ public:
 	~MaxPerformanceCounter();
 
 	void add_value();
+	void print(char const* const formatting_string);
+	void print_header(char const* const string);
 };
 
 template <typename T>
@@ -50,6 +55,16 @@ void MaxPerformanceCounter<T, false>::incr() {
 }
 
 template <typename T>
+void MaxPerformanceCounter<T, false>::print(char const* const formatting_string) {
+
+}
+
+template <typename T>
+void MaxPerformanceCounter<T, false>::print_header(char const* const string) {
+
+}
+
+template <typename T>
 class MaxPerformanceCounter<T, true> {
 public:
 	MaxPerformanceCounter();
@@ -57,6 +72,8 @@ public:
 	~MaxPerformanceCounter();
 
 	void incr();
+	void print(char const* const formatting_string);
+	static void print_header(char const* const string);
 private:
 	MaxReducer<size_t> reducer;
 };
@@ -80,6 +97,16 @@ MaxPerformanceCounter<T, true>::~MaxPerformanceCounter() {
 template <typename T>
 void MaxPerformanceCounter<T, true>::incr() {
 	reducer.incr();
+}
+
+template <typename T>
+void MaxPerformanceCounter<T, true>::print(char const* const formatting_string) {
+	printf(formatting_string, reducer.get_sum());
+}
+
+template <typename T>
+void MaxPerformanceCounter<T, true>::print_header(char const* const string) {
+	cout << string;
 }
 
 }

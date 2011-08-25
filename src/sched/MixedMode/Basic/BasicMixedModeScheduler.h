@@ -67,6 +67,10 @@ public:
 
 	procs_t get_max_team_size();
 
+	void print_performance_counter_values();
+
+	static void print_performance_counter_headers();
+
 	static char const name[];
 	static procs_t const max_cpus;
 private:
@@ -176,6 +180,15 @@ procs_t BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>
 	return num_threads;
 }
 
+template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
+void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::print_performance_counter_values() {
+
+}
+
+template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
+void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::print_performance_counter_headers() {
+
+}
 
 }
 

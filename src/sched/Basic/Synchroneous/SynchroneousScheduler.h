@@ -37,6 +37,10 @@ public:
 	template<class CallTaskType, typename ... TaskParams>
 	void finish(TaskParams ... params);
 
+	void print_performance_counter_values();
+
+	static void print_performance_counter_headers();
+
 	static char const name[];
 	static procs_t const max_cpus;
 
@@ -94,6 +98,16 @@ template<class CallTaskType, typename ... TaskParams>
 void SynchroneousScheduler<CPUHierarchyT>::finish(TaskParams ... params) {
 	CallTaskType task(params ...);
 	task(tec);
+}
+
+template <class CPUHierarchyT>
+void SynchroneousScheduler<CPUHierarchyT>::print_performance_counter_values() {
+
+}
+
+template <class CPUHierarchyT>
+void SynchroneousScheduler<CPUHierarchyT>::print_performance_counter_headers() {
+
 }
 
 }

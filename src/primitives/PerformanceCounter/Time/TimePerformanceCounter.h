@@ -10,6 +10,7 @@
 #define TIMEPERFORMANCECOUNTER_H_
 
 #include <stdio.h>
+#include <iostream>
 #include <sys/time.h>
 
 #include "../../../settings.h"
@@ -31,7 +32,8 @@ public:
 
 	void start_timer();
 	void stop_timer();
-	void output(char const* const formatting_string);
+	void print(char const* const formatting_string);
+	void print_header(char const* const string);
 };
 
 TimePerformanceCounter<false>::TimePerformanceCounter() {
@@ -54,7 +56,11 @@ void TimePerformanceCounter<false>::stop_timer() {
 
 }
 
-void TimePerformanceCounter<false>::output(char const* const formatting_string) {
+void TimePerformanceCounter<false>::print(char const* const formatting_string) {
+
+}
+
+void TimePerformanceCounter<false>::print_header(char const* const string) {
 
 }
 
@@ -67,7 +73,8 @@ public:
 
 	void start_timer();
 	void stop_timer();
-	void output(char const* formatting_string);
+	void print(char const* formatting_string);
+	static void print_header(char const* const string);
 private:
 	SumReducer<double> reducer;
 	struct timeval start_time;
@@ -97,8 +104,12 @@ void TimePerformanceCounter<true>::stop_timer() {
 	reducer.add(time);
 }
 
-void TimePerformanceCounter<true>::output(char const* const formatting_string) {
+void TimePerformanceCounter<true>::print(char const* const formatting_string) {
 	printf(formatting_string, reducer.get_sum());
+}
+
+void TimePerformanceCounter<true>::print_header(char const* const string) {
+	cout << string;
 }
 
 }

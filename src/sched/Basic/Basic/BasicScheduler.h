@@ -59,6 +59,10 @@ public:
 	template<class CallTaskType, typename ... TaskParams>
 	void finish(TaskParams ... params);
 
+	void print_performance_counter_values();
+
+	static void print_performance_counter_headers();
+
 	static char const name[];
 	static procs_t const max_cpus;
 
@@ -155,18 +159,38 @@ void BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::finish(Tas
 		delete threads[i];
 	}
 	delete[] threads;
+}
 
-	performance_counters.num_spawns.output("Num spawns: %d\n");
-	performance_counters.num_calls.output("Num calls: %d\n");
-	performance_counters.num_spawns_to_call.output("Num spawns converted to call: %d\n");
-	performance_counters.num_finishes.output("Num finishes: %d\n");
-	performance_counters.num_steals.output("Num stealen tasks: %d\n");
-	performance_counters.num_steal_calls.output("Num steal calls: %d\n");
-	performance_counters.num_unsuccessful_steal_calls.output("Num unsuccessful steal calls: %d\n");
-	performance_counters.num_stealing_deque_pop_cas.output("Num Stealing deque pop CAS: %d\n");
-	performance_counters.total_time.output("Total time (all threads): %f\n");
-	performance_counters.task_time.output("Task time (all threads): %f\n");
-	performance_counters.idle_time.output("Idle (stealing) time (all threads): %f\n");
+template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
+void BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::print_performance_counter_values() {
+	performance_counters.num_spawns.print("%d\t");
+	performance_counters.num_calls.print("%d\t");
+	performance_counters.num_spawns_to_call.print("%d\t");
+	performance_counters.num_finishes.print("%d\t");
+	performance_counters.num_steals.print("%d\t");
+	performance_counters.num_steal_calls.print("%d\t");
+	performance_counters.num_unsuccessful_steal_calls.print("%d\t");
+	performance_counters.num_stealing_deque_pop_cas.print("%d\t");
+	performance_counters.total_time.print("%f\t");
+	performance_counters.task_time.print("%f\t");
+	performance_counters.idle_time.print("%f\t");
+}
+
+template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
+void BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::print_performance_counter_headers() {
+	BasicPerformanceCounter<scheduler_count_spawns>::print_header("spawns\t");
+	BasicPerformanceCounter<scheduler_count_spawns_to_call>::print_header("calls\t");
+	BasicPerformanceCounter<scheduler_count_calls>::print_header("spawns->call\t");
+	BasicPerformanceCounter<scheduler_count_finishes>::print_header("finishes\t");
+
+	BasicPerformanceCounter<stealing_deque_count_steals>::print_header("stolen\t");
+	BasicPerformanceCounter<stealing_deque_count_steal_calls>::print_header("steal_calls\t");
+	BasicPerformanceCounter<stealing_deque_count_unsuccessful_steal_calls>::print_header("unsuccessful_steal_calls\t");
+	BasicPerformanceCounter<stealing_deque_count_pop_cas>::print_header("stealing_deque_pop_cas\t");
+
+	TimePerformanceCounter<scheduler_measure_total_time>::print_header("scheduler_total_time\t");
+	TimePerformanceCounter<scheduler_measure_task_time>::print_header("total_task_time\t");
+	TimePerformanceCounter<scheduler_measure_idle_time>::print_header("total_idle_time\t");
 }
 
 }

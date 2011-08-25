@@ -31,4 +31,12 @@ void ReferenceSTLSort::sort() {
 	std::sort(start, end);
 }
 
+void ReferenceSTLSort::print_results() {
+
+}
+
+void ReferenceSTLSort::print_headers() {
+
+}
+
 }

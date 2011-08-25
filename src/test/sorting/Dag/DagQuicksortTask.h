@@ -20,7 +20,7 @@ public:
 	DagQuicksortTask(unsigned int* data, size_t length);
 	virtual ~DagQuicksortTask();
 
-	virtual void operator()(typename Task::Scheduler::TaskExecutionContext &tec);
+	virtual void operator()(typename Task::TEC& tec);
 
 private:
 	unsigned int* data;
@@ -39,7 +39,7 @@ DagQuicksortTask<Task, CUTOFF_LENGTH>::~DagQuicksortTask() {
 }
 
 template <class Task, size_t CUTOFF_LENGTH>
-void DagQuicksortTask<Task, CUTOFF_LENGTH>::operator()(typename Task::Scheduler::TaskExecutionContext &tec) {
+void DagQuicksortTask<Task, CUTOFF_LENGTH>::operator()(typename Task::TEC& tec) {
 	if(length <= 1)
 		return;
 

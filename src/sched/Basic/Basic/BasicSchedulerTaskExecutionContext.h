@@ -263,11 +263,16 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::main_loop() {
 					// For all except the last level we assume num_partners > 0
 					assert(levels[level].num_partners > 0);
 					assert(levels[level].partners[next_rand % levels[level].num_partners] != this);
+
+					performance_counters.num_steal_calls.incr();
 					di = levels[level].partners[next_rand % levels[level].num_partners]->stealing_deque.steal_push(this->stealing_deque);
 				//	di = levels[level].partners[next_rand % levels[level].num_partners]->stealing_deque.steal();
 
 					if(di.task != NULL) {
 						break;
+					}
+					else {
+						performance_counters.num_unsuccessful_steal_calls.incr();
 					}
 				}
 				if(di.task == NULL) {
