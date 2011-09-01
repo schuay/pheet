@@ -67,6 +67,9 @@ OrderedReducerView<T, Operation>* OrderedReducerView<T, Operation>::fold() {
 		ret->pred->reuse = ret;
 		ret = ret->pred;
 	}
+	if(ret->pred != NULL) {
+		ret->pred->reduce();
+	}
 	return ret;
 }
 
@@ -93,12 +96,19 @@ void OrderedReducerView<T, Operation>::reduce() {
 		// Definitely not waiting for a child any more
 		state &= 0xFD;
 
-		while(pred != NULL && (pred->state & 0x3) == 0x1) {
-			data = reduce_op(pred->data, data);
-			View* tmp = pred->pred;
-			// TODO: put into memory reclamation instead
-			delete pred;
-			pred = tmp;
+		if((pred->state & 0x3) == 0x1) {
+			do {
+				data = reduce_op(pred->data, data);
+				View* tmp = pred->pred;
+				// No memory reclamation as this view is from another fork
+				delete pred;
+				pred = tmp;
+			}while(pred != NULL && (pred->state & 0x3) == 0x1);
+
+			// The pred pointer is the only dangerous pointer, as the parent might read an old value while folding/reducing
+			// This means we need a fence. The good thing is that reduction only happens when there was a
+			// fork previously, so this fence should be rare
+			MEMORY_FENCE();
 		}
 	}
 }

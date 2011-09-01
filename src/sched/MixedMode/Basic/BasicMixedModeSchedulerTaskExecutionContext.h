@@ -26,6 +26,37 @@
  */
 namespace pheet {
 
+struct BasicMixedModeSchedulerPerformanceCounters {
+	BasicMixedModeSchedulerPerformanceCounters(procs_t num_levels)
+	: num_levels(num_levels) {
+
+	}
+
+	BasicMixedModeSchedulerPerformanceCounters(BasicSchedulerPerformanceCounters& other)
+		: num_spawns(other.num_spawns), num_spawns_to_call(other.num_spawns_to_call),
+		  num_calls(other.num_calls), num_finishes(other.num_finishes),
+		  num_steals(other.num_steals), num_steal_calls(other.num_steal_calls),
+		  num_unsuccessful_steal_calls(other.num_unsuccessful_steal_calls),
+		  num_stealing_deque_pop_cas(other.num_stealing_deque_pop_cas),
+		  total_time(other.total_time), task_time(other.task_time),
+		  idle_time(other.idle_time) {}
+
+	procs_t num_levels;
+	BasicPerformanceCounter<scheduler_count_spawns> num_spawns;
+	BasicPerformanceCounter<scheduler_count_spawns_to_call> num_spawns_to_call;
+	BasicPerformanceCounter<scheduler_count_calls> num_calls;
+	BasicPerformanceCounter<scheduler_count_finishes> num_finishes;
+
+	BasicPerformanceCounter<stealing_deque_count_steals> num_steals;
+	BasicPerformanceCounter<stealing_deque_count_steal_calls> num_steal_calls;
+	BasicPerformanceCounter<stealing_deque_count_unsuccessful_steal_calls> num_unsuccessful_steal_calls;
+	BasicPerformanceCounter<stealing_deque_count_pop_cas> num_stealing_deque_pop_cas;
+
+	TimePerformanceCounter<scheduler_measure_total_time> total_time;
+	TimePerformanceCounter<scheduler_measure_task_time> task_time;
+	TimePerformanceCounter<scheduler_measure_idle_time> idle_time;
+};
+
 union BasicMixedModeSchedulerTaskExecutionContextRegistration {
 	uint64_t complete;
 	struct {

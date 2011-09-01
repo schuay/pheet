@@ -1,16 +1,16 @@
 /*
- * OrderedReducer.h
+ * OrderedLocalStorage.h
  *
  *  Created on: 09.08.2011
  *   Author(s): Martin Wimmer
  *     License: Ask author
  */
 
-#ifndef ORDEREDREDUCER_H_
-#define ORDEREDREDUCER_H_
+#ifndef ORDEREDLOCALSTORAGE_H_
+#define ORDEREDLOCALSTORAGE_H_
 
 #include "../../../settings.h"
-#include "OrderedReducerView.h"
+#include "OrderedLocalStorageView.h"
 #include "../../Backoff/Exponential/ExponentialBackoff.h"
 
 /*
@@ -18,29 +18,28 @@
  */
 namespace pheet {
 
-template <typename T, template <typename S> class Operation>
-class OrderedReducer {
+template <class T>
+class OrderedLocalStorage {
 public:
-	OrderedReducer();
-	OrderedReducer(OrderedReducer& other);
-	~OrderedReducer();
+	OrderedLocalStorage();
+	OrderedLocalStorage(OrderedLocalStorage& other);
+	~OrderedLocalStorage();
 
-	void bind(OrderedReducer& other);
-	void add_data(T data);
-	T get_data();
+	void bind(OrderedLocalStorage& other);
+	T& get();
 private:
 	void init();
 	void finalize();
 
-	typedef OrderedReducerView<T, Operation> View;
+	typedef OrderedLocalStorageView<T, Operation> View;
 	typedef ExponentialBackoff<> Backoff;
+
 	View* my_view;
 	View* parent_view;
-//	bool root;
 };
 
 template <typename T, template <typename S> class Operation>
-OrderedReducer<T, Operation>::OrderedReducer()
+OrderedLocalStorage<T, Operation>::OrderedLocalStorage()
 :my_view(NULL), parent_view(NULL)
 {
 	my_view = NULL;
@@ -48,19 +47,19 @@ OrderedReducer<T, Operation>::OrderedReducer()
 }
 
 template <typename T, template <typename S> class Operation>
-OrderedReducer<T, Operation>::OrderedReducer(OrderedReducer& other) {
+OrderedLocalStorage<T, Operation>::OrderedLocalStorage(OrderedLocalStorage& other) {
 	my_view = other.my_view;
 	parent_view = my_view->create_parent_view();
 	other.my_view = parent_view;
 }
 
 template <typename T, template <typename S> class Operation>
-OrderedReducer<T, Operation>::~OrderedReducer() {
+OrderedLocalStorage<T, Operation>::~OrderedLocalStorage() {
 	finalize();
 }
 
 template <typename T, template <typename S> class Operation>
-void OrderedReducer<T, Operation>::bind(OrderedReducer& other) {
+void OrderedLocalStorage<T, Operation>::bind(OrderedLocalStorage& other) {
 	finalize();
 
 	my_view = other.my_view;
@@ -69,12 +68,12 @@ void OrderedReducer<T, Operation>::bind(OrderedReducer& other) {
 }
 
 template <typename T, template <typename S> class Operation>
-void OrderedReducer<T, Operation>::init() {
+void OrderedLocalStorage<T, Operation>::init() {
 	my_view = new View(false);
 }
 
 template <typename T, template <typename S> class Operation>
-void OrderedReducer<T, Operation>::finalize() {
+void OrderedLocalStorage<T, Operation>::finalize() {
 	if(my_view != NULL) {
 		my_view->reduce();
 	//	my_view->notify_parent();
@@ -95,34 +94,14 @@ void OrderedReducer<T, Operation>::finalize() {
 }
 
 template <typename T, template <typename S> class Operation>
-void OrderedReducer<T, Operation>::add_data(T data) {
+T& OrderedLocalStorage<T, Operation>::get_data() {
 	if(my_view == NULL) {
 		init();
 	}
 	my_view = my_view->fold();
-	my_view->add_data(data);
-}
-
-template <typename T, template <typename S> class Operation>
-T OrderedReducer<T, Operation>::get_data() {
-	if(my_view == NULL) {
-		Operation<T> reduce_op;
-		return reduce_op.get_identity();
-	}
-	Backoff bo;
-	if(!my_view->is_reduced()) {
-		while(true) {
-			my_view = my_view->fold();
-			my_view->reduce();
-			if(my_view->is_reduced()) {
-				break;
-			}
-			bo.backoff();
-		}
-	}
 	return my_view->get_data();
 }
 
 }
 
-#endif /* ORDEREDREDUCER_H_ */
+#endif /* ORDEREDLOCALSTORAGE_H_ */

@@ -24,7 +24,7 @@ T MaxOperation::operator ()(T x, T y) {
 	return max(x, y);
 }
 
-template <typename T>
+template <typename T, template <typename S> class M = MaxOperation >
 class MaxReducer {
 public:
 	MaxReducer();
@@ -34,33 +34,33 @@ public:
 	void add_value(T value);
 	T get_max();
 private:
-	typedef OrderedReducer<T, MaxOperation> Reducer;
+	typedef OrderedReducer<T, M> Reducer;
 	Reducer reducer;
 };
 
-template <typename T>
+template <typename T, template <typename S> class M>
 MaxReducer<T>::MaxReducer() {
 
 }
 
-template <typename T>
-MaxReducer<T>::MaxReducer(MaxReducer<T> const& other)
+template <typename T, template <typename S> class M>
+MaxReducer<T, M>::MaxReducer(MaxReducer<T> const& other)
 : reducer(other.reducer) {
 
 }
 
-template <typename T>
-MaxReducer<T>::~MaxReducer() {
+template <typename T, template <typename S> class M>
+MaxReducer<T, M>::~MaxReducer() {
 
 }
 
-template <typename T>
-void MaxReducer<T>::add_value(T value) {
+template <typename T, template <typename S> class M>
+void MaxReducer<T, M>::add_value(T value) {
 	reducer.add_data(value);
 }
 
-template <typename T>
-T MaxReducer<T>::get_max() {
+template <typename T, template <typename S> class M>
+T MaxReducer<T, M>::get_max() {
 	return reducer.get_data();
 }
 
