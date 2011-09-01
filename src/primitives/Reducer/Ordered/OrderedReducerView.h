@@ -38,23 +38,18 @@ private:
 	OrderedReducerView<T, Operation>* pred;
 //	OrderedReducerView<T, Operation>* parent;
 	OrderedReducerView<T, Operation>* reuse;
-	// Bit 0: finished, Bit 1: has unfinished child, Bit 2: has been used
+	// Bit 1: has unfinished child, Bit 2: has been used (Bit 0 isn't used any more)
 	uint8_t state;
 };
 
 template <typename T, template <typename S> class Operation>
 OrderedReducerView<T, Operation>::OrderedReducerView(bool is_parent)
 :data(reduce_op.get_identity()), pred(NULL)/*, parent(NULL)*/, reuse(NULL), state(((is_parent)?0x2u:0x0u)) {
-//	assert(pred == NULL || child == NULL);
-/*	if(child != NULL) {
-		child->parent = this;
-	}*/
+
 }
 
 template <typename T, template <typename S> class Operation>
 OrderedReducerView<T, Operation>::~OrderedReducerView() {
-//	assert((state & 0x3) == 0x1);
-
 	if(reuse != NULL) {
 		delete reuse;
 	}
@@ -63,7 +58,8 @@ OrderedReducerView<T, Operation>::~OrderedReducerView() {
 template <typename T, template <typename S> class Operation>
 OrderedReducerView<T, Operation>* OrderedReducerView<T, Operation>::fold() {
 	OrderedReducerView<T, Operation>* ret = this;
-	while((ret->state & 0x4) == 0 && ret->pred != NULL && (ret->pred->state & 0x1) == 0x1) {
+	while((ret->state & 0x4) == 0 && ret->pred != NULL) {
+		assert(ret->pred->reuse == NULL);
 		ret->pred->reuse = ret;
 		ret = ret->pred;
 	}
@@ -96,14 +92,14 @@ void OrderedReducerView<T, Operation>::reduce() {
 		// Definitely not waiting for a child any more
 		state &= 0xFD;
 
-		if((pred->state & 0x3) == 0x1) {
+		if((pred->state & 0x2) == 0x0) {
 			do {
 				data = reduce_op(pred->data, data);
 				View* tmp = pred->pred;
 				// No memory reclamation as this view is from another fork
 				delete pred;
 				pred = tmp;
-			}while(pred != NULL && (pred->state & 0x3) == 0x1);
+			}while(pred != NULL && (pred->state & 0x2) == 0x0);
 
 			// The pred pointer is the only dangerous pointer, as the parent might read an old value while folding/reducing
 			// This means we need a fence. The good thing is that reduction only happens when there was a
@@ -116,23 +112,6 @@ void OrderedReducerView<T, Operation>::reduce() {
 template <typename T, template <typename S> class Operation>
 bool OrderedReducerView<T, Operation>::is_reduced() {
 	return pred == NULL && (state & 0x2) == 0;
-}
-/*
-template <typename T, template <typename S> class Operation>
-void OrderedReducerView<T, Operation>::notify_parent() {
-	if(parent != NULL) {
-		parent->pred = this;
-	}
-}*/
-
-template <typename T, template <typename S> class Operation>
-void OrderedReducerView<T, Operation>::set_finished() {
-	if(pred != NULL) {
-		state = (state & 0xFD) | 0x1;
-	}
-	else {
-		state |= 0x1;
-	}
 }
 
 template <typename T, template <typename S> class Operation>

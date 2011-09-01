@@ -25,7 +25,6 @@ public:
 	void reduce();
 	bool is_reduced();
 //	void notify_parent();
-	void set_finished();
 	void set_predecessor(OrderedLocalStorageView<T>* pred);
 
 	T& get_data();
@@ -36,7 +35,7 @@ private:
 	OrderedLocalStorageView<T>* pred;
 	OrderedLocalStorageView<T>* reuse;
 
-	// Bit 0: finished, Bit 1: has unfinished child
+	// Bit 1: has unfinished child
 	uint8_t state;
 };
 
@@ -59,7 +58,8 @@ OrderedLocalStorageView<T>::~OrderedLocalStorageView() {
 template <typename T>
 OrderedLocalStorageView<T>* OrderedLocalStorageView<T>::fold() {
 	OrderedLocalStorageView<T>* ret = this;
-	while(ret->data == NULL && ret->pred != NULL && (ret->pred->state & 0x1) == 0x1) {
+	while(ret->data == NULL && ret->pred != NULL) {
+		assert(ret->pred->reuse == NULL);
 		ret->pred->reuse = ret;
 		ret = ret->pred;
 	}
@@ -93,36 +93,22 @@ void OrderedLocalStorageView<T>::reduce() {
 		// Definitely not waiting for a child any more
 		state &= 0xFD;
 
-		if(pred->state == 0x1) {
-			do {
-				data = reduce_op(pred->data, data);
-				View* tmp = pred->pred;
-				// No memory reclamation as this view is from another fork
-				delete pred;
-				pred = tmp;
-			}while(pred != NULL && pred->state == 0x1);
+		do {
+			View* tmp = pred->pred;
+			// No memory reclamation as this view is from another fork
+			delete pred;
+			pred = tmp;
+		}while(pred != NULL);
 
-			// The pred pointer is the only dangerous pointer, as the parent might read an old value while folding/reducing
-			// This means we need a fence. The good thing is that reduction only happens when there was a
-			// fork previously, so this fence should be rare
-			MEMORY_FENCE();
-		}
+		// The pred pointer is the only dangerous pointer, as the parent might read an old value while folding/reducing
+		// This means we need a fence. The good thing is that reduction only happens when there was a
+		// fork previously, so this fence should be rare
 	}
 }
 
 template <typename T>
 bool OrderedLocalStorageView<T>::is_reduced() {
 	return pred == NULL && (state & 0x2) == 0;
-}
-
-template <typename T>
-void OrderedLocalStorageView<T>::set_finished() {
-	if(pred != NULL) {
-		state = 0x1;
-	}
-	else {
-		state |= 0x1;
-	}
 }
 
 template <typename T>

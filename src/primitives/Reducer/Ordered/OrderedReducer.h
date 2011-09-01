@@ -88,8 +88,6 @@ void OrderedReducer<T, Operation>::finalize() {
 			// Order between those two operations is not relevant as both have to be finished before we proceed
 			// Notify parent view
 			parent_view->set_predecessor(my_view);
-			// Finalize this view
-			my_view->set_finished();
 		}
 	}
 }
