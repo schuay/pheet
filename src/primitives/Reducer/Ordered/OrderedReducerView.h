@@ -14,50 +14,56 @@
  */
 namespace pheet {
 
-template <typename T, template <typename S> class Operation>
+template <class Monoid>
 class OrderedReducerView {
 public:
-	OrderedReducerView(bool is_parent);
+	template <typename ... ConsParams>
+	OrderedReducerView(ConsParams ... params);
+	OrderedReducerView(Monoid const& template_monoid);
 	~OrderedReducerView();
 
-	OrderedReducerView<T, Operation>* fold();
-	OrderedReducerView<T, Operation>* create_parent_view();
+	OrderedReducerView<Monoid>* fold();
+	OrderedReducerView<Monoid>* create_parent_view();
 	void reduce();
 	bool is_reduced();
-//	void notify_parent();
 	void set_finished();
-	void set_predecessor(OrderedReducerView<T, Operation>* pred);
-	void add_data(T data);
-	T get_data();
+	void set_predecessor(OrderedReducerView<Monoid>* pred);
+	template <typename ... PutParams>
+	void add_data(PutParams ... params);
+	typename Monoid::OutputType get_data();
 private:
-	typedef OrderedReducerView<T, Operation> View;
+	typedef OrderedReducerView<Monoid> View;
 
-	Operation<T> reduce_op;
-
-	T data;
-	OrderedReducerView<T, Operation>* pred;
-//	OrderedReducerView<T, Operation>* parent;
-	OrderedReducerView<T, Operation>* reuse;
+	Monoid data;
+	OrderedReducerView<Monoid>* pred;
+	OrderedReducerView<Monoid>* reuse;
 	// Bit 1: has unfinished child, Bit 2: has been used (Bit 0 isn't used any more)
 	uint8_t state;
 };
 
-template <typename T, template <typename S> class Operation>
-OrderedReducerView<T, Operation>::OrderedReducerView(bool is_parent)
-:data(reduce_op.get_identity()), pred(NULL)/*, parent(NULL)*/, reuse(NULL), state(((is_parent)?0x2u:0x0u)) {
+template <class Monoid>
+template <typename ... ConsParams>
+OrderedReducerView<Monoid>::OrderedReducerView(ConsParams ... params)
+:data(params ...), pred(NULL), reuse(NULL), state(0x0u) {
 
 }
 
-template <typename T, template <typename S> class Operation>
-OrderedReducerView<T, Operation>::~OrderedReducerView() {
+template <class Monoid>
+OrderedReducerView<Monoid>::OrderedReducerView(Monoid const& template_monoid)
+:data(template_monoid), pred(NULL), reuse(NULL), state(0x2u) {
+
+}
+
+template <class Monoid>
+OrderedReducerView<Monoid>::~OrderedReducerView() {
 	if(reuse != NULL) {
 		delete reuse;
 	}
 }
 
-template <typename T, template <typename S> class Operation>
-OrderedReducerView<T, Operation>* OrderedReducerView<T, Operation>::fold() {
-	OrderedReducerView<T, Operation>* ret = this;
+template <class Monoid>
+OrderedReducerView<Monoid>* OrderedReducerView<Monoid>::fold() {
+	OrderedReducerView<Monoid>* ret = this;
 	while((ret->state & 0x4) == 0 && ret->pred != NULL) {
 		assert(ret->pred->reuse == NULL);
 		ret->pred->reuse = ret;
@@ -69,32 +75,32 @@ OrderedReducerView<T, Operation>* OrderedReducerView<T, Operation>::fold() {
 	return ret;
 }
 
-template <typename T, template <typename S> class Operation>
-OrderedReducerView<T, Operation>* OrderedReducerView<T, Operation>::create_parent_view() {
-	OrderedReducerView<T, Operation>* ret = reuse;
+template <class Monoid>
+OrderedReducerView<Monoid>* OrderedReducerView<Monoid>::create_parent_view() {
+	OrderedReducerView<Monoid>* ret = reuse;
 	if(ret != NULL) {
 		reuse = ret->reuse;
-		ret->data = reduce_op.get_identity();
+		ret->data.reset();
 		ret->pred = NULL;
 	//	ret->parent = NULL;
 		ret->reuse = NULL;
 		ret->state = 0x2;
 	}
 	else {
-		ret = new View(true);
+		ret = new View(data);
 	}
 	return ret;
 }
 
-template <typename T, template <typename S> class Operation>
-void OrderedReducerView<T, Operation>::reduce() {
+template <class Monoid>
+void OrderedReducerView<Monoid>::reduce() {
 	if(pred != NULL) {
 		// Definitely not waiting for a child any more
 		state &= 0xFD;
 
 		if((pred->state & 0x2) == 0x0) {
 			do {
-				data = reduce_op(pred->data, data);
+				data.left_reduce(pred->data);
 				View* tmp = pred->pred;
 				// No memory reclamation as this view is from another fork
 				delete pred;
@@ -109,26 +115,27 @@ void OrderedReducerView<T, Operation>::reduce() {
 	}
 }
 
-template <typename T, template <typename S> class Operation>
-bool OrderedReducerView<T, Operation>::is_reduced() {
+template <class Monoid>
+bool OrderedReducerView<Monoid>::is_reduced() {
 	return pred == NULL && (state & 0x2) == 0;
 }
 
-template <typename T, template <typename S> class Operation>
-void OrderedReducerView<T, Operation>::set_predecessor(OrderedReducerView<T, Operation>* pred) {
+template <class Monoid>
+void OrderedReducerView<Monoid>::set_predecessor(OrderedReducerView<Monoid>* pred) {
 	assert(this->pred == NULL);
 	this->pred = pred;
 }
 
-template <typename T, template <typename S> class Operation>
-void OrderedReducerView<T, Operation>::add_data(T data) {
+template <typename Monoid>
+template <typename ... PutParams>
+void OrderedReducerView<Monoid>::add_data(PutParams ... params) {
 	state |= 0x4;
-	this->data = reduce_op(this->data, data);
+	data.put(params ...);
 }
 
-template <typename T, template <typename S> class Operation>
-T OrderedReducerView<T, Operation>::get_data() {
-	return data;
+template <class Monoid>
+typename Monoid::OutputType OrderedReducerView<Monoid>::get_data() {
+	return data.get();
 }
 
 }

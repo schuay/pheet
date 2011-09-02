@@ -15,6 +15,9 @@
 #include "../../../misc/atomics.h"
 #include "../../../misc/bitops.h"
 #include "../../../misc/type_traits.h"
+#include "../../../primitives/PerformanceCounter/Basic/BasicPerformanceCounter.h"
+#include "../../../primitives/PerformanceCounter/Basic/BasicPerformanceCounterVector.h"
+#include "../../../primitives/PerformanceCounter/Time/TimePerformanceCounter.h"
 
 #include <vector>
 #include <queue>
@@ -33,7 +36,8 @@ struct BasicMixedModeSchedulerPerformanceCounters {
 	}
 
 	BasicMixedModeSchedulerPerformanceCounters(BasicSchedulerPerformanceCounters& other)
-		: num_spawns(other.num_spawns), num_spawns_to_call(other.num_spawns_to_call),
+		: num_tasks_at_level(other.num_tasks_at_level),
+		  num_spawns(other.num_spawns), num_spawns_to_call(other.num_spawns_to_call),
 		  num_calls(other.num_calls), num_finishes(other.num_finishes),
 		  num_steals(other.num_steals), num_steal_calls(other.num_steal_calls),
 		  num_unsuccessful_steal_calls(other.num_unsuccessful_steal_calls),
@@ -41,7 +45,8 @@ struct BasicMixedModeSchedulerPerformanceCounters {
 		  total_time(other.total_time), task_time(other.task_time),
 		  idle_time(other.idle_time) {}
 
-	procs_t num_levels;
+	BasicPerformanceCounter<scheduler_count_tasks_at_level> num_tasks_at_level;
+
 	BasicPerformanceCounter<scheduler_count_spawns> num_spawns;
 	BasicPerformanceCounter<scheduler_count_spawns_to_call> num_spawns_to_call;
 	BasicPerformanceCounter<scheduler_count_calls> num_calls;
@@ -186,7 +191,7 @@ public:
 	typedef BasicMixedModeSchedulerTaskExecutionContextTeamInfo TeamInfo;
 	typedef BasicMixedModeSchedulerTaskExecutionContextTeamAnnouncement<TaskExecutionContext> TeamAnnouncement;
 
-	BasicMixedModeSchedulerTaskExecutionContext(vector<LevelDescription*> const* levels, vector<typename CPUHierarchy::CPUDescriptor*> const* cpus, typename Scheduler::State* scheduler_state);
+	BasicMixedModeSchedulerTaskExecutionContext(vector<LevelDescription*> const* levels, vector<typename CPUHierarchy::CPUDescriptor*> const* cpus, typename Scheduler::State* scheduler_state, BasicMixedModeSchedulerPerformanceCounters& perf_count);
 	~BasicMixedModeSchedulerTaskExecutionContext();
 
 	void join();
@@ -275,6 +280,8 @@ private:
 
 	void register_for_team(TeamAnnouncement* team);
 	bool deregister_from_team(TeamAnnouncement* team);
+
+	BasicMixedModeSchedulerPerformanceCounters performance_counters;
 
 	// Stack is only used by the coordinator
 	static size_t const finish_stack_size;

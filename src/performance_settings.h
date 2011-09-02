@@ -13,6 +13,7 @@ namespace pheet {
 
 #ifndef NDEBUG
 
+bool const scheduler_count_tasks_at_level = true;
 bool const scheduler_count_spawns = true;
 bool const scheduler_count_spawns_to_call = true;
 bool const scheduler_count_calls = true;
@@ -27,6 +28,7 @@ bool const scheduler_measure_idle_time = true;
 
 #else
 
+bool const scheduler_count_tasks_at_level = false;
 bool const scheduler_count_spawns = false;
 bool const scheduler_count_spawns_to_call = false;
 bool const scheduler_count_calls = false;

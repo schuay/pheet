@@ -10,29 +10,15 @@
 #define SUMREDUCER_H_
 
 #include "../Ordered/OrderedReducer.h"
+#include "../Ordered/ScalarMonoid.h"
+#include "SumOperation.h"
 
 /*
  *
  */
 namespace pheet {
 
-template <typename T>
-struct SumOperation {
-	T operator()(T x, T y);
-	T get_identity();
-};
-
-template <typename T>
-T SumOperation<T>::operator()(T x, T y) {
-	return x + y;
-}
-
-template <typename T>
-T SumOperation<T>::get_identity() {
-	return 0;
-}
-
-template <typename T>
+template <typename T, template <typename S> class Op = SumOperation>
 class SumReducer {
 public:
 	SumReducer();
@@ -46,48 +32,48 @@ public:
 
 	T get_sum();
 private:
-	typedef OrderedReducer<T, SumOperation> Reducer;
+	typedef OrderedReducer<ScalarMonoid<T, SumOperation> > Reducer;
 	Reducer reducer;
 };
 
-template <typename T>
-SumReducer<T>::SumReducer() {
+template <typename T, template <typename S> class Op>
+SumReducer<T, Op>::SumReducer() {
 
 }
 
-template <typename T>
-SumReducer<T>::SumReducer(SumReducer<T>& other)
+template <typename T, template <typename S> class Op>
+SumReducer<T, Op>::SumReducer(SumReducer<T>& other)
 : reducer(other.reducer) {
 
 }
 
-template <typename T>
-SumReducer<T>::~SumReducer() {
+template <typename T, template <typename S> class Op>
+SumReducer<T, Op>::~SumReducer() {
 
 }
 
-template <typename T>
-void SumReducer<T>::add(T value) {
+template <typename T, template <typename S> class Op>
+void SumReducer<T, Op>::add(T value) {
 	reducer.add_data(value);
 }
 
-template <typename T>
-void SumReducer<T>::sub(T value) {
+template <typename T, template <typename S> class Op>
+void SumReducer<T, Op>::sub(T value) {
 	reducer.add_data(-value);
 }
 
-template <typename T>
-void SumReducer<T>::incr() {
+template <typename T, template <typename S> class Op>
+void SumReducer<T, Op>::incr() {
 	reducer.add_data(1);
 }
 
-template <typename T>
-void SumReducer<T>::decr() {
+template <typename T, template <typename S> class Op>
+void SumReducer<T, Op>::decr() {
 	reducer.add_data(-1);
 }
 
-template <typename T>
-T SumReducer<T>::get_sum() {
+template <typename T, template <typename S> class Op>
+T SumReducer<T, Op>::get_sum() {
 	return reducer.get_data();
 }
 }

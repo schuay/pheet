@@ -33,7 +33,7 @@ public:
 	void start_timer();
 	void stop_timer();
 	void print(char const* const formatting_string);
-	void print_header(char const* const string);
+	static void print_header(char const* const string);
 };
 
 TimePerformanceCounter<false>::TimePerformanceCounter() {

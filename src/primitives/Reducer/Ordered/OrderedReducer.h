@@ -18,95 +18,90 @@
  */
 namespace pheet {
 
-template <typename T, template <typename S> class Operation>
+template <class Monoid>
 class OrderedReducer {
 public:
-	OrderedReducer();
+	template <typename ... ConsParams>
+	OrderedReducer(ConsParams ... params);
 	OrderedReducer(OrderedReducer& other);
 	~OrderedReducer();
 
-	void bind(OrderedReducer& other);
-	void add_data(T data);
-	T get_data();
+//	void bind(OrderedReducer& other);
+
+	template <typename ... PutParams>
+	void add_data(PutParams ... params);
+	typename Monoid::OutputType get_data();
 private:
-	void init();
+//	void init();
 	void finalize();
 
-	typedef OrderedReducerView<T, Operation> View;
+	typedef OrderedReducerView<Monoid> View;
 	typedef ExponentialBackoff<> Backoff;
 	View* my_view;
 	View* parent_view;
 //	bool root;
 };
 
-template <typename T, template <typename S> class Operation>
-OrderedReducer<T, Operation>::OrderedReducer()
-:my_view(NULL), parent_view(NULL)
+template <class Monoid>
+template <typename ... ConsParams>
+OrderedReducer<Monoid>::OrderedReducer(ConsParams ... params)
+:my_view(new View(params ...)), parent_view(NULL)
 {
-	my_view = NULL;
-	parent_view = NULL;
+
 }
 
-template <typename T, template <typename S> class Operation>
-OrderedReducer<T, Operation>::OrderedReducer(OrderedReducer& other) {
+template <class Monoid>
+OrderedReducer<Monoid>::OrderedReducer(OrderedReducer& other) {
 	my_view = other.my_view;
 	parent_view = my_view->create_parent_view();
 	other.my_view = parent_view;
 }
 
-template <typename T, template <typename S> class Operation>
-OrderedReducer<T, Operation>::~OrderedReducer() {
+template <class Monoid>
+OrderedReducer<Monoid>::~OrderedReducer() {
 	finalize();
 }
-
-template <typename T, template <typename S> class Operation>
-void OrderedReducer<T, Operation>::bind(OrderedReducer& other) {
+/*
+template <class Monoid>
+void OrderedReducer<Monoid>::bind(OrderedReducer& other) {
 	finalize();
 
 	my_view = other.my_view;
 	parent_view = my_view->create_parent_view();
 	other.my_view = parent_view;
-}
-
-template <typename T, template <typename S> class Operation>
-void OrderedReducer<T, Operation>::init() {
+}*/
+/*
+template <class Monoid>
+void OrderedReducer<Monoid>::init() {
 	my_view = new View(false);
-}
+}*/
 
-template <typename T, template <typename S> class Operation>
-void OrderedReducer<T, Operation>::finalize() {
-	if(my_view != NULL) {
-		my_view->reduce();
-	//	my_view->notify_parent();
-		if(parent_view == NULL) {
-			assert(my_view->is_reduced());
-			delete my_view;
-		}
-		else {
-			// Fence in reduce method (only executed if necessary) ensures that parent gets a consistent view
+template <class Monoid>
+void OrderedReducer<Monoid>::finalize() {
+	my_view->reduce();
+//	my_view->notify_parent();
+	if(parent_view == NULL) {
+		assert(my_view->is_reduced());
+		delete my_view;
+	}
+	else {
+		// Fence in reduce method (only executed if necessary) ensures that parent gets a consistent view
 
-			// Order between those two operations is not relevant as both have to be finished before we proceed
-			// Notify parent view
-			parent_view->set_predecessor(my_view);
-		}
+		// Order between those two operations is not relevant as both have to be finished before we proceed
+		// Notify parent view
+		parent_view->set_predecessor(my_view);
 	}
 }
 
-template <typename T, template <typename S> class Operation>
-void OrderedReducer<T, Operation>::add_data(T data) {
-	if(my_view == NULL) {
-		init();
-	}
+template <class Monoid>
+template <typename ... PutParams>
+void OrderedReducer<Monoid>::add_data(PutParams ... params) {
 	my_view = my_view->fold();
-	my_view->add_data(data);
+	my_view->add_data(params ...);
 }
 
-template <typename T, template <typename S> class Operation>
-T OrderedReducer<T, Operation>::get_data() {
-	if(my_view == NULL) {
-		Operation<T> reduce_op;
-		return reduce_op.get_identity();
-	}
+template <class Monoid>
+typename Monoid::OutputType OrderedReducer<Monoid>::get_data() {
 	Backoff bo;
 	if(!my_view->is_reduced()) {
 		while(true) {

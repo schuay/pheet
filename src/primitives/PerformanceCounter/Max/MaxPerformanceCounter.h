@@ -31,7 +31,7 @@ public:
 
 	void add_value();
 	void print(char const* const formatting_string);
-	void print_header(char const* const string);
+	static void print_header(char const* const string);
 };
 
 template <typename T>

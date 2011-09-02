@@ -81,6 +81,8 @@ private:
 	procs_t num_threads;
 
 	State state;
+
+	BasicMixedModeSchedulerPerformanceCounters performance_counters;
 };
 
 template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
@@ -147,7 +149,7 @@ void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::i
 		ld.partners = NULL;
 		ld.reverse_ids = false;
 		levels->push_back(&ld);
-		TaskExecutionContext *tec = new TaskExecutionContext(levels, ch->get_cpus(), &state);
+		TaskExecutionContext *tec = new TaskExecutionContext(levels, ch->get_cpus(), &state, performance_counters);
 		threads[offset] = tec;
 		levels->pop_back();
 	}

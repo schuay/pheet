@@ -9,6 +9,9 @@
 #ifndef MAXREDUCER_H_
 #define MAXREDUCER_H_
 
+#include "../Ordered/OrderedReducer.h"
+#include "../Ordered/ScalarMonoid.h"
+
 /*
  *
  */
@@ -34,7 +37,7 @@ public:
 	void add_value(T value);
 	T get_max();
 private:
-	typedef OrderedReducer<T, M> Reducer;
+	typedef OrderedReducer<ScalarMonoid<T, M> > Reducer;
 	Reducer reducer;
 };
 

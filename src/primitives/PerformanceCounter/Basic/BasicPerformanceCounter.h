@@ -31,7 +31,7 @@ public:
 
 	void incr();
 	void print(char const* const formatting_string);
-	void print_header(char const* const string);
+	static void print_header(char const* const string);
 };
 
 BasicPerformanceCounter<false>::BasicPerformanceCounter() {
