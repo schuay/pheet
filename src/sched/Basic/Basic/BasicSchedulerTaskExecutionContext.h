@@ -438,6 +438,8 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::finalize_stac
 
 template <class Scheduler, template <typename T> class StealingDeque>
 void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::start_finish_region() {
+	performance_counters.num_finishes.incr();
+
 	// Perform cleanup on left side of finish stack
 	empty_stack();
 
@@ -473,8 +475,6 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::end_finish_re
 template <class Scheduler, template <typename T> class StealingDeque>
 template<class CallTaskType, typename ... TaskParams>
 void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::finish(TaskParams ... params) {
-	performance_counters.num_finishes.incr();
-
 	start_finish_region();
 
 	call<CallTaskType>(params ...);

@@ -66,6 +66,9 @@ void SortingTest<Sorter>::run_test() {
 
 	size_t runs = get_number_of_runs(data);
 	double seconds = calculate_seconds(start, end);
+	std::cout << "test\tsorter\tscheduler\ttype\tsize\tseed\tcpus\ttotal_time\truns\t";
+	s.print_headers();
+	std::cout << std::endl;
 	cout << "sorting\t" << Sorter::name << "\t" << Sorter::scheduler_name << "\t" << types[type] << "\t" << size << "\t" << seed << "\t" << cpus << "\t" << seconds << "\t" << runs << "\t";
 	s.print_results();
 	cout << endl;

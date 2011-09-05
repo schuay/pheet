@@ -26,7 +26,7 @@ template <>
 class BasicPerformanceCounter<false> {
 public:
 	BasicPerformanceCounter();
-	BasicPerformanceCounter(BasicPerformanceCounter<false> const& other);
+	BasicPerformanceCounter(BasicPerformanceCounter<false>& other);
 	~BasicPerformanceCounter();
 
 	void incr();
@@ -38,7 +38,7 @@ BasicPerformanceCounter<false>::BasicPerformanceCounter() {
 
 }
 
-BasicPerformanceCounter<false>::BasicPerformanceCounter(BasicPerformanceCounter<false> const& other) {
+BasicPerformanceCounter<false>::BasicPerformanceCounter(BasicPerformanceCounter<false>& other) {
 
 }
 

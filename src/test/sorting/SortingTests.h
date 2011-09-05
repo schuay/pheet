@@ -30,9 +30,9 @@ private:
 
 template <class Sorter>
 void SortingTests::run_sorter() {
-	std::cout << "test\tsorter\tscheduler\ttype\tsize\tseed\tcpus\ttotal_time\truns\t";
-	Sorter::print_headers();
-	std::cout << std::endl;
+//	std::cout << "test\tsorter\tscheduler\ttype\tsize\tseed\tcpus\ttotal_time\truns\t";
+//	Sorter::print_headers();
+//	std::cout << std::endl;
 
 	for(size_t t = 0; t < sizeof(sorting_test_types)/sizeof(sorting_test_types[0]); t++) {
 		for(size_t n = 0; n < sizeof(sorting_test_n)/sizeof(sorting_test_n[0]); n++) {

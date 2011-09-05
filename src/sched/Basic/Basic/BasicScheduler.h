@@ -61,7 +61,7 @@ public:
 
 	void print_performance_counter_values();
 
-	static void print_performance_counter_headers();
+	void print_performance_counter_headers();
 
 	static char const name[];
 	static procs_t const max_cpus;

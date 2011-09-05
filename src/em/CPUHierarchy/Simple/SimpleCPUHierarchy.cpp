@@ -74,4 +74,8 @@ std::vector<SimpleCPUHierarchy::CPUDescriptor*> const* SimpleCPUHierarchy::get_c
 	return &cpus;
 }
 
+procs_t SimpleCPUHierarchy::get_max_depth() {
+	return 1;
+}
+
 }

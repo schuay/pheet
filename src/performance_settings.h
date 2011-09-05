@@ -24,6 +24,7 @@ bool const stealing_deque_count_unsuccessful_steal_calls = true;
 bool const stealing_deque_count_pop_cas = true;
 bool const scheduler_measure_total_time = true;
 bool const scheduler_measure_task_time = true;
+bool const scheduler_measure_sync_time = true;
 bool const scheduler_measure_idle_time = true;
 
 #else
@@ -39,6 +40,7 @@ bool const stealing_deque_count_unsuccessful_steal_calls = false;
 bool const stealing_deque_count_pop_cas = false;
 bool const scheduler_measure_total_time = false;
 bool const scheduler_measure_task_time = false;
+bool const scheduler_measure_sync_time = false;
 bool const scheduler_measure_idle_time = false;
 
 #endif

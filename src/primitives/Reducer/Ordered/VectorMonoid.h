@@ -32,9 +32,9 @@ public:
 	OutputType get();
 
 private:
-	T* values;
-	size_t length;
 	Operation<T> reduce_op;
+	size_t length;
+	T* values;
 };
 
 template <typename T, template <typename S> class Operation>

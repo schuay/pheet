@@ -77,6 +77,7 @@ template <typename T, template <typename S> class Op>
 T const* VectorSumReducer<T, Op>::get_sum() {
 	return reducer.get_data();
 }
+
 }
 
 #endif /* VECTORSUMREDUCER_H_ */

@@ -77,4 +77,19 @@ std::vector<OversubscribedSimpleCPUHierarchy::CPUDescriptor*> const* Oversubscri
 	return &cpus;
 }
 
+procs_t OversubscribedSimpleCPUHierarchy::get_max_depth() {
+	if(np <= system_max_cpus) {
+		return 1;
+	}
+	std::vector<OversubscribedSimpleCPUHierarchy*> const* subsets = get_subsets();
+	procs_t depth = 0;
+	for(size_t i = 0; i < subsets->size(); ++i) {
+		procs_t tmp = (*subsets)[i]->get_max_depth();
+		if(tmp > depth) {
+			depth = tmp;
+		}
+	}
+	return depth + 1;
+}
+
 }

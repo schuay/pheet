@@ -31,6 +31,7 @@ public:
 	procs_t get_size();
 	std::vector<SimpleCPUHierarchy*> const* get_subsets();
 	std::vector<CPUDescriptor*> const* get_cpus();
+	procs_t get_max_depth();
 
 private:
 	SimpleCPUHierarchy(SimpleCPUHierarchy* parent, procs_t offset);
