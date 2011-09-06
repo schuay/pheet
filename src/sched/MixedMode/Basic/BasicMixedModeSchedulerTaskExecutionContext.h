@@ -43,7 +43,11 @@ struct BasicMixedModeSchedulerPerformanceCounters {
 		  num_unsuccessful_steal_calls(other.num_unsuccessful_steal_calls),
 		  num_stealing_deque_pop_cas(other.num_stealing_deque_pop_cas),
 		  total_time(other.total_time), task_time(other.task_time),
-		  sync_time(other.idle_time), idle_time(other.idle_time) {}
+		  sync_time(other.idle_time), idle_time(other.idle_time),
+		  queue_processing_time(other.queue_processing_time),
+		  visit_partners_time(other.visit_partners_time),
+		  wait_for_finish_time(other.wait_for_finish_time),
+		  wait_for_coordinator_time(other.wait_for_coordinator_time) {}
 
 	BasicPerformanceCounterVector<scheduler_count_tasks_at_level> num_tasks_at_level;
 
