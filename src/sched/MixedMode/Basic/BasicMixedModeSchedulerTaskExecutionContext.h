@@ -1372,10 +1372,15 @@ bool BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::tie_
 		return false;
 	}
 	// Tie breaking complete now switch to the new team
-	bool dereg = deregister_from_team(my_team);
+#ifndef NDEBUG
+	bool dereg =
+#endif
+	deregister_from_team(my_team);
+#ifndef NDEBUG
 	// deregistration should never fail in this case, as my_team can't be completed if other_team wins (at least 1 thread would never join my_team)
 	// TODO: This might change if we allow tasks with higher thread requirements to win over smaller ones in certain cases. Recheck it then
 	assert(dereg);
+#endif
 
 	performance_counters.sync_time.stop_timer();
 	join_team(other_team);
