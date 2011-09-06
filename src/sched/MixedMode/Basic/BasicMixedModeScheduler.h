@@ -204,6 +204,10 @@ void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::p
 	performance_counters.task_time.print("%f\t");
 	performance_counters.sync_time.print("%f\t");
 	performance_counters.idle_time.print("%f\t");
+	performance_counters.queue_processing_time.print("%f\t");
+	performance_counters.visit_partners_time.print("%f\t");
+	performance_counters.wait_for_finish_time.print("%f\t");
+	performance_counters.wait_for_coordinator_time.print("%f\t");
 }
 
 template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
@@ -230,6 +234,10 @@ void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::p
 	TimePerformanceCounter<scheduler_measure_task_time>::print_header("total_task_time\t");
 	TimePerformanceCounter<scheduler_measure_sync_time>::print_header("total_sync_time\t");
 	TimePerformanceCounter<scheduler_measure_idle_time>::print_header("total_idle_time\t");
+	TimePerformanceCounter<scheduler_measure_queue_processing_time>::print_header("queue_processing_time\t");
+	TimePerformanceCounter<scheduler_measure_visit_partners_time>::print_header("visit_partners_time\t");
+	TimePerformanceCounter<scheduler_measure_wait_for_finish_time>::print_header("wait_for_finish_time\t");
+	TimePerformanceCounter<scheduler_measure_wait_for_coordinator_time>::print_header("wait_for_coordinator_time\t");
 }
 
 }

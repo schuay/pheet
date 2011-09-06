@@ -26,6 +26,10 @@ bool const scheduler_measure_total_time = true;
 bool const scheduler_measure_task_time = true;
 bool const scheduler_measure_sync_time = true;
 bool const scheduler_measure_idle_time = true;
+bool const scheduler_measure_queue_processing_time = true;
+bool const scheduler_measure_visit_partners_time = true;
+bool const scheduler_measure_wait_for_finish_time = true;
+bool const scheduler_measure_wait_for_coordinator_time = true;
 
 #else
 
@@ -42,6 +46,10 @@ bool const scheduler_measure_total_time = false;
 bool const scheduler_measure_task_time = false;
 bool const scheduler_measure_sync_time = false;
 bool const scheduler_measure_idle_time = false;
+bool const scheduler_measure_queue_processing_time = false;
+bool const scheduler_measure_visit_partners_time = false;
+bool const scheduler_measure_wait_for_finish_time = false;
+bool const scheduler_measure_wait_for_coordinator_time = false;
 
 #endif
 

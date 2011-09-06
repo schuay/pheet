@@ -78,14 +78,25 @@ public:
 private:
 	SumReducer<double> reducer;
 	struct timeval start_time;
+#ifndef NDEBUG
+	bool is_active;
+#endif
 };
 
-TimePerformanceCounter<true>::TimePerformanceCounter() {
+TimePerformanceCounter<true>::TimePerformanceCounter()
+#ifndef NDEBUG
+: is_active(false)
+#endif
+{
 
 }
 
 TimePerformanceCounter<true>::TimePerformanceCounter(TimePerformanceCounter<true>& other)
-: reducer(other.reducer) {
+: reducer(other.reducer)
+#ifndef NDEBUG
+  , is_active(false)
+#endif
+{
 
 }
 
@@ -94,6 +105,10 @@ TimePerformanceCounter<true>::~TimePerformanceCounter() {
 }
 
 void TimePerformanceCounter<true>::start_timer() {
+#ifndef NDEBUG
+	assert(!is_active);
+	is_active = true;
+#endif
 	gettimeofday(&start_time, NULL);
 }
 
@@ -102,6 +117,10 @@ void TimePerformanceCounter<true>::stop_timer() {
 	gettimeofday(&stop_time, NULL);
 	double time = (stop_time.tv_sec - start_time.tv_sec) + 1.0e-6 * stop_time.tv_usec - 1.0e-6 * start_time.tv_usec;
 	reducer.add(time);
+#ifndef NDEBUG
+	assert(is_active);
+	is_active = false;
+#endif
 }
 
 void TimePerformanceCounter<true>::print(char const* const formatting_string) {

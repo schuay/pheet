@@ -61,6 +61,10 @@ struct BasicMixedModeSchedulerPerformanceCounters {
 	TimePerformanceCounter<scheduler_measure_task_time> task_time;
 	TimePerformanceCounter<scheduler_measure_sync_time> sync_time;
 	TimePerformanceCounter<scheduler_measure_idle_time> idle_time;
+	TimePerformanceCounter<scheduler_measure_queue_processing_time> queue_processing_time;
+	TimePerformanceCounter<scheduler_measure_visit_partners_time> visit_partners_time;
+	TimePerformanceCounter<scheduler_measure_wait_for_finish_time> wait_for_finish_time;
+	TimePerformanceCounter<scheduler_measure_wait_for_coordinator_time> wait_for_coordinator_time;
 };
 
 union BasicMixedModeSchedulerTaskExecutionContextRegistration {
@@ -468,6 +472,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::run(
 	// Start execution
 	Task* startup_task = scheduler_state->startup_task;
 	if(startup_task != NULL && PTR_CAS(&(scheduler_state->startup_task), startup_task, NULL)) {
+		performance_counters.queue_processing_time.start_timer();
 		start_finish_region();
 
 		++finish_stack[finish_stack_filled_right].num_spawned;
@@ -491,6 +496,8 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::run(
 			// Execute the rest of the tasks in the team
 			coordinate_team();
 
+			performance_counters.queue_processing_time.stop_timer();
+
 			// Process other tasks until this task has been finished
 			wait_for_finish(di.finish_stack_element);
 
@@ -498,6 +505,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::run(
 		}
 		else if(current_team != NULL && current_team->level != num_levels - 1) {
 			disband_team();
+			performance_counters.queue_processing_time.stop_timer();
 		}
 
 		scheduler_state->current_state = 2; // finished
@@ -526,6 +534,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::wait
 		// Try to join teams or steal tasks
 		visit_partners();
 
+		performance_counters.queue_processing_time.start_timer();
 		// Coordinate the current team if existing until it's empty
 		coordinate_team();
 
@@ -536,6 +545,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::wait
 				coordinate_team();
 			}
 		}
+		performance_counters.queue_processing_time.stop_timer();
 	}
 }
 
@@ -548,6 +558,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::wait
 		// TODO: try a policy where we do not need to empty our queues before we notice the finish
 		// (currently not implemented for simplicity)
 
+		performance_counters.queue_processing_time.start_timer();
 		while(has_local_work()) {
 			// Execute a single task. This will create a team if there was a task
 			if(execute_next_queue_task()) {
@@ -559,12 +570,15 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::wait
 				}
 			}
 		}
+		performance_counters.queue_processing_time.stop_timer();
 
 		// Try to join teams or steal tasks
 		visit_partners_until_finished(parent);
 
+		performance_counters.queue_processing_time.start_timer();
 		// Coordinate the current team if existing until it's empty
 		coordinate_team(); // TODO: coordinate_team_until_finished();
+		performance_counters.queue_processing_time.stop_timer();
 	}
 }
 
@@ -589,7 +603,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::wait
 				break;
 			}
 
-		//	++team_announcement_index;
+			performance_counters.queue_processing_time.start_timer();
 			do {
 				// Execute a single task. This will create a team if there was a task
 				if(execute_next_queue_task(min_level)) {
@@ -597,6 +611,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::wait
 					coordinate_team();
 				}
 			} while(has_local_work(min_level));
+			performance_counters.queue_processing_time.stop_timer();
 			// If we executed something, make sure we drop the team
 
 			if(current_team != my_team && current_team != NULL && current_team->level != num_levels - 1) {
@@ -617,11 +632,13 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::wait
 		visit_partners_until_synced(my_team);
 
 		if(current_team != my_team) {
+			performance_counters.queue_processing_time.start_timer();
 			// Coordinate the current team if existing until it's empty
 			coordinate_team();
 			if(current_team != NULL && current_team->level != num_levels - 1) {
 				disband_team();
 			}
+			performance_counters.queue_processing_time.stop_timer();
 
 			register_for_team(my_team);
 		}
@@ -674,8 +691,10 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::coor
 		// Solo team
 		DequeItem di = get_next_team_task();
 		while(di.task != NULL) {
+			performance_counters.queue_processing_time.stop_timer();
 			// Execute
 			execute_solo_queue_task(di);
+			performance_counters.queue_processing_time.start_timer();
 
 			// Try to get a same-size task
 			di = get_next_team_task();
@@ -691,8 +710,10 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::coor
 			// Show it to the rest of the team
 			announce_next_team_task(tt);
 
+			performance_counters.queue_processing_time.stop_timer();
 			// Execute (same for coor and client!)
 			execute_team_task(tt);
+			performance_counters.queue_processing_time.start_timer();
 
 			// Try to get a same-size task
 			di = get_next_team_task();
@@ -726,6 +747,7 @@ bool BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::exec
 	DequeItem di = get_next_queue_task();
 
 	if(di.task != NULL) {
+		performance_counters.queue_processing_time.stop_timer();
 		create_team(di.team_size);
 
 		if(di.team_size == 1) {
@@ -734,6 +756,7 @@ bool BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::exec
 		else {
 			execute_queue_task(di);
 		}
+		performance_counters.queue_processing_time.start_timer();
 		return true;
 	}
 	return false;
@@ -1089,6 +1112,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visi
 	assert(!has_local_work());
 
 	performance_counters.idle_time.start_timer();
+	performance_counters.visit_partners_time.start_timer();
 
 	Backoff bo;
 	DequeItem di;
@@ -1107,7 +1131,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visi
 			TeamAnnouncement* team = find_partner_team(partner, level);
 			if(team != NULL) {
 				// Joins the team and executes all tasks. Only returns after the team has been disbanded
-
+				performance_counters.visit_partners_time.stop_timer();
 				performance_counters.idle_time.stop_timer();
 
 				join_team(team);
@@ -1119,6 +1143,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visi
 		//	di = levels[level].partners[next_rand % levels[level].num_partners]->stealing_deque.steal();
 
 			if(di.task != NULL) {
+				performance_counters.visit_partners_time.stop_timer();
 				performance_counters.idle_time.stop_timer();
 
 				create_team(di.team_size);
@@ -1133,6 +1158,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visi
 			}
 		}
 		if(scheduler_state->current_state >= 2) {
+			performance_counters.visit_partners_time.stop_timer();
 			performance_counters.idle_time.stop_timer();
 			return;
 		}
@@ -1149,6 +1175,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visi
 	assert(!has_local_work());
 
 	performance_counters.idle_time.start_timer();
+	performance_counters.wait_for_finish_time.start_timer();
 
 	Backoff bo;
 	DequeItem di;
@@ -1167,6 +1194,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visi
 			TeamAnnouncement* team = find_partner_team(partner, level);
 			if(team != NULL) {
 				performance_counters.idle_time.stop_timer();
+				performance_counters.wait_for_finish_time.stop_timer();
 
 				// Joins the team and executes all tasks. Only returns after the team has been disbanded
 				join_team(team);
@@ -1179,6 +1207,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visi
 
 			if(di.task != NULL) {
 				performance_counters.idle_time.stop_timer();
+				performance_counters.wait_for_finish_time.stop_timer();
 
 				create_team(di.team_size);
 
@@ -1193,6 +1222,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visi
 		}
 		if(parent->num_finished_remote == parent->num_spawned) {
 			performance_counters.idle_time.stop_timer();
+			performance_counters.wait_for_finish_time.stop_timer();
 
 			return;
 		}
@@ -1228,12 +1258,13 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visi
 			TeamAnnouncement* team = find_partner_team(partner, level);
 			if(team != NULL) {
 				// Joins the other team if it wins the tie-breaking scheme and executes all tasks. Only returns after the team has been disbanded
+				performance_counters.idle_time.stop_timer();
 				if(tie_break_team(my_team_announcement, team)) {
-					performance_counters.idle_time.stop_timer();
 
 					// True means the other team won (false means we are still stuck with our team)
 					return;
 				}
+				performance_counters.idle_time.start_timer();
 			}
 
 			// includes deregistration mechanism and stealing can only work if deregistration was successful
@@ -1241,6 +1272,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visi
 			di = steal_for_sync(my_team_announcement, partner, level + 1);
 
 			if(di.task != NULL) {
+				performance_counters.sync_time.stop_timer();
 				performance_counters.idle_time.stop_timer();
 
 				create_team(di.team_size);
@@ -1251,6 +1283,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visi
 				else {
 					execute_queue_task(di);
 				}
+				performance_counters.sync_time.start_timer();
 				return;
 			}
 		}
@@ -1344,7 +1377,9 @@ bool BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::tie_
 	// TODO: This might change if we allow tasks with higher thread requirements to win over smaller ones in certain cases. Recheck it then
 	assert(dereg);
 
+	performance_counters.sync_time.stop_timer();
 	join_team(other_team);
+	performance_counters.sync_time.start_timer();
 	assert(current_team == NULL);
 
 	register_for_team(my_team);
@@ -1356,34 +1391,46 @@ bool BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::tie_
  */
 template <class Scheduler, template <typename T> class StealingDeque>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::follow_team() {
+	performance_counters.queue_processing_time.start_timer();
+
 	while(true) {
 		{
+			performance_counters.wait_for_coordinator_time.start_timer();
 			Backoff bo;
 			while(current_team->first_task == NULL) {
 				bo.backoff();
 			}
+			performance_counters.wait_for_coordinator_time.stop_timer();
 			current_team_task = current_team->first_task;
 			if(current_team_task == waiting_for_finish) {
+				performance_counters.queue_processing_time.stop_timer();
 				return;
 			}
 
+			performance_counters.queue_processing_time.stop_timer();
 			execute_team_task(current_team_task);
+			performance_counters.queue_processing_time.start_timer();
 		}
 
 		while(current_team->last_task != current_team_task) {
+			performance_counters.wait_for_coordinator_time.start_timer();
 			Backoff bo;
 			while(current_team_task->next == NULL && current_team->last_task != current_team_task) {
 				bo.backoff();
 			}
+			performance_counters.wait_for_coordinator_time.stop_timer();
 			if(current_team_task->next == NULL) {
 				break;
 			}
 			current_team_task = current_team_task->next;
 			if(current_team_task == waiting_for_finish) {
+				performance_counters.queue_processing_time.stop_timer();
 				return;
 			}
 
+			performance_counters.queue_processing_time.stop_timer();
 			execute_team_task(current_team_task);
+			performance_counters.queue_processing_time.start_timer();
 		}
 
 		{
@@ -1409,6 +1456,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::foll
 			current_team = current_team->next_team;
 			if(current_team->level > max_team_level) {
 				current_team = NULL;
+				performance_counters.queue_processing_time.stop_timer();
 				break;
 			}
 
@@ -1540,8 +1588,10 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::end_
 		if(current_team_task->parent->num_spawned > 0) {
 			// There exist some non-executed or stolen tasks
 
+			performance_counters.queue_processing_time.start_timer();
 			// Execute the rest of the tasks in the team
 			coordinate_team(); // TODO: coordinate_team_until_finished(current_task_parent);
+			performance_counters.queue_processing_time.stop_timer();
 
 			// Process other tasks until this task has been finished
 			wait_for_finish(current_team_task->parent);
