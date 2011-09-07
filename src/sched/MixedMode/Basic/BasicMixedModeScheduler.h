@@ -95,7 +95,7 @@ template <class CPUHierarchyT, template <typename T> class StealingDeque, class 
 BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::BasicMixedModeScheduler(CPUHierarchy* cpus)
 : cpu_hierarchy(cpus), num_threads(cpus->get_size()),
   performance_counters(/* don't expect the compiler to understand that get_depth is side-effect free, so add this conditional statement */
-		  scheduler_count_tasks_at_level?cpu_hierarchy.get_max_depth():0) {
+		  scheduler_count_tasks_at_level?cpu_hierarchy.get_max_depth():0, cpus->get_size()) {
 
 	threads = new TaskExecutionContext*[num_threads];
 
@@ -185,13 +185,6 @@ procs_t BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>
 
 template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
 void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::print_performance_counter_values() {
-	if(scheduler_count_tasks_at_level) {
-		procs_t depth = cpu_hierarchy.get_max_depth();
-		for(procs_t i = 0; i < depth; ++i) {
-			performance_counters.num_tasks_at_level.print(i, "%d\t");
-		}
-	}
-
 	performance_counters.num_spawns.print("%d\t");
 	performance_counters.num_calls.print("%d\t");
 	performance_counters.num_spawns_to_call.print("%d\t");
@@ -208,18 +201,27 @@ void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::p
 	performance_counters.visit_partners_time.print("%f\t");
 	performance_counters.wait_for_finish_time.print("%f\t");
 	performance_counters.wait_for_coordinator_time.print("%f\t");
+
+	if(scheduler_count_tasks_at_level) {
+		procs_t depth = cpu_hierarchy.get_max_depth();
+		for(procs_t i = 0; i < depth; ++i) {
+			performance_counters.num_tasks_at_level.print(i, "%d\t");
+		}
+	}
+	if(scheduler_count_steal_calls_per_thread) {
+		for(procs_t i = 0; i < num_threads; ++i) {
+			performance_counters.num_steal_calls_per_thread.print(i, "%d\t");
+		}
+	}
+	if(scheduler_count_unsuccessful_steal_calls_per_thread) {
+		for(procs_t i = 0; i < num_threads; ++i) {
+			performance_counters.num_unsuccessful_steal_calls_per_thread.print(i, "%d\t");
+		}
+	}
 }
 
 template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
 void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::print_performance_counter_headers() {
-	if(scheduler_count_tasks_at_level) {
-		procs_t depth = cpu_hierarchy.get_max_depth();
-	//	char header[32];
-		for(procs_t i = 0; i < depth; ++i) {
-			printf("tasks_at_level_%d\t", (int)i);
-		}
-	}
-
 	BasicPerformanceCounter<scheduler_count_spawns>::print_header("spawns\t");
 	BasicPerformanceCounter<scheduler_count_spawns_to_call>::print_header("calls\t");
 	BasicPerformanceCounter<scheduler_count_calls>::print_header("spawns->call\t");
@@ -238,6 +240,24 @@ void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::p
 	TimePerformanceCounter<scheduler_measure_visit_partners_time>::print_header("visit_partners_time\t");
 	TimePerformanceCounter<scheduler_measure_wait_for_finish_time>::print_header("wait_for_finish_time\t");
 	TimePerformanceCounter<scheduler_measure_wait_for_coordinator_time>::print_header("wait_for_coordinator_time\t");
+
+	if(scheduler_count_tasks_at_level) {
+		procs_t depth = cpu_hierarchy.get_max_depth();
+	//	char header[32];
+		for(procs_t i = 0; i < depth; ++i) {
+			printf("tasks_at_level_%d\t", (int)i);
+		}
+	}
+	if(scheduler_count_steal_calls_per_thread) {
+		for(procs_t i = 0; i < num_threads; ++i) {
+			printf("steal_calls_at_thread_%d\t", (int)i);
+		}
+	}
+	if(scheduler_count_unsuccessful_steal_calls_per_thread) {
+		for(procs_t i = 0; i < num_threads; ++i) {
+			printf("unsuccessful_steal_calls_at_thread_%d\t", (int)i);
+		}
+	}
 }
 
 }

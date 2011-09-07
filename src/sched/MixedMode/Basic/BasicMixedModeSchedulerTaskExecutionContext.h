@@ -30,13 +30,17 @@
 namespace pheet {
 
 struct BasicMixedModeSchedulerPerformanceCounters {
-	BasicMixedModeSchedulerPerformanceCounters(procs_t num_levels)
-	: num_tasks_at_level(num_levels) {
+	BasicMixedModeSchedulerPerformanceCounters(procs_t num_levels, procs_t num_threads)
+	: num_tasks_at_level(num_levels),
+	  num_steal_calls_per_thread(num_threads),
+	  num_unsuccessful_steal_calls_per_thread(num_threads) {
 
 	}
 
 	BasicMixedModeSchedulerPerformanceCounters(BasicMixedModeSchedulerPerformanceCounters& other)
 		: num_tasks_at_level(other.num_tasks_at_level),
+		  num_steal_calls_per_thread(other.num_steal_calls_per_thread),
+		  num_unsuccessful_steal_calls_per_thread(other.num_unsuccessful_steal_calls_per_thread),
 		  num_spawns(other.num_spawns), num_spawns_to_call(other.num_spawns_to_call),
 		  num_calls(other.num_calls), num_finishes(other.num_finishes),
 		  num_steals(other.num_steals), num_steal_calls(other.num_steal_calls),
@@ -50,6 +54,8 @@ struct BasicMixedModeSchedulerPerformanceCounters {
 		  wait_for_coordinator_time(other.wait_for_coordinator_time) {}
 
 	BasicPerformanceCounterVector<scheduler_count_tasks_at_level> num_tasks_at_level;
+	BasicPerformanceCounterVector<scheduler_count_steal_calls_per_thread> num_steal_calls_per_thread;
+	BasicPerformanceCounterVector<scheduler_count_unsuccessful_steal_calls_per_thread> num_unsuccessful_steal_calls_per_thread;
 
 	BasicPerformanceCounter<scheduler_count_spawns> num_spawns;
 	BasicPerformanceCounter<scheduler_count_spawns_to_call> num_spawns_to_call;
@@ -1972,6 +1978,7 @@ template <class Scheduler, template <typename T> class StealingDeque>
 typename BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::DequeItem
 BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::steal_tasks_from_partner(TaskExecutionContext* partner, procs_t min_level) {
 	performance_counters.num_steal_calls.incr();
+	performance_counters.num_steal_calls_per_thread.incr(get_global_id());
 
 	StealingDeque<DequeItem>** my_queue;
 	StealingDeque<DequeItem>** partner_queue;
@@ -1984,9 +1991,10 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::steal_tas
 	}
 	partner_min = partner->stealing_deques + min_level;
 
-	partner_queue = partner->lowest_level_deque;
+	partner_queue = partner->highest_level_deque;
 	if(partner_queue < partner_min || partner_queue == NULL /* actually not really necessary, but just in case NULL is not 0... */) {
 		performance_counters.num_unsuccessful_steal_calls.incr();
+		performance_counters.num_unsuccessful_steal_calls_per_thread.incr(get_global_id());
 		return nullable_traits<DequeItem>::null_value;
 	}
 	assert(partner_queue >= partner->stealing_deques && partner_queue < partner->stealing_deques + partner->num_levels);
@@ -1995,14 +2003,15 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::steal_tas
 		if(!(*partner_queue)->is_empty()) {
 			DequeItem ret = (*partner_queue)->steal_push(**my_queue);
 			if(ret.task != NULL) {
-				assert(lowest_level_deque == NULL || lowest_level_deque > my_queue);
+				assert(highest_level_deque == NULL || highest_level_deque < my_queue);
 			//	current_deque = my_queue;
-				lowest_level_deque = my_queue;
-				if(highest_level_deque == NULL) {
-					highest_level_deque = my_queue;
+				highest_level_deque = my_queue;
+				if(lowest_level_deque == NULL) {
+					lowest_level_deque = my_queue;
 				}
 			}
 			else {
+				performance_counters.num_unsuccessful_steal_calls_per_thread.incr(get_global_id());
 				performance_counters.num_unsuccessful_steal_calls.incr();
 			}
 			return ret;
@@ -2011,6 +2020,7 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::steal_tas
 		--my_queue;
 	}
 
+	performance_counters.num_unsuccessful_steal_calls_per_thread.incr(get_global_id());
 	performance_counters.num_unsuccessful_steal_calls.incr();
 	return nullable_traits<DequeItem>::null_value;
 }
@@ -2025,6 +2035,7 @@ template <class Scheduler, template <typename T> class StealingDeque>
 typename BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::DequeItem
 BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::steal_for_sync(TeamAnnouncement* my_team, TaskExecutionContext* partner, procs_t min_level) {
 	performance_counters.num_steal_calls.incr();
+	performance_counters.num_steal_calls_per_thread.incr(get_global_id());
 
 	StealingDeque<DequeItem>** my_queue;
 	StealingDeque<DequeItem>** partner_queue;
@@ -2037,9 +2048,10 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::steal_for
 	}
 	partner_min = partner->stealing_deques + min_level;
 
-	partner_queue = partner->lowest_level_deque;
+	partner_queue = partner->highest_level_deque;
 	if(partner_queue < partner_min || partner_queue == NULL /* actually not really necessary, but just in case NULL is not 0... */) {
 		performance_counters.num_unsuccessful_steal_calls.incr();
+		performance_counters.num_unsuccessful_steal_calls_per_thread.incr(get_global_id());
 		return nullable_traits<DequeItem>::null_value;
 	}
 	assert(partner_queue >= partner->stealing_deques && partner_queue < partner->stealing_deques + partner->num_levels);
@@ -2049,6 +2061,7 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::steal_for
 			// try to deregister before stealing
 			if(!deregister_from_team(my_team)) {
 				performance_counters.num_unsuccessful_steal_calls.incr();
+				performance_counters.num_unsuccessful_steal_calls_per_thread.incr(get_global_id());
 				return nullable_traits<DequeItem>::null_value;
 			}
 
@@ -2071,6 +2084,7 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::steal_for
 	}
 
 	performance_counters.num_unsuccessful_steal_calls.incr();
+	performance_counters.num_unsuccessful_steal_calls_per_thread.incr(get_global_id());
 	return nullable_traits<DequeItem>::null_value;
 }
 
