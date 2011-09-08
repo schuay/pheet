@@ -128,7 +128,7 @@ void TimePerformanceCounter<true>::print(char const* const formatting_string) {
 }
 
 void TimePerformanceCounter<true>::print_header(char const* const string) {
-	cout << string;
+	std::cout << string;
 }
 
 }

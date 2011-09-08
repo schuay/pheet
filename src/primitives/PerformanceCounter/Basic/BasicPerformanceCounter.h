@@ -94,7 +94,7 @@ void BasicPerformanceCounter<true>::print(char const* const formatting_string) {
 }
 
 void BasicPerformanceCounter<true>::print_header(char const* const string) {
-	cout << string;
+	std::cout << string;
 }
 
 }

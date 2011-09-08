@@ -9,6 +9,12 @@
 #ifndef ORDEREDREDUCERVIEW_H_
 #define ORDEREDREDUCERVIEW_H_
 
+#include "../../../settings.h"
+#include "../../../misc/atomics.h"
+#include "../../../misc/types.h"
+
+#include <stdint.h>
+
 /*
  *
  */

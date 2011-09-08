@@ -27,10 +27,10 @@ public:
 
 	void incr();
 	void decr();
-	void add(T value);
-	void sub(T value);
+	void add(T const& value);
+	void sub(T const& value);
 
-	T get_sum();
+	T const& get_sum();
 private:
 	typedef OrderedReducer<ScalarMonoid<T, SumOperation> > Reducer;
 	Reducer reducer;
@@ -53,12 +53,12 @@ SumReducer<T, Op>::~SumReducer() {
 }
 
 template <typename T, template <typename S> class Op>
-void SumReducer<T, Op>::add(T value) {
+void SumReducer<T, Op>::add(T const& value) {
 	reducer.add_data(value);
 }
 
 template <typename T, template <typename S> class Op>
-void SumReducer<T, Op>::sub(T value) {
+void SumReducer<T, Op>::sub(T const& value) {
 	reducer.add_data(-value);
 }
 
@@ -73,7 +73,7 @@ void SumReducer<T, Op>::decr() {
 }
 
 template <typename T, template <typename S> class Op>
-T SumReducer<T, Op>::get_sum() {
+T const& SumReducer<T, Op>::get_sum() {
 	return reducer.get_data();
 }
 }

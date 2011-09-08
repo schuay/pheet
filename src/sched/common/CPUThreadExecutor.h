@@ -10,6 +10,8 @@
 #define CPUTHREADEXECUTOR_H_
 
 #include <pthread.h>
+#include <vector>
+#include <iostream>
 
 namespace pheet {
 
@@ -19,7 +21,7 @@ void* execute_cpu_thread(void *param);
 template <class CPUDescriptor, class T>
 class CPUThreadExecutor {
 public:
-	CPUThreadExecutor(vector<CPUDescriptor*> const* cpus, T* work);
+	CPUThreadExecutor(std::vector<CPUDescriptor*> const* cpus, T* work);
 	~CPUThreadExecutor();
 
 	void run();
@@ -38,7 +40,7 @@ private:
 };
 
 template <class CPUDescriptor, class T>
-CPUThreadExecutor<CPUDescriptor, T>::CPUThreadExecutor(vector<CPUDescriptor*> const* cpus, T* work)
+CPUThreadExecutor<CPUDescriptor, T>::CPUThreadExecutor(std::vector<CPUDescriptor*> const* cpus, T* work)
 : num_cpus(cpus->size()), work(work) {
 	this->cpus = new CPUDescriptor*[num_cpus];
 
@@ -92,7 +94,7 @@ void CPUThreadExecutor<CPUDescriptor, T>::execute() {
 			break;
 		}
 		*/
-		cerr << "Failed to bind scheduler thread to cpu(s)" << endl;
+		std::cerr << "Failed to bind scheduler thread to cpu(s)" << std::endl;
 	}
 /*	#else
 	#ifdef ENV_SOLARIS_SUNCC

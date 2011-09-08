@@ -10,7 +10,8 @@
 #define EXPONENTIALBACKOFF_H_
 
 #include <stdlib.h>
-
+#include <time.h>
+#include <algorithm>
 
 /*
  *
@@ -47,7 +48,7 @@ void ExponentialBackoff<MIN_BACKOFF, MAX_BACKOFF>::backoff() {
 	// let's sleep
 	(void)nanosleep(&delay, (timespec *)NULL);
 
-	limit = min(limit + sleep, MAX_BACKOFF);
+	limit = std::min(limit + sleep, MAX_BACKOFF);
 }
 
 typedef ExponentialBackoff<100, 100000> StandardExponentialBackoff;

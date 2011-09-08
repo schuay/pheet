@@ -17,7 +17,7 @@ namespace pheet {
 template <typename T, template <typename S> class Operation>
 class ScalarMonoid {
 public:
-	typedef T OutputType;
+	typedef T const& OutputType;
 	typedef ScalarMonoid<T, Operation> Monoid;
 
 	ScalarMonoid();
@@ -72,7 +72,7 @@ void ScalarMonoid<T, Operation>::put(T value) {
 }
 
 template <typename T, template <typename S> class Operation>
-T ScalarMonoid<T, Operation>::get() {
+typename ScalarMonoid<T, Operation>::OutputType ScalarMonoid<T, Operation>::get() {
 	return value;
 }
 

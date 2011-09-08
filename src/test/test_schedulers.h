@@ -9,18 +9,18 @@
 #ifndef TEST_SCHEDULERS_H_
 #define TEST_SCHEDULERS_H_
 
-#include "../../sched/Basic/Synchroneous/SynchroneousScheduler.h"
-#include "../../sched/Basic/Basic/BasicScheduler.h"
-#include "../../sched/MixedMode/Basic/BasicMixedModeScheduler.h"
+#include "../sched/Basic/Synchroneous/SynchroneousScheduler.h"
+#include "../sched/Basic/Basic/BasicScheduler.h"
+#include "../sched/MixedMode/Basic/BasicMixedModeScheduler.h"
 
-#include "../../em/CPUHierarchy/Oversubscribed/OversubscribedSimpleCPUHierarchy.h"
+#include "../em/CPUHierarchy/Oversubscribed/OversubscribedSimpleCPUHierarchy.h"
 
-#include "../../ds/CircularArray/FixedSize/FixedSizeCircularArray.h"
-#include "../../ds/CircularArray/TwoLevelGrowing/TwoLevelGrowingCircularArray.h"
-#include "../../ds/StealingDeque/CircularArray/CircularArrayStealingDeque.h"
+#include "../ds/CircularArray/FixedSize/FixedSizeCircularArray.h"
+#include "../ds/CircularArray/TwoLevelGrowing/TwoLevelGrowingCircularArray.h"
+#include "../ds/StealingDeque/CircularArray/CircularArrayStealingDeque.h"
 
-#include "../../primitives/Backoff/Exponential/ExponentialBackoff.h"
-#include "../../primitives/Barrier/Simple/SimpleBarrier.h"
+#include "../primitives/Backoff/Exponential/ExponentialBackoff.h"
+#include "../primitives/Barrier/Simple/SimpleBarrier.h"
 
 namespace pheet {
 

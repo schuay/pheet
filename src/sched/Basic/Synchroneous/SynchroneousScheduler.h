@@ -68,7 +68,7 @@ SynchroneousScheduler<CPUHierarchyT>::SynchroneousScheduler(CPUHierarchy* cpus)
 				&old_cpu_affinity);
 	cpu_set_t cpu_affinity;
 	CPU_ZERO(&cpu_affinity);
-	vector<typename CPUHierarchy::CPUDescriptor*> const* cpu_descs;
+	std::vector<typename CPUHierarchy::CPUDescriptor*> const* cpu_descs;
 	cpu_descs = cpus->get_cpus();
 	for(size_t i = 0; i < cpu_descs->size(); i++) {
 		CPU_SET((*cpu_descs)[i]->get_physical_id(), &cpu_affinity);
@@ -76,7 +76,7 @@ SynchroneousScheduler<CPUHierarchyT>::SynchroneousScheduler(CPUHierarchy* cpus)
 	if((err = pthread_setaffinity_np(pthread_self(), sizeof(cpu_affinity),
 			&cpu_affinity)) != 0)
 	{
-		cerr << "Failed to bind scheduler thread to cpu(s)" << endl;
+		std::cerr << "Failed to bind scheduler thread to cpu(s)" << std::endl;
 	}
 #endif
 }
@@ -88,7 +88,7 @@ SynchroneousScheduler<CPUHierarchyT>::~SynchroneousScheduler() {
 	if((err = pthread_setaffinity_np(pthread_self(), sizeof(old_cpu_affinity),
 			&old_cpu_affinity)) != 0)
 	{
-		cerr << "Failed to reset cpu affinity" << endl;
+		std::cerr << "Failed to reset cpu affinity" << std::endl;
 	}
 #endif
 }

@@ -10,7 +10,13 @@
 #define GRAPHBIPARTITIONINGTEST_H_
 
 #include "graph_helpers.h"
+
+#include "../../misc/types.h"
+#include "../Test.h"
+
+#include <stdlib.h>
 #include <vector>
+#include <iostream>
 #include <boost/random/uniform_int.hpp>
 #include <boost/random/uniform_real.hpp>
 #include <boost/random/mersenne_twister.hpp>
@@ -21,9 +27,9 @@
 namespace pheet {
 
 template <class Partitioner>
-class GraphBipartitioningTest {
+class GraphBipartitioningTest : Test {
 public:
-	GraphBipartitioningTest(procs_t cpus, int type, size_t size, double p, unsigned int seed);
+	GraphBipartitioningTest(procs_t cpus, int type, size_t size, float p, unsigned int seed);
 	~GraphBipartitioningTest();
 
 	void run_test();
@@ -31,6 +37,7 @@ public:
 private:
 	GraphVertex* generate_data();
 	void delete_data(GraphVertex* data);
+	size_t check_solution(GraphBipartitioningSolution const& solution);
 
 	procs_t cpus;
 	int type;
@@ -66,14 +73,14 @@ void GraphBipartitioningTest<Partitioner>::run_test() {
 	p.partition();
 	check_time(end);
 
-	size_t runs = get_number_of_runs(data);
+	size_t weight = check_solution(p.get_solution());
 	double seconds = calculate_seconds(start, end);
-	std::cout << "test\tsorter\tscheduler\ttype\tsize\tp\tseed\tcpus\ttotal_time\truns\t";
+	std::cout << "test\tsorter\tscheduler\ttype\tsize\tp\tseed\tcpus\ttotal_time\tweight\t";
 	p.print_headers();
 	std::cout << std::endl;
-	cout << "graph_bipartitioning\t" << Partitioner::name << "\t" << Partitioner::scheduler_name << "\t" << types[type] << "\t" << size << "\t" << p << "\t" << seed << "\t" << cpus << "\t" << seconds << "\t" << runs << "\t";
+	std::cout << "graph_bipartitioning\t" << Partitioner::name << "\t" << Partitioner::scheduler_name << "\t" << types[type] << "\t" << size << "\t" << p << "\t" << seed << "\t" << cpus << "\t" << seconds << "\t" << weight << "\t";
 	p.print_results();
-	cout << endl;
+	std::cout << std::endl;
 
 	delete_data(data);
 }
@@ -86,14 +93,14 @@ GraphVertex* GraphBipartitioningTest<Partitioner>::generate_data() {
     boost::uniform_real<float> rnd_f(0.0, 1.0);
     boost::uniform_int<size_t> rnd_st(0, 2048);
 
-	vector<GraphEdge> edges;
+	std::vector<GraphEdge> edges;
 	for(size_t i = 0; i < size - 1; ++i) {
 		for(size_t j = i + 1; j < size; ++j) {
 			if(rnd_f(rng) < p) {
 				GraphEdge e;
 				e.target = j;
 				e.weight = rnd_st(rng);
-				edges.add(e);
+				edges.push_back(e);
 			}
 		}
 		data[i].num_edges = edges.size();
@@ -110,6 +117,8 @@ GraphVertex* GraphBipartitioningTest<Partitioner>::generate_data() {
 	}
 	data[size - 1].num_edges = 0;
 	data[size - 1].edges = NULL;
+
+	return data;
 }
 
 template <class Partitioner>
@@ -120,6 +129,12 @@ void GraphBipartitioningTest<Partitioner>::delete_data(GraphVertex* data) {
 		}
 	}
 	delete[] data;
+}
+
+template <class Partitioner>
+size_t GraphBipartitioningTest<Partitioner>::check_solution(GraphBipartitioningSolution const& solution) {
+	// todo recheck weights
+	return solution.weight;
 }
 
 }

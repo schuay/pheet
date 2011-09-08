@@ -9,9 +9,12 @@
 #ifndef MIXEDMODEQUICKSORTTASK_H_
 #define MIXEDMODEQUICKSORTTASK_H_
 
+#include "../../../settings.h"
 #include "../MixedMode/MixedModeQuicksortTask.h"
 #include "../../../primitives/Backoff/Exponential/ExponentialBackoff.h"
 #include "../../../primitives/Barrier/Simple/SimpleBarrier.h"
+
+#include <assert.h>
 
 namespace pheet {
 

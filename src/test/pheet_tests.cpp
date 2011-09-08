@@ -7,6 +7,7 @@
  */
 
 #include "sorting/SortingTests.h"
+#include "graph_bipartitioning/GraphBipartitioningTests.h"
 
 using namespace pheet;
 
@@ -14,6 +15,9 @@ int main(int argc, char* argv[]) {
 
 	SortingTests st;
 	st.run_test();
+
+	GraphBipartitioningTests gpt;
+	gpt.run_test();
 
 	return 0;
 }
