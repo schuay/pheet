@@ -9,6 +9,8 @@
 #ifndef BINARYTREECPUHIERARCHY_H_
 #define BINARYTREECPUHIERARCHY_H_
 
+#include <vector>
+
 /*
  *
  */
@@ -23,18 +25,18 @@ public:
 	~BinaryTreeCPUHierarchy();
 
 	procs_t get_size();
-	vector<BinaryTreeCPUHierarchy<BaseCPUHierarchy>*> const* get_subsets();
-	vector<CPUDescriptor*> const* get_cpus();
+	std::vector<BinaryTreeCPUHierarchy<BaseCPUHierarchy>*> const* get_subsets();
+	std::vector<CPUDescriptor*> const* get_cpus();
 	procs_t get_max_depth();
 
 private:
-	BinaryTreeCPUHierarchy(typename vector<BaseCPUHierarchy*>::const_iterator begin, typename vector<BaseCPUHierarchy*>::const_iterator end);
+	BinaryTreeCPUHierarchy(typename std::vector<BaseCPUHierarchy*>::const_iterator begin, typename std::vector<BaseCPUHierarchy*>::const_iterator end);
 
-	void init_subsets(typename vector<BaseCPUHierarchy*>::const_iterator begin, typename vector<BaseCPUHierarchy*>::const_iterator end);
+	void init_subsets(typename std::vector<BaseCPUHierarchy*>::const_iterator begin, typename std::vector<BaseCPUHierarchy*>::const_iterator end);
 
 	BaseCPUHierarchy* base;
-	vector<BinaryTreeCPUHierarchy*> subsets;
-	vector<CPUDescriptor*> cpus;
+	std::vector<BinaryTreeCPUHierarchy*> subsets;
+	std::vector<CPUDescriptor*> cpus;
 
 	procs_t size;
 };
@@ -46,9 +48,9 @@ BinaryTreeCPUHierarchy<BaseCPUHierarchy>::BinaryTreeCPUHierarchy(BaseCPUHierarch
 }
 
 template <class BaseCPUHierarchy>
-BinaryTreeCPUHierarchy<BaseCPUHierarchy>::BinaryTreeCPUHierarchy(typename vector<BaseCPUHierarchy*>::const_iterator begin, typename vector<BaseCPUHierarchy*>::const_iterator end)
+BinaryTreeCPUHierarchy<BaseCPUHierarchy>::BinaryTreeCPUHierarchy(typename std::vector<BaseCPUHierarchy*>::const_iterator begin, typename std::vector<BaseCPUHierarchy*>::const_iterator end)
 : base(NULL), size(0) {
-	for(typename vector<BaseCPUHierarchy*>::const_iterator i = begin; i != end; ++i) {
+	for(typename std::vector<BaseCPUHierarchy*>::const_iterator i = begin; i != end; ++i) {
 		size += (*i)->get_size();
 	}
 	init_subsets(begin, end);
@@ -67,9 +69,9 @@ procs_t BinaryTreeCPUHierarchy<BaseCPUHierarchy>::get_size () {
 }
 
 template <class BaseCPUHierarchy>
-vector<BinaryTreeCPUHierarchy<BaseCPUHierarchy>*> const* BinaryTreeCPUHierarchy<BaseCPUHierarchy>::get_subsets() {
+std::vector<BinaryTreeCPUHierarchy<BaseCPUHierarchy>*> const* BinaryTreeCPUHierarchy<BaseCPUHierarchy>::get_subsets() {
 	if(size > 1 && subsets.size() == 0) {
-		vector<BaseCPUHierarchy*> const* sub = base->get_subsets();
+		std::vector<BaseCPUHierarchy*> const* sub = base->get_subsets();
 
 		init_subsets(sub->begin(), sub->end());
 	}
@@ -77,7 +79,7 @@ vector<BinaryTreeCPUHierarchy<BaseCPUHierarchy>*> const* BinaryTreeCPUHierarchy<
 }
 
 template <class BaseCPUHierarchy>
-void BinaryTreeCPUHierarchy<BaseCPUHierarchy>::init_subsets(typename vector<BaseCPUHierarchy*>::const_iterator begin, typename vector<BaseCPUHierarchy*>::const_iterator end) {
+void BinaryTreeCPUHierarchy<BaseCPUHierarchy>::init_subsets(typename std::vector<BaseCPUHierarchy*>::const_iterator begin, typename std::vector<BaseCPUHierarchy*>::const_iterator end) {
 	size_t subset_size = end - begin;
 	if(subset_size > 2) {
 		subsets.reserve(2);
@@ -87,22 +89,22 @@ void BinaryTreeCPUHierarchy<BaseCPUHierarchy>::init_subsets(typename vector<Base
 	}
 	else {
 		subsets.reserve(subset_size);
-		for(typename vector<BaseCPUHierarchy*>::const_iterator i = begin; i != end; ++i) {
+		for(typename std::vector<BaseCPUHierarchy*>::const_iterator i = begin; i != end; ++i) {
 			subsets.push_back(new BinaryTreeCPUHierarchy(*i));
 		}
 	}
 }
 
 template <class BaseCPUHierarchy>
-vector<typename BaseCPUHierarchy::CPUDescriptor*> const* BinaryTreeCPUHierarchy<BaseCPUHierarchy>::get_cpus() {
+std::vector<typename BaseCPUHierarchy::CPUDescriptor*> const* BinaryTreeCPUHierarchy<BaseCPUHierarchy>::get_cpus() {
 	if(cpus.size() == 0) {
 		if(base != NULL) {
 			cpus = *(base->get_cpus());
 		}
 		else {
-			vector<BinaryTreeCPUHierarchy<BaseCPUHierarchy>*> const* subsets = get_subsets();
+			std::vector<BinaryTreeCPUHierarchy<BaseCPUHierarchy>*> const* subsets = get_subsets();
 			for(size_t i = 0; i < subsets->size(); i++) {
-				vector<CPUDescriptor*> const* subset_cpus = (*subsets)[i]->get_cpus();
+				std::vector<CPUDescriptor*> const* subset_cpus = (*subsets)[i]->get_cpus();
 				for(size_t j = 0; j < subset_cpus->size(); j++) {
 					cpus.push_back((*subset_cpus)[j]);
 				}
@@ -114,7 +116,7 @@ vector<typename BaseCPUHierarchy::CPUDescriptor*> const* BinaryTreeCPUHierarchy<
 
 template <class BaseCPUHierarchy>
 procs_t BinaryTreeCPUHierarchy<BaseCPUHierarchy>::get_max_depth() {
-	vector<BinaryTreeCPUHierarchy<BaseCPUHierarchy>*> const* subsets = get_subsets();
+	std::vector<BinaryTreeCPUHierarchy<BaseCPUHierarchy>*> const* subsets = get_subsets();
 	procs_t depth = 0;
 	for(size_t i = 0; i < subsets->size(); ++i) {
 		procs_t tmp = (*subsets)[i]->get_max_depth();

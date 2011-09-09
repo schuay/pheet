@@ -23,7 +23,7 @@ namespace pheet {
 
 
 template <class Task, class LowerBound, class NextVertex>
-class BranchBoundGraphBipartitioningTask {
+class BranchBoundGraphBipartitioningTask : public Task {
 public:
 	typedef BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex> BBTask;
 	typedef ExponentialBackoff<> Backoff;
@@ -44,6 +44,9 @@ private:
 	std::set<size_t> set2;
 	size_t* ub;
 	size_t lb;
+
+	LowerBound lb_calc;
+	NextVertex nv_calc;
 };
 
 template <class Task, class LowerBound, class NextVertex>
@@ -62,14 +65,14 @@ void BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex>::operator(
 	if(lb >= *ub) {
 		return;
 	}
-	size_t next = NextVertex(graph, size, k, set1, set2);
+	size_t next = nv_calc(graph, size, k, set1, set2);
 
 	set1.insert(next);
 	if(set1.size() == k) {
 		prepare_solution();
 	}
 	else {
-		size_t sub_lb = LowerBound(graph, size, k, set1, set2);
+		size_t sub_lb = lb_calc(graph, size, k, set1, set2);
 		if(sub_lb < *ub) {
 			tec.template spawn<BBTask>(graph, size, k, best, set1, set2, ub, sub_lb);
 		}
@@ -81,7 +84,7 @@ void BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex>::operator(
 		prepare_solution();
 	}
 	else {
-		size_t sub_lb = LowerBound(graph, size, k, set1, set2);
+		size_t sub_lb = lb_calc(graph, size, k, set1, set2);
 		if(sub_lb < *ub) {
 			tec.template spawn<BBTask>(graph, size, k, best, set1, set2, ub, sub_lb);
 		}

@@ -35,20 +35,9 @@ struct GraphBipartitioningSolution {
 template <>
 struct MaxOperation<GraphBipartitioningSolution> {
 	GraphBipartitioningSolution& operator()(GraphBipartitioningSolution& x, GraphBipartitioningSolution& y);
+
 	GraphBipartitioningSolution get_identity();
 };
-
-GraphBipartitioningSolution& MaxOperation<GraphBipartitioningSolution>::operator()(GraphBipartitioningSolution& x, GraphBipartitioningSolution& y) {
-	if(x.weight <= y.weight)
-		return x;
-	return y;
-}
-
-GraphBipartitioningSolution MaxOperation<GraphBipartitioningSolution>::get_identity() {
-	GraphBipartitioningSolution ret;
-	ret.weight = std::numeric_limits<size_t>::max();
-	return ret;
-}
 
 }
 

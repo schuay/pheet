@@ -14,6 +14,7 @@
 #include "../../../misc/types.h"
 
 #include <stdint.h>
+#include <assert.h>
 
 /*
  *

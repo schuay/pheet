@@ -104,7 +104,7 @@ void BasicPerformanceCounterVector<true>::print(size_t i, char const* const form
 }
 
 void BasicPerformanceCounterVector<true>::print_header(char const* const string) {
-	cout << string;
+	std::cout << string;
 }
 /*
 size_t BasicPerformanceCounterVector<true>::get_length() {

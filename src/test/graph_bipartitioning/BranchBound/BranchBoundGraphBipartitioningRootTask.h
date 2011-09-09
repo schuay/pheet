@@ -19,7 +19,7 @@
 namespace pheet {
 
 template <class Task, class LowerBound, class NextVertex>
-class BranchBoundGraphBipartitioningRootTask {
+class BranchBoundGraphBipartitioningRootTask : public Task {
 public:
 	typedef BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex> BBTask;
 
@@ -35,7 +35,7 @@ private:
 };
 
 template <class Task, class LowerBound, class NextVertex>
-BranchBoundGraphBipartitioningRootTask<Task, LowerBound, NextVertex>::BranchBoundGraphBipartitioningRootTask(GraphVertex* graph, size_t size)
+BranchBoundGraphBipartitioningRootTask<Task, LowerBound, NextVertex>::BranchBoundGraphBipartitioningRootTask(GraphVertex* graph, size_t size, GraphBipartitioningSolution* out)
 : graph(graph), size(size) {
 
 
@@ -47,13 +47,13 @@ BranchBoundGraphBipartitioningRootTask<Task, LowerBound, NextVertex>::~BranchBou
 }
 
 template <class Task, class LowerBound, class NextVertex>
-void BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex>::operator()(typename Task::TEC& tec) {
+void BranchBoundGraphBipartitioningRootTask<Task, LowerBound, NextVertex>::operator()(typename Task::TEC& tec) {
 	MaxReducer<GraphBipartitioningSolution> best;
 	std::set<size_t> set1;
 	std::set<size_t> set2;
 	size_t ub = std::numeric_limits< size_t >::max();
 
-	tec.template finish<BBTask>(graph, size, size >> 1, best, set1, set2, ub, 0);
+	tec.template finish<BBTask>(graph, size, size >> 1, best, set1, set2, &ub, 0);
 
 	(*out) = best.get_max();
 }

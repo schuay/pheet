@@ -8,6 +8,8 @@
 
 #include "GraphBipartitioningTests.h"
 #include "BranchBound/BranchBoundGraphBipartitioning.h"
+#include "BranchBound/BasicLowerBound.h"
+#include "BranchBound/BasicNextVertex.h"
 
 #include "../test_schedulers.h"
 
@@ -21,12 +23,12 @@ GraphBipartitioningTests::~GraphBipartitioningTests() {
 
 }
 
-void SortingTests::run_test() {
+void GraphBipartitioningTests::run_test() {
 	std::cout << "----" << std::endl;
 
-	this->run_partitioner<BranchBoundGraphBipartitioning<DefaultMixedModeScheduler> >();
-	this->run_partitioner<BranchBoundGraphBipartitioning<DefaultBasicScheduler> >();
-	this->run_partitioner<BranchBoundGraphBipartitioning<DefaultSynchroneousScheduler> >();
+	this->run_partitioner<BranchBoundGraphBipartitioning<DefaultMixedModeScheduler, BasicLowerBound, BasicNextVertex> >();
+	this->run_partitioner<BranchBoundGraphBipartitioning<DefaultBasicScheduler, BasicLowerBound, BasicNextVertex> >();
+	this->run_partitioner<BranchBoundGraphBipartitioning<DefaultSynchroneousScheduler, BasicLowerBound, BasicNextVertex> >();
 }
 
 }

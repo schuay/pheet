@@ -66,20 +66,20 @@ template <class Partitioner>
 void GraphBipartitioningTest<Partitioner>::run_test() {
 	GraphVertex* data = generate_data();
 
-	Partitioner p(cpus, data, size);
+	Partitioner part(cpus, data, size);
 
 	Time start, end;
 	check_time(start);
-	p.partition();
+	part.partition();
 	check_time(end);
 
-	size_t weight = check_solution(p.get_solution());
+	size_t weight = check_solution(part.get_solution());
 	double seconds = calculate_seconds(start, end);
 	std::cout << "test\tsorter\tscheduler\ttype\tsize\tp\tseed\tcpus\ttotal_time\tweight\t";
-	p.print_headers();
+	part.print_headers();
 	std::cout << std::endl;
 	std::cout << "graph_bipartitioning\t" << Partitioner::name << "\t" << Partitioner::scheduler_name << "\t" << types[type] << "\t" << size << "\t" << p << "\t" << seed << "\t" << cpus << "\t" << seconds << "\t" << weight << "\t";
-	p.print_results();
+	part.print_results();
 	std::cout << std::endl;
 
 	delete_data(data);

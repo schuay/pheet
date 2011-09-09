@@ -26,7 +26,7 @@ public:
 	~BranchBoundGraphBipartitioning();
 
 	void partition();
-	GraphSolution const& get_solution();
+	GraphBipartitioningSolution const& get_solution();
 
 	void print_results();
 	void print_headers();
@@ -40,7 +40,7 @@ private:
 	size_t size;
 	typename Scheduler::CPUHierarchy cpu_hierarchy;
 	Scheduler scheduler;
-	GraphSolution solution;
+	GraphBipartitioningSolution solution;
 };
 
 template <class Scheduler, class LowerBound, class NextVertex>
@@ -69,7 +69,7 @@ void BranchBoundGraphBipartitioning<Scheduler, LowerBound, NextVertex>::partitio
 }
 
 template <class Scheduler, class LowerBound, class NextVertex>
-GraphSolution const& BranchBoundGraphBipartitioning<Scheduler, LowerBound, NextVertex>::get_solution() {
+GraphBipartitioningSolution const& BranchBoundGraphBipartitioning<Scheduler, LowerBound, NextVertex>::get_solution() {
 	return solution;
 }
 

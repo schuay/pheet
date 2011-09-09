@@ -74,7 +74,7 @@ public:
 	static char const name[];
 	static procs_t const max_cpus;
 private:
-	void initialize_tecs(BinaryTreeCPUHierarchy<CPUHierarchy>* cpus, size_t offset, vector<typename TaskExecutionContext::LevelDescription*>* levels);
+	void initialize_tecs(BinaryTreeCPUHierarchy<CPUHierarchy>* cpus, size_t offset, std::vector<typename TaskExecutionContext::LevelDescription*>* levels);
 
 	BinaryTreeCPUHierarchy<CPUHierarchy> cpu_hierarchy;
 	TaskExecutionContext** threads;
@@ -99,7 +99,7 @@ BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::BasicM
 
 	threads = new TaskExecutionContext*[num_threads];
 
-	vector<typename TaskExecutionContext::LevelDescription*> levels;
+	std::vector<typename TaskExecutionContext::LevelDescription*> levels;
 	initialize_tecs(&cpu_hierarchy, 0, &levels);
 }
 
@@ -109,9 +109,9 @@ BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::~Basic
 }
 
 template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
-void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::initialize_tecs(BinaryTreeCPUHierarchy<CPUHierarchy>* ch, size_t offset, vector<typename TaskExecutionContext::LevelDescription*>* levels) {
+void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::initialize_tecs(BinaryTreeCPUHierarchy<CPUHierarchy>* ch, size_t offset, std::vector<typename TaskExecutionContext::LevelDescription*>* levels) {
 	if(ch->get_size() > 1) {
-		vector<BinaryTreeCPUHierarchy<CPUHierarchy>*> const* sub = ch->get_subsets();
+		std::vector<BinaryTreeCPUHierarchy<CPUHierarchy>*> const* sub = ch->get_subsets();
 
 		if(sub->size() == 2) {
 			BinaryTreeCPUHierarchy<CPUHierarchy>* sub0 = (*sub)[0];

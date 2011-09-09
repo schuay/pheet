@@ -13,6 +13,8 @@
 #include "OrderedReducerView.h"
 #include "../../Backoff/Exponential/ExponentialBackoff.h"
 
+#include <assert.h>
+
 /*
  *
  */

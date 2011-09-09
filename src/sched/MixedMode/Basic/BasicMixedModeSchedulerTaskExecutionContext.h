@@ -206,7 +206,7 @@ public:
 	typedef BasicMixedModeSchedulerTaskExecutionContextTeamInfo TeamInfo;
 	typedef BasicMixedModeSchedulerTaskExecutionContextTeamAnnouncement<TaskExecutionContext> TeamAnnouncement;
 
-	BasicMixedModeSchedulerTaskExecutionContext(vector<LevelDescription*> const* levels, vector<typename CPUHierarchy::CPUDescriptor*> const* cpus, typename Scheduler::State* scheduler_state, BasicMixedModeSchedulerPerformanceCounters& perf_count);
+	BasicMixedModeSchedulerTaskExecutionContext(std::vector<LevelDescription*> const* levels, std::vector<typename CPUHierarchy::CPUDescriptor*> const* cpus, typename Scheduler::State* scheduler_state, BasicMixedModeSchedulerPerformanceCounters& perf_count);
 	~BasicMixedModeSchedulerTaskExecutionContext();
 
 	void join();
@@ -317,11 +317,11 @@ private:
 
 	// Information needed for task reclamation scheme
 	// TODO: we might get rid of the queue alltogether and use a single pointer instead as the queue never gets more than one entry (i think)
-	queue<TeamTaskData*> team_task_reclamation_queue;
+	std::queue<TeamTaskData*> team_task_reclamation_queue;
 	TeamTaskData** team_task_reuse;
 
 	// Information needed for team reclamation scheme
-	queue<TeamAnnouncement*> team_announcement_reclamation_queue;
+	std::queue<TeamAnnouncement*> team_announcement_reclamation_queue;
 	TeamAnnouncement** team_announcement_reuse;
 
 	// for finishing
@@ -354,7 +354,7 @@ size_t const BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDequ
 
 
 template <class Scheduler, template <typename T> class StealingDeque>
-BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::BasicMixedModeSchedulerTaskExecutionContext(vector<LevelDescription*> const* levels, vector<typename CPUHierarchy::CPUDescriptor*> const* cpus, typename Scheduler::State* scheduler_state, BasicMixedModeSchedulerPerformanceCounters& perf_count)
+BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::BasicMixedModeSchedulerTaskExecutionContext(std::vector<LevelDescription*> const* levels, std::vector<typename CPUHierarchy::CPUDescriptor*> const* cpus, typename Scheduler::State* scheduler_state, BasicMixedModeSchedulerPerformanceCounters& perf_count)
 : performance_counters(perf_count),
   finish_stack_filled_left(0), finish_stack_filled_right(finish_stack_size), num_levels(levels->size()), current_team_task(NULL), current_team(NULL),
   /*team_announcement_index(0),*/ waiting_for_finish(NULL), team_info(NULL), max_team_level(num_levels), lowest_level_deque(NULL),

@@ -39,7 +39,7 @@ template <typename T, template <typename S> class M = MaxOperation >
 class MaxReducer {
 public:
 	MaxReducer();
-	MaxReducer(MaxReducer<T> const& other);
+	MaxReducer(MaxReducer<T, M>& other);
 	~MaxReducer();
 
 	void add_value(T const& value);
@@ -55,7 +55,7 @@ MaxReducer<T, M>::MaxReducer() {
 }
 
 template <typename T, template <typename S> class M>
-MaxReducer<T, M>::MaxReducer(MaxReducer<T> const& other)
+MaxReducer<T, M>::MaxReducer(MaxReducer<T, M>& other)
 : reducer(other.reducer) {
 
 }
