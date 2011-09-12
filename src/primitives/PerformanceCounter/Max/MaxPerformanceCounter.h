@@ -34,32 +34,38 @@ public:
 	static void print_header(char const* const string);
 };
 
+inline
 template <typename T>
 MaxPerformanceCounter<T, false>::MaxPerformanceCounter() {
 
 }
 
 template <typename T>
+inline
 MaxPerformanceCounter<T, false>::MaxPerformanceCounter(MaxPerformanceCounter const& other) {
 
 }
 
 template <typename T>
+inline
 MaxPerformanceCounter<T, false>::~MaxPerformanceCounter() {
 
 }
 
 template <typename T>
+inline
 void MaxPerformanceCounter<T, false>::incr() {
 
 }
 
 template <typename T>
+inline
 void MaxPerformanceCounter<T, false>::print(char const* const formatting_string) {
 
 }
 
 template <typename T>
+inline
 void MaxPerformanceCounter<T, false>::print_header(char const* const string) {
 
 }
@@ -79,32 +85,38 @@ private:
 };
 
 template <typename T>
+inline
 MaxPerformanceCounter<T, true>::MaxPerformanceCounter() {
 
 }
 
 template <typename T>
+inline
 MaxPerformanceCounter<T, true>::MaxPerformanceCounter(MaxPerformanceCounter<true> const& other)
 : reducer(other.reducer) {
 
 }
 
 template <typename T>
+inline
 MaxPerformanceCounter<T, true>::~MaxPerformanceCounter() {
 
 }
 
 template <typename T>
+inline
 void MaxPerformanceCounter<T, true>::incr() {
 	reducer.incr();
 }
 
 template <typename T>
+inline
 void MaxPerformanceCounter<T, true>::print(char const* const formatting_string) {
 	printf(formatting_string, reducer.get_sum());
 }
 
 template <typename T>
+inline
 void MaxPerformanceCounter<T, true>::print_header(char const* const string) {
 	cout << string;
 }

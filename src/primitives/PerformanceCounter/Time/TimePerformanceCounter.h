@@ -36,30 +36,37 @@ public:
 	static void print_header(char const* const string);
 };
 
+inline
 TimePerformanceCounter<false>::TimePerformanceCounter() {
 
 }
 
+inline
 TimePerformanceCounter<false>::TimePerformanceCounter(TimePerformanceCounter<false> const& other) {
 
 }
 
+inline
 TimePerformanceCounter<false>::~TimePerformanceCounter() {
 
 }
 
+inline
 void TimePerformanceCounter<false>::start_timer() {
 
 }
 
+inline
 void TimePerformanceCounter<false>::stop_timer() {
 
 }
 
+inline
 void TimePerformanceCounter<false>::print(char const* const formatting_string) {
 
 }
 
+inline
 void TimePerformanceCounter<false>::print_header(char const* const string) {
 
 }
@@ -83,6 +90,7 @@ private:
 #endif
 };
 
+inline
 TimePerformanceCounter<true>::TimePerformanceCounter()
 #ifndef NDEBUG
 : is_active(false)
@@ -91,6 +99,7 @@ TimePerformanceCounter<true>::TimePerformanceCounter()
 
 }
 
+inline
 TimePerformanceCounter<true>::TimePerformanceCounter(TimePerformanceCounter<true>& other)
 : reducer(other.reducer)
 #ifndef NDEBUG
@@ -100,10 +109,12 @@ TimePerformanceCounter<true>::TimePerformanceCounter(TimePerformanceCounter<true
 
 }
 
+inline
 TimePerformanceCounter<true>::~TimePerformanceCounter() {
 
 }
 
+inline
 void TimePerformanceCounter<true>::start_timer() {
 #ifndef NDEBUG
 	assert(!is_active);
@@ -112,6 +123,7 @@ void TimePerformanceCounter<true>::start_timer() {
 	gettimeofday(&start_time, NULL);
 }
 
+inline
 void TimePerformanceCounter<true>::stop_timer() {
 	struct timeval stop_time;
 	gettimeofday(&stop_time, NULL);
@@ -123,10 +135,12 @@ void TimePerformanceCounter<true>::stop_timer() {
 #endif
 }
 
+inline
 void TimePerformanceCounter<true>::print(char const* const formatting_string) {
 	printf(formatting_string, reducer.get_sum());
 }
 
+inline
 void TimePerformanceCounter<true>::print_header(char const* const string) {
 	std::cout << string;
 }

@@ -29,14 +29,14 @@ public:
 	virtual void operator()(typename Task::TEC& tec);
 
 private:
-	GraphBipartitioningSolution* out;
 	GraphVertex* graph;
 	size_t size;
+	GraphBipartitioningSolution* out;
 };
 
 template <class Task, class LowerBound, class NextVertex>
 BranchBoundGraphBipartitioningRootTask<Task, LowerBound, NextVertex>::BranchBoundGraphBipartitioningRootTask(GraphVertex* graph, size_t size, GraphBipartitioningSolution* out)
-: graph(graph), size(size) {
+: graph(graph), size(size), out(out) {
 
 
 }

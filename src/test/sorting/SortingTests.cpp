@@ -28,14 +28,16 @@ SortingTests::~SortingTests() {
 }
 
 void SortingTests::run_test() {
-	std::cout << "----" << std::endl;
+	if(sorting_test) {
+		std::cout << "----" << std::endl;
 
-	this->run_sorter<MixedModeQuicksort<DefaultMixedModeScheduler> >();
-	this->run_sorter<DagQuicksort<DefaultMixedModeScheduler> >();
-	this->run_sorter<DagQuicksort<DefaultBasicScheduler> >();
-	this->run_sorter<DagQuicksort<DefaultSynchroneousScheduler> >();
-	this->run_sorter<ReferenceQuicksort>();
-	this->run_sorter<ReferenceSTLSort>();
+		this->run_sorter<MixedModeQuicksort<DefaultMixedModeScheduler> >();
+		this->run_sorter<DagQuicksort<DefaultMixedModeScheduler> >();
+		this->run_sorter<DagQuicksort<DefaultBasicScheduler> >();
+		this->run_sorter<DagQuicksort<DefaultSynchroneousScheduler> >();
+		this->run_sorter<ReferenceQuicksort>();
+		this->run_sorter<ReferenceSTLSort>();
+	}
 }
 
 }

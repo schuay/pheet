@@ -34,26 +34,32 @@ public:
 	static void print_header(char const* const string);
 };
 
+inline
 BasicPerformanceCounter<false>::BasicPerformanceCounter() {
 
 }
 
+inline
 BasicPerformanceCounter<false>::BasicPerformanceCounter(BasicPerformanceCounter<false>& other) {
 
 }
 
+inline
 BasicPerformanceCounter<false>::~BasicPerformanceCounter() {
 
 }
 
+inline
 void BasicPerformanceCounter<false>::incr() {
 
 }
 
+inline
 void BasicPerformanceCounter<false>::print(char const* const formatting_string) {
 
 }
 
+inline
 void BasicPerformanceCounter<false>::print_header(char const* const string) {
 
 }
@@ -72,27 +78,33 @@ private:
 	SumReducer<size_t> reducer;
 };
 
+inline
 BasicPerformanceCounter<true>::BasicPerformanceCounter() {
 
 }
 
+inline
 BasicPerformanceCounter<true>::BasicPerformanceCounter(BasicPerformanceCounter<true>& other)
 : reducer(other.reducer) {
 
 }
 
+inline
 BasicPerformanceCounter<true>::~BasicPerformanceCounter() {
 
 }
 
+inline
 void BasicPerformanceCounter<true>::incr() {
 	reducer.incr();
 }
 
+inline
 void BasicPerformanceCounter<true>::print(char const* const formatting_string) {
 	printf(formatting_string, reducer.get_sum());
 }
 
+inline
 void BasicPerformanceCounter<true>::print_header(char const* const string) {
 	std::cout << string;
 }

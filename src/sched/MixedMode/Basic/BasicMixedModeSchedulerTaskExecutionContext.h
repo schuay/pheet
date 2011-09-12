@@ -1595,12 +1595,10 @@ template <class Scheduler, template <typename T> class StealingDeque>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::end_finish_region() {
 	performance_counters.task_time.stop_timer();
 	if(is_coordinator()) {
-		assert(current_team_task->parent == &(finish_stack[finish_stack_filled_right]));
-
 		// Store current team task
 		TeamTaskData* my_team_task = current_team_task;
 
-		if(current_team_task->parent->num_spawned > 0) {
+		if(finish_stack[finish_stack_filled_right].num_spawned > 0) {
 			// There exist some non-executed or stolen tasks
 
 			performance_counters.queue_processing_time.start_timer();
@@ -1609,7 +1607,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::end_
 			performance_counters.queue_processing_time.stop_timer();
 
 			// Process other tasks until this task has been finished
-			wait_for_finish(current_team_task->parent);
+			wait_for_finish(&(finish_stack[finish_stack_filled_right]));
 
 		}
 		if(current_team == NULL || current_team->level != my_team_task->team_level) {

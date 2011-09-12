@@ -36,26 +36,32 @@ public:
 //	size_t get_length();
 };
 
+inline
 BasicPerformanceCounterVector<false>::BasicPerformanceCounterVector(size_t length) {
 
 }
 
+inline
 BasicPerformanceCounterVector<false>::BasicPerformanceCounterVector(BasicPerformanceCounterVector<false>& other) {
 
 }
 
+inline
 BasicPerformanceCounterVector<false>::~BasicPerformanceCounterVector() {
 
 }
 
+inline
 void BasicPerformanceCounterVector<false>::incr(size_t i) {
 
 }
 
+inline
 void BasicPerformanceCounterVector<false>::print(size_t i, char const* const formatting_string) {
 
 }
 
+inline
 void BasicPerformanceCounterVector<false>::print_header(size_t i, char const* const string) {
 
 }
@@ -80,29 +86,35 @@ private:
 	VectorSumReducer<size_t> reducer;
 };
 
+inline
 BasicPerformanceCounterVector<true>::BasicPerformanceCounterVector(size_t length)
 : reducer(length) {
 
 }
 
+inline
 BasicPerformanceCounterVector<true>::BasicPerformanceCounterVector(BasicPerformanceCounterVector<true>& other)
 : reducer(other.reducer) {
 
 }
 
+inline
 BasicPerformanceCounterVector<true>::~BasicPerformanceCounterVector() {
 
 }
 
+inline
 void BasicPerformanceCounterVector<true>::incr(size_t i) {
 	reducer.incr(i);
 }
 
+inline
 void BasicPerformanceCounterVector<true>::print(size_t i, char const* const formatting_string) {
 	size_t const* data = reducer.get_sum();
 	printf(formatting_string, data[i]);
 }
 
+inline
 void BasicPerformanceCounterVector<true>::print_header(char const* const string) {
 	std::cout << string;
 }
