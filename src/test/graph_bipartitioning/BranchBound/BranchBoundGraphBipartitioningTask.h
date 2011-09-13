@@ -39,7 +39,7 @@ private:
 	GraphVertex* graph;
 	size_t size;
 	size_t k;
-	MaxReducer<GraphBipartitioningSolution>& best;
+	MaxReducer<GraphBipartitioningSolution> best;
 	std::set<size_t> set1;
 	std::set<size_t> set2;
 	size_t* ub;
@@ -135,6 +135,9 @@ void BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex>::prepare_s
 				break;
 			}
 			bo.backoff();
+		}
+		else {
+			break;
 		}
 	}
 }

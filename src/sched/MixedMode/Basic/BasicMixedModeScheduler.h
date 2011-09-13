@@ -60,10 +60,10 @@ public:
 	~BasicMixedModeScheduler();
 
 	template<class CallTaskType, typename ... TaskParams>
-	void finish(TaskParams ... params);
+	void finish(TaskParams&& ... params);
 
 	template<class CallTaskType, typename ... TaskParams>
-	void finish_nt(procs_t nt, TaskParams ... params);
+	void finish_nt(procs_t nt, TaskParams&& ... params);
 
 	procs_t get_max_team_size();
 
@@ -156,14 +156,14 @@ void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::i
 
 template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
 template<class CallTaskType, typename ... TaskParams>
-void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::finish(TaskParams ... params) {
-	finish_nt<CallTaskType, TaskParams ...>((procs_t)1, params ...);
+void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::finish(TaskParams&& ... params) {
+	finish_nt<CallTaskType, TaskParams ...>((procs_t)1, static_cast<TaskParams&&>(params) ...);
 }
 
 template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
 template<class CallTaskType, typename ... TaskParams>
-void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::finish_nt(procs_t nt, TaskParams ... params) {
-	CallTaskType* task = new CallTaskType(params ...);
+void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::finish_nt(procs_t nt, TaskParams&& ... params) {
+	CallTaskType* task = new CallTaskType(static_cast<TaskParams&&>(params) ...);
 	state.team_size = nt;
 	state.startup_task = task;
 	state.current_state = 1;

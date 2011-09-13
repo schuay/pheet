@@ -25,7 +25,7 @@ template <class Monoid>
 class OrderedReducerView {
 public:
 	template <typename ... ConsParams>
-	OrderedReducerView(ConsParams ... params);
+	OrderedReducerView(ConsParams&& ... params);
 	OrderedReducerView(Monoid const& template_monoid);
 	~OrderedReducerView();
 
@@ -36,7 +36,7 @@ public:
 	void set_finished();
 	void set_predecessor(OrderedReducerView<Monoid>* pred);
 	template <typename ... PutParams>
-	void add_data(PutParams ... params);
+	void add_data(PutParams&& ... params);
 	typename Monoid::OutputType get_data();
 private:
 	typedef OrderedReducerView<Monoid> View;
@@ -50,8 +50,8 @@ private:
 
 template <class Monoid>
 template <typename ... ConsParams>
-OrderedReducerView<Monoid>::OrderedReducerView(ConsParams ... params)
-:data(params ...), pred(NULL), reuse(NULL), state(0x0u) {
+OrderedReducerView<Monoid>::OrderedReducerView(ConsParams&& ... params)
+:data(static_cast<ConsParams&&>(params) ...), pred(NULL), reuse(NULL), state(0x0u) {
 
 }
 
@@ -72,8 +72,11 @@ template <class Monoid>
 OrderedReducerView<Monoid>* OrderedReducerView<Monoid>::fold() {
 	OrderedReducerView<Monoid>* ret = this;
 	while((ret->state & 0x4) == 0 && ret->pred != NULL) {
-		assert(ret->pred->reuse == NULL);
-		ret->pred->reuse = ret;
+		OrderedReducerView<Monoid>* tmp = ret->pred;
+		while(tmp->reuse != NULL) {
+			tmp = tmp->reuse;
+		}
+		tmp->reuse = ret;
 		ret = ret->pred;
 	}
 	if(ret->pred != NULL) {
@@ -130,14 +133,15 @@ bool OrderedReducerView<Monoid>::is_reduced() {
 template <class Monoid>
 void OrderedReducerView<Monoid>::set_predecessor(OrderedReducerView<Monoid>* pred) {
 	assert(this->pred == NULL);
+	assert(pred != this);
 	this->pred = pred;
 }
 
 template <typename Monoid>
 template <typename ... PutParams>
-void OrderedReducerView<Monoid>::add_data(PutParams ... params) {
+void OrderedReducerView<Monoid>::add_data(PutParams&& ... params) {
 	state |= 0x4;
-	data.put(params ...);
+	data.put(static_cast<PutParams&&>(params) ...);
 }
 
 template <class Monoid>

@@ -122,13 +122,13 @@ public:
 	void join();
 
 	template<class CallTaskType, typename ... TaskParams>
-		void finish(TaskParams ... params);
+		void finish(TaskParams&& ... params);
 
 	template<class CallTaskType, typename ... TaskParams>
-		void call(TaskParams ... params);
+		void call(TaskParams&& ... params);
 
 	template<class CallTaskType, typename ... TaskParams>
-		void spawn(TaskParams ... params);
+		void spawn(TaskParams&& ... params);
 
 private:
 	void run();
@@ -438,6 +438,7 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::finalize_stac
 
 template <class Scheduler, template <typename T> class StealingDeque>
 void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::start_finish_region() {
+	performance_counters.task_time.stop_timer();
 	performance_counters.num_finishes.incr();
 
 	// Perform cleanup on left side of finish stack
@@ -452,10 +453,12 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::start_finish_
 	stack[stack_filled_right].parent = current_task_parent;
 
 	current_task_parent = stack + stack_filled_right;
+	performance_counters.task_time.start_timer();
 }
 
 template <class Scheduler, template <typename T> class StealingDeque>
 void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::end_finish_region() {
+	performance_counters.task_time.stop_timer();
 	assert(current_task_parent == &(stack[stack_filled_right]));
 
 	if(current_task_parent->num_spawned > 1) {
@@ -470,30 +473,32 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::end_finish_re
 
 	// Remove stack element
 	++stack_filled_right;
+	performance_counters.task_time.start_timer();
 }
 
 template <class Scheduler, template <typename T> class StealingDeque>
 template<class CallTaskType, typename ... TaskParams>
-void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::finish(TaskParams ... params) {
+void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::finish(TaskParams&& ... params) {
 	start_finish_region();
 
-	call<CallTaskType>(params ...);
+	call<CallTaskType>(static_cast<TaskParams&&>(params) ...);
 
 	end_finish_region();
 }
 
 template <class Scheduler, template <typename T> class StealingDeque>
 template<class CallTaskType, typename ... TaskParams>
-void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::spawn(TaskParams ... params) {
+void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::spawn(TaskParams&& ... params) {
 	performance_counters.num_spawns.incr();
 
 	if(stealing_deque.get_length() >= max_queue_length) {
 		performance_counters.num_spawns_to_call.incr();
-		call<CallTaskType>(params ...);
+		call<CallTaskType>(static_cast<TaskParams&&>(params) ...);
 	}
 	else {
 		CallTaskType* task = new CallTaskType(params ...);
 		assert(current_task_parent != NULL);
+		++(current_task_parent->num_spawned);
 		DequeItem di;
 		di.task = task;
 		di.stack_element = current_task_parent;
@@ -503,10 +508,10 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::spawn(TaskPar
 
 template <class Scheduler, template <typename T> class StealingDeque>
 template<class CallTaskType, typename ... TaskParams>
-void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::call(TaskParams ... params) {
+void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::call(TaskParams&& ... params) {
 	performance_counters.num_calls.incr();
 	// Create task
-	CallTaskType task(params ...);
+	CallTaskType task(static_cast<TaskParams&&>(params) ...);
 	// Execute task
 	task(*this);
 }

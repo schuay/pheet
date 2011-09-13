@@ -95,6 +95,8 @@ struct BasicMixedModeSchedulerTaskExecutionContextFinishStackElement {
 
 	// Pointer to num_finished_remote of another thread (the one we stole tasks from)
 	BasicMixedModeSchedulerTaskExecutionContextFinishStackElement* parent;
+
+	BasicMixedModeSchedulerTaskExecutionContextFinishStackElement* prev_el;
 };
 
 /*
@@ -212,28 +214,28 @@ public:
 	void join();
 
 	template<class CallTaskType, typename ... TaskParams>
-		void finish(TaskParams ... params);
+		void finish(TaskParams&& ... params);
 
 	template<class CallTaskType, typename ... TaskParams>
-		void call(TaskParams ... params);
+		void call(TaskParams&& ... params);
 
 	template<class CallTaskType, typename ... TaskParams>
-		void spawn(TaskParams ... params);
+		void spawn(TaskParams&& ... params);
 
 	template<class CallTaskType, typename ... TaskParams>
-		void local_spawn(TaskParams ... params);
+		void local_spawn(TaskParams&& ... params);
 
 	template<class CallTaskType, typename ... TaskParams>
-		void finish_nt(procs_t nt_size, TaskParams ... params);
+		void finish_nt(procs_t nt_size, TaskParams&& ... params);
 
 	template<class CallTaskType, typename ... TaskParams>
-		void call_nt(procs_t nt_size, TaskParams ... params);
+		void call_nt(procs_t nt_size, TaskParams&& ... params);
 
 	template<class CallTaskType, typename ... TaskParams>
-		void spawn_nt(procs_t nt_size, TaskParams ... params);
+		void spawn_nt(procs_t nt_size, TaskParams&& ... params);
 
 	template<class CallTaskType, typename ... TaskParams>
-		void local_spawn_nt(procs_t nt_size, TaskParams ... params);
+		void local_spawn_nt(procs_t nt_size, TaskParams&& ... params);
 
 	// If team is out of sync
 	void sync_team();
@@ -493,12 +495,14 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::run(
 
 		create_team(di.team_size);
 
+		performance_counters.queue_processing_time.stop_timer();
 		if(di.team_size == 1) {
 			execute_solo_queue_task(di);
 		}
 		else {
 			execute_queue_task(di);
 		}
+		performance_counters.queue_processing_time.start_timer();
 
 		if(di.finish_stack_element->num_spawned > 0) {
 			// There exist some non-executed or stolen tasks
@@ -1588,6 +1592,16 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::star
 		finish_stack[finish_stack_filled_right].num_spawned = 0;
 		// Parent is not finished when this element is finished, so leave parent empty
 		finish_stack[finish_stack_filled_right].parent = NULL;
+		if(current_team_task != NULL) {
+			finish_stack[finish_stack_filled_right].prev_el = current_team_task->parent;
+			current_team_task->parent = &(finish_stack[finish_stack_filled_right]);
+		}
+#ifndef NDEBUG
+		else {
+			// Some additional safety which may ease debugging
+			finish_stack[finish_stack_filled_right].prev_el = NULL;
+		}
+#endif
 	}
 }
 
@@ -1595,6 +1609,7 @@ template <class Scheduler, template <typename T> class StealingDeque>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::end_finish_region() {
 	performance_counters.task_time.stop_timer();
 	if(is_coordinator()) {
+		assert(current_team_task->parent == &(finish_stack[finish_stack_filled_right]));
 		// Store current team task
 		TeamTaskData* my_team_task = current_team_task;
 
@@ -1610,6 +1625,9 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::end_
 			wait_for_finish(&(finish_stack[finish_stack_filled_right]));
 
 		}
+		if(my_team_task != NULL)
+			my_team_task->parent = finish_stack[finish_stack_filled_right].prev_el;
+
 		if(current_team == NULL || current_team->level != my_team_task->team_level) {
 			create_team(my_team_task->team_size);
 			if(my_team_task->team_size > 1) {
@@ -1631,7 +1649,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::end_
 
 template <class Scheduler, template <typename T> class StealingDeque>
 template<class CallTaskType, typename ... TaskParams>
-void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::spawn(TaskParams ... params) {
+void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::spawn(TaskParams&& ... params) {
 	if(is_coordinator()) {
 		performance_counters.num_spawns.incr();
 		if(team_info->team_size == 1) {
@@ -1640,10 +1658,10 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::spaw
 			if(stealing_deques[level]->get_length() >= levels[level].spawn_same_size_threshold) {
 				performance_counters.num_spawns_to_call.incr();
 				// There are enough tasks in our queue - make a synchroneous call instead
-				call<CallTaskType>(params ...);
+				call<CallTaskType>(static_cast<TaskParams&&>(params) ...);
 			}
 			else {
-				CallTaskType* task = new CallTaskType(params ...);
+				CallTaskType* task = new CallTaskType(static_cast<TaskParams&&>(params) ...);
 				assert(current_team_task->parent != NULL);
 				current_team_task->parent->num_spawned++;
 				DequeItem di;
@@ -1655,7 +1673,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::spaw
 		}
 		else {
 			// TODO: optimization to use call in some cases to prevent the deque from growing too large
-			CallTaskType* task = new CallTaskType(params ...);
+			CallTaskType* task = new CallTaskType(static_cast<TaskParams&&>(params) ...);
 			assert(current_team_task->parent != NULL);
 			current_team_task->parent->num_spawned++;
 			DequeItem di;
@@ -1669,16 +1687,16 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::spaw
 
 template <class Scheduler, template <typename T> class StealingDeque>
 template<class CallTaskType, typename ... TaskParams>
-void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::local_spawn(TaskParams ... params) {
+void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::local_spawn(TaskParams&& ... params) {
 	if(team_info->team_size == 1) {
 		// Use the optimized synchroneous version instead
-		spawn<CallTaskType, TaskParams ...>(params ...);
+		spawn<CallTaskType, TaskParams ...>(static_cast<TaskParams&&>(params) ...);
 	}
 	else {
 		performance_counters.num_spawns.incr();
 
 		// We are out of sync, so calls instead of spawns are not possible
-		CallTaskType* task = new CallTaskType(params ...);
+		CallTaskType* task = new CallTaskType(static_cast<TaskParams&&>(params) ...);
 		assert(finish_stack_filled_left > 0);
 		current_team_task->parent->num_spawned++;
 		DequeItem di;
@@ -1691,7 +1709,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::loca
 
 template <class Scheduler, template <typename T> class StealingDeque>
 template<class CallTaskType, typename ... TaskParams>
-void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::call(TaskParams ... params) {
+void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::call(TaskParams&& ... params) {
 	if(is_coordinator()) {
 		performance_counters.num_calls.incr();
 		performance_counters.num_tasks_at_level.incr(team_info->team_level);
@@ -1701,7 +1719,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::call
 			assert(true);
 		}
 		else {
-			CallTaskType task(params ...);
+			CallTaskType task(static_cast<TaskParams&&>(params) ...);
 			task(*this);
 		}
 	}
@@ -1730,10 +1748,10 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::call
 
 template <class Scheduler, template <typename T> class StealingDeque>
 template<class CallTaskType, typename ... TaskParams>
-void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::finish(TaskParams ... params) {
+void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::finish(TaskParams&& ... params) {
 	start_finish_region();
 
-	call<CallTaskType>(params ...);
+	call<CallTaskType>(static_cast<TaskParams&&>(params) ...);
 
 	end_finish_region();
 
@@ -1763,11 +1781,11 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::fini
 
 template <class Scheduler, template <typename T> class StealingDeque>
 template<class CallTaskType, typename ... TaskParams>
-void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::spawn_nt(procs_t nt_size, TaskParams ... params) {
+void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::spawn_nt(procs_t nt_size, TaskParams&& ... params) {
 	procs_t level = get_level_for_num_threads(nt_size);
 	if(level == team_info->team_level) {
 		// If we stay at the same level use the optimized method for same-size spawns
-		spawn<CallTaskType, TaskParams ...>(params ...);
+		spawn<CallTaskType, TaskParams ...>(static_cast<TaskParams&&>(params) ...);
 	}
 	else {
 		// TODO: optimization to use call in some cases to prevent the finish_stack from growing too large
@@ -1777,7 +1795,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::spaw
 		if(is_coordinator()) {
 			performance_counters.num_spawns.incr();
 
-			CallTaskType* task = new CallTaskType(params ...);
+			CallTaskType* task = new CallTaskType(static_cast<TaskParams&&>(params) ...);
 			assert(current_team_task->parent != NULL);
 			current_team_task->parent->num_spawned++;
 			DequeItem di;
@@ -1791,14 +1809,14 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::spaw
 
 template <class Scheduler, template <typename T> class StealingDeque>
 template<class CallTaskType, typename ... TaskParams>
-void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::local_spawn_nt(procs_t nt_size, TaskParams ... params) {
+void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::local_spawn_nt(procs_t nt_size, TaskParams&& ... params) {
 	procs_t level = get_level_for_num_threads(nt_size);
 	if(level == team_info->team_level) {
 		// Use the optimized synchroneous version instead
-		spawn_nt<CallTaskType, TaskParams ...>(nt_size, params ...);
+		spawn_nt<CallTaskType, TaskParams ...>(nt_size, static_cast<TaskParams&&>(params) ...);
 	}
 	else {
-		CallTaskType* task = new CallTaskType(params ...);
+		CallTaskType* task = new CallTaskType(static_cast<TaskParams&&>(params) ...);
 		assert(finish_stack_filled_left > 0);
 		current_team_task->parent.num_spawned++;
 		DequeItem di;
@@ -1811,7 +1829,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::loca
 
 template <class Scheduler, template <typename T> class StealingDeque>
 template<class CallTaskType, typename ... TaskParams>
-void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::call_nt(procs_t nt_size, TaskParams ... params) {
+void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::call_nt(procs_t nt_size, TaskParams&& ... params) {
 	// TODO
 	assert(true);
 	/*
@@ -1834,10 +1852,10 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::call
 
 template <class Scheduler, template <typename T> class StealingDeque>
 template<class CallTaskType, typename ... TaskParams>
-void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::finish_nt(procs_t nt_size, TaskParams ... params) {
+void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::finish_nt(procs_t nt_size, TaskParams&& ... params) {
 	start_finish_region();
 
-	call_nt<CallTaskType>(nt_size, params ...);
+	call_nt<CallTaskType>(nt_size, static_cast<TaskParams&&>(params) ...);
 
 	end_finish_region();
 

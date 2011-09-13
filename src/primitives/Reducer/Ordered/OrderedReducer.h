@@ -24,14 +24,14 @@ template <class Monoid>
 class OrderedReducer {
 public:
 	template <typename ... ConsParams>
-	OrderedReducer(ConsParams ... params);
+	OrderedReducer(ConsParams&& ... params);
 	OrderedReducer(OrderedReducer& other);
 	~OrderedReducer();
 
 //	void bind(OrderedReducer& other);
 
 	template <typename ... PutParams>
-	void add_data(PutParams ... params);
+	void add_data(PutParams&& ... params);
 	typename Monoid::OutputType get_data();
 private:
 //	void init();
@@ -46,8 +46,8 @@ private:
 
 template <class Monoid>
 template <typename ... ConsParams>
-OrderedReducer<Monoid>::OrderedReducer(ConsParams ... params)
-:my_view(new View(params ...)), parent_view(NULL)
+OrderedReducer<Monoid>::OrderedReducer(ConsParams&& ... params)
+:my_view(new View(static_cast<ConsParams&&>(params) ...)), parent_view(NULL)
 {
 
 }
@@ -89,7 +89,6 @@ void OrderedReducer<Monoid>::finalize() {
 	else {
 		// Fence in reduce method (only executed if necessary) ensures that parent gets a consistent view
 
-		// Order between those two operations is not relevant as both have to be finished before we proceed
 		// Notify parent view
 		parent_view->set_predecessor(my_view);
 	}
@@ -97,9 +96,9 @@ void OrderedReducer<Monoid>::finalize() {
 
 template <class Monoid>
 template <typename ... PutParams>
-void OrderedReducer<Monoid>::add_data(PutParams ... params) {
+void OrderedReducer<Monoid>::add_data(PutParams&& ... params) {
 	my_view = my_view->fold();
-	my_view->add_data(params ...);
+	my_view->add_data(static_cast<PutParams&&>(params) ...);
 }
 
 template <class Monoid>

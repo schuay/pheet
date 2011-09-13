@@ -57,7 +57,7 @@ public:
 	~BasicScheduler();
 
 	template<class CallTaskType, typename ... TaskParams>
-	void finish(TaskParams ... params);
+	void finish(TaskParams&& ... params);
 
 	void print_performance_counter_values();
 
@@ -143,8 +143,8 @@ void BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::initialize
 
 template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
 template<class CallTaskType, typename ... TaskParams>
-void BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::finish(TaskParams ... params) {
-	CallTaskType task(params ...);
+void BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::finish(TaskParams&& ... params) {
+	CallTaskType task(static_cast<TaskParams&&>(params) ...);
 	state.startup_task = &task;
 	state.current_state = 1;
 
