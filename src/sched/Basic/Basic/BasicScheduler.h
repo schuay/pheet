@@ -63,6 +63,8 @@ public:
 
 	void print_performance_counter_headers();
 
+	TaskExecutionContext* get_context();
+
 	static char const name[];
 	static procs_t const max_cpus;
 
@@ -191,6 +193,11 @@ void BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::print_perf
 	TimePerformanceCounter<scheduler_measure_total_time>::print_header("scheduler_total_time\t");
 	TimePerformanceCounter<scheduler_measure_task_time>::print_header("total_task_time\t");
 	TimePerformanceCounter<scheduler_measure_idle_time>::print_header("total_idle_time\t");
+}
+
+template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
+typename BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::TaskExecutionContext* BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::get_context() {
+	return TaskExecutionContext::get();
 }
 
 }

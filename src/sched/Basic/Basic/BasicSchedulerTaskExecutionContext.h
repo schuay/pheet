@@ -121,6 +121,8 @@ public:
 
 	void join();
 
+	static BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>* get();
+
 	template<class CallTaskType, typename ... TaskParams>
 		void finish(TaskParams&& ... params);
 
@@ -163,12 +165,17 @@ private:
 	size_t max_queue_length;
 	StealingDeque<DequeItem> stealing_deque;
 
+	static thread_local BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>* local_context;
+
 	friend class CPUThreadExecutor<typename CPUHierarchy::CPUDescriptor, BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>>;
 	friend class Scheduler::Finish;
 };
 
 template <class Scheduler, template <typename T> class StealingDeque>
 size_t const BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::stack_size = 256;
+
+template <class Scheduler, template <typename T> class StealingDeque>
+thread_local BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>* BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::local_context = NULL;
 
 template <class Scheduler, template <typename T> class StealingDeque>
 BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::BasicSchedulerTaskExecutionContext(std::vector<LevelDescription*> const* levels, std::vector<typename CPUHierarchy::CPUDescriptor*> const* cpus, typename Scheduler::State* scheduler_state, BasicSchedulerPerformanceCounters& perf_count)
@@ -200,9 +207,15 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::join() {
 	thread_executor.join();
 }
 
+template <class Scheduler, template <typename T> class StealingDeque>
+BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>* BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::get() {
+	return local_context;
+}
 
 template <class Scheduler, template <typename T> class StealingDeque>
 void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::run() {
+	BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::local_context = this;
+
 	scheduler_state->state_barrier.wait(0, 1);
 
 	Task* startup_task = scheduler_state->startup_task;
@@ -216,8 +229,8 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::run() {
 	// We need to stop here, as it isn't safe after the barrier
 	performance_counters.total_time.stop_timer();
 
+	local_context = NULL;
 	scheduler_state->state_barrier.barrier(1, levels[0].total_size);
-
 	// Now we can safely finish execution
 }
 
