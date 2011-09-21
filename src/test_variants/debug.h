@@ -19,6 +19,13 @@ const unsigned int sorting_test_seeds[] = {0, 1};
 const size_t sorting_test_n[] = {100000};
 const int sorting_test_types[] = {0, 1};
 
+const bool graph_bipartitioning_test = false;
+const procs_t graph_bipartitioning_test_cpus[] = {1, 2};
+const unsigned int graph_bipartitioning_test_seeds[] = {0, 1};
+const size_t graph_bipartitioning_test_n[] = {10};
+const double graph_bipartitioning_test_p[] = {0.5};
+const int graph_bipartitioning_test_types[] = {0};
+
 }
 
 #endif /* DEBUG_H_ */
