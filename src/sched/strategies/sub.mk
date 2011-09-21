@@ -1,0 +1,1 @@
+include src/sched/strategies/LifoFifo/sub.mk

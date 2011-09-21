@@ -8,21 +8,21 @@
 #ifndef BASESTRATEGY_H_
 #define BASESTRATEGY_H_
 
+#include "../../settings.h"
+#include "../../misc/types.h"
+
 namespace pheet {
 
 typedef uint64_t prio_t;
 
-template <class Sched>
 class BaseStrategy {
 public:
-	typedef typename Scheduler::TaskExecutionContext TEC;
-
 	BaseStrategy();
 	virtual ~BaseStrategy();
 
-	virtual prio_t get_pop_priority(TEC& tec) = 0;
-	template <class HardwareType>
-	virtual prio_t get_steal_priority<HardwareType>(TEC& tec, HardwareType) = 0;
+	virtual prio_t get_pop_priority() = 0;
+//	template <class HardwareType>
+	virtual prio_t get_steal_priority/*<HardwareType>*/() = 0;
 };
 
 inline BaseStrategy::BaseStrategy() {

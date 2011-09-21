@@ -11,13 +11,17 @@
 
 #include "../sched/Basic/Synchroneous/SynchroneousScheduler.h"
 #include "../sched/Basic/Basic/BasicScheduler.h"
+#include "../sched/Basic/Priority/PriorityScheduler.h"
 #include "../sched/MixedMode/Basic/BasicMixedModeScheduler.h"
+
+#include "../sched/strategies/LifoFifo/LifoFifoStrategy.h"
 
 #include "../em/CPUHierarchy/Oversubscribed/OversubscribedSimpleCPUHierarchy.h"
 
 #include "../ds/CircularArray/FixedSize/FixedSizeCircularArray.h"
 #include "../ds/CircularArray/TwoLevelGrowing/TwoLevelGrowingCircularArray.h"
 #include "../ds/StealingDeque/CircularArray/CircularArrayStealingDeque.h"
+#include "../ds/PriorityTaskStorage/Fallback/FallbackTaskStorage.h"
 
 #include "../primitives/Backoff/Exponential/ExponentialBackoff.h"
 #include "../primitives/Barrier/Simple/SimpleBarrier.h"
@@ -75,10 +79,31 @@ TwoLevelGrowingCircularArrayStealingDeque<T>::TwoLevelGrowingCircularArraySteali
 
 }
 
+template <typename T>
+class FixedSizeCircularArrayStealingDequeFallbackTaskStorage : public FallbackTaskStorage<T, FixedSizeCircularArrayStealingDeque > {
+public:
+	FixedSizeCircularArrayStealingDequeFallbackTaskStorage(size_t initial_capacity);
+	FixedSizeCircularArrayStealingDequeFallbackTaskStorage(size_t initial_capacity, BasicPerformanceCounter<stealing_deque_count_steals>& num_stolen, BasicPerformanceCounter<stealing_deque_count_pop_cas>& num_pop_cas);
+};
+
+template <typename T>
+FixedSizeCircularArrayStealingDequeFallbackTaskStorage<T>::FixedSizeCircularArrayStealingDequeFallbackTaskStorage(size_t initial_capacity)
+: FallbackTaskStorage<T, FixedSizeCircularArrayStealingDeque >(initial_capacity){
+
+}
+
+template <typename T>
+FixedSizeCircularArrayStealingDequeFallbackTaskStorage<T>::FixedSizeCircularArrayStealingDequeFallbackTaskStorage(size_t initial_capacity, BasicPerformanceCounter<stealing_deque_count_steals>& num_stolen, BasicPerformanceCounter<stealing_deque_count_pop_cas>& num_pop_cas)
+: FallbackTaskStorage<T, FixedSizeCircularArrayStealingDeque >(initial_capacity, num_stolen, num_pop_cas){
+
+}
+
 typedef BasicMixedModeScheduler<OversubscribedSimpleCPUHierarchy, TwoLevelGrowingCircularArrayStealingDeque, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff>
 	DefaultMixedModeScheduler;
 typedef BasicScheduler<OversubscribedSimpleCPUHierarchy, FixedSizeCircularArrayStealingDeque, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff>
 	DefaultBasicScheduler;
+typedef PriorityScheduler<OversubscribedSimpleCPUHierarchy, FixedSizeCircularArrayStealingDequeFallbackTaskStorage, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff, LifoFifoStrategy>
+	FallbackPriorityScheduler;
 typedef SynchroneousScheduler<OversubscribedSimpleCPUHierarchy>
 	DefaultSynchroneousScheduler;
 

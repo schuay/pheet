@@ -1,0 +1,1 @@
+TEST_OBJS += lib/sched/strategies/LifoFifo/LifoFifoStrategy.o

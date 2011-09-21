@@ -10,6 +10,7 @@
 #define TYPES_H_
 
 #include <stddef.h>
+#include <stdint.h>
 
 namespace pheet {
 
