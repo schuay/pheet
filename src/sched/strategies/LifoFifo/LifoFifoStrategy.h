@@ -13,9 +13,10 @@
 
 namespace pheet {
 
-class LifoFifoStrategy : BaseStrategy {
+class LifoFifoStrategy : public BaseStrategy {
 public:
 	LifoFifoStrategy();
+	LifoFifoStrategy(LifoFifoStrategy& other);
 	LifoFifoStrategy(LifoFifoStrategy&& other);
 	virtual ~LifoFifoStrategy();
 
@@ -30,6 +31,11 @@ private:
 
 inline LifoFifoStrategy::LifoFifoStrategy()
 : prio(++offset) {
+
+}
+
+inline LifoFifoStrategy::LifoFifoStrategy(LifoFifoStrategy& other)
+: prio(other.prio) {
 
 }
 

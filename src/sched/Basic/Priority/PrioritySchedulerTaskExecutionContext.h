@@ -131,7 +131,7 @@ public:
 		void spawn(TaskParams&& ... params);
 
 	template<class CallTaskType, class Strategy, typename ... TaskParams>
-		void spawn_prio(Strategy&& s, TaskParams&& ... params);
+		void spawn_prio(Strategy s, TaskParams&& ... params);
 
 private:
 	void run();
@@ -175,7 +175,7 @@ size_t const PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, Defau
 
 template <class Scheduler, template <typename T> class TaskStorage, class DefaultStrategy>
 PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrategy>::PrioritySchedulerTaskExecutionContext(std::vector<LevelDescription*> const* levels, std::vector<typename CPUHierarchy::CPUDescriptor*> const* cpus, typename Scheduler::State* scheduler_state, PrioritySchedulerPerformanceCounters& perf_count)
-: performance_counters(perf_count), stack_filled_left(0), stack_filled_right(stack_size), num_levels(levels->size()), thread_executor(cpus, this), scheduler_state(scheduler_state), max_queue_length(find_last_bit_set((*levels)[0]->total_size - 1) << 4), task_storage(max_queue_length, performance_counters.num_steals, performance_counters.num_stealing_deque_pop_cas) {
+: performance_counters(perf_count), stack_filled_left(0), stack_filled_right(stack_size), num_levels(levels->size()), thread_executor(cpus, this), scheduler_state(scheduler_state), max_queue_length(find_last_bit_set((*levels)[0]->total_size + 8) << 4), task_storage(max_queue_length, performance_counters.num_steals, performance_counters.num_stealing_deque_pop_cas) {
 	performance_counters.total_time.start_timer();
 
 	stack = new StackElement[stack_size];
@@ -497,7 +497,7 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrate
 
 template <class Scheduler, template <typename T> class TaskStorage, class DefaultStrategy>
 template<class CallTaskType, class Strategy, typename ... TaskParams>
-void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrategy>::spawn_prio(Strategy&& s, TaskParams&& ... params) {
+void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrategy>::spawn_prio(Strategy s, TaskParams&& ... params) {
 	performance_counters.num_spawns.incr();
 
 	if(task_storage.get_length() >= max_queue_length) {

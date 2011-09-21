@@ -23,7 +23,7 @@ public:
 	size_t get_capacity();
 	bool is_growable();
 
-	T get(size_t i);
+	T& get(size_t i);
 	void put(size_t i, T value);
 
 	void grow(size_t bottom, size_t top);
@@ -54,7 +54,7 @@ bool FixedSizeCircularArray<T>::is_growable() {
 }
 
 template <typename T>
-T FixedSizeCircularArray<T>::get(size_t i) {
+T& FixedSizeCircularArray<T>::get(size_t i) {
 	return data[i % capacity];
 }
 

@@ -22,6 +22,10 @@
 #include "../ds/CircularArray/TwoLevelGrowing/TwoLevelGrowingCircularArray.h"
 #include "../ds/StealingDeque/CircularArray/CircularArrayStealingDeque.h"
 #include "../ds/PriorityTaskStorage/Fallback/FallbackTaskStorage.h"
+#include "../ds/PriorityTaskStorage/Modular/ModularTaskStorage.h"
+#include "../ds/PriorityTaskStorage/Modular/ModularTaskStorage.h"
+#include "../ds/PriorityTaskStorage/Modular/Primary/Primitive/PrimitivePrimaryTaskStorage.h"
+#include "../ds/PriorityTaskStorage/Modular/Secondary/Primitive/PrimitiveSecondaryTaskStorage.h"
 
 #include "../primitives/Backoff/Exponential/ExponentialBackoff.h"
 #include "../primitives/Barrier/Simple/SimpleBarrier.h"
@@ -98,12 +102,30 @@ FixedSizeCircularArrayStealingDequeFallbackTaskStorage<T>::FixedSizeCircularArra
 
 }
 
+template <typename T>
+class DefaultPrimitivePrimaryTaskStorage : public PrimitivePrimaryTaskStorage<T, MyTwoLevelGrowingCircularArray> {
+public:
+	template <typename ... ConsParams>
+	DefaultPrimitivePrimaryTaskStorage(ConsParams&& ... params)
+	: PrimitivePrimaryTaskStorage<T, MyTwoLevelGrowingCircularArray>(static_cast<ConsParams&&>(params) ...) {}
+};
+
+template <typename T>
+class PrimitiveModularTaskStorage : public ModularTaskStorage<T, DefaultPrimitivePrimaryTaskStorage, PrimitiveSecondaryTaskStorage > {
+public:
+	template <typename ... ConsParams>
+	PrimitiveModularTaskStorage(ConsParams&& ... params)
+	: ModularTaskStorage<T, DefaultPrimitivePrimaryTaskStorage, PrimitiveSecondaryTaskStorage >(static_cast<ConsParams&&>(params) ...) {}
+};
+
 typedef BasicMixedModeScheduler<OversubscribedSimpleCPUHierarchy, TwoLevelGrowingCircularArrayStealingDeque, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff>
 	DefaultMixedModeScheduler;
 typedef BasicScheduler<OversubscribedSimpleCPUHierarchy, FixedSizeCircularArrayStealingDeque, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff>
 	DefaultBasicScheduler;
 typedef PriorityScheduler<OversubscribedSimpleCPUHierarchy, FixedSizeCircularArrayStealingDequeFallbackTaskStorage, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff, LifoFifoStrategy>
 	FallbackPriorityScheduler;
+typedef PriorityScheduler<OversubscribedSimpleCPUHierarchy, PrimitiveModularTaskStorage, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff, LifoFifoStrategy>
+	PrimitivePriorityScheduler;
 typedef SynchroneousScheduler<OversubscribedSimpleCPUHierarchy>
 	DefaultSynchroneousScheduler;
 
