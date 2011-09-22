@@ -12,14 +12,15 @@
 
 namespace pheet {
 
-class UserDefinedPriority {
+class UserDefinedPriority : public BaseStrategy {
 public:
 	UserDefinedPriority(prio_t pop_priority, prio_t steal_priority);
-	UserDefinedPriority(UserDefinedPriority&& other)
+	UserDefinedPriority(UserDefinedPriority& other);
+	UserDefinedPriority(UserDefinedPriority&& other);
 	virtual ~UserDefinedPriority();
 
-	virtual prio_t get_pop_priority();
-	virtual prio_t get_steal_priority();
+	virtual prio_t get_pop_priority(size_t task_id);
+	virtual prio_t get_steal_priority(size_t task_id);
 private:
 	prio_t pop_priority;
 	prio_t steal_priority;
@@ -30,20 +31,25 @@ inline UserDefinedPriority::UserDefinedPriority(prio_t pop_priority, prio_t stea
 
 }
 
+inline UserDefinedPriority::UserDefinedPriority(UserDefinedPriority& other)
+: pop_priority(other.pop_priority), steal_priority(other.steal_priority) {
+
+}
+
 inline UserDefinedPriority::UserDefinedPriority(UserDefinedPriority&& other)
 : pop_priority(other.pop_priority), steal_priority(other.steal_priority) {
 
 }
 
-inline UserDefinedPriority::~UserDefinedPriority()
+inline UserDefinedPriority::~UserDefinedPriority() {
 
 }
 
-inline prio_t get_pop_priority() {
+inline prio_t get_pop_priority(size_t task_id) {
 	return pop_priority;
 }
 
-inline prio_t get_steal_priority() {
+inline prio_t get_steal_priority(size_t task_id) {
 	return steal_priority;
 }
 

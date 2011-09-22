@@ -37,6 +37,7 @@ public:
 	T take(iterator item);
 	bool is_taken(iterator item);
 	prio_t get_steal_priority(iterator item);
+	size_t get_task_id(iterator item);
 
 	template <class Strategy>
 	void push(Strategy& s, T item);
@@ -115,7 +116,20 @@ bool PrimitivePrimaryTaskStorage<TT, CircularArray>::is_taken(iterator item) {
 
 template <typename TT, template <typename S> class CircularArray>
 prio_t PrimitivePrimaryTaskStorage<TT, CircularArray>::get_steal_priority(iterator item) {
-	return data.get(item).s->get_steal_priority();
+	return data.get(item).s->get_steal_priority(item);
+}
+
+/*
+ * Returns a task id specifying the insertion order. some strategies use the insertion order
+ * to prioritize tasks.
+ * The task_id is local per queue. When a task is stolen it is assigned a new task id
+ * (therefore automatically rebasing the strategy)
+ * Warning! If multiple tasks are stolen and inserted into another queue, they have to be
+ * inserted in the previous insertion order! (by increasing task_id)
+ */
+template <typename TT, template <typename S> class CircularArray>
+size_t PrimitivePrimaryTaskStorage<TT, CircularArray>::get_task_id(iterator item) {
+	return item;
 }
 
 template <typename TT, template <typename S> class CircularArray>
@@ -132,7 +146,7 @@ inline void PrimitivePrimaryTaskStorage<TT, CircularArray>::push(Strategy& s, T 
 	PrimitiveTaskStorageItem<TT> to_put;
 	to_put.data = item;
 	to_put.s = new Strategy(s);
-	to_put.pop_prio = s.get_pop_priority();
+	to_put.pop_prio = s.get_pop_priority(bottom);
 	to_put.index = bottom;
 
 	data.put(bottom, to_put);

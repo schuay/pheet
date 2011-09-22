@@ -20,9 +20,9 @@ public:
 	BaseStrategy();
 	virtual ~BaseStrategy();
 
-	virtual prio_t get_pop_priority() = 0;
+	virtual prio_t get_pop_priority(size_t task_id) = 0;
 //	template <class HardwareType>
-	virtual prio_t get_steal_priority/*<HardwareType>*/() = 0;
+	virtual prio_t get_steal_priority/*<HardwareType>*/(size_t task_id) = 0;
 };
 
 inline BaseStrategy::BaseStrategy() {

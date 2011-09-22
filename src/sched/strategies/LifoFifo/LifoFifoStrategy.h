@@ -20,27 +20,21 @@ public:
 	LifoFifoStrategy(LifoFifoStrategy&& other);
 	virtual ~LifoFifoStrategy();
 
-	virtual prio_t get_pop_priority();
-	virtual prio_t get_steal_priority();
+	virtual prio_t get_pop_priority(size_t task_id);
+	virtual prio_t get_steal_priority(size_t task_id);
 
 private:
-	static thread_local prio_t offset;
-
-	prio_t prio;
 };
 
-inline LifoFifoStrategy::LifoFifoStrategy()
-: prio(++offset) {
+inline LifoFifoStrategy::LifoFifoStrategy() {
 
 }
 
-inline LifoFifoStrategy::LifoFifoStrategy(LifoFifoStrategy& other)
-: prio(other.prio) {
+inline LifoFifoStrategy::LifoFifoStrategy(LifoFifoStrategy& other) {
 
 }
 
-inline LifoFifoStrategy::LifoFifoStrategy(LifoFifoStrategy&& other)
-: prio(other.prio) {
+inline LifoFifoStrategy::LifoFifoStrategy(LifoFifoStrategy&& other) {
 
 }
 
@@ -48,12 +42,12 @@ inline LifoFifoStrategy::~LifoFifoStrategy() {
 
 }
 
-inline prio_t LifoFifoStrategy::get_pop_priority() {
-	return prio;
+inline prio_t LifoFifoStrategy::get_pop_priority(size_t task_id) {
+	return task_id + 1;
 }
 
-inline prio_t LifoFifoStrategy::get_steal_priority() {
-	return std::numeric_limits< prio_t >::max() - offset;
+inline prio_t LifoFifoStrategy::get_steal_priority(size_t task_id) {
+	return std::numeric_limits< prio_t >::max() - task_id;
 }
 
 }
