@@ -147,7 +147,7 @@ inline TT PrimitivePrimaryTaskStorage<TT, CircularArray>::pop() {
 	T ret;
 	do {
 		iterator i = begin();
-		while(i != end() && is_taken(top)) {
+		while(i != end() && is_taken(i)) {
 			++i;
 		}
 		top = i;
