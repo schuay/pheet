@@ -19,6 +19,9 @@ struct PrimitiveHeapPrimaryTaskStorageItem {
 	TT data;
 	BaseStrategy* s;
 	prio_t pop_prio;
+	// We won't be able to just store the steal prio statically in the future,
+	// as there might be more types of steal priorities, and calculating those may be expensive!
+	prio_t steal_prio;
 	size_t index;
 };
 
@@ -138,7 +141,7 @@ bool PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::is_taken(iterator item)
 
 template <typename TT, template <typename S> class CircularArray>
 prio_t PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::get_steal_priority(iterator item) {
-	return data.get(item).s->get_steal_priority(item);
+	return data.get(item).steal_prio;
 }
 
 /*
@@ -169,6 +172,7 @@ inline void PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::push(Strategy& s
 	to_put.data = item;
 	to_put.s = new Strategy(s);
 	to_put.pop_prio = s.get_pop_priority(bottom);
+	to_put.steal_prio = s.get_steal_priority(bottom);
 	to_put.index = bottom;
 
 	data.put(bottom, to_put);

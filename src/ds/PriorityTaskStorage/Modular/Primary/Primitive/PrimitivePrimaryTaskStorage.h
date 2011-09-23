@@ -17,6 +17,7 @@ struct PrimitivePrimaryTaskStorageItem {
 	TT data;
 	BaseStrategy* s;
 	prio_t pop_prio;
+	prio_t steal_prio;
 	size_t index;
 };
 
@@ -118,7 +119,7 @@ bool PrimitivePrimaryTaskStorage<TT, CircularArray>::is_taken(iterator item) {
 
 template <typename TT, template <typename S> class CircularArray>
 prio_t PrimitivePrimaryTaskStorage<TT, CircularArray>::get_steal_priority(iterator item) {
-	return data.get(item).s->get_steal_priority(item);
+	return data.get(item).steal_prio;
 }
 
 /*
@@ -149,6 +150,7 @@ inline void PrimitivePrimaryTaskStorage<TT, CircularArray>::push(Strategy& s, T 
 	to_put.data = item;
 	to_put.s = new Strategy(s);
 	to_put.pop_prio = s.get_pop_priority(bottom);
+	to_put.steal_prio = s.get_steal_priority(bottom);
 	to_put.index = bottom;
 
 	data.put(bottom, to_put);

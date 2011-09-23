@@ -33,7 +33,7 @@ public:
 	typedef FinishRegion<SynchroneousScheduler> Finish;
 
 	SynchroneousScheduler(CPUHierarchy* cpus);
-	virtual ~SynchroneousScheduler();
+	~SynchroneousScheduler();
 
 	template<class CallTaskType, typename ... TaskParams>
 	void finish(TaskParams ... params);
