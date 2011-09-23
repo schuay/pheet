@@ -104,10 +104,11 @@ TT PrimitivePrimaryTaskStorage<TT, CircularArray>::take(iterator item) {
 		return null_element;
 	}
 	T ret = ptsi.data;
+	BaseStrategy* s = ptsi.s;
 	if(!SIZET_CAS(&(ptsi.index), item, item + 1)) {
 		return null_element;
 	}
-	delete ptsi.s;
+	delete s;
 
 	return ret;
 }
