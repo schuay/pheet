@@ -65,6 +65,8 @@ public:
 	bool is_empty();
 	bool is_full();
 
+	static void print_name();
+
 private:
 	void clean();
 
@@ -72,9 +74,9 @@ private:
 	size_t bottom;
 
 	CircularArray<PrimitiveHeapPrimaryTaskStorageItem<T> > data;
-	std::priority_queue<iterator, std::vector<iterator>, PrimitiveHeapPrimaryTaskStorageComparator<CircularArray<T> > > heap;
+	std::priority_queue<iterator, std::vector<iterator>, PrimitiveHeapPrimaryTaskStorageComparator<CircularArray<PrimitiveHeapPrimaryTaskStorageItem<T> > > > heap;
 
-	BasicPerformanceCounter<stealing_deque_count_steals> num_pop_cas;
+	BasicPerformanceCounter<stealing_deque_count_pop_cas> num_pop_cas;
 
 	static const T null_element;
 };
@@ -91,7 +93,7 @@ inline PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::PrimitiveHeapPrimaryT
 template <typename TT, template <typename S> class CircularArray>
 inline PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::PrimitiveHeapPrimaryTaskStorage(size_t initial_capacity, BasicPerformanceCounter<stealing_deque_count_pop_cas>& num_pop_cas)
 : top(0), bottom(0), data(initial_capacity),
-  heap(PrimitiveHeapPrimaryTaskStorageComparator<CircularArray<TT> >(&data)),
+  heap(PrimitiveHeapPrimaryTaskStorageComparator<CircularArray<PrimitiveHeapPrimaryTaskStorageItem<T> > >(&data)),
   num_pop_cas(num_pop_cas) {
 
 }
@@ -271,6 +273,11 @@ void PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::clean() {
 	while(is_taken(top)) {
 		++top;
 	}
+}
+
+template <typename TT, template <typename S> class CircularArray>
+void PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::print_name() {
+	std::cout << "PrimitiveHeapPrimaryTaskStorage";
 }
 
 }

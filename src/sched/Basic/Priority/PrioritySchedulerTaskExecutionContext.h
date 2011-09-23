@@ -106,15 +106,16 @@ public:
 template <class TaskExecutionContext>
 PrioritySchedulerTaskExecutionContextDequeItem<TaskExecutionContext> const nullable_traits<PrioritySchedulerTaskExecutionContextDequeItem<TaskExecutionContext> >::null_value;
 
-template <class Scheduler, template <typename T> class TaskStorage, class DefaultStrategy>
+template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy>
 class PrioritySchedulerTaskExecutionContext {
 public:
-	typedef PrioritySchedulerTaskExecutionContextLevelDescription<PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrategy> > LevelDescription;
+	typedef PrioritySchedulerTaskExecutionContextLevelDescription<PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy> > LevelDescription;
 	typedef typename Scheduler::Backoff Backoff;
 	typedef typename Scheduler::CPUHierarchy CPUHierarchy;
 	typedef typename Scheduler::Task Task;
 	typedef PrioritySchedulerTaskExecutionContextStackElement StackElement;
-	typedef PrioritySchedulerTaskExecutionContextDequeItem<PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrategy> > DequeItem;
+	typedef PrioritySchedulerTaskExecutionContextDequeItem<PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy> > DequeItem;
+	typedef TaskStorageT<DequeItem> TaskStorage;
 
 	PrioritySchedulerTaskExecutionContext(std::vector<LevelDescription*> const* levels, std::vector<typename CPUHierarchy::CPUDescriptor*> const* cpus, typename Scheduler::State* scheduler_state, PrioritySchedulerPerformanceCounters& perf_count);
 	~PrioritySchedulerTaskExecutionContext();
@@ -159,22 +160,22 @@ private:
 	LevelDescription* levels;
 	procs_t num_levels;
 
-	CPUThreadExecutor<typename CPUHierarchy::CPUDescriptor, PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrategy> > thread_executor;
+	CPUThreadExecutor<typename CPUHierarchy::CPUDescriptor, PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy> > thread_executor;
 
 	typename Scheduler::State* scheduler_state;
 
 	size_t max_queue_length;
-	TaskStorage<DequeItem> task_storage;
+	TaskStorage task_storage;
 
-	friend class CPUThreadExecutor<typename CPUHierarchy::CPUDescriptor, PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrategy>>;
+	friend class CPUThreadExecutor<typename CPUHierarchy::CPUDescriptor, PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>>;
 	friend class Scheduler::Finish;
 };
 
-template <class Scheduler, template <typename T> class TaskStorage, class DefaultStrategy>
-size_t const PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrategy>::stack_size = 256;
+template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy>
+size_t const PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::stack_size = 256;
 
-template <class Scheduler, template <typename T> class TaskStorage, class DefaultStrategy>
-PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrategy>::PrioritySchedulerTaskExecutionContext(std::vector<LevelDescription*> const* levels, std::vector<typename CPUHierarchy::CPUDescriptor*> const* cpus, typename Scheduler::State* scheduler_state, PrioritySchedulerPerformanceCounters& perf_count)
+template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy>
+PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::PrioritySchedulerTaskExecutionContext(std::vector<LevelDescription*> const* levels, std::vector<typename CPUHierarchy::CPUDescriptor*> const* cpus, typename Scheduler::State* scheduler_state, PrioritySchedulerPerformanceCounters& perf_count)
 : performance_counters(perf_count), stack_filled_left(0), stack_filled_right(stack_size), num_levels(levels->size()), thread_executor(cpus, this), scheduler_state(scheduler_state), max_queue_length(find_last_bit_set((*levels)[0]->total_size + 8) << 4), task_storage(max_queue_length, performance_counters.num_steals, performance_counters.num_stealing_deque_pop_cas) {
 	performance_counters.total_time.start_timer();
 
@@ -192,20 +193,20 @@ PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrategy>::
 	thread_executor.run();
 }
 
-template <class Scheduler, template <typename T> class TaskStorage, class DefaultStrategy>
-PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrategy>::~PrioritySchedulerTaskExecutionContext() {
+template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy>
+PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::~PrioritySchedulerTaskExecutionContext() {
 	delete[] stack;
 	delete[] levels;
 }
 
-template <class Scheduler, template <typename T> class TaskStorage, class DefaultStrategy>
-void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrategy>::join() {
+template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy>
+void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::join() {
 	thread_executor.join();
 }
 
 
-template <class Scheduler, template <typename T> class TaskStorage, class DefaultStrategy>
-void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrategy>::run() {
+template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy>
+void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::run() {
 	scheduler_state->state_barrier.wait(0, 1);
 
 	Task* startup_task = scheduler_state->startup_task;
@@ -224,8 +225,8 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrate
 	// Now we can safely finish execution
 }
 
-template <class Scheduler, template <typename T> class TaskStorage, class DefaultStrategy>
-void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrategy>::execute_task(Task* task, StackElement* parent) {
+template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy>
+void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::execute_task(Task* task, StackElement* parent) {
 	if(parent < stack || (parent >= (stack + stack_size))) {
 		// to prevent thrashing on the parent finish block (owned by another thread), we create a new finish block local to the thread
 
@@ -245,8 +246,8 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrate
 	signal_task_completion(parent);
 }
 
-template <class Scheduler, template <typename T> class TaskStorage, class DefaultStrategy>
-void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrategy>::main_loop() {
+template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy>
+void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::main_loop() {
 	while(true) {
 		// Make sure our queue is empty
 		process_queue();
@@ -296,8 +297,8 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrate
 	}
 }
 
-template <class Scheduler, template <typename T> class TaskStorage, class DefaultStrategy>
-void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrategy>::wait_for_finish(StackElement* parent) {
+template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy>
+void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::wait_for_finish(StackElement* parent) {
 	while(true) {
 		// TODO: try a policy where we do not need to empty our queues before we notice the finish
 		// (currently not implemented for simplicity)
@@ -346,8 +347,8 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrate
 	}
 }
 
-template <class Scheduler, template <typename T> class TaskStorage, class DefaultStrategy>
-void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrategy>::process_queue() {
+template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy>
+void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::process_queue() {
 	DequeItem di = task_storage.pop();
 	while(di.task != NULL) {
 		// Warning, no distinction between locally spawned tasks and remote tasks
@@ -360,9 +361,9 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrate
 	}
 }
 
-template <class Scheduler, template <typename T> class TaskStorage, class DefaultStrategy>
-typename PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrategy>::StackElement*
-PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrategy>::create_non_blocking_finish_region(StackElement* parent) {
+template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy>
+typename PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::StackElement*
+PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::create_non_blocking_finish_region(StackElement* parent) {
 	// Perform cleanup on finish stack
 	empty_stack();
 
@@ -381,8 +382,8 @@ PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrategy>::
 /*
  * empty stack but not below limit
  */
-template <class Scheduler, template <typename T> class TaskStorage, class DefaultStrategy>
-void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrategy>::empty_stack() {
+template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy>
+void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::empty_stack() {
 	while(stack_filled_left > 0) {
 		size_t se = stack_filled_left - 1;
 		if(stack[se].num_spawned == stack[se].num_finished_remote) {
@@ -399,8 +400,8 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrate
 	}
 }
 
-template <class Scheduler, template <typename T> class TaskStorage, class DefaultStrategy>
-void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrategy>::signal_task_completion(StackElement* stack_element) {
+template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy>
+void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::signal_task_completion(StackElement* stack_element) {
 	StackElement* parent = stack_element->parent;
 
 	if(stack_element >= stack && (stack_element < (stack + stack_size))) {
@@ -419,8 +420,8 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrate
 	}
 }
 
-template <class Scheduler, template <typename T> class TaskStorage, class DefaultStrategy>
-void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrategy>::finalize_stack_element(StackElement* element, StackElement* parent) {
+template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy>
+void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::finalize_stack_element(StackElement* element, StackElement* parent) {
 	if(parent != NULL) {
 		if(element->num_spawned == 0) {
 			// No tasks processed remotely - no need for atomic ops
@@ -439,8 +440,8 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrate
 	}
 }
 
-template <class Scheduler, template <typename T> class TaskStorage, class DefaultStrategy>
-void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrategy>::start_finish_region() {
+template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy>
+void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::start_finish_region() {
 	performance_counters.task_time.stop_timer();
 	performance_counters.num_finishes.incr();
 
@@ -459,8 +460,8 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrate
 	performance_counters.task_time.start_timer();
 }
 
-template <class Scheduler, template <typename T> class TaskStorage, class DefaultStrategy>
-void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrategy>::end_finish_region() {
+template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy>
+void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::end_finish_region() {
 	performance_counters.task_time.stop_timer();
 	assert(current_task_parent == &(stack[stack_filled_right]));
 
@@ -479,9 +480,9 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrate
 	performance_counters.task_time.start_timer();
 }
 
-template <class Scheduler, template <typename T> class TaskStorage, class DefaultStrategy>
+template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy>
 template<class CallTaskType, typename ... TaskParams>
-void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrategy>::finish(TaskParams&& ... params) {
+void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::finish(TaskParams&& ... params) {
 	start_finish_region();
 
 	call<CallTaskType>(static_cast<TaskParams&&>(params) ...);
@@ -489,15 +490,15 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrate
 	end_finish_region();
 }
 
-template <class Scheduler, template <typename T> class TaskStorage, class DefaultStrategy>
+template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy>
 template<class CallTaskType, typename ... TaskParams>
-void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrategy>::spawn(TaskParams&& ... params) {
+void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::spawn(TaskParams&& ... params) {
 	spawn_prio<CallTaskType>(DefaultStrategy(), static_cast<TaskParams&&>(params) ...);
 }
 
-template <class Scheduler, template <typename T> class TaskStorage, class DefaultStrategy>
+template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy>
 template<class CallTaskType, class Strategy, typename ... TaskParams>
-void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrategy>::spawn_prio(Strategy s, TaskParams&& ... params) {
+void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::spawn_prio(Strategy s, TaskParams&& ... params) {
 	performance_counters.num_spawns.incr();
 
 	if(task_storage.get_length() >= max_queue_length) {
@@ -515,9 +516,9 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrate
 	}
 }
 
-template <class Scheduler, template <typename T> class TaskStorage, class DefaultStrategy>
+template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy>
 template<class CallTaskType, typename ... TaskParams>
-void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorage, DefaultStrategy>::call(TaskParams&& ... params) {
+void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::call(TaskParams&& ... params) {
 	performance_counters.num_calls.incr();
 	// Create task
 	CallTaskType task(static_cast<TaskParams&&>(params) ...);

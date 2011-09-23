@@ -8,6 +8,8 @@
 #ifndef MODULARTASKSTORAGE_H_
 #define MODULARTASKSTORAGE_H_
 
+#include <iostream>
+
 namespace pheet {
 
 template <typename TT, template <typename S> class Primary, template <typename S, template <typename Q> class P> class Secondary>
@@ -30,6 +32,8 @@ public:
 	size_t get_length();
 	bool is_empty();
 	bool is_full();
+
+	static void print_name();
 
 private:
 	Primary<T> primary;
@@ -93,6 +97,15 @@ inline bool ModularTaskStorage<TT, Primary, Secondary>::is_empty() {
 template <typename TT, template <typename S> class Primary, template <typename S, template <typename Q> class P> class Secondary>
 inline bool ModularTaskStorage<TT, Primary, Secondary>::is_full() {
 	return primary.is_full();
+}
+
+template <typename TT, template <typename S> class Primary, template <typename S, template <typename Q> class P> class Secondary>
+void ModularTaskStorage<TT, Primary, Secondary>::print_name() {
+	std::cout << "ModularTaskStorage<";
+	Primary<T>::print_name();
+	std::cout << ", ";
+	Secondary<T, Primary>::print_name();
+	std::cout << ">";
 }
 
 }

@@ -16,6 +16,7 @@
 
 #include <assert.h>
 #include <vector>
+#include <iostream>
 
 #ifdef ENV_LINUX_GCC
 #include <pthread.h>
@@ -36,6 +37,8 @@ public:
 
 	template<class CallTaskType, typename ... TaskParams>
 	void finish(TaskParams ... params);
+
+	static void print_name();
 
 	void print_performance_counter_values();
 
@@ -98,6 +101,11 @@ template<class CallTaskType, typename ... TaskParams>
 void SynchroneousScheduler<CPUHierarchyT>::finish(TaskParams ... params) {
 	CallTaskType task(params ...);
 	task(tec);
+}
+
+template <class CPUHierarchyT>
+void SynchroneousScheduler<CPUHierarchyT>::print_name() {
+	std::cout << name;
 }
 
 template <class CPUHierarchyT>

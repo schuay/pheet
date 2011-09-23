@@ -69,7 +69,9 @@ void SortingTest<Sorter>::run_test() {
 	std::cout << "test\tsorter\tscheduler\ttype\tsize\tseed\tcpus\ttotal_time\truns\t";
 	s.print_headers();
 	std::cout << std::endl;
-	cout << "sorting\t" << Sorter::name << "\t" << Sorter::scheduler_name << "\t" << types[type] << "\t" << size << "\t" << seed << "\t" << cpus << "\t" << seconds << "\t" << runs << "\t";
+	cout << "sorting\t" << Sorter::name << "\t";
+	Sorter::print_scheduler_name();
+	std::cout << "\t" << types[type] << "\t" << size << "\t" << seed << "\t" << cpus << "\t" << seconds << "\t" << runs << "\t";
 	s.print_results();
 	cout << endl;
 	delete[] data;

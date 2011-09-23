@@ -10,6 +10,7 @@
 #include "ReferenceSTLSort.h"
 
 #include <assert.h>
+#include <iostream>
 
 namespace pheet {
 
@@ -37,6 +38,10 @@ void ReferenceSTLSort::print_results() {
 
 void ReferenceSTLSort::print_headers() {
 
+}
+
+void ReferenceSTLSort::print_scheduler_name() {
+	std::cout << scheduler_name;
 }
 
 }

@@ -26,6 +26,8 @@ public:
 
 	void print_headers();
 
+	static void print_scheduler_name();
+
 	static procs_t const max_cpus;
 	static char const name[];
 	static char const * const scheduler_name;
@@ -70,6 +72,11 @@ void DagQuicksort<Scheduler>::print_results() {
 template <class Scheduler>
 void DagQuicksort<Scheduler>::print_headers() {
 	scheduler.print_performance_counter_headers();
+}
+
+template <class Scheduler>
+void DagQuicksort<Scheduler>::print_scheduler_name() {
+	Scheduler::print_name();
 }
 
 }

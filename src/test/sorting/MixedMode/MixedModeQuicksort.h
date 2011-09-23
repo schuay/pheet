@@ -26,6 +26,8 @@ public:
 
 	void print_headers();
 
+	static void print_scheduler_name();
+
 	static procs_t const max_cpus;
 	static char const name[];
 	static char const * const scheduler_name;
@@ -70,6 +72,11 @@ void MixedModeQuicksort<Scheduler, BLOCK_SIZE>::print_results() {
 template <class Scheduler, size_t BLOCK_SIZE>
 void MixedModeQuicksort<Scheduler, BLOCK_SIZE>::print_headers() {
 	scheduler.print_performance_counter_headers();
+}
+
+template <class Scheduler, size_t BLOCK_SIZE>
+void MixedModeQuicksort<Scheduler, BLOCK_SIZE>::print_scheduler_name() {
+	Scheduler::print_name();
 }
 
 }

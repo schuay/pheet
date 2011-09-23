@@ -18,6 +18,7 @@
 #include <stdint.h>
 #include <limits>
 #include <vector>
+#include <iostream>
 
 namespace pheet {
 
@@ -58,6 +59,8 @@ public:
 
 	template<class CallTaskType, typename ... TaskParams>
 	void finish(TaskParams&& ... params);
+
+	static void print_name();
 
 	void print_performance_counter_values();
 
@@ -161,6 +164,11 @@ void BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::finish(Tas
 		delete threads[i];
 	}
 	delete[] threads;
+}
+
+template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
+void BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::print_name() {
+	std::cout << name;
 }
 
 template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>

@@ -48,6 +48,8 @@ public:
 	bool is_empty();
 	bool is_full();
 
+	static void print_name();
+
 private:
 	void clean();
 
@@ -56,7 +58,7 @@ private:
 
 	CircularArray<PrimitivePrimaryTaskStorageItem<T> > data;
 
-	BasicPerformanceCounter<stealing_deque_count_steals> num_pop_cas;
+	BasicPerformanceCounter<stealing_deque_count_pop_cas> num_pop_cas;
 
 	static const T null_element;
 };
@@ -240,6 +242,11 @@ void PrimitivePrimaryTaskStorage<TT, CircularArray>::clean() {
 	while(is_taken(top)) {
 		++top;
 	}
+}
+
+template <typename TT, template <typename S> class CircularArray>
+void PrimitivePrimaryTaskStorage<TT, CircularArray>::print_name() {
+	std::cout << "PrimitivePrimaryTaskStorage";
 }
 
 }

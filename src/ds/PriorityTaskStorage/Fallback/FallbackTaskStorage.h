@@ -12,6 +12,7 @@
 #include "../../../misc/atomics.h"
 
 #include <limits>
+#include <iostream>
 
 namespace pheet {
 
@@ -35,6 +36,8 @@ public:
 	size_t get_length();
 	bool is_empty();
 	bool is_full();
+
+	static void print_name();
 
 private:
 	BaseType<TT> data;
@@ -96,6 +99,11 @@ inline bool FallbackTaskStorage<TT, BaseType>::is_empty() {
 template <typename TT, template <typename S> class BaseType>
 inline bool FallbackTaskStorage<TT, BaseType>::is_full() {
 	return data.is_full();
+}
+
+template <typename TT, template <typename S> class BaseType>
+void FallbackTaskStorage<TT, BaseType>::print_name() {
+	std::cout << "FallbackTaskStorage";
 }
 
 }

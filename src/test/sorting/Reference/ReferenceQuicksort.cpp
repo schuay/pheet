@@ -12,6 +12,7 @@
 #include <functional>
 #include <algorithm>
 #include <assert.h>
+#include <iostream>
 
 namespace pheet {
 
@@ -51,6 +52,10 @@ void ReferenceQuicksort::print_results() {
 
 void ReferenceQuicksort::print_headers() {
 
+}
+
+void ReferenceQuicksort::print_scheduler_name() {
+	std::cout << scheduler_name;
 }
 
 }

@@ -17,6 +17,7 @@
 #include <stdint.h>
 #include <limits>
 #include <vector>
+#include <iostream>
 
 /*
  *
@@ -66,6 +67,8 @@ public:
 	void finish_nt(procs_t nt, TaskParams&& ... params);
 
 	procs_t get_max_team_size();
+
+	static void print_name();
 
 	void print_performance_counter_values();
 
@@ -181,6 +184,11 @@ void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::f
 template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
 procs_t BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::get_max_team_size() {
 	return num_threads;
+}
+
+template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
+void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::print_name() {
+	std::cout << name;
 }
 
 template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>

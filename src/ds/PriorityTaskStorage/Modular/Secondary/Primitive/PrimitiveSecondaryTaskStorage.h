@@ -21,6 +21,8 @@ public:
 
 	TT steal();
 
+	static void print_name();
+
 private:
 	Primary<TT>* primary;
 
@@ -69,6 +71,11 @@ TT PrimitiveSecondaryTaskStorage<TT, Primary>::steal() {
 	}
 	// We don't care if taking fails, this is just stealing, which is allowed to fail
 	return primary->take(best);
+}
+
+template <typename TT, template <typename S> class Primary>
+void PrimitiveSecondaryTaskStorage<TT, Primary>::print_name() {
+	std::cout << "PrimitiveSecondaryTaskStorage";
 }
 
 }
