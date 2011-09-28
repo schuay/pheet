@@ -22,7 +22,7 @@ template <typename T, template <typename S> class Op = SumOperation>
 class SumReducer {
 public:
 	SumReducer();
-	SumReducer(SumReducer<T>& other);
+	SumReducer(SumReducer<T, Op>& other);
 	~SumReducer();
 
 	void incr();
@@ -32,7 +32,7 @@ public:
 
 	T const& get_sum();
 private:
-	typedef OrderedReducer<ScalarMonoid<T, SumOperation> > Reducer;
+	typedef OrderedReducer<ScalarMonoid<T, Op> > Reducer;
 	Reducer reducer;
 };
 
@@ -42,7 +42,7 @@ SumReducer<T, Op>::SumReducer() {
 }
 
 template <typename T, template <typename S> class Op>
-SumReducer<T, Op>::SumReducer(SumReducer<T>& other)
+SumReducer<T, Op>::SumReducer(SumReducer<T, Op>& other)
 : reducer(other.reducer) {
 
 }

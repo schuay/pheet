@@ -10,6 +10,16 @@
 
 namespace pheet {
 
+GraphBipartitioningSolution& GraphBipartitioningSolution::operator=(GraphBipartitioningSolution const& other) {
+	weight = other.weight;
+	return *this;
+}
+
+GraphBipartitioningSolution& GraphBipartitioningSolution::operator=(GraphBipartitioningSolution& other) {
+	weight = other.weight;
+	return *this;
+}
+
 GraphBipartitioningSolution& MaxOperation<GraphBipartitioningSolution>::operator()(GraphBipartitioningSolution& x, GraphBipartitioningSolution& y) {
 	if(x.weight <= y.weight)
 		return x;

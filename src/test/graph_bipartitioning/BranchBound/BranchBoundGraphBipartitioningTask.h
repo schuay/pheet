@@ -51,8 +51,13 @@ private:
 
 template <class Task, class LowerBound, class NextVertex>
 BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex>::BranchBoundGraphBipartitioningTask(GraphVertex* graph, size_t size, size_t k, MaxReducer<GraphBipartitioningSolution>& best, std::set<size_t> set1, std::set<size_t> set2, size_t* ub, size_t lb)
-: graph(graph), size(size), k(k), best(best), set1(set1), set2(set2), ub(ub), lb(lb) {
-
+: graph(graph), size(size), k(k), best(best)/*, set1(set1), set2(set2)*/, ub(ub), lb(lb) {
+	for(auto i = set1.begin(); i != set1.end(); ++i) {
+		this->set1.insert(*i);
+	}
+	for(auto i = set2.begin(); i != set2.end(); ++i) {
+		this->set2.insert(*i);
+	}
 }
 
 template <class Task, class LowerBound, class NextVertex>
@@ -93,22 +98,38 @@ void BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex>::operator(
 
 template <class Task, class LowerBound, class NextVertex>
 void BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex>::prepare_solution() {
-	std::set<size_t>* unfinished;
+//	std::set<size_t>* unfinished;
 	GraphBipartitioningSolution sol;
 	sol.weight = 0;
-	sol.set1 = set1;
-	sol.set2 = set2;
+	for(auto i = set1.begin(); i != set1.end(); ++i) {
+		sol.set1.insert(*i);
+	}
+	for(auto i = set2.begin(); i != set2.end(); ++i) {
+		sol.set2.insert(*i);
+	}
+//	sol.set1.insert(set1.begin(), set1.end());
+//	sol.set2.insert(set2.begin(), set2.end());
 	if(set1.size() == k) {
-		unfinished = &(sol.set2);
+		for(size_t i = 0; i < size; ++i) {
+			if(sol.set1.find(i) == sol.set1.end() && sol.set2.find(i) == sol.set2.end()) {
+				sol.set2.insert(i);
+			}
+		}
+	//	unfinished = &(sol.set2);
 	}
 	else {
-		unfinished = &(sol.set1);
+		for(size_t i = 0; i < size; ++i) {
+			if(sol.set1.find(i) == sol.set1.end() && sol.set2.find(i) == sol.set2.end()) {
+				sol.set1.insert(i);
+			}
+		}
+	//	unfinished = &(sol.set1);
 	}
-	for(size_t i = 0; i < size; ++i) {
+/*	for(size_t i = 0; i < size; ++i) {
 		if(sol.set1.find(i) == sol.set1.end() && sol.set2.find(i) == sol.set2.end()) {
 			unfinished->insert(i);
 		}
-	}
+	}*/
 	for(size_t i = 0; i < size; ++i) {
 		if(sol.set1.find(i) != sol.set1.end()) {
 			for(size_t j = 0; j < graph[i].num_edges; ++j) {
