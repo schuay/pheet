@@ -387,7 +387,7 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrat
 	while(stack_filled_left > 0) {
 		size_t se = stack_filled_left - 1;
 		if(stack[se].num_spawned == stack[se].num_finished_remote) {
-			finalize_stack_element(&(stack[se]), stack[se].parent);
+	//		finalize_stack_element(&(stack[se]), stack[se].parent);
 
 			stack_filled_left = se;
 

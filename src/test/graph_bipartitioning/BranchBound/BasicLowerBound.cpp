@@ -20,26 +20,41 @@ BasicLowerBound::~BasicLowerBound() {
 
 }
 
-size_t BasicLowerBound::operator()(GraphVertex* graph, size_t size, size_t k, std::set<size_t> const& set1, std::set<size_t> const& set2) {
+size_t BasicLowerBound::operator()(GraphVertex* graph, size_t size, size_t k, size_t const* set1, size_t set1_size, size_t const* set2, size_t set2_size) {
 	size_t lb = 0;
-	for(std::set<size_t>::const_iterator it = set1.begin(); it != set1.end(); ++it) {
-		size_t v = *it;
-		for(size_t i = 0; i < graph[v].num_edges; ++i) {
-			size_t el = graph[v].edges[i].target;
-			if(set2.find(el) != set2.end()) {
-				lb += graph[v].edges[i].weight;
+	for(size_t i = 0; i < set1_size; ++i) {
+		size_t node = set1[i];
+		size_t i2 = 0;
+		for(size_t j = 0; j < graph[node].num_edges; ++j) {
+			size_t target = graph[node].edges[j].target;
+			while(i2 < set2_size && set2[i2] < target) {
+				++i2;
+			}
+			if(i2 == set2_size) {
+				break;
+			}
+			if(set2[i2] == target) {
+				lb += graph[node].edges[j].weight;
 			}
 		}
 	}
-	for(std::set<size_t>::const_iterator it = set2.begin(); it != set2.end(); ++it) {
-		size_t v = *it;
-		for(size_t i = 0; i < graph[v].num_edges; ++i) {
-			size_t el = graph[v].edges[i].target;
-			if(set1.find(el) != set1.end()) {
-				lb += graph[v].edges[i].weight;
+	for(size_t i = 0; i < set2_size; ++i) {
+		size_t node = set2[i];
+		size_t i2 = 0;
+		for(size_t j = 0; j < graph[node].num_edges; ++j) {
+			size_t target = graph[node].edges[j].target;
+			while(i2 < set1_size && set1[i2] < target) {
+				++i2;
+			}
+			if(i2 == set1_size) {
+				break;
+			}
+			if(set1[i2] == target) {
+				lb += graph[node].edges[j].weight;
 			}
 		}
 	}
+
 	return lb;
 }
 

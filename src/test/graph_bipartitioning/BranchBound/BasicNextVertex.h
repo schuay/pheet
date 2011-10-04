@@ -21,7 +21,7 @@ public:
 	BasicNextVertex();
 	~BasicNextVertex();
 
-	size_t operator()(GraphVertex* graph, size_t size, size_t k, std::set<size_t> const& set1, std::set<size_t> const& set2);
+	size_t operator()(GraphVertex* graph, size_t size, size_t k, size_t const* set1, size_t set1_size, size_t const* set2, size_t set2_size);
 
 	static char const name[];
 };

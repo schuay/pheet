@@ -18,8 +18,8 @@ BasicNextVertex::~BasicNextVertex() {
 
 }
 
-size_t BasicNextVertex::operator()(GraphVertex* graph, size_t size, size_t k, std::set<size_t> const& set1, std::set<size_t> const& set2) {
-	return set1.size() + set2.size();
+size_t BasicNextVertex::operator()(GraphVertex* graph, size_t size, size_t k, size_t const* set1, size_t set1_size, size_t const* set2, size_t set2_size) {
+	return set1_size + set2_size;
 }
 
 char const BasicNextVertex::name[] = "BasicNextVertex";

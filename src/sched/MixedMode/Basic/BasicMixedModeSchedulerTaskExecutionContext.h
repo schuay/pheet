@@ -1067,7 +1067,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::empt
 	while(finish_stack_filled_left > 0) {
 		size_t se = finish_stack_filled_left - 1;
 		if(finish_stack[se].num_spawned == finish_stack[se].num_finished_remote) {
-			finalize_finish_stack_element(&(finish_stack[se]), finish_stack[se].parent);
+		//	finalize_finish_stack_element(&(finish_stack[se]), finish_stack[se].parent);
 
 			finish_stack_filled_left = se;
 

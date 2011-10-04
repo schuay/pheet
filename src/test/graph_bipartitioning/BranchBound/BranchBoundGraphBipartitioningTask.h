@@ -14,6 +14,7 @@
 #include "../../../primitives/Backoff/Exponential/ExponentialBackoff.h"
 
 #include <set>
+#include <algorithm>
 
 /*
  *
@@ -28,7 +29,7 @@ public:
 	typedef BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex> BBTask;
 	typedef ExponentialBackoff<> Backoff;
 
-	BranchBoundGraphBipartitioningTask(GraphVertex* graph, size_t size, size_t k, MaxReducer<GraphBipartitioningSolution>& best, std::set<size_t> set1, std::set<size_t> set2, size_t* ub, size_t lb);
+	BranchBoundGraphBipartitioningTask(GraphVertex* graph, size_t size, size_t k, MaxReducer<GraphBipartitioningSolution>& best, size_t* set1, size_t set1_size, size_t* set2, size_t set2_size, size_t* ub);
 	virtual ~BranchBoundGraphBipartitioningTask();
 
 	virtual void operator()(typename Task::TEC& tec);
@@ -40,8 +41,10 @@ private:
 	size_t size;
 	size_t k;
 	MaxReducer<GraphBipartitioningSolution> best;
-	std::set<size_t> set1;
-	std::set<size_t> set2;
+	size_t* set1;
+	size_t set1_size;
+	size_t* set2;
+	size_t set2_size;
 	size_t* ub;
 	size_t lb;
 
@@ -50,19 +53,29 @@ private:
 };
 
 template <class Task, class LowerBound, class NextVertex>
-BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex>::BranchBoundGraphBipartitioningTask(GraphVertex* graph, size_t size, size_t k, MaxReducer<GraphBipartitioningSolution>& best, std::set<size_t> set1, std::set<size_t> set2, size_t* ub, size_t lb)
-: graph(graph), size(size), k(k), best(best)/*, set1(set1), set2(set2)*/, ub(ub), lb(lb) {
-	for(auto i = set1.begin(); i != set1.end(); ++i) {
-		this->set1.insert(*i);
+BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex>::BranchBoundGraphBipartitioningTask(GraphVertex* graph, size_t size, size_t k, MaxReducer<GraphBipartitioningSolution>& best, size_t* set1, size_t set1_size, size_t* set2, size_t set2_size, size_t* ub)
+: graph(graph), size(size), k(k), best(best), set1_size(set1_size), set2_size(set2_size), ub(ub) {
+	this->set1 = new size_t[k];
+	this->set2 = new size_t[size - k];
+
+	for(size_t i = 0; i < set1_size; ++i) {
+		this->set1[i] = set1[i];
 	}
-	for(auto i = set2.begin(); i != set2.end(); ++i) {
-		this->set2.insert(*i);
+	if(set1_size > 0)
+		std::sort(this->set1, this->set1 + set1_size);
+	for(size_t i = 0; i < set2_size; ++i) {
+		this->set2[i] = set2[i];
 	}
+	if(set2_size > 0)
+		std::sort(this->set2, this->set2 + set2_size);
+
+	lb = lb_calc(graph, size, k, this->set1, set1_size, this->set2, set2_size);
 }
 
 template <class Task, class LowerBound, class NextVertex>
 BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex>::~BranchBoundGraphBipartitioningTask() {
-
+	delete[] set1;
+	delete[] set2;
 }
 
 template <class Task, class LowerBound, class NextVertex>
@@ -70,82 +83,92 @@ void BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex>::operator(
 	if(lb >= *ub) {
 		return;
 	}
-	size_t next = nv_calc(graph, size, k, set1, set2);
+	size_t next = nv_calc(graph, size, k, set1, set1_size, set2, set2_size);
 
-	set1.insert(next);
-	if(set1.size() == k) {
+	set1[set1_size] = next;
+	if(set1_size == k - 1) {
+		++set1_size;
 		prepare_solution();
+		--set1_size;
 	}
 	else {
-		size_t sub_lb = lb_calc(graph, size, k, set1, set2);
-		if(sub_lb < *ub) {
-			tec.template spawn<BBTask>(graph, size, k, best, set1, set2, ub, sub_lb);
-		}
+//		size_t sub_lb = lb_calc(graph, size, k, set1, set1_size, set2, set2_size);
+	//	if(sub_lb < *ub) {
+			tec.template spawn<BBTask>(graph, size, k, best, set1, set1_size + 1, set2, set2_size, ub);
+	//	}
 	}
-	set1.erase(next);
 
-	set2.insert(next);
-	if(set2.size() == size - k) {
+	set2[set2_size] = next;
+	if(set2_size == (size - k) - 1) {
+		++set2_size;
 		prepare_solution();
+		--set2_size;
 	}
 	else {
-		size_t sub_lb = lb_calc(graph, size, k, set1, set2);
-		if(sub_lb < *ub) {
-			tec.template spawn<BBTask>(graph, size, k, best, set1, set2, ub, sub_lb);
-		}
+	//	size_t sub_lb = lb_calc(graph, size, k, set1, set1_size, set2, set2_size);
+	//	if(sub_lb < *ub) {
+			tec.template spawn<BBTask>(graph, size, k, best, set1, set1_size, set2, set2_size + 1, ub);
+	//	}
 	}
 }
 
 template <class Task, class LowerBound, class NextVertex>
 void BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex>::prepare_solution() {
-//	std::set<size_t>* unfinished;
+	size_t* unfinished;
+	size_t unfinished_size;
 	GraphBipartitioningSolution sol;
 	sol.weight = 0;
-	for(auto i = set1.begin(); i != set1.end(); ++i) {
-		sol.set1.insert(*i);
-	}
-	for(auto i = set2.begin(); i != set2.end(); ++i) {
-		sol.set2.insert(*i);
-	}
-//	sol.set1.insert(set1.begin(), set1.end());
-//	sol.set2.insert(set2.begin(), set2.end());
-	if(set1.size() == k) {
-		for(size_t i = 0; i < size; ++i) {
-			if(sol.set1.find(i) == sol.set1.end() && sol.set2.find(i) == sol.set2.end()) {
-				sol.set2.insert(i);
-			}
-		}
-	//	unfinished = &(sol.set2);
+
+	if(set1_size == k) {
+		unfinished = set2;
+		unfinished_size = set2_size;
 	}
 	else {
-		for(size_t i = 0; i < size; ++i) {
-			if(sol.set1.find(i) == sol.set1.end() && sol.set2.find(i) == sol.set2.end()) {
-				sol.set1.insert(i);
-			}
-		}
-	//	unfinished = &(sol.set1);
+		unfinished = set1;
+		unfinished_size = set1_size;
 	}
-/*	for(size_t i = 0; i < size; ++i) {
-		if(sol.set1.find(i) == sol.set1.end() && sol.set2.find(i) == sol.set2.end()) {
-			unfinished->insert(i);
-		}
-	}*/
+	size_t s1_i = 0;
+	size_t s2_i = 0;
 	for(size_t i = 0; i < size; ++i) {
-		if(sol.set1.find(i) != sol.set1.end()) {
-			for(size_t j = 0; j < graph[i].num_edges; ++j) {
-				if(sol.set2.find(graph[i].edges[j].target) != sol.set2.end()) {
-					sol.weight += graph[i].edges[j].weight;
-				}
-			}
+		while(s1_i < set1_size && set1[s1_i] < i) {
+			++s1_i;
 		}
-		else {
-			for(size_t j = 0; j < graph[i].num_edges; ++j) {
-				if(sol.set1.find(graph[i].edges[j].target) != sol.set1.end()) {
-					sol.weight += graph[i].edges[j].weight;
-				}
+		while(s2_i < set2_size && set2[s2_i] < i) {
+			++s2_i;
+		}
+		if((s1_i == set1_size || set1[s1_i] > i) &&
+			(s2_i == set2_size || set2[s2_i] > i)) {
+			unfinished[unfinished_size] = i;
+			++unfinished_size;
+		}
+	}
+	for(size_t i = 0; i < set1_size; ++i) {
+		size_t node = set1[i];
+		size_t i2 = i + 1;
+		for(size_t j = 0; j < graph[node].num_edges; ++j) {
+			size_t target = graph[node].edges[j].target;
+			while(i2 < set1_size && set1[i2] < target) {
+				++i2;
+			}
+			if(i2 == set1_size || set1[i2] > target) {
+				sol.weight += graph[node].edges[j].weight;
 			}
 		}
 	}
+	for(size_t i = 0; i < set2_size; ++i) {
+		size_t node = set2[i];
+		size_t i2 = i + 1;
+		for(size_t j = 0; j < graph[node].num_edges; ++j) {
+			size_t target = graph[node].edges[j].target;
+			while(i2 < set2_size && set2[i2] < target) {
+				++i2;
+			}
+			if(i2 == set2_size || set2[i2] > target) {
+				sol.weight += graph[node].edges[j].weight;
+			}
+		}
+	}
+
 
 	Backoff bo;
 	while(true) {

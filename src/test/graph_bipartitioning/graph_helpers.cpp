@@ -10,6 +10,10 @@
 
 namespace pheet {
 
+GraphBipartitioningSolution::GraphBipartitioningSolution() {
+	weight = 0;
+}
+
 GraphBipartitioningSolution& GraphBipartitioningSolution::operator=(GraphBipartitioningSolution const& other) {
 	weight = other.weight;
 	return *this;

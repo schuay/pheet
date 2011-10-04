@@ -27,12 +27,14 @@ struct GraphVertex {
 };
 
 struct GraphBipartitioningSolution {
+	GraphBipartitioningSolution();
+
 	GraphBipartitioningSolution& operator=(GraphBipartitioningSolution const& other);
 	GraphBipartitioningSolution& operator=(GraphBipartitioningSolution& other);
 
 	size_t weight;
-	std::set<size_t> set1;
-	std::set<size_t> set2;
+//	std::set<size_t> set1;
+//	std::set<size_t> set2;
 };
 
 template <>
