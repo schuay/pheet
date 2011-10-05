@@ -29,13 +29,15 @@ public:
 	typedef BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex> BBTask;
 	typedef ExponentialBackoff<> Backoff;
 
-	BranchBoundGraphBipartitioningTask(GraphVertex* graph, size_t size, size_t k, MaxReducer<GraphBipartitioningSolution>& best, size_t* set1, size_t set1_size, size_t* set2, size_t set2_size, size_t* ub);
+	BranchBoundGraphBipartitioningTask(GraphVertex* graph, size_t size, size_t k, MaxReducer<GraphBipartitioningSolution>& best, size_t* set1, size_t set1_size, size_t* set2, size_t set2_size, size_t* ub, size_t lb);
 	virtual ~BranchBoundGraphBipartitioningTask();
 
 	virtual void operator()(typename Task::TEC& tec);
 
 private:
-	void prepare_solution();
+	void prepare_solution(size_t* set1, size_t set1_size, size_t* set2, size_t set2_size);
+	size_t* create_new_set(size_t* set, size_t new_el, size_t set_size, size_t max_size);
+	size_t* clone_set(size_t* set, size_t set_size, size_t max_size);
 
 	GraphVertex* graph;
 	size_t size;
@@ -53,23 +55,9 @@ private:
 };
 
 template <class Task, class LowerBound, class NextVertex>
-BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex>::BranchBoundGraphBipartitioningTask(GraphVertex* graph, size_t size, size_t k, MaxReducer<GraphBipartitioningSolution>& best, size_t* set1, size_t set1_size, size_t* set2, size_t set2_size, size_t* ub)
-: graph(graph), size(size), k(k), best(best), set1_size(set1_size), set2_size(set2_size), ub(ub) {
-	this->set1 = new size_t[k];
-	this->set2 = new size_t[size - k];
+BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex>::BranchBoundGraphBipartitioningTask(GraphVertex* graph, size_t size, size_t k, MaxReducer<GraphBipartitioningSolution>& best, size_t* set1, size_t set1_size, size_t* set2, size_t set2_size, size_t* ub, size_t lb)
+: graph(graph), size(size), k(k), best(best), set1(set1), set1_size(set1_size), set2(set2), set2_size(set2_size), ub(ub), lb(lb) {
 
-	for(size_t i = 0; i < set1_size; ++i) {
-		this->set1[i] = set1[i];
-	}
-	if(set1_size > 0)
-		std::sort(this->set1, this->set1 + set1_size);
-	for(size_t i = 0; i < set2_size; ++i) {
-		this->set2[i] = set2[i];
-	}
-	if(set2_size > 0)
-		std::sort(this->set2, this->set2 + set2_size);
-
-	lb = lb_calc(graph, size, k, this->set1, set1_size, this->set2, set2_size);
 }
 
 template <class Task, class LowerBound, class NextVertex>
@@ -83,37 +71,48 @@ void BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex>::operator(
 	if(lb >= *ub) {
 		return;
 	}
+	assert(set1_size < k);
+	assert(set2_size < size - k);
 	size_t next = nv_calc(graph, size, k, set1, set1_size, set2, set2_size);
 
-	set1[set1_size] = next;
+//	set1[set1_size] = next;
+	size_t* new_set = create_new_set(set1, next, set1_size, k);
 	if(set1_size == k - 1) {
-		++set1_size;
-		prepare_solution();
-		--set1_size;
+		size_t* tmp_set = clone_set(set2, set2_size, size - k);
+		prepare_solution(new_set, set1_size + 1, tmp_set, set2_size);
+		delete[] tmp_set;
+		delete[] new_set;
 	}
 	else {
-//		size_t sub_lb = lb_calc(graph, size, k, set1, set1_size, set2, set2_size);
-	//	if(sub_lb < *ub) {
-			tec.template spawn<BBTask>(graph, size, k, best, set1, set1_size + 1, set2, set2_size, ub);
-	//	}
+		size_t sub_lb = lb_calc(graph, size, k, new_set, set1_size + 1, set2, set2_size);
+		if(sub_lb < *ub) {
+			tec.template spawn<BBTask>(graph, size, k, best, new_set, set1_size + 1, clone_set(set2, set2_size, size - k), set2_size, ub, sub_lb);
+		}
+		else {
+			delete[] new_set;
+		}
 	}
 
-	set2[set2_size] = next;
+	new_set = create_new_set(set2, next, set2_size, size - k);
 	if(set2_size == (size - k) - 1) {
-		++set2_size;
-		prepare_solution();
-		--set2_size;
+		size_t* tmp_set = clone_set(set1, set1_size, k);
+		prepare_solution(tmp_set, set1_size, new_set, set2_size + 1);
+		delete[] tmp_set;
+		delete[] new_set;
 	}
 	else {
-	//	size_t sub_lb = lb_calc(graph, size, k, set1, set1_size, set2, set2_size);
-	//	if(sub_lb < *ub) {
-			tec.template spawn<BBTask>(graph, size, k, best, set1, set1_size, set2, set2_size + 1, ub);
-	//	}
+		size_t sub_lb = lb_calc(graph, size, k, set1, set1_size, new_set, set2_size + 1);
+		if(sub_lb < *ub) {
+			tec.template spawn<BBTask>(graph, size, k, best, clone_set(set1, set1_size, k), set1_size, new_set, set2_size + 1, ub, sub_lb);
+		}
+		else {
+			delete[] new_set;
+		}
 	}
 }
 
 template <class Task, class LowerBound, class NextVertex>
-void BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex>::prepare_solution() {
+void BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex>::prepare_solution(size_t* set1, size_t set1_size, size_t* set2, size_t set2_size) {
 	size_t* unfinished;
 	size_t unfinished_size;
 	GraphBipartitioningSolution sol;
@@ -142,6 +141,16 @@ void BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex>::prepare_s
 			++unfinished_size;
 		}
 	}
+	std::sort(unfinished, unfinished + unfinished_size);
+	if(set1_size == k) {
+		assert(unfinished_size == size - k);
+		set2_size = unfinished_size;
+	}
+	else {
+		assert(unfinished_size == k);
+		set1_size = unfinished_size;
+	}
+
 	for(size_t i = 0; i < set1_size; ++i) {
 		size_t node = set1[i];
 		size_t i2 = i + 1;
@@ -184,6 +193,34 @@ void BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex>::prepare_s
 			break;
 		}
 	}
+}
+
+template <class Task, class LowerBound, class NextVertex>
+size_t* BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex>::create_new_set(size_t* set, size_t new_el, size_t set_size, size_t max_size) {
+	size_t* ret = new size_t[max_size];
+	size_t i, j;
+	for(i = 0, j = 0; i < set_size; ++i, ++j) {
+		if(i == j && set[i] > new_el) {
+			ret[j] = new_el;
+			++j;
+		}
+		assert(j < max_size);
+		ret[j] = set[i];
+	}
+	if(i == j) {
+		assert(j < max_size);
+		ret[j] = new_el;
+	}
+	return ret;
+}
+
+template <class Task, class LowerBound, class NextVertex>
+size_t* BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex>::clone_set(size_t* set, size_t set_size, size_t max_size) {
+	size_t* ret = new size_t[max_size];
+	for(size_t i = 0; i < set_size; ++i) {
+		ret[i] = set[i];
+	}
+	return ret;
 }
 
 }

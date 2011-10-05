@@ -51,7 +51,8 @@ void BranchBoundGraphBipartitioningRootTask<Task, LowerBound, NextVertex>::opera
 	MaxReducer<GraphBipartitioningSolution> best;
 	size_t ub = std::numeric_limits< size_t >::max();
 
-	tec.template finish<BBTask>(graph, size, size >> 1, best, static_cast<size_t*>(NULL), 0, static_cast<size_t*>(NULL), 0, &ub);
+	size_t k = size >> 1;
+	tec.template finish<BBTask>(graph, size, k, best, static_cast<size_t*>(new size_t[k]), 0, static_cast<size_t*>(new size_t[size - k]), 0, &ub, 0);
 
 	(*out) = best.get_max();
 }
