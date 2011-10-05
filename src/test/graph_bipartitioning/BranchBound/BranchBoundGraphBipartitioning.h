@@ -75,7 +75,7 @@ GraphBipartitioningSolution const& BranchBoundGraphBipartitioning<Scheduler, Low
 
 template <class Scheduler, class LowerBound, class NextVertex>
 void BranchBoundGraphBipartitioning<Scheduler, LowerBound, NextVertex>::print_results() {
-	std::cout << LowerBound::name << "\t" << NextVertex::name << ">\t";
+	std::cout << LowerBound::name << "\t" << NextVertex::name << "\t";
 	scheduler.print_performance_counter_values();
 }
 

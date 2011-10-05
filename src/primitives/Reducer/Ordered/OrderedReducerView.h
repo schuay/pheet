@@ -97,7 +97,8 @@ OrderedReducerView<Monoid>* OrderedReducerView<Monoid>::create_parent_view() {
 		ret->state = 0x2;
 	}
 	else {
-		ret = new View(data);
+		ret = new View(static_cast<Monoid const&>(data));
+		assert(ret->state == 0x2);
 	}
 	return ret;
 }
@@ -115,7 +116,7 @@ void OrderedReducerView<Monoid>::reduce() {
 				// No memory reclamation as this view is from another fork
 				delete pred;
 				pred = tmp;
-			}while(pred != NULL && (pred->state & 0x2) == 0x0);
+			}while(pred != NULL && ((pred->state & 0x2) == 0x0 || pred->pred != NULL));
 
 			// The pred pointer is the only dangerous pointer, as the parent might read an old value while folding/reducing
 			// This means we need a fence. The good thing is that reduction only happens when there was a
