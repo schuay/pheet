@@ -482,7 +482,7 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::end_finish_re
 	}
 
 	// Restore old parent
-	current_task_parent = current_task_parent->parent;
+	current_task_parent = stack[stack_filled_right].parent;
 
 	// Remove stack element
 	++stack_filled_right;
