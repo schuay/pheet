@@ -22,7 +22,7 @@ const int sorting_test_types[] = {0};
 const bool graph_bipartitioning_test = false;
 const procs_t graph_bipartitioning_test_cpus[] = {1, 2, 4, 8, 16, 32, 64, 128};
 const unsigned int graph_bipartitioning_test_seeds[] = {0};
-const size_t graph_bipartitioning_test_n[] = {16};
+const size_t graph_bipartitioning_test_n[] = {30};
 const double graph_bipartitioning_test_p[] = {0.5};
 const int graph_bipartitioning_test_types[] = {0};
 

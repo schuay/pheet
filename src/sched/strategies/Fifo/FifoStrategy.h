@@ -10,6 +10,7 @@
 
 #include "../BaseStrategy.h"
 #include <limits>
+#include <iostream>
 
 namespace pheet {
 
@@ -22,6 +23,8 @@ public:
 
 	virtual prio_t get_pop_priority(size_t task_id);
 	virtual prio_t get_steal_priority(size_t task_id);
+
+	static void print_name();
 };
 
 inline FifoStrategy::FifoStrategy() {
@@ -32,7 +35,7 @@ inline FifoStrategy::FifoStrategy(FifoStrategy& other) {
 
 }
 
-inline FifoStrategy::FifoStrategy(FifoStrategy& other) {
+inline FifoStrategy::FifoStrategy(FifoStrategy&& other) {
 
 }
 
@@ -46,6 +49,10 @@ inline prio_t FifoStrategy::get_pop_priority(size_t task_id) {
 
 inline prio_t FifoStrategy::get_steal_priority(size_t task_id) {
 	return std::numeric_limits< prio_t >::max() - task_id;
+}
+
+inline void FifoStrategy::print_name() {
+	std::cout << "FifoStrategy";
 }
 
 }

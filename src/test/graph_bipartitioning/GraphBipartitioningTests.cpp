@@ -10,6 +10,11 @@
 #include "BranchBound/BranchBoundGraphBipartitioning.h"
 #include "BranchBound/BasicLowerBound.h"
 #include "BranchBound/BasicNextVertex.h"
+#include "StrategyBranchBound/StrategyBranchBoundGraphBipartitioning.h"
+#include "StrategyBranchBound/BranchBoundGraphBipartitioningAutoStrategy.h"
+#include "../../sched/strategies/Fifo/FifoStrategy.h"
+#include "../../sched/strategies/Lifo/LifoStrategy.h"
+#include "../../sched/strategies/LifoFifo/LifoFifoStrategy.h"
 
 #include "../test_schedulers.h"
 
@@ -27,9 +32,17 @@ void GraphBipartitioningTests::run_test() {
 	if(graph_bipartitioning_test) {
 		std::cout << "----" << std::endl;
 
+		this->run_partitioner<BranchBoundGraphBipartitioning<PrimitivePriorityScheduler, BasicLowerBound, BasicNextVertex> >();
+		this->run_partitioner<BranchBoundGraphBipartitioning<PrimitiveHeapPriorityScheduler, BasicLowerBound, BasicNextVertex> >();
+		this->run_partitioner<BranchBoundGraphBipartitioning<FallbackPriorityScheduler, BasicLowerBound, BasicNextVertex> >();
 		this->run_partitioner<BranchBoundGraphBipartitioning<DefaultMixedModeScheduler, BasicLowerBound, BasicNextVertex> >();
 		this->run_partitioner<BranchBoundGraphBipartitioning<DefaultBasicScheduler, BasicLowerBound, BasicNextVertex> >();
 		this->run_partitioner<BranchBoundGraphBipartitioning<DefaultSynchroneousScheduler, BasicLowerBound, BasicNextVertex> >();
+
+		this->run_partitioner<StrategyBranchBoundGraphBipartitioning<PrimitivePriorityScheduler, BasicLowerBound, BasicNextVertex, BranchBoundGraphBipartitioningAutoStrategy<FifoStrategy> > >();
+		this->run_partitioner<StrategyBranchBoundGraphBipartitioning<PrimitiveHeapPriorityScheduler, BasicLowerBound, BasicNextVertex, BranchBoundGraphBipartitioningAutoStrategy<FifoStrategy> > >();
+		this->run_partitioner<StrategyBranchBoundGraphBipartitioning<PrimitiveHeapPriorityScheduler, BasicLowerBound, BasicNextVertex, BranchBoundGraphBipartitioningAutoStrategy<LifoStrategy> > >();
+		this->run_partitioner<StrategyBranchBoundGraphBipartitioning<PrimitiveHeapPriorityScheduler, BasicLowerBound, BasicNextVertex, BranchBoundGraphBipartitioningAutoStrategy<LifoFifoStrategy> > >();
 	}
 }
 

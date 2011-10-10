@@ -10,6 +10,7 @@
 
 #include "../BaseStrategy.h"
 #include <limits>
+#include <iostream>
 
 namespace pheet {
 
@@ -22,6 +23,8 @@ public:
 
 	virtual prio_t get_pop_priority(size_t task_id);
 	virtual prio_t get_steal_priority(size_t task_id);
+
+	static void print_name();
 
 private:
 };
@@ -48,6 +51,10 @@ inline prio_t LifoFifoStrategy::get_pop_priority(size_t task_id) {
 
 inline prio_t LifoFifoStrategy::get_steal_priority(size_t task_id) {
 	return std::numeric_limits< prio_t >::max() - task_id;
+}
+
+inline void LifoFifoStrategy::print_name() {
+	std::cout << "LifoFifoStrategy";
 }
 
 }

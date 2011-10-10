@@ -232,11 +232,11 @@ inline TT PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::peek() {
 	while(i != end() && is_taken(top)) {
 		++i;
 	}
-	top = i;
 
 	if(i == end()) {
 		return null_element;
 	}
+	top = i;
 
 	iterator best = i;
 	PrimitiveHeapPrimaryTaskStorageItem<T> ret_item = data.get(i);

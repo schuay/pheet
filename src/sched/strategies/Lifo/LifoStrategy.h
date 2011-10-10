@@ -9,6 +9,7 @@
 #define LIFOSTRATEGY_H_
 
 #include "../BaseStrategy.h"
+#include <iostream>
 
 namespace pheet {
 
@@ -21,6 +22,8 @@ public:
 
 	virtual prio_t get_pop_priority(size_t task_id);
 	virtual prio_t get_steal_priority(size_t task_id);
+
+	static void print_name();
 };
 
 inline LifoStrategy::LifoStrategy() {
@@ -31,7 +34,7 @@ inline LifoStrategy::LifoStrategy(LifoStrategy& other) {
 
 }
 
-inline LifoStrategy::LifoStrategy(LifoStrategy& other) {
+inline LifoStrategy::LifoStrategy(LifoStrategy&& other) {
 
 }
 
@@ -45,6 +48,10 @@ inline prio_t LifoStrategy::get_pop_priority(size_t task_id) {
 
 inline prio_t LifoStrategy::get_steal_priority(size_t task_id) {
 	return task_id + 1;
+}
+
+inline void LifoStrategy::print_name() {
+	std::cout << "LifoStrategy";
 }
 
 }

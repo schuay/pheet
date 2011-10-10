@@ -169,11 +169,11 @@ inline TT PrimitivePrimaryTaskStorage<TT, CircularArray>::pop() {
 		while(i != end() && is_taken(i)) {
 			++i;
 		}
-		top = i;
 
 		if(i == end()) {
 			return null_element;
 		}
+		top = i;
 
 		iterator best = i;
 		prio_t best_prio = data.get(i).pop_prio;
@@ -199,11 +199,11 @@ inline TT PrimitivePrimaryTaskStorage<TT, CircularArray>::peek() {
 	while(i != end() && is_taken(top)) {
 		++i;
 	}
-	top = i;
 
 	if(i == end()) {
 		return null_element;
 	}
+	top = i;
 
 	iterator best = i;
 	PrimitivePrimaryTaskStorageItem<T> ret_item = data.get(i);
