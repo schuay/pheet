@@ -15,6 +15,9 @@
 #include "../Test.h"
 #include <exception>
 
+#include <boost/random/uniform_int.hpp>
+#include <boost/random/mersenne_twister.hpp>
+
 using namespace std;
 
 namespace pheet {
@@ -82,22 +85,29 @@ template <class Sorter>
 unsigned int* SortingTest<Sorter>::generate_data() {
 	unsigned int* data = new unsigned int[size];
 
-	srandom(seed);
+	boost::mt19937 rng;
+	rng.seed(seed);
+
 	switch(type) {
 	case 0:
 		// Random
+	{
+		boost::uniform_int<size_t> rnd_st(0, 0x3FFFFFF - 1);
+
 		for(size_t i = 0; i < size; i++) {
-			data[i] = random() % 0x3FFFFFF;
+			data[i] = rnd_st(rng);
 		}
+	}
 		break;
 	case 1:
 	{
 		// Gauss ?
 		int temp;
+		boost::uniform_int<size_t> rnd_st(0, 0x0FFFFFF - 1);
 		for(size_t i = 0; i < size; i++) {
 			temp=0;
 			for (int j=0;j<4;j++)
-				temp += random() % 0x0FFFFFF;
+				temp += rnd_st(rng);
 			temp /=4;
 			data[i] = temp;
 		}
@@ -105,8 +115,9 @@ unsigned int* SortingTest<Sorter>::generate_data() {
 		break;
 	case 2:
 	{
+		boost::uniform_int<size_t> rnd_st(0, 0x3FFFFFF - 1);
 		// All the same
-		int temp = random() % 0x3FFFFFF;
+		int temp = rnd_st(rng);
 		for(size_t i = 0; i < size; i++) {
 			data[i] = temp;
 		}
@@ -114,6 +125,7 @@ unsigned int* SortingTest<Sorter>::generate_data() {
 		break;
 	case 3:
 	{
+		boost::uniform_int<size_t> rnd_st(0, 0x3FFFFFF - 1);
 		// Bucket
 		size_t temp = 0x3FFFFFF / cpus + 1;
 		size_t c=0;
@@ -126,7 +138,7 @@ unsigned int* SortingTest<Sorter>::generate_data() {
 			 for(k=0;k<size/cpus/cpus;k++)
 			 {
 			 int t2 = j * temp;
-			 data[c] = t2 + ((random() & 0x3FFFFFF) / cpus);
+			 data[c] = t2 + ((rnd_st(rng)) / cpus);
 			 c++;
 			 }
 		  }
@@ -134,12 +146,13 @@ unsigned int* SortingTest<Sorter>::generate_data() {
 
 		for(;c<size;c++)
 		{
-			data[c]=random() & 0x3FFFFFF;
+			data[c]=rnd_st(rng);
 		}
 	}
 		break;
 	case 4:
 	{
+		boost::uniform_int<size_t> rnd_st(0, 0x3FFFFFF - 1);
 		// Staggered
 		size_t c=0, temp;
 		for(procs_t i=0;i<cpus;i++)
@@ -154,13 +167,13 @@ unsigned int* SortingTest<Sorter>::generate_data() {
 
 			for (j=0;j<size/cpus;j++)
 			{
-			  data[c] = temp + ((random() & 0x3FFFFFF)/cpus);
+			  data[c] = temp + ((rnd_st(rng))/cpus);
 			  c++;
 			}
 		}
 		for(;c<size;c++)
 		{
-			data[c]=random() & 0x3FFFFFF;
+			data[c]=rnd_st(rng);
 		}
 	}
 	break;

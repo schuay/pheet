@@ -90,6 +90,7 @@ GraphVertex* GraphBipartitioningTest<Partitioner>::generate_data() {
 	GraphVertex* data = new GraphVertex[size];
 
 	boost::mt19937 rng;
+	rng.seed(seed);
     boost::uniform_real<float> rnd_f(0.0, 1.0);
     boost::uniform_int<size_t> rnd_st(0, 2048);
 

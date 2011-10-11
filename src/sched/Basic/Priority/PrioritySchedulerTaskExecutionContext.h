@@ -22,6 +22,9 @@
 #include <assert.h>
 #include <iostream>
 
+#include <boost/random/uniform_int.hpp>
+#include <boost/random/mersenne_twister.hpp>
+
 namespace pheet {
 
 struct PrioritySchedulerPerformanceCounters {
@@ -167,6 +170,8 @@ private:
 	size_t max_queue_length;
 	TaskStorage task_storage;
 
+	boost::mt19937 rng;
+
 	friend class CPUThreadExecutor<typename CPUHierarchy::CPUDescriptor, PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>>;
 	friend class Scheduler::Finish;
 };
@@ -258,18 +263,18 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrat
 			performance_counters.idle_time.start_timer();
 			while(true) {
 				// Finalize elements in stack
-				procs_t next_rand = random();
-
 				// We do not steal from the last level as there are no partners
 				procs_t level = num_levels - 1;
 				while(level > 0) {
 					level--;
 					// For all except the last level we assume num_partners > 0
 					assert(levels[level].num_partners > 0);
-					assert(levels[level].partners[next_rand % levels[level].num_partners] != this);
+					boost::uniform_int<procs_t> n_r_gen(0, levels[level].num_partners - 1);
+					procs_t next_rand = n_r_gen(rng);
+					assert(levels[level].partners[next_rand] != this);
 
 					performance_counters.num_steal_calls.incr();
-					di = levels[level].partners[next_rand % levels[level].num_partners]->task_storage.steal_push(this->task_storage);
+					di = levels[level].partners[next_rand]->task_storage.steal_push(this->task_storage);
 				//	di = levels[level].partners[next_rand % levels[level].num_partners]->task_storage.steal();
 
 					if(di.task != NULL) {
@@ -311,17 +316,17 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrat
 			DequeItem di;
 			while(true) {
 				// Finalize elements in stack
-				procs_t next_rand = random();
-
 				// We do not steal from the last level as there are no partners
 				procs_t level = num_levels - 1;
 				while(level > 0) {
 					level--;
 					// For all except the last level we assume num_partners > 0
 					assert(levels[level].num_partners > 0);
-					assert(levels[level].partners[next_rand % levels[level].num_partners] != this);
+					boost::uniform_int<procs_t> n_r_gen(0, levels[level].num_partners - 1);
+					procs_t next_rand = n_r_gen(rng);
+					assert(levels[level].partners[next_rand] != this);
 					performance_counters.num_steal_calls.incr();
-					di = levels[level].partners[next_rand % levels[level].num_partners]->task_storage.steal_push(this->task_storage);
+					di = levels[level].partners[next_rand]->task_storage.steal_push(this->task_storage);
 				//	di = levels[level].partners[next_rand % levels[level].num_partners]->task_storage.steal();
 
 					if(di.task != NULL) {
