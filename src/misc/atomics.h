@@ -15,18 +15,18 @@
 
 #include "atomics_gnu.h"
 
-#else
-#ifdef ENV_LINUX_ICC
+#elif ENV_LINUX_ICC
 
 #include "atomics_gnu.h"
 
-#else
-#ifdef ENV_SOLARIS_SUNCC
+#elif ENV_CYGWIN_GCC
+
+#include "atomics_gnu.h"
+
+#elif ENV_SOLARIS_SUNCC
 
 #include "atomics_sun.h"
 
-#endif
-#endif
 #endif
 
 #endif /* ATOMICS_H_ */

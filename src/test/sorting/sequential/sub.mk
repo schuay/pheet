@@ -1,1 +1,0 @@
-TEST_OBJS += lib/test/sorting/sequential/stlSort.o lib/test/sorting/sequential/quickSort.o

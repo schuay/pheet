@@ -172,7 +172,7 @@ private:
 };
 
 template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy>
-size_t const PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::stack_size = 256;
+size_t const PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::stack_size = 2048;
 
 template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy>
 PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::PrioritySchedulerTaskExecutionContext(std::vector<LevelDescription*> const* levels, std::vector<typename CPUHierarchy::CPUDescriptor*> const* cpus, typename Scheduler::State* scheduler_state, PrioritySchedulerPerformanceCounters& perf_count)

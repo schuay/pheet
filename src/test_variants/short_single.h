@@ -13,7 +13,7 @@
 
 namespace pheet {
 
-const bool sorting_test = false;
+const bool sorting_test = true;
 const procs_t sorting_test_cpus[] = {1, 2, 4, 8};
 const unsigned int sorting_test_seeds[] = {0};
 const size_t sorting_test_n[] = {10000000};
