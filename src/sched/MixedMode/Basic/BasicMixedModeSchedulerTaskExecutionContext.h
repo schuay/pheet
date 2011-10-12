@@ -1071,13 +1071,15 @@ template <class Scheduler, template <typename T> class StealingDeque>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::empty_finish_stack() {
 	while(finish_stack_filled_left > 0) {
 		size_t se = finish_stack_filled_left - 1;
-		if(finish_stack[se].num_spawned == finish_stack[se].num_finished_remote) {
+		if(finish_stack[se].num_spawned == finish_stack[se].num_finished_remote &&
+				finish_stack[finish_stack_filled_left].parent == NULL) {
 		//	finalize_finish_stack_element(&(finish_stack[se]), finish_stack[se].parent);
 
 			finish_stack_filled_left = se;
 
 			// When parent is set to NULL, some thread is finalizing/has finalized this stack element (otherwise we would have an error)
-			assert(finish_stack[finish_stack_filled_left].parent == NULL);
+		//	assert(finish_stack[finish_stack_filled_left].parent == NULL);
+
 		}
 		else {
 			break;
@@ -1181,6 +1183,8 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visi
 			performance_counters.idle_time.stop_timer();
 			return;
 		}
+		// We may perform the cleanup now, as we have to wait anyway (and this also makes debugging easier)
+		empty_finish_stack();
 		bo.backoff();
 	}
 }
@@ -1245,6 +1249,8 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visi
 
 			return;
 		}
+		// We may perform the cleanup now, as we have to wait anyway (and this also makes debugging easier)
+		empty_finish_stack();
 		bo.backoff();
 	}
 }
