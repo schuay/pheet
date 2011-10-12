@@ -1078,6 +1078,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::empt
 			finish_stack_filled_left = se;
 
 			// When parent is set to NULL, some thread is finalizing/has finalized this stack element (otherwise we would have an error)
+			// Actually we have to check before whether parent has already been set to NULL, or we might have a race
 		//	assert(finish_stack[finish_stack_filled_left].parent == NULL);
 
 		}

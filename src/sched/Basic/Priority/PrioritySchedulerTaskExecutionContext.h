@@ -391,13 +391,15 @@ template <class Scheduler, template <typename T> class TaskStorageT, class Defau
 void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::empty_stack() {
 	while(stack_filled_left > 0) {
 		size_t se = stack_filled_left - 1;
-		if(stack[se].num_spawned == stack[se].num_finished_remote) {
+		if(stack[se].num_spawned == stack[se].num_finished_remote
+				&& stack[stack_filled_left].parent == NULL) {
 	//		finalize_stack_element(&(stack[se]), stack[se].parent);
 
 			stack_filled_left = se;
 
 			// When parent is set to NULL, some thread is finalizing/has finalized this stack element (otherwise we would have an error)
-			assert(stack[stack_filled_left].parent == NULL);
+			// Actually we have to check before whether parent has already been set to NULL, or we might have a race
+		//	assert(stack[stack_filled_left].parent == NULL);
 		}
 		else {
 			break;
