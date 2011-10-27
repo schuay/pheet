@@ -24,6 +24,9 @@
 #include <assert.h>
 #include <iostream>
 
+#include <boost/random/uniform_int.hpp>
+#include <boost/random/mersenne_twister.hpp>
+
 /*
  *
  */
@@ -344,6 +347,8 @@ private:
 
 	// Information relevant for execution
 	CPUThreadExecutor<typename CPUHierarchy::CPUDescriptor, BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque> > thread_executor;
+
+	boost::mt19937 rng;
 
 	typename Scheduler::State* scheduler_state;
 
@@ -1066,13 +1071,16 @@ template <class Scheduler, template <typename T> class StealingDeque>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::empty_finish_stack() {
 	while(finish_stack_filled_left > 0) {
 		size_t se = finish_stack_filled_left - 1;
-		if(finish_stack[se].num_spawned == finish_stack[se].num_finished_remote) {
+		if(finish_stack[se].num_spawned == finish_stack[se].num_finished_remote &&
+				finish_stack[finish_stack_filled_left].parent == NULL) {
 		//	finalize_finish_stack_element(&(finish_stack[se]), finish_stack[se].parent);
 
 			finish_stack_filled_left = se;
 
 			// When parent is set to NULL, some thread is finalizing/has finalized this stack element (otherwise we would have an error)
-			assert(finish_stack[finish_stack_filled_left].parent == NULL);
+			// Actually we have to check before whether parent has already been set to NULL, or we might have a race
+		//	assert(finish_stack[finish_stack_filled_left].parent == NULL);
+
 		}
 		else {
 			break;
@@ -1131,15 +1139,15 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visi
 	Backoff bo;
 	DequeItem di;
 	while(true) {
-		procs_t next_rand = random();
-
 		// We do not steal from the last level as there are no partners
 		procs_t level = num_levels - 1;
 		while(level > 0) {
 			--level;
 			// For all except the last level we assume num_partners > 0
 			assert(levels[level].num_partners > 0);
-			TaskExecutionContext* partner = levels[level].partners[next_rand % levels[level].num_partners];
+			boost::uniform_int<procs_t> n_r_gen(0, levels[level].num_partners - 1);
+			procs_t next_rand = n_r_gen(rng);
+			TaskExecutionContext* partner = levels[level].partners[next_rand];
 			assert(partner != this);
 
 			TeamAnnouncement* team = find_partner_team(partner, level);
@@ -1176,6 +1184,8 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visi
 			performance_counters.idle_time.stop_timer();
 			return;
 		}
+		// We may perform the cleanup now, as we have to wait anyway (and this also makes debugging easier)
+		empty_finish_stack();
 		bo.backoff();
 	}
 }
@@ -1194,15 +1204,15 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visi
 	Backoff bo;
 	DequeItem di;
 	while(true) {
-		procs_t next_rand = random();
-
 		// We do not steal from the last level as there are no partners
 		procs_t level = num_levels - 1;
 		while(level > 0) {
 			--level;
 			// For all except the last level we assume num_partners > 0
 			assert(levels[level].num_partners > 0);
-			TaskExecutionContext* partner = levels[level].partners[next_rand % levels[level].num_partners];
+			boost::uniform_int<procs_t> n_r_gen(0, levels[level].num_partners - 1);
+			procs_t next_rand = n_r_gen(rng);
+			TaskExecutionContext* partner = levels[level].partners[next_rand];
 			assert(partner != this);
 
 			TeamAnnouncement* team = find_partner_team(partner, level);
@@ -1240,6 +1250,8 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visi
 
 			return;
 		}
+		// We may perform the cleanup now, as we have to wait anyway (and this also makes debugging easier)
+		empty_finish_stack();
 		bo.backoff();
 	}
 }
@@ -1258,15 +1270,15 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visi
 	Backoff bo;
 	DequeItem di;
 	while(true) {
-		procs_t next_rand = random();
-
 		// We do not steal from the last level as there are no partners
 		procs_t level = num_levels - 1;
 		while(level >= min_level) {
 			--level;
 			// For all except the last level we assume num_partners > 0
 			assert(levels[level].num_partners > 0);
-			TaskExecutionContext* partner = levels[level].partners[next_rand % levels[level].num_partners];
+			boost::uniform_int<procs_t> n_r_gen(0, levels[level].num_partners - 1);
+			procs_t next_rand = n_r_gen(rng);
+			TaskExecutionContext* partner = levels[level].partners[next_rand];
 			assert(partner != this);
 
 			TeamAnnouncement* team = find_partner_team(partner, level);
