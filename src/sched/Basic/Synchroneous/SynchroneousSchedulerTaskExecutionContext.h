@@ -9,6 +9,9 @@
 #ifndef SYNCHRONEOUSSCHEDULERTASKEXECUTIONCONTEXT_H_
 #define SYNCHRONEOUSSCHEDULERTASKEXECUTIONCONTEXT_H_
 
+#include <boost/random/uniform_int.hpp>
+#include <boost/random/mersenne_twister.hpp>
+
 namespace pheet {
 
 template <class Scheduler>
@@ -26,11 +29,15 @@ public:
 	template<class CallTaskType, typename ... TaskParams>
 		void spawn(TaskParams ... params);
 
+	boost::mt19937& get_rng();
+
+private:
 	void start_finish_region();
 	void end_finish_region();
 
-private:
 	Scheduler* sched;
+
+	boost::mt19937 rng;
 
 	friend class Scheduler::Finish;
 };
@@ -72,6 +79,11 @@ template <class Scheduler>
 template<class CallTaskType, typename ... TaskParams>
 void SynchroneousSchedulerTaskExecutionContext<Scheduler>::spawn(TaskParams ... params) {
 	sched->finish<CallTaskType>(params ...);
+}
+
+template <class Scheduler>
+boost::mt19937& SynchroneousSchedulerTaskExecutionContext<Scheduler>::get_rng() {
+	return rng;
 }
 
 }

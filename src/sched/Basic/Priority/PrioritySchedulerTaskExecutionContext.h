@@ -137,11 +137,14 @@ public:
 	template<class CallTaskType, class Strategy, typename ... TaskParams>
 		void spawn_prio(Strategy s, TaskParams&& ... params);
 
+	boost::mt19937& get_rng();
+
 private:
 	void run();
 	void execute_task(Task* task, StackElement* parent);
 	void main_loop();
 	void process_queue();
+	bool process_queue_until_finished(StackElement* parent);
 	void wait_for_finish(StackElement* parent);
 
 	void empty_stack();
@@ -305,12 +308,12 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrat
 template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy>
 void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::wait_for_finish(StackElement* parent) {
 	while(true) {
-		// TODO: try a policy where we do not need to empty our queues before we notice the finish
-		// (currently not implemented for simplicity)
+		if(parent->num_finished_remote + 1 == parent->num_spawned) {
+			return;
+		}
 
 		// Make sure our queue is empty
-		process_queue();
-
+		if(!process_queue_until_finished(parent))
 		{	// Local scope so we have a new backoff object
 			Backoff bo;
 			DequeItem di;
@@ -364,6 +367,24 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrat
 		delete di.task;
 		di = task_storage.pop();
 	}
+}
+
+template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy>
+bool PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::process_queue_until_finished(StackElement* parent) {
+	DequeItem di = task_storage.pop();
+	while(di.task != NULL) {
+		// Warning, no distinction between locally spawned tasks and remote tasks
+		// But this makes it easier with the finish construct, etc.
+		// Otherwise we would have to empty our deque on the next finish call
+		// which is bad for balancing
+		execute_task(di.task, di.stack_element);
+		delete di.task;
+		if(parent->num_spawned == parent->num_finished_remote + 1) {
+			return true;
+		}
+		di = task_storage.pop();
+	}
+	return false;
 }
 
 template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy>
@@ -531,6 +552,11 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrat
 	CallTaskType task(static_cast<TaskParams&&>(params) ...);
 	// Execute task
 	task(*this);
+}
+
+template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy>
+boost::mt19937& PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::get_rng() {
+	return rng;
 }
 
 }

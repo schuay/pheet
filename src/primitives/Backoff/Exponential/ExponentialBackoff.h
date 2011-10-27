@@ -27,8 +27,13 @@ public:
 	void backoff();
 private:
 	unsigned int limit;
-};
 
+//	static thread_local boost::mt19937 rng;
+};
+/*
+template <unsigned int MIN_BACKOFF, unsigned int MAX_BACKOFF>
+thread_local boost::mt19937 ExponentialBackoff<MIN_BACKOFF, MAX_BACKOFF>::rng;
+*/
 template <unsigned int MIN_BACKOFF, unsigned int MAX_BACKOFF>
 ExponentialBackoff<MIN_BACKOFF, MAX_BACKOFF>::ExponentialBackoff() {
 	limit = MIN_BACKOFF;
@@ -40,7 +45,8 @@ ExponentialBackoff<MIN_BACKOFF, MAX_BACKOFF>::~ExponentialBackoff() {
 
 template <unsigned int MIN_BACKOFF, unsigned int MAX_BACKOFF>
 void ExponentialBackoff<MIN_BACKOFF, MAX_BACKOFF>::backoff() {
-	unsigned int sleep = random() % limit;
+//	boost::uniform_int<unsigned int> rnd_gen(0, limit);
+	unsigned int sleep = random() % limit; //rnd_gen(rng);
 
 	timespec delay;
 	delay.tv_sec = (time_t)0;
