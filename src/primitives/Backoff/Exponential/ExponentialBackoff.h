@@ -18,6 +18,9 @@
  */
 namespace pheet {
 
+// TODO: switch to a thread-local random number generator. (otherwise backoff doesn't make much sense as random() contains a lock)
+// Postponed until GCC has support for template aliases. Data-structures will probably be refactored then to always know the type of scheduler in use.
+
 template <unsigned int MIN_BACKOFF = 100, unsigned int MAX_BACKOFF = 100000>
 class ExponentialBackoff {
 public:
