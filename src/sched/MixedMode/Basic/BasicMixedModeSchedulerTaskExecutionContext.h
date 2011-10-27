@@ -251,6 +251,8 @@ public:
 	procs_t get_team_size();
 	procs_t get_max_team_size();
 
+	boost::mt19937& get_rng();
+
 private:
 	void run();
 	void init();
@@ -260,7 +262,9 @@ private:
 	void wait_for_sync();
 	void wait_for_coordinator_finish(TeamTaskData const* parent_task);
 	void coordinate_team();
+	bool coordinate_team_until_finished(FinishStackElement* parent);
 	void coordinate_team_level();
+	bool coordinate_team_level_until_finished(FinishStackElement* parent);
 	void disband_team();
 	bool execute_next_queue_task();
 	bool execute_next_queue_task(procs_t min_level);
@@ -582,9 +586,8 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::wait
 			// Execute a single task. This will create a team if there was a task
 			if(execute_next_queue_task()) {
 				// Coordinate the current team if existing until it's empty
-				coordinate_team(); // TODO: coordinate_team_until_finished();
-
-				if(parent->num_finished_remote == parent->num_spawned) {
+				if(coordinate_team_until_finished(parent)) {
+					performance_counters.queue_processing_time.stop_timer();
 					return;
 				}
 			}
@@ -596,7 +599,10 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::wait
 
 		performance_counters.queue_processing_time.start_timer();
 		// Coordinate the current team if existing until it's empty
-		coordinate_team(); // TODO: coordinate_team_until_finished();
+		if(coordinate_team_until_finished(parent)) {
+			performance_counters.queue_processing_time.stop_timer();
+			return;
+		}
 		performance_counters.queue_processing_time.stop_timer();
 	}
 }
@@ -705,6 +711,29 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::coor
  * Coordinates a team until we run out of work for the team
  */
 template <class Scheduler, template <typename T> class StealingDeque>
+bool BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::coordinate_team_until_finished(FinishStackElement* parent) {
+	if(current_team != NULL) {
+		procs_t level = current_team->level;
+		if(coordinate_team_level_until_finished(parent)) {
+			return true;
+		}
+
+		// TODO: get smaller tasks and just resize the team instead of disbanding it
+
+		if(level < num_levels - 1) {
+			disband_team();
+		}
+		else {
+			current_team = NULL;
+		}
+	}
+	return false;
+}
+
+/*
+ * Coordinates a team until we run out of work for the team
+ */
+template <class Scheduler, template <typename T> class StealingDeque>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::coordinate_team_level() {
 	if(current_team->level == num_levels - 1) {
 		// Solo team
@@ -738,6 +767,54 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::coor
 			di = get_next_team_task();
 		}
 	}
+}
+
+/*
+ * Coordinates a team until we run out of work for the team
+ */
+template <class Scheduler, template <typename T> class StealingDeque>
+bool BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::coordinate_team_level_until_finished(FinishStackElement* parent) {
+	if(current_team->level == num_levels - 1) {
+		// Solo team
+		DequeItem di = get_next_team_task();
+		while(di.task != NULL) {
+			performance_counters.queue_processing_time.stop_timer();
+			// Execute
+			execute_solo_queue_task(di);
+			performance_counters.queue_processing_time.start_timer();
+
+			if(parent->num_spawned == parent->num_finished_remote) {
+				return true;
+			}
+
+			// Try to get a same-size task
+			di = get_next_team_task();
+		}
+		current_team = NULL;
+	}
+	else {
+		DequeItem di = get_next_team_task();
+		while(di.task != NULL) {
+			// This method is responsible for creating the team task data and finish stack elements, etc...
+			TeamTaskData* tt = create_team_task(di);
+
+			// Show it to the rest of the team
+			announce_next_team_task(tt);
+
+			performance_counters.queue_processing_time.stop_timer();
+			// Execute (same for coor and client!)
+			execute_team_task(tt);
+			performance_counters.queue_processing_time.start_timer();
+
+			if(parent->num_spawned == parent->num_finished_remote) {
+				return true;
+			}
+
+			// Try to get a same-size task
+			di = get_next_team_task();
+		}
+	}
+	return false;
 }
 
 template <class Scheduler, template <typename T> class StealingDeque>
@@ -1625,17 +1702,18 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::end_
 		// Store current team task
 		TeamTaskData* my_team_task = current_team_task;
 
-		if(finish_stack[finish_stack_filled_right].num_spawned > 0) {
+		if(finish_stack[finish_stack_filled_right].num_spawned > finish_stack[finish_stack_filled_right].num_finished_remote) {
 			// There exist some non-executed or stolen tasks
 
 			performance_counters.queue_processing_time.start_timer();
 			// Execute the rest of the tasks in the team
-			coordinate_team(); // TODO: coordinate_team_until_finished(current_task_parent);
+			bool fin = coordinate_team_until_finished(&(finish_stack[finish_stack_filled_right]));
 			performance_counters.queue_processing_time.stop_timer();
 
-			// Process other tasks until this task has been finished
-			wait_for_finish(&(finish_stack[finish_stack_filled_right]));
-
+			if(!fin) {
+				// Process other tasks until this task has been finished
+				wait_for_finish(&(finish_stack[finish_stack_filled_right]));
+			}
 		}
 		if(my_team_task != NULL)
 			my_team_task->parent = finish_stack[finish_stack_filled_right].prev_el;
@@ -2175,6 +2253,11 @@ bool BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::dere
 
 	current_team = NULL;
 	return true;
+}
+
+template <class Scheduler, template <typename T> class StealingDeque>
+boost::mt19937& BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::get_rng() {
+	return rng;
 }
 
 }

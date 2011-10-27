@@ -135,11 +135,14 @@ public:
 	template<class CallTaskType, typename ... TaskParams>
 		void spawn(TaskParams&& ... params);
 
+	boost::mt19937& get_rng();
+
 private:
 	void run();
 	void execute_task(Task* task, StackElement* parent);
 	void main_loop();
 	void process_queue();
+	bool process_queue_until_finished(StackElement* parent);
 	void wait_for_finish(StackElement* parent);
 
 	void empty_stack();
@@ -289,7 +292,7 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::main_loop() {
 					if(di.task != NULL) {
 						break;
 					}
-					else {
+					else{
 						performance_counters.num_unsuccessful_steal_calls.incr();
 					}
 				}
@@ -314,12 +317,12 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::main_loop() {
 template <class Scheduler, template <typename T> class StealingDeque>
 void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::wait_for_finish(StackElement* parent) {
 	while(true) {
-		// TODO: try a policy where we do not need to empty our queues before we notice the finish
-		// (currently not implemented for simplicity)
+		if(parent->num_finished_remote + 1 == parent->num_spawned) {
+			return;
+		}
 
 		// Make sure our queue is empty
-		process_queue();
-
+		if(!process_queue_until_finished(parent))
 		{	// Local scope so we have a new backoff object
 			Backoff bo;
 			DequeItem di;
@@ -373,6 +376,24 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::process_queue
 		delete di.task;
 		di = stealing_deque.pop();
 	}
+}
+
+template <class Scheduler, template <typename T> class StealingDeque>
+bool BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::process_queue_until_finished(StackElement* parent) {
+	DequeItem di = stealing_deque.pop();
+	while(di.task != NULL) {
+		// Warning, no distinction between locally spawned tasks and remote tasks
+		// But this makes it easier with the finish construct, etc.
+		// Otherwise we would have to empty our deque on the next finish call
+		// which is bad for balancing
+		execute_task(di.task, di.stack_element);
+		delete di.task;
+		if(parent->num_spawned == parent->num_finished_remote + 1) {
+			return true;
+		}
+		di = stealing_deque.pop();
+	}
+	return false;
 }
 
 template <class Scheduler, template <typename T> class StealingDeque>
@@ -481,12 +502,12 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::end_finish_re
 	performance_counters.task_time.stop_timer();
 	assert(current_task_parent == &(stack[stack_filled_right]));
 
-	if(current_task_parent->num_spawned > 1) {
+//	if(current_task_parent->num_spawned > current_task_parent->num_finished_remote + 1) {
 		// There exist some non-executed or stolen tasks
 
 		// Process other tasks until this task has been finished
 		wait_for_finish(current_task_parent);
-	}
+//	}
 
 	// Restore old parent
 	current_task_parent = stack[stack_filled_right].parent;
@@ -534,6 +555,11 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::call(TaskPara
 	CallTaskType task(static_cast<TaskParams&&>(params) ...);
 	// Execute task
 	task(*this);
+}
+
+template <class Scheduler, template <typename T> class StealingDeque>
+boost::mt19937& BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::get_rng() {
+	return rng;
 }
 
 }
