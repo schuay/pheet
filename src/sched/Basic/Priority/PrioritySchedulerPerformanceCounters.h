@@ -1,0 +1,91 @@
+/*
+ * PrioritySchedulerPerformanceCounters.h
+ *
+ *  Created on: Oct 28, 2011
+ *      Author: mwimmer
+ */
+
+#ifndef PRIORITYSCHEDULERPERFORMANCECOUNTERS_H_
+#define PRIORITYSCHEDULERPERFORMANCECOUNTERS_H_
+
+#include "../../../settings.h"
+
+#include "../../../primitives/PerformanceCounter/Basic/BasicPerformanceCounter.h"
+#include "../../../primitives/PerformanceCounter/Time/TimePerformanceCounter.h"
+
+namespace pheet {
+
+template <class TaskStoragePerformanceCounters>
+class PrioritySchedulerPerformanceCounters {
+public:
+	PrioritySchedulerPerformanceCounters() {}
+	PrioritySchedulerPerformanceCounters(PrioritySchedulerPerformanceCounters<TaskStoragePerformanceCounters>& other)
+		: num_spawns(other.num_spawns), num_spawns_to_call(other.num_spawns_to_call),
+		  num_calls(other.num_calls), num_finishes(other.num_finishes),
+		  num_steals(other.num_steals), num_steal_calls(other.num_steal_calls),
+		  num_unsuccessful_steal_calls(other.num_unsuccessful_steal_calls),
+		  num_stealing_deque_pop_cas(other.num_stealing_deque_pop_cas),
+		  total_time(other.total_time), task_time(other.task_time),
+		  idle_time(other.idle_time),
+		  task_storage_performance_counters(other.task_storage_performance_counters) {}
+
+	void print_headers();
+	void print_values();
+
+//private:
+	BasicPerformanceCounter<scheduler_count_spawns> num_spawns;
+	BasicPerformanceCounter<scheduler_count_spawns_to_call> num_spawns_to_call;
+	BasicPerformanceCounter<scheduler_count_calls> num_calls;
+	BasicPerformanceCounter<scheduler_count_finishes> num_finishes;
+
+	BasicPerformanceCounter<stealing_deque_count_steals> num_steals;
+	BasicPerformanceCounter<stealing_deque_count_steal_calls> num_steal_calls;
+	BasicPerformanceCounter<stealing_deque_count_unsuccessful_steal_calls> num_unsuccessful_steal_calls;
+	BasicPerformanceCounter<stealing_deque_count_pop_cas> num_stealing_deque_pop_cas;
+
+	TimePerformanceCounter<scheduler_measure_total_time> total_time;
+	TimePerformanceCounter<scheduler_measure_task_time> task_time;
+	TimePerformanceCounter<scheduler_measure_idle_time> idle_time;
+
+	TaskStoragePerformanceCounters task_storage_performance_counters;
+};
+
+template <class TaskStoragePerformanceCounters>
+inline void PrioritySchedulerPerformanceCounters<TaskStoragePerformanceCounters>::print_headers() {
+	BasicPerformanceCounter<scheduler_count_spawns>::print_header("spawns\t");
+	BasicPerformanceCounter<scheduler_count_spawns_to_call>::print_header("calls\t");
+	BasicPerformanceCounter<scheduler_count_calls>::print_header("spawns->call\t");
+	BasicPerformanceCounter<scheduler_count_finishes>::print_header("finishes\t");
+
+	BasicPerformanceCounter<stealing_deque_count_steals>::print_header("stolen\t");
+	BasicPerformanceCounter<stealing_deque_count_steal_calls>::print_header("steal_calls\t");
+	BasicPerformanceCounter<stealing_deque_count_unsuccessful_steal_calls>::print_header("unsuccessful_steal_calls\t");
+	BasicPerformanceCounter<stealing_deque_count_pop_cas>::print_header("stealing_deque_pop_cas\t");
+
+	TimePerformanceCounter<scheduler_measure_total_time>::print_header("scheduler_total_time\t");
+	TimePerformanceCounter<scheduler_measure_task_time>::print_header("total_task_time\t");
+	TimePerformanceCounter<scheduler_measure_idle_time>::print_header("total_idle_time\t");
+
+	task_storage_performance_counters.print_headers();
+}
+
+template <class TaskStoragePerformanceCounters>
+inline void PrioritySchedulerPerformanceCounters<TaskStoragePerformanceCounters>::print_values() {
+	num_spawns.print("%d\t");
+	num_calls.print("%d\t");
+	num_spawns_to_call.print("%d\t");
+	num_finishes.print("%d\t");
+	num_steals.print("%d\t");
+	num_steal_calls.print("%d\t");
+	num_unsuccessful_steal_calls.print("%d\t");
+	num_stealing_deque_pop_cas.print("%d\t");
+	total_time.print("%f\t");
+	task_time.print("%f\t");
+	idle_time.print("%f\t");
+
+	task_storage_performance_counters.print_values();
+}
+
+}
+
+#endif /* PRIORITYSCHEDULERPERFORMANCECOUNTERS_H_ */
