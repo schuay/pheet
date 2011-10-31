@@ -384,6 +384,14 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::BasicMixe
 		this->levels[i].reverse_ids = (*levels)[i]->reverse_ids;
 	}
 
+	// May be moved to the parallel part if we add a full barrier after initialization. Not sure if it is worth it though
+	stealing_deques = new StealingDeque<DequeItem>*[num_levels];
+	for(procs_t i = 0; i < num_levels; ++i) {
+		procs_t size = find_last_bit_set(this->levels[num_levels - i - 1].total_size) << 4;
+		stealing_deques[i] = new StealingDeque<DequeItem>(size, performance_counters.num_steals, performance_counters.num_stealing_deque_pop_cas);
+		this->levels[i].spawn_same_size_threshold = size;
+	}
+
 	// All other initializations can be done in parallel
 
 	// Run thread
@@ -463,13 +471,6 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::init
 	team_task_reuse[num_levels - 1]->next = NULL;
 	team_task_reuse[num_levels - 1]->executed_countdown = 0;
 	team_announcement_reuse[num_levels - 1]->level = num_levels - 1;
-
-	stealing_deques = new StealingDeque<DequeItem>*[num_levels];
-	for(procs_t i = 0; i < num_levels; ++i) {
-		procs_t size = find_last_bit_set(this->levels[num_levels - i - 1].total_size) << 4;
-		stealing_deques[i] = new StealingDeque<DequeItem>(size, performance_counters.num_steals, performance_counters.num_stealing_deque_pop_cas);
-		levels[i].spawn_same_size_threshold = size;
-	}
 
 	// Initialize team_info structure
 	default_team_info = new TeamInfo();
@@ -1224,6 +1225,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visi
 			assert(levels[level].num_partners > 0);
 			boost::uniform_int<procs_t> n_r_gen(0, levels[level].num_partners - 1);
 			procs_t next_rand = n_r_gen(rng);
+			assert(next_rand < levels[level].num_partners);
 			TaskExecutionContext* partner = levels[level].partners[next_rand];
 			assert(partner != this);
 
@@ -1289,6 +1291,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visi
 			assert(levels[level].num_partners > 0);
 			boost::uniform_int<procs_t> n_r_gen(0, levels[level].num_partners - 1);
 			procs_t next_rand = n_r_gen(rng);
+			assert(next_rand < levels[level].num_partners);
 			TaskExecutionContext* partner = levels[level].partners[next_rand];
 			assert(partner != this);
 
@@ -1355,6 +1358,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visi
 			assert(levels[level].num_partners > 0);
 			boost::uniform_int<procs_t> n_r_gen(0, levels[level].num_partners - 1);
 			procs_t next_rand = n_r_gen(rng);
+			assert(next_rand < levels[level].num_partners);
 			TaskExecutionContext* partner = levels[level].partners[next_rand];
 			assert(partner != this);
 

@@ -12,6 +12,8 @@
 #include <vector>
 #include <queue>
 
+#include "PrimitiveHeapPrimaryTaskStoragePerformanceCounters.h"
+
 namespace pheet {
 
 template <typename TT>
@@ -46,10 +48,7 @@ public:
 	typedef TT T;
 	// Not completely a standard iterator, as it doesn't support a dereference operation, but this makes implementation simpler for now (and even more lightweight)
 	typedef size_t iterator;
-	typedef struct{
-		void print_headers() {}
-		void print_values() {}
-	} PerformanceCounters;
+	typedef PrimitiveHeapPrimaryTaskStoragePerformanceCounters PerformanceCounters;
 
 	PrimitiveHeapPrimaryTaskStorage(size_t initial_capacity);
 	PrimitiveHeapPrimaryTaskStorage(size_t initial_capacity, PerformanceCounters& perf_count);
@@ -127,15 +126,18 @@ TT PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::take(iterator item) {
 	PrimitiveHeapPrimaryTaskStorageItem<T>& ptsi = data.get(item);
 
 	if(ptsi.index != item) {
+		perf_count.num_unsuccessful_takes.incr();
 		return null_element;
 	}
 	T ret = ptsi.data;
 	BaseStrategy* s = ptsi.s;
 	if(!SIZET_CAS(&(ptsi.index), item, item + 1)) {
+		perf_count.num_unsuccessful_takes.incr();
 		return null_element;
 	}
 	delete s;
 
+	perf_count.num_successful_takes.incr();
 	return ret;
 }
 
@@ -190,6 +192,8 @@ inline void PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::push(Strategy& s
 
 template <typename TT, template <typename S> class CircularArray>
 inline TT PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::pop() {
+	perf_count.total_size_pop.add(heap.size());
+	perf_count.pop_time.start_timer();
 	T ret;
 /*	do {
 		iterator i = begin();
@@ -218,6 +222,8 @@ inline TT PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::pop() {
 	} while(ret == null_element);*/
 	do {
 		if(heap.empty()) {
+			perf_count.num_unsuccessful_pops.incr();
+			perf_count.pop_time.stop_timer();
 			return null_element;
 		}
 
@@ -227,12 +233,14 @@ inline TT PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::pop() {
 		ret = take(el);
 	} while(ret == null_element);
 
+	perf_count.num_successful_pops.incr();
+	perf_count.pop_time.stop_timer();
 	return ret;
 }
 
 template <typename TT, template <typename S> class CircularArray>
 inline TT PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::peek() {
-	iterator i = begin();
+/*	iterator i = begin();
 	while(i != end() && is_taken(top)) {
 		++i;
 	}
@@ -256,20 +264,31 @@ inline TT PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::peek() {
 				ret_item = tmp_item;
 			}
 		}
+	}*/
+
+	size_t el = heap.top();
+	TT ret;
+	while(is_taken(el)) {
+		heap.pop();
+		if(heap.empty()) {
+			return null_element;
+		}
+		el = heap.top();
+		ret = data.get(el);
 	}
 
-	return ret_item.data;
+	return ret;
 }
 
 template <typename TT, template <typename S> class CircularArray>
 inline size_t PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::get_length() {
-	return bottom - top;
+	return heap.size();
 }
 
 template <typename TT, template <typename S> class CircularArray>
 inline bool PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::is_empty() {
 	clean();
-	return bottom > top;
+	return heap.empty();
 }
 
 template <typename TT, template <typename S> class CircularArray>
@@ -279,8 +298,9 @@ inline bool PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::is_full() {
 
 template <typename TT, template <typename S> class CircularArray>
 void PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::clean() {
-	while(is_taken(top)) {
-		++top;
+	size_t el = heap.top();
+	while(is_taken(el)) {
+		heap.pop();
 	}
 }
 

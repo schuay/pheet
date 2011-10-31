@@ -8,7 +8,10 @@
 #ifndef PRIMITIVEPRIMARYTASKSTORAGE_H_
 #define PRIMITIVEPRIMARYTASKSTORAGE_H_
 
+#include "../../../../../settings.h"
 #include "../../../../../sched/strategies/BaseStrategy.h"
+
+#include "PrimitivePrimaryTaskStoragePerformanceCounters.h"
 
 namespace pheet {
 
@@ -27,10 +30,7 @@ public:
 	typedef TT T;
 	// Not completely a standard iterator, as it doesn't support a dereference operation, but this makes implementation simpler for now (and even more lightweight)
 	typedef size_t iterator;
-	typedef struct{
-		void print_headers() {}
-		void print_values() {}
-	} PerformanceCounters;
+	typedef PrimitivePrimaryTaskStoragePerformanceCounters PerformanceCounters;
 
 	PrimitivePrimaryTaskStorage(size_t initial_capacity);
 	PrimitivePrimaryTaskStorage(size_t initial_capacity, PerformanceCounters& perf_count);
@@ -105,15 +105,18 @@ TT PrimitivePrimaryTaskStorage<TT, CircularArray>::take(iterator item) {
 	PrimitivePrimaryTaskStorageItem<T>& ptsi = data.get(item);
 
 	if(ptsi.index != item) {
+		perf_count.num_unsuccessful_takes.incr();
 		return null_element;
 	}
 	T ret = ptsi.data;
 	BaseStrategy* s = ptsi.s;
 	if(!SIZET_CAS(&(ptsi.index), item, item + 1)) {
+		perf_count.num_unsuccessful_takes.incr();
 		return null_element;
 	}
 	delete s;
 
+	perf_count.num_successful_takes.incr();
 	return ret;
 }
 
@@ -167,6 +170,8 @@ inline void PrimitivePrimaryTaskStorage<TT, CircularArray>::push(Strategy& s, T 
 
 template <typename TT, template <typename S> class CircularArray>
 inline TT PrimitivePrimaryTaskStorage<TT, CircularArray>::pop() {
+	perf_count.total_size_pop.add(bottom - top);
+	perf_count.pop_time.start_timer();
 	T ret;
 	do {
 		iterator i = begin();
@@ -175,6 +180,8 @@ inline TT PrimitivePrimaryTaskStorage<TT, CircularArray>::pop() {
 		}
 
 		if(i == end()) {
+			perf_count.num_unsuccessful_pops.incr();
+			perf_count.pop_time.stop_timer();
 			return null_element;
 		}
 		top = i;
@@ -194,6 +201,8 @@ inline TT PrimitivePrimaryTaskStorage<TT, CircularArray>::pop() {
 		ret = take(best);
 	} while(ret == null_element);
 
+	perf_count.num_successful_pops.incr();
+	perf_count.pop_time.stop_timer();
 	return ret;
 }
 

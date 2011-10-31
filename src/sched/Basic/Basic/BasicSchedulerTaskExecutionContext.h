@@ -283,6 +283,7 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::main_loop() {
 					assert(levels[level].num_partners > 0);
 					boost::uniform_int<procs_t> n_r_gen(0, levels[level].num_partners - 1);
 					procs_t next_rand = n_r_gen(rng);
+					assert(next_rand < levels[level].num_partners);
 					assert(levels[level].partners[next_rand] != this);
 
 					performance_counters.num_steal_calls.incr();

@@ -30,6 +30,7 @@ public:
 	~BasicPerformanceCounter();
 
 	void incr();
+	void add(size_t value);
 	void print(char const* const formatting_string);
 	static void print_header(char const* const string);
 };
@@ -55,6 +56,11 @@ void BasicPerformanceCounter<false>::incr() {
 }
 
 inline
+void BasicPerformanceCounter<false>::add(size_t value) {
+
+}
+
+inline
 void BasicPerformanceCounter<false>::print(char const* const formatting_string) {
 
 }
@@ -72,6 +78,7 @@ public:
 	~BasicPerformanceCounter();
 
 	void incr();
+	void add(size_t value);
 	void print(char const* formatting_string);
 	static void print_header(char const* const string);
 private:
@@ -97,6 +104,11 @@ BasicPerformanceCounter<true>::~BasicPerformanceCounter() {
 inline
 void BasicPerformanceCounter<true>::incr() {
 	reducer.incr();
+}
+
+inline
+void BasicPerformanceCounter<true>::add(size_t value) {
+	reducer.add(value);
 }
 
 inline

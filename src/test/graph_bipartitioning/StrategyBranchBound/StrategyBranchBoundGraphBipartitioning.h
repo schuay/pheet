@@ -31,6 +31,8 @@ public:
 	void print_results();
 	void print_headers();
 
+	static void print_scheduler_name();
+
 	static procs_t const max_cpus;
 	static char const name[];
 	static char const * const scheduler_name;
@@ -87,6 +89,10 @@ void StrategyBranchBoundGraphBipartitioning<Scheduler, LowerBound, NextVertex, S
 	scheduler.print_performance_counter_headers();
 }
 
+template <class Scheduler, class LowerBound, class NextVertex, class SchedulingStrategy>
+void StrategyBranchBoundGraphBipartitioning<Scheduler, LowerBound, NextVertex, SchedulingStrategy>::print_scheduler_name() {
+	Scheduler::print_name();
+}
 
 }
 
