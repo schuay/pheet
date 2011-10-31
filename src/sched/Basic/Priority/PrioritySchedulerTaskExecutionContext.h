@@ -92,7 +92,7 @@ public:
 	typedef PrioritySchedulerTaskExecutionContextStackElement StackElement;
 	typedef PrioritySchedulerTaskExecutionContextDequeItem<PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy> > DequeItem;
 	typedef TaskStorageT<DequeItem> TaskStorage;
-	typedef PrioritySchedulerPerformanceCounters<TaskStorage::PerformanceCounters> PerformanceCounters;
+	typedef PrioritySchedulerPerformanceCounters<typename TaskStorage::PerformanceCounters> PerformanceCounters;
 
 	PrioritySchedulerTaskExecutionContext(std::vector<LevelDescription*> const* levels, std::vector<typename CPUHierarchy::CPUDescriptor*> const* cpus, typename Scheduler::State* scheduler_state, PerformanceCounters& perf_count);
 	~PrioritySchedulerTaskExecutionContext();
@@ -158,7 +158,7 @@ size_t const PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, Defa
 
 template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy>
 PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::PrioritySchedulerTaskExecutionContext(std::vector<LevelDescription*> const* levels, std::vector<typename CPUHierarchy::CPUDescriptor*> const* cpus, typename Scheduler::State* scheduler_state, PerformanceCounters& perf_count)
-: performance_counters(perf_count), stack_filled_left(0), stack_filled_right(stack_size), num_levels(levels->size()), thread_executor(cpus, this), scheduler_state(scheduler_state), max_queue_length(find_last_bit_set((*levels)[0]->total_size + 8) << 4), task_storage(max_queue_length, performance_counters.num_steals, performance_counters.num_stealing_deque_pop_cas) {
+: performance_counters(perf_count), stack_filled_left(0), stack_filled_right(stack_size), num_levels(levels->size()), thread_executor(cpus, this), scheduler_state(scheduler_state), max_queue_length(find_last_bit_set((*levels)[0]->total_size + 8) << 4), task_storage(max_queue_length, performance_counters.task_storage_performance_counters) {
 	performance_counters.total_time.start_timer();
 
 	stack = new StackElement[stack_size];

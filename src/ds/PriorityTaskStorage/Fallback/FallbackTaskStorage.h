@@ -20,7 +20,10 @@ template <typename TT, template <typename S> class BaseType>
 class FallbackTaskStorage {
 public:
 	typedef TT T;
-	typedef struct{} PerformanceCounters;
+	typedef struct{
+		void print_headers() {}
+		void print_values() {}
+	} PerformanceCounters;
 
 	FallbackTaskStorage(size_t initial_capacity);
 	FallbackTaskStorage(size_t initial_capacity, PerformanceCounters& perf_count);
@@ -42,6 +45,8 @@ public:
 
 private:
 	BaseType<TT> data;
+
+	PerformanceCounters perf_count;
 };
 
 template <typename TT, template <typename S> class BaseType>
@@ -52,7 +57,7 @@ inline FallbackTaskStorage<TT, BaseType>::FallbackTaskStorage(size_t initial_cap
 
 template <typename TT, template <typename S> class BaseType>
 inline FallbackTaskStorage<TT, BaseType>::FallbackTaskStorage(size_t initial_capacity, PerformanceCounters& perf_count)
-: data(initial_capacity, num_stolen, num_pop_cas), perf_count(perf_count) {
+: data(initial_capacity), perf_count(perf_count) {
 
 }
 

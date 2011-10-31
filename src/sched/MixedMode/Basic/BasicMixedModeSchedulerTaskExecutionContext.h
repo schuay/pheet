@@ -523,12 +523,12 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::run(
 
 			// Process other tasks until this task has been finished
 			wait_for_finish(di.finish_stack_element);
-
-			assert(current_team == NULL);
 		}
-		else if(current_team != NULL && current_team->level != num_levels - 1) {
-			disband_team();
+		else {
 			performance_counters.queue_processing_time.stop_timer();
+		}
+		if(current_team != NULL && current_team->level != num_levels - 1) {
+			disband_team();
 		}
 
 		scheduler_state->current_state = 2; // finished

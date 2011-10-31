@@ -17,7 +17,7 @@ template <typename TT, template <typename S> class Primary, template <typename S
 class ModularTaskStorage {
 public:
 	typedef TT T;
-	typedef ModularTaskStoragePerformanceCounters PerformanceCounters;
+	typedef ModularTaskStoragePerformanceCounters<typename Primary<T>::PerformanceCounters, typename Secondary<T, Primary>::PerformanceCounters> PerformanceCounters;
 
 	ModularTaskStorage(size_t initial_capacity);
 	ModularTaskStorage(size_t initial_capacity, PerformanceCounters& perf_count);
@@ -52,7 +52,7 @@ ModularTaskStorage<TT, Primary, Secondary>::ModularTaskStorage(size_t initial_ca
 
 template <typename TT, template <typename S> class Primary, template <typename S, template <typename Q> class P> class Secondary>
 ModularTaskStorage<TT, Primary, Secondary>::ModularTaskStorage(size_t initial_capacity, PerformanceCounters& perf_count)
-: primary(initial_capacity, num_pop_cas), secondary(&primary, num_stolen), perf_count(perf_count) {
+: primary(initial_capacity, perf_count.primary_perf_count), secondary(&primary, perf_count.secondary_perf_count), perf_count(perf_count) {
 
 }
 

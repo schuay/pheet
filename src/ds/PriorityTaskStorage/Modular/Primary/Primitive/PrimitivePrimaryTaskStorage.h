@@ -27,9 +27,13 @@ public:
 	typedef TT T;
 	// Not completely a standard iterator, as it doesn't support a dereference operation, but this makes implementation simpler for now (and even more lightweight)
 	typedef size_t iterator;
+	typedef struct{
+		void print_headers() {}
+		void print_values() {}
+	} PerformanceCounters;
 
 	PrimitivePrimaryTaskStorage(size_t initial_capacity);
-	PrimitivePrimaryTaskStorage(size_t initial_capacity, BasicPerformanceCounter<stealing_deque_count_pop_cas>& num_pop_cas);
+	PrimitivePrimaryTaskStorage(size_t initial_capacity, PerformanceCounters& perf_count);
 	~PrimitivePrimaryTaskStorage();
 
 	iterator begin();
@@ -59,7 +63,7 @@ private:
 
 	CircularArray<PrimitivePrimaryTaskStorageItem<T> > data;
 
-	BasicPerformanceCounter<stealing_deque_count_pop_cas> num_pop_cas;
+	PerformanceCounters perf_count;
 
 	static const T null_element;
 };
@@ -74,8 +78,8 @@ inline PrimitivePrimaryTaskStorage<TT, CircularArray>::PrimitivePrimaryTaskStora
 }
 
 template <typename TT, template <typename S> class CircularArray>
-inline PrimitivePrimaryTaskStorage<TT, CircularArray>::PrimitivePrimaryTaskStorage(size_t initial_capacity, BasicPerformanceCounter<stealing_deque_count_pop_cas>& num_pop_cas)
-: top(0), bottom(0), data(initial_capacity), num_pop_cas(num_pop_cas) {
+inline PrimitivePrimaryTaskStorage<TT, CircularArray>::PrimitivePrimaryTaskStorage(size_t initial_capacity, PerformanceCounters& perf_count)
+: top(0), bottom(0), data(initial_capacity), perf_count(perf_count) {
 
 }
 

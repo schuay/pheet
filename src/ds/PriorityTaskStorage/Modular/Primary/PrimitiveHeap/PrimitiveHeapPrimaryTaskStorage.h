@@ -46,9 +46,13 @@ public:
 	typedef TT T;
 	// Not completely a standard iterator, as it doesn't support a dereference operation, but this makes implementation simpler for now (and even more lightweight)
 	typedef size_t iterator;
+	typedef struct{
+		void print_headers() {}
+		void print_values() {}
+	} PerformanceCounters;
 
 	PrimitiveHeapPrimaryTaskStorage(size_t initial_capacity);
-	PrimitiveHeapPrimaryTaskStorage(size_t initial_capacity, BasicPerformanceCounter<stealing_deque_count_pop_cas>& num_pop_cas);
+	PrimitiveHeapPrimaryTaskStorage(size_t initial_capacity, PerformanceCounters& perf_count);
 	~PrimitiveHeapPrimaryTaskStorage();
 
 	iterator begin();
@@ -79,7 +83,7 @@ private:
 	CircularArray<PrimitiveHeapPrimaryTaskStorageItem<T> > data;
 	std::priority_queue<iterator, std::vector<iterator>, PrimitiveHeapPrimaryTaskStorageComparator<CircularArray<PrimitiveHeapPrimaryTaskStorageItem<T> > > > heap;
 
-	BasicPerformanceCounter<stealing_deque_count_pop_cas> num_pop_cas;
+	PerformanceCounters perf_count;
 
 	static const T null_element;
 };
@@ -94,10 +98,10 @@ inline PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::PrimitiveHeapPrimaryT
 }
 
 template <typename TT, template <typename S> class CircularArray>
-inline PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::PrimitiveHeapPrimaryTaskStorage(size_t initial_capacity, BasicPerformanceCounter<stealing_deque_count_pop_cas>& num_pop_cas)
+inline PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::PrimitiveHeapPrimaryTaskStorage(size_t initial_capacity, PerformanceCounters& perf_count)
 : top(0), bottom(0), data(initial_capacity),
   heap(PrimitiveHeapPrimaryTaskStorageComparator<CircularArray<PrimitiveHeapPrimaryTaskStorageItem<T> > >(&data)),
-  num_pop_cas(num_pop_cas) {
+  perf_count(perf_count) {
 
 }
 

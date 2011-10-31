@@ -14,9 +14,13 @@ template <typename TT, template <typename S> class Primary>
 class PrimitiveSecondaryTaskStorage {
 public:
 	typedef TT T;
+	typedef struct{
+		void print_headers() {}
+		void print_values() {}
+	} PerformanceCounters;
 
 	PrimitiveSecondaryTaskStorage(Primary<TT>* primary);
-	PrimitiveSecondaryTaskStorage(Primary<TT>* primary, BasicPerformanceCounter<stealing_deque_count_steals>& num_stolen);
+	PrimitiveSecondaryTaskStorage(Primary<TT>* primary, PerformanceCounters& perf_count);
 	~PrimitiveSecondaryTaskStorage();
 
 	TT steal();
@@ -26,7 +30,7 @@ public:
 private:
 	Primary<TT>* primary;
 
-	BasicPerformanceCounter<stealing_deque_count_steals> num_stolen;
+	PerformanceCounters perf_count;
 
 	static T const null_element;
 };
@@ -41,8 +45,8 @@ inline PrimitiveSecondaryTaskStorage<TT, Primary>::PrimitiveSecondaryTaskStorage
 }
 
 template <typename TT, template <typename S> class Primary>
-inline PrimitiveSecondaryTaskStorage<TT, Primary>::PrimitiveSecondaryTaskStorage(Primary<T>* primary, BasicPerformanceCounter<stealing_deque_count_steals>& num_stolen)
-: primary(primary), num_stolen(num_stolen) {
+inline PrimitiveSecondaryTaskStorage<TT, Primary>::PrimitiveSecondaryTaskStorage(Primary<T>* primary, PerformanceCounters& perf_count)
+: primary(primary), perf_count(perf_count) {
 
 }
 

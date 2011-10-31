@@ -80,7 +80,7 @@ private:
 
 	State state;
 
-	TaskExecutionContext::PerformanceCounters performance_counters;
+	typename TaskExecutionContext::PerformanceCounters performance_counters;
 };
 
 template <class CPUHierarchyT, template <typename T> class TaskStorage, class Barrier, class BackoffT, class DefaultStrategy>

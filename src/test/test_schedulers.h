@@ -87,21 +87,10 @@ TwoLevelGrowingCircularArrayStealingDeque<T>::TwoLevelGrowingCircularArraySteali
 template <typename T>
 class FixedSizeCircularArrayStealingDequeFallbackTaskStorage : public FallbackTaskStorage<T, FixedSizeCircularArrayStealingDeque > {
 public:
-	FixedSizeCircularArrayStealingDequeFallbackTaskStorage(size_t initial_capacity);
-	FixedSizeCircularArrayStealingDequeFallbackTaskStorage(size_t initial_capacity, BasicPerformanceCounter<stealing_deque_count_steals>& num_stolen, BasicPerformanceCounter<stealing_deque_count_pop_cas>& num_pop_cas);
+	template <typename ... ConsParams>
+	FixedSizeCircularArrayStealingDequeFallbackTaskStorage(ConsParams&& ... params)
+	: FallbackTaskStorage<T, FixedSizeCircularArrayStealingDeque >(static_cast<ConsParams&&>(params) ...) {};
 };
-
-template <typename T>
-FixedSizeCircularArrayStealingDequeFallbackTaskStorage<T>::FixedSizeCircularArrayStealingDequeFallbackTaskStorage(size_t initial_capacity)
-: FallbackTaskStorage<T, FixedSizeCircularArrayStealingDeque >(initial_capacity){
-
-}
-
-template <typename T>
-FixedSizeCircularArrayStealingDequeFallbackTaskStorage<T>::FixedSizeCircularArrayStealingDequeFallbackTaskStorage(size_t initial_capacity, BasicPerformanceCounter<stealing_deque_count_steals>& num_stolen, BasicPerformanceCounter<stealing_deque_count_pop_cas>& num_pop_cas)
-: FallbackTaskStorage<T, FixedSizeCircularArrayStealingDeque >(initial_capacity, num_stolen, num_pop_cas){
-
-}
 
 template <typename T>
 class DefaultPrimitivePrimaryTaskStorage : public PrimitivePrimaryTaskStorage<T, MyTwoLevelGrowingCircularArray> {
