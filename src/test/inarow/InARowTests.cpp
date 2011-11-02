@@ -33,13 +33,13 @@ namespace pheet {
 	void InARowTests::run_test()
 	{
 		//test<DefaultBasicScheduler>(8,8,4,4,2,(unsigned int*)scenario2);
-		test<DefaultBasicScheduler>(8,8,4,7,8,(unsigned int*)scenario2);
+		//test<DefaultBasicScheduler>(8,8,4,7,8,(unsigned int*)scenario2);
 		
 		//test<DefaultSynchroneousScheduler>(8,8,4,10,1,(unsigned int*)scenario1);
-		return;
-		test<DefaultBasicScheduler>(8,8,4,3,1,0);
+		//		return;
+		//test<DefaultBasicScheduler>(8,8,4,7,8,(unsigned int*)scenario2);
 		
-		test<PrimitivePriorityScheduler>(8,8,4,3,1,0);
+	  test<PrimitivePriorityScheduler>(8,8,4,7,8,(unsigned int*)scenario2);
 	}
 
 }
