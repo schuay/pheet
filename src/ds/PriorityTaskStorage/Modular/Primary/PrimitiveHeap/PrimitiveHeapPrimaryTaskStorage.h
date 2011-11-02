@@ -74,6 +74,7 @@ public:
 	static void print_name();
 
 private:
+	void clean_heap();
 	void clean();
 
 	size_t top;
@@ -282,26 +283,37 @@ inline TT PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::peek() {
 
 template <typename TT, template <typename S> class CircularArray>
 inline size_t PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::get_length() {
+	clean_heap();
 	return heap.size();
 }
 
 template <typename TT, template <typename S> class CircularArray>
 inline bool PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::is_empty() {
-	clean();
+	clean_heap();
 	return heap.empty();
 }
 
 template <typename TT, template <typename S> class CircularArray>
 inline bool PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::is_full() {
+	clean_heap();
 	return (!data.is_growable()) && (bottom - top == data.get_capacity());
 }
 
 template <typename TT, template <typename S> class CircularArray>
-void PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::clean() {
+void PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::clean_heap() {
 	size_t el = heap.top();
 	while(is_taken(el)) {
 		heap.pop();
 	}
+}
+
+template <typename TT, template <typename S> class CircularArray>
+void PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::clean() {
+	size_t i = top;
+	while(i < bottom && is_taken(i)) {
+		++i;
+	}
+	top = i;
 }
 
 template <typename TT, template <typename S> class CircularArray>
