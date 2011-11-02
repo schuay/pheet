@@ -267,6 +267,9 @@ inline TT PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::peek() {
 		}
 	}*/
 
+	if(heap.empty()) {
+		return null_element;
+	}
 	size_t el = heap.top();
 	TT ret;
 	while(is_taken(el)) {
@@ -301,9 +304,16 @@ inline bool PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::is_full() {
 
 template <typename TT, template <typename S> class CircularArray>
 void PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::clean_heap() {
+	if(heap.empty()) {
+		return;
+	}
 	size_t el = heap.top();
 	while(is_taken(el)) {
 		heap.pop();
+		if(heap.empty()) {
+			return;
+		}
+		el = heap.top();
 	}
 }
 
