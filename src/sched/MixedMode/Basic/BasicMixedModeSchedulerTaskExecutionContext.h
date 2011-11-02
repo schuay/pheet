@@ -769,6 +769,9 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::coor
 			execute_team_task(tt);
 			performance_counters.queue_processing_time.start_timer();
 
+			// Send task to memory reclamation
+			team_task_reclamation_queue.push(tt);
+
 			// Try to get a same-size task
 			di = get_next_team_task();
 		}
@@ -811,6 +814,9 @@ bool BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::coor
 			// Execute (same for coor and client!)
 			execute_team_task(tt);
 			performance_counters.queue_processing_time.start_timer();
+
+			// Send task to memory reclamation
+			team_task_reclamation_queue.push(tt);
 
 			if(parent->num_spawned == parent->num_finished_remote) {
 				return true;
@@ -908,7 +914,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::exec
 	execute_team_task(current_team_task);
 
 	// Send task to memory reclamation
-	team_task_reclamation_queue.push(current_team_task);
+	team_task_reclamation_queue.push(tt);
 //	}
 }
 
