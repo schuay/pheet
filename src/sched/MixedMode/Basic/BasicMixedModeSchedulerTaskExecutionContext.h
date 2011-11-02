@@ -637,6 +637,9 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::wait
 					// Coordinate the current team if existing until it's empty
 					coordinate_team();
 				}
+				else {
+					performance_counters.queue_processing_time.start_timer();
+				}
 				performance_counters.sync_time.start_timer();
 			} while(has_local_work(min_level));
 			performance_counters.queue_processing_time.stop_timer();
@@ -869,6 +872,7 @@ bool BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::exec
 	DequeItem di = get_next_queue_task(min_level);
 
 	if(di.task != NULL) {
+		performance_counters.queue_processing_time.stop_timer();
 		create_team(di.team_size);
 
 		if(di.team_size == 1) {
@@ -877,6 +881,7 @@ bool BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::exec
 		else {
 			execute_queue_task(di);
 		}
+		performance_counters.queue_processing_time.start_timer();
 		return true;
 	}
 	return false;
