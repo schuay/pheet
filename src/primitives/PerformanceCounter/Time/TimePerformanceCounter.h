@@ -137,6 +137,9 @@ void TimePerformanceCounter<true>::stop_timer() {
 
 inline
 void TimePerformanceCounter<true>::print(char const* const formatting_string) {
+#ifndef NDEBUG
+	assert(!is_active);
+#endif
 	printf(formatting_string, reducer.get_sum());
 }
 

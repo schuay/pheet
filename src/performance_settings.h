@@ -33,6 +33,18 @@ bool const scheduler_measure_visit_partners_time = true;
 bool const scheduler_measure_wait_for_finish_time = true;
 bool const scheduler_measure_wait_for_coordinator_time = true;
 
+bool const task_storage_count_steals = true;
+bool const task_storage_count_unsuccessful_pops = true;
+bool const task_storage_count_successful_pops = true;
+bool const task_storage_count_unsuccessful_takes = true;
+bool const task_storage_count_successful_takes = true;
+bool const task_storage_count_unsuccessful_steals = true;
+bool const task_storage_count_successful_steals = true;
+bool const task_storage_count_size_pop = true;
+bool const task_storage_count_size_steal = true;
+bool const task_storage_measure_pop_time = true;
+bool const task_storage_measure_steal_time = true;
+
 #else
 
 bool const scheduler_count_tasks_at_level = false;
@@ -54,6 +66,18 @@ bool const scheduler_measure_queue_processing_time = false;
 bool const scheduler_measure_visit_partners_time = false;
 bool const scheduler_measure_wait_for_finish_time = false;
 bool const scheduler_measure_wait_for_coordinator_time = false;
+
+bool const task_storage_count_steals = false;
+bool const task_storage_count_unsuccessful_pops = false;
+bool const task_storage_count_successful_pops = false;
+bool const task_storage_count_unsuccessful_takes = false;
+bool const task_storage_count_successful_takes = false;
+bool const task_storage_count_unsuccessful_steals = false;
+bool const task_storage_count_successful_steals = false;
+bool const task_storage_count_size_pop = false;
+bool const task_storage_count_size_steal = false;
+bool const task_storage_measure_pop_time = false;
+bool const task_storage_measure_steal_time = false;
 
 #endif
 

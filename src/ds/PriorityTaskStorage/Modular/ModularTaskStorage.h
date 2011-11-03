@@ -9,6 +9,7 @@
 #define MODULARTASKSTORAGE_H_
 
 #include <iostream>
+#include "ModularTaskStoragePerformanceCounters.h"
 
 namespace pheet {
 
@@ -16,9 +17,10 @@ template <typename TT, template <typename S> class Primary, template <typename S
 class ModularTaskStorage {
 public:
 	typedef TT T;
+	typedef ModularTaskStoragePerformanceCounters<typename Primary<T>::PerformanceCounters, typename Secondary<T, Primary>::PerformanceCounters> PerformanceCounters;
 
 	ModularTaskStorage(size_t initial_capacity);
-	ModularTaskStorage(size_t initial_capacity, BasicPerformanceCounter<stealing_deque_count_steals>& num_stolen, BasicPerformanceCounter<stealing_deque_count_pop_cas>& num_pop_cas);
+	ModularTaskStorage(size_t initial_capacity, PerformanceCounters& perf_count);
 	~ModularTaskStorage();
 
 	template <class Strategy>
@@ -38,6 +40,8 @@ public:
 private:
 	Primary<T> primary;
 	Secondary<T, Primary> secondary;
+
+	PerformanceCounters perf_count;
 };
 
 template <typename TT, template <typename S> class Primary, template <typename S, template <typename Q> class P> class Secondary>
@@ -47,8 +51,8 @@ ModularTaskStorage<TT, Primary, Secondary>::ModularTaskStorage(size_t initial_ca
 }
 
 template <typename TT, template <typename S> class Primary, template <typename S, template <typename Q> class P> class Secondary>
-ModularTaskStorage<TT, Primary, Secondary>::ModularTaskStorage(size_t initial_capacity, BasicPerformanceCounter<stealing_deque_count_steals>& num_stolen, BasicPerformanceCounter<stealing_deque_count_pop_cas>& num_pop_cas)
-: primary(initial_capacity, num_pop_cas), secondary(&primary, num_stolen) {
+ModularTaskStorage<TT, Primary, Secondary>::ModularTaskStorage(size_t initial_capacity, PerformanceCounters& perf_count)
+: primary(initial_capacity, perf_count.primary_perf_count), secondary(&primary, perf_count.secondary_perf_count), perf_count(perf_count) {
 
 }
 

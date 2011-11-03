@@ -384,6 +384,14 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::BasicMixe
 		this->levels[i].reverse_ids = (*levels)[i]->reverse_ids;
 	}
 
+	// May be moved to the parallel part if we add a full barrier after initialization. Not sure if it is worth it though
+	stealing_deques = new StealingDeque<DequeItem>*[num_levels];
+	for(procs_t i = 0; i < num_levels; ++i) {
+		procs_t size = find_last_bit_set(this->levels[num_levels - i - 1].total_size) << 4;
+		stealing_deques[i] = new StealingDeque<DequeItem>(size, performance_counters.num_steals, performance_counters.num_stealing_deque_pop_cas);
+		this->levels[i].spawn_same_size_threshold = size;
+	}
+
 	// All other initializations can be done in parallel
 
 	// Run thread
@@ -464,13 +472,6 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::init
 	team_task_reuse[num_levels - 1]->executed_countdown = 0;
 	team_announcement_reuse[num_levels - 1]->level = num_levels - 1;
 
-	stealing_deques = new StealingDeque<DequeItem>*[num_levels];
-	for(procs_t i = 0; i < num_levels; ++i) {
-		procs_t size = find_last_bit_set(this->levels[num_levels - i - 1].total_size) << 4;
-		stealing_deques[i] = new StealingDeque<DequeItem>(size, performance_counters.num_steals, performance_counters.num_stealing_deque_pop_cas);
-		levels[i].spawn_same_size_threshold = size;
-	}
-
 	// Initialize team_info structure
 	default_team_info = new TeamInfo();
 
@@ -523,12 +524,12 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::run(
 
 			// Process other tasks until this task has been finished
 			wait_for_finish(di.finish_stack_element);
-
-			assert(current_team == NULL);
 		}
-		else if(current_team != NULL && current_team->level != num_levels - 1) {
-			disband_team();
+		else {
 			performance_counters.queue_processing_time.stop_timer();
+		}
+		if(current_team != NULL && current_team->level != num_levels - 1) {
+			disband_team();
 		}
 
 		scheduler_state->current_state = 2; // finished
@@ -630,11 +631,16 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::wait
 
 			performance_counters.queue_processing_time.start_timer();
 			do {
+				performance_counters.sync_time.stop_timer();
 				// Execute a single task. This will create a team if there was a task
 				if(execute_next_queue_task(min_level)) {
 					// Coordinate the current team if existing until it's empty
 					coordinate_team();
 				}
+				else {
+					performance_counters.queue_processing_time.start_timer();
+				}
+				performance_counters.sync_time.start_timer();
 			} while(has_local_work(min_level));
 			performance_counters.queue_processing_time.stop_timer();
 			// If we executed something, make sure we drop the team
@@ -763,6 +769,9 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::coor
 			execute_team_task(tt);
 			performance_counters.queue_processing_time.start_timer();
 
+			// Send task to memory reclamation
+			team_task_reclamation_queue.push(tt);
+
 			// Try to get a same-size task
 			di = get_next_team_task();
 		}
@@ -805,6 +814,9 @@ bool BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::coor
 			// Execute (same for coor and client!)
 			execute_team_task(tt);
 			performance_counters.queue_processing_time.start_timer();
+
+			// Send task to memory reclamation
+			team_task_reclamation_queue.push(tt);
 
 			if(parent->num_spawned == parent->num_finished_remote) {
 				return true;
@@ -866,6 +878,7 @@ bool BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::exec
 	DequeItem di = get_next_queue_task(min_level);
 
 	if(di.task != NULL) {
+		performance_counters.queue_processing_time.stop_timer();
 		create_team(di.team_size);
 
 		if(di.team_size == 1) {
@@ -874,6 +887,7 @@ bool BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::exec
 		else {
 			execute_queue_task(di);
 		}
+		performance_counters.queue_processing_time.start_timer();
 		return true;
 	}
 	return false;
@@ -900,7 +914,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::exec
 	execute_team_task(current_team_task);
 
 	// Send task to memory reclamation
-	team_task_reclamation_queue.push(current_team_task);
+	team_task_reclamation_queue.push(tt);
 //	}
 }
 
@@ -1224,6 +1238,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visi
 			assert(levels[level].num_partners > 0);
 			boost::uniform_int<procs_t> n_r_gen(0, levels[level].num_partners - 1);
 			procs_t next_rand = n_r_gen(rng);
+			assert(next_rand < levels[level].num_partners);
 			TaskExecutionContext* partner = levels[level].partners[next_rand];
 			assert(partner != this);
 
@@ -1289,6 +1304,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visi
 			assert(levels[level].num_partners > 0);
 			boost::uniform_int<procs_t> n_r_gen(0, levels[level].num_partners - 1);
 			procs_t next_rand = n_r_gen(rng);
+			assert(next_rand < levels[level].num_partners);
 			TaskExecutionContext* partner = levels[level].partners[next_rand];
 			assert(partner != this);
 
@@ -1355,6 +1371,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visi
 			assert(levels[level].num_partners > 0);
 			boost::uniform_int<procs_t> n_r_gen(0, levels[level].num_partners - 1);
 			procs_t next_rand = n_r_gen(rng);
+			assert(next_rand < levels[level].num_partners);
 			TaskExecutionContext* partner = levels[level].partners[next_rand];
 			assert(partner != this);
 

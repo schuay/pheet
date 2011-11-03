@@ -15,8 +15,7 @@
 #include "../../../misc/atomics.h"
 #include "../../../misc/bitops.h"
 #include "../../../misc/type_traits.h"
-#include "../../../primitives/PerformanceCounter/Basic/BasicPerformanceCounter.h"
-#include "../../../primitives/PerformanceCounter/Time/TimePerformanceCounter.h"
+#include "PrioritySchedulerPerformanceCounters.h"
 
 #include <vector>
 #include <assert.h>
@@ -26,32 +25,6 @@
 #include <boost/random/mersenne_twister.hpp>
 
 namespace pheet {
-
-struct PrioritySchedulerPerformanceCounters {
-	PrioritySchedulerPerformanceCounters() {}
-	PrioritySchedulerPerformanceCounters(PrioritySchedulerPerformanceCounters& other)
-		: num_spawns(other.num_spawns), num_spawns_to_call(other.num_spawns_to_call),
-		  num_calls(other.num_calls), num_finishes(other.num_finishes),
-		  num_steals(other.num_steals), num_steal_calls(other.num_steal_calls),
-		  num_unsuccessful_steal_calls(other.num_unsuccessful_steal_calls),
-		  num_stealing_deque_pop_cas(other.num_stealing_deque_pop_cas),
-		  total_time(other.total_time), task_time(other.task_time),
-		  idle_time(other.idle_time) {}
-
-	BasicPerformanceCounter<scheduler_count_spawns> num_spawns;
-	BasicPerformanceCounter<scheduler_count_spawns_to_call> num_spawns_to_call;
-	BasicPerformanceCounter<scheduler_count_calls> num_calls;
-	BasicPerformanceCounter<scheduler_count_finishes> num_finishes;
-
-	BasicPerformanceCounter<stealing_deque_count_steals> num_steals;
-	BasicPerformanceCounter<stealing_deque_count_steal_calls> num_steal_calls;
-	BasicPerformanceCounter<stealing_deque_count_unsuccessful_steal_calls> num_unsuccessful_steal_calls;
-	BasicPerformanceCounter<stealing_deque_count_pop_cas> num_stealing_deque_pop_cas;
-
-	TimePerformanceCounter<scheduler_measure_total_time> total_time;
-	TimePerformanceCounter<scheduler_measure_task_time> task_time;
-	TimePerformanceCounter<scheduler_measure_idle_time> idle_time;
-};
 
 struct PrioritySchedulerTaskExecutionContextStackElement {
 	// Modified by local thread. Incremented when task is spawned, decremented when finished
@@ -119,8 +92,9 @@ public:
 	typedef PrioritySchedulerTaskExecutionContextStackElement StackElement;
 	typedef PrioritySchedulerTaskExecutionContextDequeItem<PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy> > DequeItem;
 	typedef TaskStorageT<DequeItem> TaskStorage;
+	typedef PrioritySchedulerPerformanceCounters<typename TaskStorage::PerformanceCounters> PerformanceCounters;
 
-	PrioritySchedulerTaskExecutionContext(std::vector<LevelDescription*> const* levels, std::vector<typename CPUHierarchy::CPUDescriptor*> const* cpus, typename Scheduler::State* scheduler_state, PrioritySchedulerPerformanceCounters& perf_count);
+	PrioritySchedulerTaskExecutionContext(std::vector<LevelDescription*> const* levels, std::vector<typename CPUHierarchy::CPUDescriptor*> const* cpus, typename Scheduler::State* scheduler_state, PerformanceCounters& perf_count);
 	~PrioritySchedulerTaskExecutionContext();
 
 	void join();
@@ -155,7 +129,7 @@ private:
 	void start_finish_region();
 	void end_finish_region();
 
-	PrioritySchedulerPerformanceCounters performance_counters;
+	PerformanceCounters performance_counters;
 
 	static size_t const stack_size;
 	StackElement* stack;
@@ -183,8 +157,8 @@ template <class Scheduler, template <typename T> class TaskStorageT, class Defau
 size_t const PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::stack_size = 2048;
 
 template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy>
-PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::PrioritySchedulerTaskExecutionContext(std::vector<LevelDescription*> const* levels, std::vector<typename CPUHierarchy::CPUDescriptor*> const* cpus, typename Scheduler::State* scheduler_state, PrioritySchedulerPerformanceCounters& perf_count)
-: performance_counters(perf_count), stack_filled_left(0), stack_filled_right(stack_size), num_levels(levels->size()), thread_executor(cpus, this), scheduler_state(scheduler_state), max_queue_length(find_last_bit_set((*levels)[0]->total_size + 8) << 4), task_storage(max_queue_length, performance_counters.num_steals, performance_counters.num_stealing_deque_pop_cas) {
+PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::PrioritySchedulerTaskExecutionContext(std::vector<LevelDescription*> const* levels, std::vector<typename CPUHierarchy::CPUDescriptor*> const* cpus, typename Scheduler::State* scheduler_state, PerformanceCounters& perf_count)
+: performance_counters(perf_count), stack_filled_left(0), stack_filled_right(stack_size), num_levels(levels->size()), thread_executor(cpus, this), scheduler_state(scheduler_state), max_queue_length(find_last_bit_set((*levels)[0]->total_size + 8) << 4), task_storage(max_queue_length, performance_counters.task_storage_performance_counters) {
 	performance_counters.total_time.start_timer();
 
 	stack = new StackElement[stack_size];
@@ -274,6 +248,7 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrat
 					assert(levels[level].num_partners > 0);
 					boost::uniform_int<procs_t> n_r_gen(0, levels[level].num_partners - 1);
 					procs_t next_rand = n_r_gen(rng);
+					assert(next_rand < levels[level].num_partners);
 					assert(levels[level].partners[next_rand] != this);
 
 					performance_counters.num_steal_calls.incr();
