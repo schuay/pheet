@@ -39,7 +39,7 @@ namespace pheet {
 		//		return;
 		//test<DefaultBasicScheduler>(8,8,4,7,8,(unsigned int*)scenario2);
 		
-	  test<PrimitivePriorityScheduler>(8,8,4,7,8,(unsigned int*)scenario2);
+		  test<PrimitivePriorityScheduler>(8,8,4,7,8,(unsigned int*)scenario2);
 	}
 
 }
