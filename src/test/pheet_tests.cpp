@@ -8,6 +8,7 @@
 
 #include "sorting/SortingTests.h"
 #include "graph_bipartitioning/GraphBipartitioningTests.h"
+#include "n-queens/NQueensTests.h"
 
 using namespace pheet;
 
@@ -18,6 +19,9 @@ int main(int argc, char* argv[]) {
 
 	GraphBipartitioningTests gpt;
 	gpt.run_test();
+
+	NQueensTests nqt;
+	nqt.run_test();
 
 	return 0;
 }
