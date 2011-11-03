@@ -136,6 +136,8 @@ private:
 	StackElement* current_task_parent;
 	size_t stack_filled_left;
 	size_t stack_filled_right;
+	// The use of the freed_stack_elements vector should lead to less usage of the stack by non-blocking tasks
+	std::vector<StackElement*> freed_stack_elements;
 
 	LevelDescription* levels;
 	procs_t num_levels;
@@ -365,19 +367,31 @@ bool PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrat
 template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy>
 typename PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::StackElement*
 PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::create_non_blocking_finish_region(StackElement* parent) {
-	// Perform cleanup on finish stack
-	empty_stack();
+	if(freed_stack_elements.empty()) {
+		// Perform cleanup on finish stack
+		empty_stack();
 
-	assert(stack_filled_left < stack_filled_right);
+		assert(stack_filled_left < stack_filled_right);
 
-	stack[stack_filled_left].num_finished_remote = 0;
-	// As we create it out of a parent region that is waiting for completion of a single task, we can already add this one task here
-	stack[stack_filled_left].num_spawned = 1;
-	stack[stack_filled_left].parent = parent;
+		stack[stack_filled_left].num_finished_remote = 0;
+		// As we create it out of a parent region that is waiting for completion of a single task, we can already add this one task here
+		stack[stack_filled_left].num_spawned = 1;
+		stack[stack_filled_left].parent = parent;
 
-	++stack_filled_left;
+		++stack_filled_left;
 
-	return &(stack[stack_filled_left - 1]);
+		return &(stack[stack_filled_left - 1]);
+	}
+	else {
+		StackElement* ret = freed_stack_elements.back();
+		freed_stack_elements.pop_back();
+
+		ret->num_spawned = 1;
+		ret->parent = parent;
+		assert(ret->num_finished_remote == 0);
+
+		return ret;
+	}
 }
 
 /*
@@ -385,6 +399,8 @@ PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>:
  */
 template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy>
 void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::empty_stack() {
+	assert(freed_stack_elements.empty());
+
 	while(stack_filled_left > 0) {
 		size_t se = stack_filled_left - 1;
 		if(stack[se].num_spawned == stack[se].num_finished_remote
@@ -429,6 +445,7 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrat
 		if(element->num_spawned == 0) {
 			// No tasks processed remotely - no need for atomic ops
 			element->parent = NULL;
+			freed_stack_elements.push_back(element);
 			signal_task_completion(parent);
 		}
 		else {
@@ -449,7 +466,8 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrat
 	performance_counters.num_finishes.incr();
 
 	// Perform cleanup on left side of finish stack
-	empty_stack();
+	// Not allowed any more. may only be called if freed_stack_elements is empty
+//	empty_stack();
 
 	assert(stack_filled_left < stack_filled_right);
 	--stack_filled_right;
