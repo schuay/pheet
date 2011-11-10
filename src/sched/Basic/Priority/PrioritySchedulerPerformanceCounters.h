@@ -42,10 +42,8 @@ public:
 	BasicPerformanceCounter<scheduler_count_calls> num_calls;
 	BasicPerformanceCounter<scheduler_count_finishes> num_finishes;
 
-	BasicPerformanceCounter<stealing_deque_count_steals> num_steals;
 	BasicPerformanceCounter<stealing_deque_count_steal_calls> num_steal_calls;
 	BasicPerformanceCounter<stealing_deque_count_unsuccessful_steal_calls> num_unsuccessful_steal_calls;
-	BasicPerformanceCounter<stealing_deque_count_pop_cas> num_stealing_deque_pop_cas;
 
 	TimePerformanceCounter<scheduler_measure_total_time> total_time;
 	TimePerformanceCounter<scheduler_measure_task_time> task_time;
@@ -60,21 +58,19 @@ public:
 template <class TaskStoragePerformanceCounters>
 inline void PrioritySchedulerPerformanceCounters<TaskStoragePerformanceCounters>::print_headers() {
 	BasicPerformanceCounter<scheduler_count_spawns>::print_header("spawns\t");
-	BasicPerformanceCounter<scheduler_count_spawns_to_call>::print_header("calls\t");
-	BasicPerformanceCounter<scheduler_count_calls>::print_header("spawns->call\t");
+	BasicPerformanceCounter<scheduler_count_calls>::print_header("calls\t");
+	BasicPerformanceCounter<scheduler_count_spawns_to_call>::print_header("spawns->call\t");
 	BasicPerformanceCounter<scheduler_count_finishes>::print_header("finishes\t");
 
-	BasicPerformanceCounter<stealing_deque_count_steals>::print_header("stolen\t");
 	BasicPerformanceCounter<stealing_deque_count_steal_calls>::print_header("steal_calls\t");
 	BasicPerformanceCounter<stealing_deque_count_unsuccessful_steal_calls>::print_header("unsuccessful_steal_calls\t");
-	BasicPerformanceCounter<stealing_deque_count_pop_cas>::print_header("stealing_deque_pop_cas\t");
 
 	TimePerformanceCounter<scheduler_measure_total_time>::print_header("scheduler_total_time\t");
 	TimePerformanceCounter<scheduler_measure_task_time>::print_header("total_task_time\t");
 	TimePerformanceCounter<scheduler_measure_idle_time>::print_header("total_idle_time\t");
 
 	MaxPerformanceCounter<size_t, scheduler_measure_finish_stack_nonblocking_max>::print_header("finish_stack_nonblocking_max\t");
-	MaxPerformanceCounter<size_t, scheduler_measure_finish_stack_blocking_min>::print_header("finish_stack_blocking_min\t");
+	MinPerformanceCounter<size_t, scheduler_measure_finish_stack_blocking_min>::print_header("finish_stack_blocking_min\t");
 
 	task_storage_performance_counters.print_headers();
 }
@@ -85,10 +81,8 @@ inline void PrioritySchedulerPerformanceCounters<TaskStoragePerformanceCounters>
 	num_calls.print("%d\t");
 	num_spawns_to_call.print("%d\t");
 	num_finishes.print("%d\t");
-	num_steals.print("%d\t");
 	num_steal_calls.print("%d\t");
 	num_unsuccessful_steal_calls.print("%d\t");
-	num_stealing_deque_pop_cas.print("%d\t");
 	total_time.print("%f\t");
 	task_time.print("%f\t");
 	idle_time.print("%f\t");
