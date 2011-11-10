@@ -27,12 +27,12 @@ struct MaxOperation {
 
 template <typename T>
 T MaxOperation<T>::operator()(T x, T y) {
-	return max(x, y);
+	return std::max(x, y);
 }
 
 template <typename T>
 T MaxOperation<T>::get_identity() {
-	return std::numeric_limits<T>::max();
+	return std::numeric_limits<T>::min();
 }
 
 template <typename T, template <typename S> class M = MaxOperation >

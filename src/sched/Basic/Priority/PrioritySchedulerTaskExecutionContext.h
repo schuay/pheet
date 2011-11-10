@@ -160,7 +160,7 @@ size_t const PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, Defa
 
 template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy>
 PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::PrioritySchedulerTaskExecutionContext(std::vector<LevelDescription*> const* levels, std::vector<typename CPUHierarchy::CPUDescriptor*> const* cpus, typename Scheduler::State* scheduler_state, PerformanceCounters& perf_count)
-: performance_counters(perf_count), stack_filled_left(0), stack_filled_right(stack_size), num_levels(levels->size()), thread_executor(cpus, this), scheduler_state(scheduler_state), max_queue_length(find_last_bit_set((*levels)[0]->total_size + 8) << 4), task_storage(max_queue_length, performance_counters.task_storage_performance_counters) {
+: performance_counters(perf_count), stack_filled_left(0), stack_filled_right(stack_size), num_levels(levels->size()), thread_executor(cpus, this), scheduler_state(scheduler_state), max_queue_length(find_last_bit_set((*levels)[0]->total_size + 8) << 4), task_storage(max_queue_length) {
 	performance_counters.total_time.start_timer();
 
 	stack = new StackElement[stack_size];
@@ -173,6 +173,9 @@ PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>:
 		this->levels[i].local_id = local_id;
 		this->levels[i].total_size = (*levels)[i]->total_size;
 	}
+
+	performance_counters.finish_stack_blocking_min.add_value(stack_size);
+	performance_counters.finish_stack_nonblocking_max.add_value(0);
 
 	thread_executor.run();
 }
@@ -254,7 +257,7 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrat
 					assert(levels[level].partners[next_rand] != this);
 
 					performance_counters.num_steal_calls.incr();
-					di = levels[level].partners[next_rand]->task_storage.steal_push(this->task_storage);
+					di = levels[level].partners[next_rand]->task_storage.steal_push(this->task_storage, performance_counters.task_storage_performance_counters);
 				//	di = levels[level].partners[next_rand % levels[level].num_partners]->task_storage.steal();
 
 					if(di.task != NULL) {
@@ -306,7 +309,7 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrat
 					procs_t next_rand = n_r_gen(rng);
 					assert(levels[level].partners[next_rand] != this);
 					performance_counters.num_steal_calls.incr();
-					di = levels[level].partners[next_rand]->task_storage.steal_push(this->task_storage);
+					di = levels[level].partners[next_rand]->task_storage.steal_push(this->task_storage, performance_counters.task_storage_performance_counters);
 				//	di = levels[level].partners[next_rand % levels[level].num_partners]->task_storage.steal();
 
 					if(di.task != NULL) {
@@ -334,7 +337,7 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrat
 
 template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy>
 void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::process_queue() {
-	DequeItem di = task_storage.pop();
+	DequeItem di = task_storage.pop(performance_counters.task_storage_performance_counters);
 	while(di.task != NULL) {
 		// Warning, no distinction between locally spawned tasks and remote tasks
 		// But this makes it easier with the finish construct, etc.
@@ -342,13 +345,13 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrat
 		// which is bad for balancing
 		execute_task(di.task, di.stack_element);
 		delete di.task;
-		di = task_storage.pop();
+		di = task_storage.pop(performance_counters.task_storage_performance_counters);
 	}
 }
 
 template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy>
 bool PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::process_queue_until_finished(StackElement* parent) {
-	DequeItem di = task_storage.pop();
+	DequeItem di = task_storage.pop(performance_counters.task_storage_performance_counters);
 	while(di.task != NULL) {
 		// Warning, no distinction between locally spawned tasks and remote tasks
 		// But this makes it easier with the finish construct, etc.
@@ -359,7 +362,7 @@ bool PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrat
 		if(parent->num_spawned == parent->num_finished_remote + 1) {
 			return true;
 		}
-		di = task_storage.pop();
+		di = task_storage.pop(performance_counters.task_storage_performance_counters);
 	}
 	return false;
 }
@@ -379,6 +382,7 @@ PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>:
 		stack[stack_filled_left].parent = parent;
 
 		++stack_filled_left;
+		performance_counters.finish_stack_nonblocking_max.add_value(stack_filled_left);
 
 		return &(stack[stack_filled_left - 1]);
 	}
@@ -471,6 +475,7 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrat
 
 	assert(stack_filled_left < stack_filled_right);
 	--stack_filled_right;
+	performance_counters.finish_stack_blocking_min.add_value(stack_filled_right);
 
 	stack[stack_filled_right].num_finished_remote = 0;
 	// We add 1 to make sure finishes are not propagated to the parent (as we wait manually and then execute a continuation)
@@ -522,7 +527,7 @@ template<class CallTaskType, class Strategy, typename ... TaskParams>
 void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::spawn_prio(Strategy s, TaskParams&& ... params) {
 	performance_counters.num_spawns.incr();
 
-	if(task_storage.get_length() >= max_queue_length) {
+	if(task_storage.get_length(performance_counters.task_storage_performance_counters) >= max_queue_length) {
 		performance_counters.num_spawns_to_call.incr();
 		call<CallTaskType>(static_cast<TaskParams&&>(params) ...);
 	}
@@ -533,7 +538,7 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrat
 		DequeItem di;
 		di.task = task;
 		di.stack_element = current_task_parent;
-		task_storage.push(s, di);
+		task_storage.push(s, di, performance_counters.task_storage_performance_counters);
 	}
 }
 

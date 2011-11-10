@@ -45,6 +45,9 @@ bool const task_storage_count_size_steal = true;
 bool const task_storage_measure_pop_time = true;
 bool const task_storage_measure_steal_time = true;
 
+bool const scheduler_measure_finish_stack_nonblocking_max = true;
+bool const scheduler_measure_finish_stack_blocking_min = true;
+
 #else
 
 bool const scheduler_count_tasks_at_level = false;
@@ -78,6 +81,9 @@ bool const task_storage_count_size_pop = false;
 bool const task_storage_count_size_steal = false;
 bool const task_storage_measure_pop_time = false;
 bool const task_storage_measure_steal_time = false;
+
+bool const scheduler_measure_finish_stack_nonblocking_max = false;
+bool const scheduler_measure_finish_stack_blocking_min = false;
 
 #endif
 

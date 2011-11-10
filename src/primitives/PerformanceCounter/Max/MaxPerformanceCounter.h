@@ -26,23 +26,21 @@ template <typename T>
 class MaxPerformanceCounter<T, false> {
 public:
 	MaxPerformanceCounter();
-	MaxPerformanceCounter(MaxPerformanceCounter const& other);
+	MaxPerformanceCounter(MaxPerformanceCounter<T, false> const& other);
 	~MaxPerformanceCounter();
 
-	void add_value();
+	void add_value(size_t value);
 	void print(char const* const formatting_string);
 	static void print_header(char const* const string);
 };
 
-inline
 template <typename T>
-MaxPerformanceCounter<T, false>::MaxPerformanceCounter() {
+inline MaxPerformanceCounter<T, false>::MaxPerformanceCounter() {
 
 }
 
 template <typename T>
-inline
-MaxPerformanceCounter<T, false>::MaxPerformanceCounter(MaxPerformanceCounter const& other) {
+inline MaxPerformanceCounter<T, false>::MaxPerformanceCounter(MaxPerformanceCounter<T, false> const& other) {
 
 }
 
@@ -54,7 +52,7 @@ MaxPerformanceCounter<T, false>::~MaxPerformanceCounter() {
 
 template <typename T>
 inline
-void MaxPerformanceCounter<T, false>::incr() {
+void MaxPerformanceCounter<T, false>::add_value(size_t value) {
 
 }
 
@@ -74,10 +72,10 @@ template <typename T>
 class MaxPerformanceCounter<T, true> {
 public:
 	MaxPerformanceCounter();
-	MaxPerformanceCounter(MaxPerformanceCounter<true> const& other);
+	MaxPerformanceCounter(MaxPerformanceCounter<T, true>& other);
 	~MaxPerformanceCounter();
 
-	void incr();
+	void add_value(size_t value);
 	void print(char const* const formatting_string);
 	static void print_header(char const* const string);
 private:
@@ -92,7 +90,7 @@ MaxPerformanceCounter<T, true>::MaxPerformanceCounter() {
 
 template <typename T>
 inline
-MaxPerformanceCounter<T, true>::MaxPerformanceCounter(MaxPerformanceCounter<true> const& other)
+MaxPerformanceCounter<T, true>::MaxPerformanceCounter(MaxPerformanceCounter<T, true>& other)
 : reducer(other.reducer) {
 
 }
@@ -105,20 +103,20 @@ MaxPerformanceCounter<T, true>::~MaxPerformanceCounter() {
 
 template <typename T>
 inline
-void MaxPerformanceCounter<T, true>::incr() {
-	reducer.incr();
+void MaxPerformanceCounter<T, true>::add_value(size_t value) {
+	reducer.add_value(value);
 }
 
 template <typename T>
 inline
 void MaxPerformanceCounter<T, true>::print(char const* const formatting_string) {
-	printf(formatting_string, reducer.get_sum());
+	printf(formatting_string, reducer.get_max());
 }
 
 template <typename T>
 inline
 void MaxPerformanceCounter<T, true>::print_header(char const* const string) {
-	cout << string;
+	std::cout << string;
 }
 
 }

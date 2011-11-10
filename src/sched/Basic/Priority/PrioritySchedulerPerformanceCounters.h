@@ -11,6 +11,8 @@
 #include "../../../settings.h"
 
 #include "../../../primitives/PerformanceCounter/Basic/BasicPerformanceCounter.h"
+#include "../../../primitives/PerformanceCounter/Max/MaxPerformanceCounter.h"
+#include "../../../primitives/PerformanceCounter/Min/MinPerformanceCounter.h"
 #include "../../../primitives/PerformanceCounter/Time/TimePerformanceCounter.h"
 
 namespace pheet {
@@ -27,6 +29,8 @@ public:
 		  num_stealing_deque_pop_cas(other.num_stealing_deque_pop_cas),
 		  total_time(other.total_time), task_time(other.task_time),
 		  idle_time(other.idle_time),
+		  finish_stack_nonblocking_max(other.finish_stack_nonblocking_max),
+		  finish_stack_blocking_min(other.finish_stack_blocking_min),
 		  task_storage_performance_counters(other.task_storage_performance_counters) {}
 
 	void print_headers();
@@ -47,6 +51,9 @@ public:
 	TimePerformanceCounter<scheduler_measure_task_time> task_time;
 	TimePerformanceCounter<scheduler_measure_idle_time> idle_time;
 
+	MaxPerformanceCounter<size_t, scheduler_measure_finish_stack_nonblocking_max> finish_stack_nonblocking_max;
+	MinPerformanceCounter<size_t, scheduler_measure_finish_stack_blocking_min> finish_stack_blocking_min;
+
 	TaskStoragePerformanceCounters task_storage_performance_counters;
 };
 
@@ -66,6 +73,9 @@ inline void PrioritySchedulerPerformanceCounters<TaskStoragePerformanceCounters>
 	TimePerformanceCounter<scheduler_measure_task_time>::print_header("total_task_time\t");
 	TimePerformanceCounter<scheduler_measure_idle_time>::print_header("total_idle_time\t");
 
+	MaxPerformanceCounter<size_t, scheduler_measure_finish_stack_nonblocking_max>::print_header("finish_stack_nonblocking_max\t");
+	MaxPerformanceCounter<size_t, scheduler_measure_finish_stack_blocking_min>::print_header("finish_stack_blocking_min\t");
+
 	task_storage_performance_counters.print_headers();
 }
 
@@ -82,6 +92,9 @@ inline void PrioritySchedulerPerformanceCounters<TaskStoragePerformanceCounters>
 	total_time.print("%f\t");
 	task_time.print("%f\t");
 	idle_time.print("%f\t");
+
+	finish_stack_nonblocking_max.print("%d\t");
+	finish_stack_blocking_min.print("%d\t");
 
 	task_storage_performance_counters.print_values();
 }

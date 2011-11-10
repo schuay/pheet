@@ -25,15 +25,24 @@ public:
 
 	template <class Strategy>
 	void push(Strategy& s, T item);
+	template <class Strategy>
+	void push(Strategy& s, T item, PerformanceCounters& pc);
 	T pop();
+	T pop(PerformanceCounters& pc);
 	T peek();
+	T peek(PerformanceCounters& pc);
 	T steal();
+	T steal(PerformanceCounters& pc);
 
 	T steal_push(ModularTaskStorage<TT, Primary, Secondary> &other);
+	T steal_push(ModularTaskStorage<TT, Primary, Secondary> &other, PerformanceCounters& pc);
 
 	size_t get_length();
+	size_t get_length(PerformanceCounters& pc);
 	bool is_empty();
+	bool is_empty(PerformanceCounters& pc);
 	bool is_full();
+	bool is_full(PerformanceCounters& pc);
 
 	static void print_name();
 
@@ -64,43 +73,93 @@ ModularTaskStorage<TT, Primary, Secondary>::~ModularTaskStorage() {
 template <typename TT, template <typename S> class Primary, template <typename S, template <typename Q> class P> class Secondary>
 template <class Strategy>
 inline void ModularTaskStorage<TT, Primary, Secondary>::push(Strategy& s, T item) {
-	primary.push(s, item);
+	PerformanceCounters pc;
+	primary.push(s, item, pc.primary_perf_count);
+}
+
+template <typename TT, template <typename S> class Primary, template <typename S, template <typename Q> class P> class Secondary>
+template <class Strategy>
+inline void ModularTaskStorage<TT, Primary, Secondary>::push(Strategy& s, T item, PerformanceCounters& pc) {
+	primary.push(s, item, pc.primary_perf_count);
 }
 
 template <typename TT, template <typename S> class Primary, template <typename S, template <typename Q> class P> class Secondary>
 inline TT ModularTaskStorage<TT, Primary, Secondary>::pop() {
-	return primary.pop();
+	PerformanceCounters pc;
+	return primary.pop(pc.primary_perf_count);
+}
+
+template <typename TT, template <typename S> class Primary, template <typename S, template <typename Q> class P> class Secondary>
+inline TT ModularTaskStorage<TT, Primary, Secondary>::pop(PerformanceCounters& pc) {
+	return primary.pop(pc.primary_perf_count);
 }
 
 template <typename TT, template <typename S> class Primary, template <typename S, template <typename Q> class P> class Secondary>
 inline TT ModularTaskStorage<TT, Primary, Secondary>::peek() {
-	return primary.peek();
+	PerformanceCounters pc;
+	return primary.peek(pc.primary_perf_count);
+}
+
+template <typename TT, template <typename S> class Primary, template <typename S, template <typename Q> class P> class Secondary>
+inline TT ModularTaskStorage<TT, Primary, Secondary>::peek(PerformanceCounters& pc) {
+	return primary.peek(pc.primary_perf_count);
 }
 
 template <typename TT, template <typename S> class Primary, template <typename S, template <typename Q> class P> class Secondary>
 inline TT ModularTaskStorage<TT, Primary, Secondary>::steal() {
-	return secondary.steal();
+	PerformanceCounters pc;
+	return secondary.steal(pc.secondary_perf_count);
+}
+
+template <typename TT, template <typename S> class Primary, template <typename S, template <typename Q> class P> class Secondary>
+inline TT ModularTaskStorage<TT, Primary, Secondary>::steal(PerformanceCounters& pc) {
+	return secondary.steal(pc.primary_perf_count, pc.secondary_perf_count);
 }
 
 template <typename TT, template <typename S> class Primary, template <typename S, template <typename Q> class P> class Secondary>
 inline TT ModularTaskStorage<TT, Primary, Secondary>::steal_push(ModularTaskStorage<TT, Primary, Secondary>& other) {
 	// Currently we don't plan to support stealing more than one task, as this would require require reconfiguring the strategies
-	return secondary.steal();
+	PerformanceCounters pc;
+	return secondary.steal(pc.secondary_perf_count);
+}
+
+template <typename TT, template <typename S> class Primary, template <typename S, template <typename Q> class P> class Secondary>
+inline TT ModularTaskStorage<TT, Primary, Secondary>::steal_push(ModularTaskStorage<TT, Primary, Secondary>& other, PerformanceCounters& pc) {
+	// Currently we don't plan to support stealing more than one task, as this would require require reconfiguring the strategies
+	return secondary.steal(pc.primary_perf_count, pc.secondary_perf_count);
 }
 
 template <typename TT, template <typename S> class Primary, template <typename S, template <typename Q> class P> class Secondary>
 inline size_t ModularTaskStorage<TT, Primary, Secondary>::get_length() {
-	return primary.get_length();
+	PerformanceCounters pc;
+	return primary.get_length(pc.primary_perf_count);
+}
+
+template <typename TT, template <typename S> class Primary, template <typename S, template <typename Q> class P> class Secondary>
+inline size_t ModularTaskStorage<TT, Primary, Secondary>::get_length(PerformanceCounters& pc) {
+	return primary.get_length(pc.primary_perf_count);
 }
 
 template <typename TT, template <typename S> class Primary, template <typename S, template <typename Q> class P> class Secondary>
 inline bool ModularTaskStorage<TT, Primary, Secondary>::is_empty() {
-	return primary.is_empty();
+	PerformanceCounters pc;
+	return primary.is_empty(pc.primary_perf_count);
+}
+
+template <typename TT, template <typename S> class Primary, template <typename S, template <typename Q> class P> class Secondary>
+inline bool ModularTaskStorage<TT, Primary, Secondary>::is_empty(PerformanceCounters& pc) {
+	return primary.is_empty(pc.primary_perf_count);
 }
 
 template <typename TT, template <typename S> class Primary, template <typename S, template <typename Q> class P> class Secondary>
 inline bool ModularTaskStorage<TT, Primary, Secondary>::is_full() {
-	return primary.is_full();
+	PerformanceCounters pc;
+	return primary.is_full(pc.primary_perf_count);
+}
+
+template <typename TT, template <typename S> class Primary, template <typename S, template <typename Q> class P> class Secondary>
+inline bool ModularTaskStorage<TT, Primary, Secondary>::is_full(PerformanceCounters& pc) {
+	return primary.is_full(pc.primary_perf_count);
 }
 
 template <typename TT, template <typename S> class Primary, template <typename S, template <typename Q> class P> class Secondary>
