@@ -291,13 +291,18 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::main_loop() {
 				//	di = levels[level].partners[next_rand % levels[level].num_partners]->stealing_deque.steal();
 
 					if(di.task != NULL) {
+						performance_counters.idle_time.stop_timer();
+						execute_task(di.task, di.stack_element);
+						delete di.task;
 						break;
 					}
 					else{
+						assert(stealing_deque.is_empty());
 						performance_counters.num_unsuccessful_steal_calls.incr();
 					}
 				}
 				if(di.task == NULL) {
+					assert(stealing_deque.is_empty());
 					if(scheduler_state->current_state >= 2) {
 						performance_counters.idle_time.stop_timer();
 						return;
@@ -305,9 +310,6 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::main_loop() {
 					bo.backoff();
 				}
 				else {
-					performance_counters.idle_time.stop_timer();
-					execute_task(di.task, di.stack_element);
-					delete di.task;
 					break;
 				}
 			}
@@ -343,21 +345,24 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::wait_for_fini
 				//	di = levels[level].partners[next_rand % levels[level].num_partners]->stealing_deque.steal();
 
 					if(di.task != NULL) {
+						execute_task(di.task, di.stack_element);
+						delete di.task;
 						break;
 					}
 					else {
+						assert(stealing_deque.is_empty());
 						performance_counters.num_unsuccessful_steal_calls.incr();
 					}
 				}
 				if(di.task == NULL) {
+					assert(stealing_deque.is_empty());
+
 					if(parent->num_finished_remote + 1 == parent->num_spawned) {
 						return;
 					}
 					bo.backoff();
 				}
 				else {
-					execute_task(di.task, di.stack_element);
-					delete di.task;
 					break;
 				}
 			}
@@ -462,6 +467,7 @@ template <class Scheduler, template <typename T> class StealingDeque>
 void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::finalize_stack_element(StackElement* element, StackElement* parent) {
 	if(parent != NULL) {
 		if(element->num_spawned == 0) {
+			assert(element >= stack && element < (stack + stack_size));
 			// No tasks processed remotely - no need for atomic ops
 			element->parent = NULL;
 			signal_task_completion(parent);

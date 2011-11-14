@@ -24,9 +24,8 @@ public:
 	PrioritySchedulerPerformanceCounters(PrioritySchedulerPerformanceCounters<TaskStoragePerformanceCounters>& other)
 		: num_spawns(other.num_spawns), num_spawns_to_call(other.num_spawns_to_call),
 		  num_calls(other.num_calls), num_finishes(other.num_finishes),
-		  num_steals(other.num_steals), num_steal_calls(other.num_steal_calls),
+		  num_steal_calls(other.num_steal_calls),
 		  num_unsuccessful_steal_calls(other.num_unsuccessful_steal_calls),
-		  num_stealing_deque_pop_cas(other.num_stealing_deque_pop_cas),
 		  total_time(other.total_time), task_time(other.task_time),
 		  idle_time(other.idle_time),
 		  finish_stack_nonblocking_max(other.finish_stack_nonblocking_max),
