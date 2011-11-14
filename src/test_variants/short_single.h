@@ -26,6 +26,7 @@ const size_t graph_bipartitioning_test_n[] = {24};
 const double graph_bipartitioning_test_p[] = {0.5};
 const int graph_bipartitioning_test_types[] = {0};
 
+const bool inarow_test = false;
 }
 
 #endif /* LONG_SINGLE_H_ */

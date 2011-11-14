@@ -56,7 +56,7 @@ namespace pheet {
 			char* newboard = new char[iar->getBoardWidth()*iar->getBoardHeight()];
 			memcpy(newboard,board,iar->getBoardWidth()*iar->getBoardHeight());
 
-			bool found = false;
+	//		bool found = false;
 
 			unsigned int pos = 0;
 			for(unsigned int i=0;i<iar->getBoardHeight();i++)
@@ -65,7 +65,7 @@ namespace pheet {
 				{
 					pos = i;
 					newboard[i*iar->getBoardWidth()+move] = player?Human:Computer;
-					found = true;
+		//			found = true;
 					break;
 				}
 			}

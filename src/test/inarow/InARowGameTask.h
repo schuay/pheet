@@ -201,7 +201,7 @@ namespace pheet {
 
 		bool move(unsigned int slot, Player player)
 		{
-			unsigned int pos;
+			unsigned int pos = boardHeight;
 			for(unsigned int i=0;i<boardHeight;i++)
 			{
 				if(currBoard[i*boardWidth+slot]==0)
@@ -211,6 +211,7 @@ namespace pheet {
 					break;
 				}
 			}
+			assert(pos < boardHeight);
 			bool win=false;
 			eval(currBoard,slot,pos,win);
 			return win;
