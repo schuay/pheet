@@ -244,7 +244,7 @@ inline size_t PrimitivePrimaryTaskStorage<TT, CircularArray>::get_length(Perform
 
 template <typename TT, template <typename S> class CircularArray>
 inline bool PrimitivePrimaryTaskStorage<TT, CircularArray>::is_empty(PerformanceCounters& pc) {
-	clean();
+	clean(pc);
 	return bottom > top;
 }
 
