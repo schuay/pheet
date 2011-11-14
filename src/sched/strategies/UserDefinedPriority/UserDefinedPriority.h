@@ -45,12 +45,14 @@ inline UserDefinedPriority::~UserDefinedPriority() {
 
 }
 
-inline prio_t get_pop_priority(size_t task_id) {
+ inline prio_t UserDefinedPriority::get_pop_priority(size_t task_id) {
 	return pop_priority;
 }
 
-inline prio_t get_steal_priority(size_t task_id) {
+ inline prio_t UserDefinedPriority::get_steal_priority(size_t task_id) {
 	return steal_priority;
+}
+
 }
 
 #endif /* USERDEFINEDPRIORITY_H_ */

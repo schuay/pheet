@@ -8,11 +8,16 @@
 
 #include "sorting/SortingTests.h"
 #include "graph_bipartitioning/GraphBipartitioningTests.h"
+#include "inarow/InARowTests.h"
 
 using namespace pheet;
 
 int main(int argc, char* argv[]) {
 
+  InARowTests iarts;
+  iarts.run_test();
+
+  return 0;
 	SortingTests st;
 	st.run_test();
 

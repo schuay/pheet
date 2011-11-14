@@ -15,6 +15,8 @@
 #include "../sched/MixedMode/Basic/BasicMixedModeScheduler.h"
 
 #include "../sched/strategies/LifoFifo/LifoFifoStrategy.h"
+#include "../sched/strategies/UserDefinedPriority/UserDefinedPriority.h"
+
 
 #include "../em/CPUHierarchy/Oversubscribed/OversubscribedSimpleCPUHierarchy.h"
 
