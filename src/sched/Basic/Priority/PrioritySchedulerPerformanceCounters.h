@@ -76,18 +76,18 @@ inline void PrioritySchedulerPerformanceCounters<TaskStoragePerformanceCounters>
 
 template <class TaskStoragePerformanceCounters>
 inline void PrioritySchedulerPerformanceCounters<TaskStoragePerformanceCounters>::print_values() {
-	num_spawns.print("%d\t");
-	num_calls.print("%d\t");
-	num_spawns_to_call.print("%d\t");
-	num_finishes.print("%d\t");
-	num_steal_calls.print("%d\t");
-	num_unsuccessful_steal_calls.print("%d\t");
+	num_spawns.print("%lu\t");
+	num_calls.print("%lu\t");
+	num_spawns_to_call.print("%lu\t");
+	num_finishes.print("%lu\t");
+	num_steal_calls.print("%lu\t");
+	num_unsuccessful_steal_calls.print("%lu\t");
 	total_time.print("%f\t");
 	task_time.print("%f\t");
 	idle_time.print("%f\t");
 
-	finish_stack_nonblocking_max.print("%d\t");
-	finish_stack_blocking_min.print("%d\t");
+	finish_stack_nonblocking_max.print("%lu\t");
+	finish_stack_blocking_min.print("%lu\t");
 
 	task_storage_performance_counters.print_values();
 }

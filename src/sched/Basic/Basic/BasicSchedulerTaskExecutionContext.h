@@ -9,14 +9,13 @@
 #ifndef BASICSCHEDULERTASKEXECUTIONCONTEXT_H_
 #define BASICSCHEDULERTASKEXECUTIONCONTEXT_H_
 
+#include "BasicSchedulerPerformanceCounters.h"
 #include "../../../settings.h"
 #include "../../common/CPUThreadExecutor.h"
 #include "../../common/FinishRegion.h"
 #include "../../../misc/atomics.h"
 #include "../../../misc/bitops.h"
 #include "../../../misc/type_traits.h"
-#include "../../../primitives/PerformanceCounter/Basic/BasicPerformanceCounter.h"
-#include "../../../primitives/PerformanceCounter/Time/TimePerformanceCounter.h"
 
 #include <vector>
 #include <assert.h>
@@ -26,32 +25,6 @@
 #include <boost/random/mersenne_twister.hpp>
 
 namespace pheet {
-
-struct BasicSchedulerPerformanceCounters {
-	BasicSchedulerPerformanceCounters() {}
-	BasicSchedulerPerformanceCounters(BasicSchedulerPerformanceCounters& other)
-		: num_spawns(other.num_spawns), num_spawns_to_call(other.num_spawns_to_call),
-		  num_calls(other.num_calls), num_finishes(other.num_finishes),
-		  num_steals(other.num_steals), num_steal_calls(other.num_steal_calls),
-		  num_unsuccessful_steal_calls(other.num_unsuccessful_steal_calls),
-		  num_stealing_deque_pop_cas(other.num_stealing_deque_pop_cas),
-		  total_time(other.total_time), task_time(other.task_time),
-		  idle_time(other.idle_time) {}
-
-	BasicPerformanceCounter<scheduler_count_spawns> num_spawns;
-	BasicPerformanceCounter<scheduler_count_spawns_to_call> num_spawns_to_call;
-	BasicPerformanceCounter<scheduler_count_calls> num_calls;
-	BasicPerformanceCounter<scheduler_count_finishes> num_finishes;
-
-	BasicPerformanceCounter<stealing_deque_count_steals> num_steals;
-	BasicPerformanceCounter<stealing_deque_count_steal_calls> num_steal_calls;
-	BasicPerformanceCounter<stealing_deque_count_unsuccessful_steal_calls> num_unsuccessful_steal_calls;
-	BasicPerformanceCounter<stealing_deque_count_pop_cas> num_stealing_deque_pop_cas;
-
-	TimePerformanceCounter<scheduler_measure_total_time> total_time;
-	TimePerformanceCounter<scheduler_measure_task_time> task_time;
-	TimePerformanceCounter<scheduler_measure_idle_time> idle_time;
-};
 
 struct BasicSchedulerTaskExecutionContextStackElement {
 	// Modified by local thread. Incremented when task is spawned, decremented when finished
@@ -291,7 +264,9 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::main_loop() {
 				//	di = levels[level].partners[next_rand % levels[level].num_partners]->stealing_deque.steal();
 
 					if(di.task != NULL) {
+						performance_counters.num_steal_executed_tasks.incr();
 						performance_counters.idle_time.stop_timer();
+
 						execute_task(di.task, di.stack_element);
 						delete di.task;
 						break;
@@ -345,6 +320,8 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::wait_for_fini
 				//	di = levels[level].partners[next_rand % levels[level].num_partners]->stealing_deque.steal();
 
 					if(di.task != NULL) {
+						performance_counters.num_steal_executed_tasks.incr();
+
 						execute_task(di.task, di.stack_element);
 						delete di.task;
 						break;
@@ -374,6 +351,8 @@ template <class Scheduler, template <typename T> class StealingDeque>
 void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::process_queue() {
 	DequeItem di = stealing_deque.pop();
 	while(di.task != NULL) {
+		performance_counters.num_dequeued_tasks.incr();
+
 		// Warning, no distinction between locally spawned tasks and remote tasks
 		// But this makes it easier with the finish construct, etc.
 		// Otherwise we would have to empty our deque on the next finish call
@@ -388,6 +367,8 @@ template <class Scheduler, template <typename T> class StealingDeque>
 bool BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::process_queue_until_finished(StackElement* parent) {
 	DequeItem di = stealing_deque.pop();
 	while(di.task != NULL) {
+		performance_counters.num_dequeued_tasks.incr();
+
 		// Warning, no distinction between locally spawned tasks and remote tasks
 		// But this makes it easier with the finish construct, etc.
 		// Otherwise we would have to empty our deque on the next finish call
@@ -405,6 +386,8 @@ bool BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::process_queue
 template <class Scheduler, template <typename T> class StealingDeque>
 typename BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::StackElement*
 BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::create_non_blocking_finish_region(StackElement* parent) {
+	performance_counters.num_non_blocking_finish_regions.incr();
+
 	// Perform cleanup on finish stack
 	empty_stack();
 
@@ -445,6 +428,7 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::empty_stack()
 
 template <class Scheduler, template <typename T> class StealingDeque>
 void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::signal_task_completion(StackElement* stack_element) {
+	performance_counters.num_completion_signals.incr();
 	StackElement* parent = stack_element->parent;
 
 	if(stack_element >= stack && (stack_element < (stack + stack_size))) {
@@ -544,6 +528,8 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::spawn(TaskPar
 		call<CallTaskType>(static_cast<TaskParams&&>(params) ...);
 	}
 	else {
+		performance_counters.num_actual_spawns.incr();
+
 		CallTaskType* task = new CallTaskType(params ...);
 		assert(current_task_parent != NULL);
 		++(current_task_parent->num_spawned);

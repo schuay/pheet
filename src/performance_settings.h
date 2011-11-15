@@ -17,13 +17,20 @@ bool const scheduler_count_tasks_at_level = true;
 bool const scheduler_count_steal_calls_per_thread = true;
 bool const scheduler_count_unsuccessful_steal_calls_per_thread = true;
 bool const scheduler_count_spawns = true;
+bool const scheduler_count_actual_spawns = true;
 bool const scheduler_count_spawns_to_call = true;
 bool const scheduler_count_calls = true;
 bool const scheduler_count_finishes = true;
+bool const scheduler_count_completion_signals = true;
+bool const scheduler_count_non_blocking_finish_regions = true;
 bool const stealing_deque_count_steals = true;
 bool const stealing_deque_count_steal_calls = true;
 bool const stealing_deque_count_unsuccessful_steal_calls = true;
 bool const stealing_deque_count_pop_cas = true;
+
+bool const stealing_deque_count_dequeued_tasks = true;
+bool const stealing_deque_count_steal_executed_tasks = true;
+
 bool const scheduler_measure_total_time = true;
 bool const scheduler_measure_task_time = true;
 bool const scheduler_measure_sync_time = true;
@@ -54,13 +61,20 @@ bool const scheduler_count_tasks_at_level = false;
 bool const scheduler_count_steal_calls_per_thread = false;
 bool const scheduler_count_unsuccessful_steal_calls_per_thread = false;
 bool const scheduler_count_spawns = false;
+bool const scheduler_count_actual_spawns = false;
 bool const scheduler_count_spawns_to_call = false;
 bool const scheduler_count_calls = false;
 bool const scheduler_count_finishes = false;
+bool const scheduler_count_completion_signals = false;
+bool const scheduler_count_non_blocking_finish_regions = false;
 bool const stealing_deque_count_steals = false;
 bool const stealing_deque_count_steal_calls = false;
 bool const stealing_deque_count_unsuccessful_steal_calls = false;
 bool const stealing_deque_count_pop_cas = false;
+
+bool const stealing_deque_count_dequeued_tasks = false;
+bool const stealing_deque_count_steal_executed_tasks = false;
+
 bool const scheduler_measure_total_time = false;
 bool const scheduler_measure_task_time = false;
 bool const scheduler_measure_sync_time = false;
