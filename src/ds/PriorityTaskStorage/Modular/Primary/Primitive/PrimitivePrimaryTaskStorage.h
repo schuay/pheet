@@ -255,7 +255,7 @@ inline bool PrimitivePrimaryTaskStorage<TT, CircularArray>::is_full(PerformanceC
 
 template <typename TT, template <typename S> class CircularArray>
 void PrimitivePrimaryTaskStorage<TT, CircularArray>::clean(PerformanceCounters& pc) {
-	while(is_taken(top, pc)) {
+	while(top < bottom && is_taken(top, pc)) {
 		++top;
 	}
 }
