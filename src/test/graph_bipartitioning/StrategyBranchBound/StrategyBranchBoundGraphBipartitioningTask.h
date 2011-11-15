@@ -88,7 +88,7 @@ void StrategyBranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex, Sc
 		size_t sub_lb = lb_calc(graph, size, k, new_set, set1_size + 1, set2, set2_size);
 		if(sub_lb < *ub) {
 			size_t* new_set2 = clone_set(set2, set2_size, size - k);
-			tec.template spawn_prio<BBTask>(strategy(new_set, set1_size + 1, new_set2, set2_size, sub_lb),
+			tec.template spawn_prio<BBTask>(strategy(graph, size, k, new_set, set1_size + 1, new_set2, set2_size, ub, sub_lb),
 					graph, size, k, best, new_set, set1_size + 1, new_set2, set2_size, ub, sub_lb);
 		}
 		else {
@@ -108,7 +108,7 @@ void StrategyBranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex, Sc
 		if(sub_lb < *ub) {
 			size_t* new_set1 = clone_set(set1, set1_size, k);
 			tec.template spawn_prio<BBTask>(
-					strategy(new_set1, set1_size, new_set, set2_size + 1, sub_lb),
+					strategy(graph, size, k, new_set1, set1_size, new_set, set2_size + 1, ub, sub_lb),
 					graph, size, k, best, new_set1, set1_size, new_set, set2_size + 1, ub, sub_lb);
 		}
 		else {

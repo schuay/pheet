@@ -36,6 +36,7 @@ public:
 private:
 //	void init();
 	void finalize();
+	void minimize();
 
 	typedef OrderedReducerView<Monoid> View;
 	typedef ExponentialBackoff<> Backoff;
@@ -54,6 +55,9 @@ OrderedReducer<Monoid>::OrderedReducer(ConsParams&& ... params)
 
 template <class Monoid>
 OrderedReducer<Monoid>::OrderedReducer(OrderedReducer& other) {
+	// Before we create a new view, we should minimize. Maybe this provides us with a view to reuse
+	other.minimize();
+
 	my_view = other.my_view;
 	parent_view = my_view->create_parent_view();
 	other.my_view = parent_view;
@@ -80,6 +84,7 @@ void OrderedReducer<Monoid>::init() {
 
 template <class Monoid>
 void OrderedReducer<Monoid>::finalize() {
+	my_view = my_view->fold();
 	my_view->reduce();
 //	my_view->notify_parent();
 	if(parent_view == NULL) {
@@ -92,6 +97,15 @@ void OrderedReducer<Monoid>::finalize() {
 		// Notify parent view
 		parent_view->set_predecessor(my_view);
 	}
+}
+
+/*
+ * Do folding and reduce if possible. May free some memory that we can reuse
+ */
+template <class Monoid>
+void OrderedReducer<Monoid>::minimize() {
+	my_view = my_view->fold();
+	my_view->reduce();
 }
 
 template <class Monoid>

@@ -70,7 +70,7 @@ OrderedReducerView<Monoid>::~OrderedReducerView() {
 
 template <class Monoid>
 OrderedReducerView<Monoid>* OrderedReducerView<Monoid>::fold() {
-	OrderedReducerView<Monoid>* ret = this;
+/*	OrderedReducerView<Monoid>* ret = this;
 	while((ret->state & 0x4) == 0 && ret->pred != NULL) {
 		OrderedReducerView<Monoid>* tmp = ret->pred;
 		while(tmp->reuse != NULL) {
@@ -82,7 +82,57 @@ OrderedReducerView<Monoid>* OrderedReducerView<Monoid>::fold() {
 	if(ret->pred != NULL) {
 		ret->pred->reduce();
 	}
-	return ret;
+	return ret;*/
+
+	// refactored as the previous implementation seemed to generate too long lists of reuse views
+/*	if((state & 0x4) == 0 && pred != NULL) {
+		OrderedReducerView<Monoid>* tmp1 = this;
+		OrderedReducerView<Monoid>* tmp2 = pred;
+		while((tmp2->state & 0x4) == 0 && tmp2->pred != NULL){
+			if(tmp1->reuse != NULL) {
+				delete tmp1->reuse;
+			}
+			tmp1->reuse = tmp2;
+
+			tmp1 = tmp2;
+			tmp2 = tmp2->pred;
+		}
+
+		if(tmp1->reuse != NULL) {
+			delete tmp1->reuse;
+		}
+		tmp1->reuse = tmp2->reuse;
+		tmp2->reuse = this;
+		return tmp2;
+	}
+	else if(pred != NULL) {
+		pred->reduce();
+	}
+	return this;*/
+	// refactored as the previous implementation seemed to generate too long lists of reuse views
+	if((state & 0x4) == 0 && pred != NULL) {
+		OrderedReducerView<Monoid>* tmp = pred;
+
+		// Delete intermediate foldable elements
+		// Do not reuse them. Reuse is primarily for the sequential case.
+		// If we have to fold more than once, we are not sequential any more
+		while((tmp->state & 0x4) == 0 && tmp->pred != NULL){
+			OrderedReducerView<Monoid>* tmp2 = tmp->pred;
+			delete tmp;
+			tmp = tmp2;
+		}
+
+		if(reuse != NULL) {
+			delete reuse;
+		}
+		reuse = tmp->reuse;
+		tmp->reuse = this;
+		return tmp;
+	}
+	else if(pred != NULL) {
+		pred->reduce();
+	}
+	return this;
 }
 
 template <class Monoid>
