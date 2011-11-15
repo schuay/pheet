@@ -25,6 +25,7 @@ public:
 		  num_spawns_to_call(other.num_spawns_to_call),
 		  num_calls(other.num_calls), num_finishes(other.num_finishes),
 		  num_completion_signals(other.num_completion_signals),
+		  num_chained_completion_signals(other.num_chained_completion_signals),
 		  num_non_blocking_finish_regions(other.num_non_blocking_finish_regions),
 		  num_steals(other.num_steals), num_steal_calls(other.num_steal_calls),
 		  num_unsuccessful_steal_calls(other.num_unsuccessful_steal_calls),
@@ -44,6 +45,7 @@ public:
 	BasicPerformanceCounter<scheduler_count_calls> num_calls;
 	BasicPerformanceCounter<scheduler_count_finishes> num_finishes;
 	BasicPerformanceCounter<scheduler_count_completion_signals> num_completion_signals;
+	BasicPerformanceCounter<scheduler_count_chained_completion_signals> num_chained_completion_signals;
 	BasicPerformanceCounter<scheduler_count_non_blocking_finish_regions> num_non_blocking_finish_regions;
 
 	BasicPerformanceCounter<stealing_deque_count_steals> num_steals;
@@ -66,6 +68,7 @@ inline void BasicSchedulerPerformanceCounters::print_headers() {
 	BasicPerformanceCounter<scheduler_count_calls>::print_header("spawns->call\t");
 	BasicPerformanceCounter<scheduler_count_finishes>::print_header("finishes\t");
 	BasicPerformanceCounter<scheduler_count_completion_signals>::print_header("num_completion_signals\t");
+	BasicPerformanceCounter<scheduler_count_chained_completion_signals>::print_header("num_chained_completion_signals\t");
 	BasicPerformanceCounter<scheduler_count_non_blocking_finish_regions>::print_header("num_non_blocking_finish_regions\t");
 
 	BasicPerformanceCounter<stealing_deque_count_steals>::print_header("stolen\t");
@@ -88,6 +91,7 @@ inline void BasicSchedulerPerformanceCounters::print_values() {
 	num_spawns_to_call.print("%lu\t");
 	num_finishes.print("%lu\t");
 	num_completion_signals.print("%lu\t");
+	num_chained_completion_signals.print("%lu\t");
 	num_non_blocking_finish_regions.print("%lu\t");
 	num_steals.print("%lu\t");
 	num_steal_calls.print("%lu\t");
