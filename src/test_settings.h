@@ -9,7 +9,7 @@
 #ifndef TEST_SETTINGS_H_
 #define TEST_SETTINGS_H_
 
-#include "test_variants/short_single.h"
+#include "test_variants/debug.h"
 
 namespace pheet {
 
