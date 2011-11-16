@@ -100,6 +100,9 @@ struct BasicMixedModeSchedulerTaskExecutionContextFinishStackElement {
 	BasicMixedModeSchedulerTaskExecutionContextFinishStackElement* parent;
 
 	BasicMixedModeSchedulerTaskExecutionContextFinishStackElement* prev_el;
+
+	// Counter to update atomically when finalizing this element (ABA problem)
+	size_t version;
 };
 
 /*
@@ -279,7 +282,7 @@ private:
 	FinishStackElement* create_non_blocking_finish_region(FinishStackElement* parent);
 	void empty_finish_stack();
 	void signal_task_completion(FinishStackElement* finish_stack_element);
-	void finalize_finish_stack_element(FinishStackElement* element, FinishStackElement* parent);
+	void finalize_finish_stack_element(FinishStackElement* element, FinishStackElement* parent, size_t version);
 	void visit_partners();
 	void visit_partners_until_finished(FinishStackElement* parent);
 	void visit_partners_until_synced(TeamAnnouncement* team);
@@ -312,6 +315,7 @@ private:
 	FinishStackElement* finish_stack;
 	size_t finish_stack_filled_left;
 	size_t finish_stack_filled_right;
+	size_t finish_stack_init_left;
 
 	// machine hierarchy
 	LevelDescription* levels;
@@ -367,7 +371,7 @@ size_t const BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDequ
 template <class Scheduler, template <typename T> class StealingDeque>
 BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::BasicMixedModeSchedulerTaskExecutionContext(std::vector<LevelDescription*> const* levels, std::vector<typename CPUHierarchy::CPUDescriptor*> const* cpus, typename Scheduler::State* scheduler_state, BasicMixedModeSchedulerPerformanceCounters& perf_count)
 : performance_counters(perf_count),
-  finish_stack_filled_left(0), finish_stack_filled_right(finish_stack_size), num_levels(levels->size()), current_team_task(NULL), current_team(NULL),
+  finish_stack_filled_left(0), finish_stack_filled_right(finish_stack_size), finish_stack_init_left(0), num_levels(levels->size()), current_team_task(NULL), current_team(NULL),
   /*team_announcement_index(0),*/ waiting_for_finish(NULL), team_info(NULL), max_team_level(num_levels), lowest_level_deque(NULL),
   highest_level_deque(NULL)/*, current_deque(NULL)*/, thread_executor(cpus, this), scheduler_state(scheduler_state)
   {
@@ -1150,6 +1154,11 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::create_no
 	finish_stack[finish_stack_filled_left].num_spawned = 1;
 	finish_stack[finish_stack_filled_left].parent = parent;
 
+	if(finish_stack_filled_left >= finish_stack_init_left/* && stack_filled_left < stack_init_right*/) {
+		finish_stack[finish_stack_filled_left].version = 0;
+		++finish_stack_init_left;
+	}
+
 	++finish_stack_filled_left;
 
 	return &(finish_stack[finish_stack_filled_left - 1]);
@@ -1182,6 +1191,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::empt
 template <class Scheduler, template <typename T> class StealingDeque>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::signal_task_completion(FinishStackElement* finish_stack_element) {
 	FinishStackElement* parent = finish_stack_element->parent;
+	size_t version = finish_stack_element->version;
 
 	if(finish_stack_element >= finish_stack && (finish_stack_element < (finish_stack + finish_stack_size))) {
 		assert(finish_stack_element->num_spawned > 0);
@@ -1196,20 +1206,21 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::sign
 		SIZET_ATOMIC_ADD(&(finish_stack_element->num_finished_remote), 1);
 	}
 	if(finish_stack_element->num_spawned == finish_stack_element->num_finished_remote) {
-		finalize_finish_stack_element(finish_stack_element, parent);
+		finalize_finish_stack_element(finish_stack_element, parent, version);
 	}
 }
 
 template <class Scheduler, template <typename T> class StealingDeque>
-void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::finalize_finish_stack_element(FinishStackElement* element, FinishStackElement* parent) {
+void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::finalize_finish_stack_element(FinishStackElement* element, FinishStackElement* parent, size_t version) {
 	if(parent != NULL) {
 		if(element->num_spawned == 0) {
 			// No tasks processed remotely - no need for atomic ops
-			element->parent = NULL;
+		//	element->parent = NULL;
+			++(element->version);
 			signal_task_completion(parent);
 		}
 		else {
-			if(PTR_CAS(&(element->parent), parent, NULL)) {
+			if(PTR_CAS(&(element->version), version, version + 1)) {
 				signal_task_completion(parent);
 			}
 		}

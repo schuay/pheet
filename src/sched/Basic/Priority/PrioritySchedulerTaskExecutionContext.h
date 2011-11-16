@@ -442,6 +442,8 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrat
 	StackElement* parent = stack_element->parent;
 	size_t version = stack_element->version;
 
+	assert(stack_element->num_spawned > stack_element->num_finished_remote);
+
 	if(stack_element >= stack && (stack_element < (stack + stack_size))) {
 		--(stack_element->num_spawned);
 

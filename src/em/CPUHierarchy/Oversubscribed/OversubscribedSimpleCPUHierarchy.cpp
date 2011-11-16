@@ -59,7 +59,7 @@ std::vector<OversubscribedSimpleCPUHierarchy*> const* OversubscribedSimpleCPUHie
 }
 
 std::vector<OversubscribedSimpleCPUHierarchy::CPUDescriptor*> const* OversubscribedSimpleCPUHierarchy::get_cpus() {
-	if(np >= system_max_cpus) {
+	if(np <= system_max_cpus) {
 		if(simple_hierarchy == NULL) {
 			simple_hierarchy = new SimpleCPUHierarchy(np);
 			allocated_simple_hierarchy = true;
