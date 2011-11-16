@@ -2118,10 +2118,10 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::steal_tas
 	StealingDeque<DequeItem>** partner_queue;
 	StealingDeque<DequeItem>** partner_min;
 
-	if(partner->num_levels < num_levels) {
-		min_level += num_levels - partner->num_levels;
+	if(partner->num_levels > num_levels) {
+		min_level += partner->num_levels - num_levels;
 
-		assert(min_level < num_levels);
+		assert(min_level < partner->num_levels);
 	}
 	partner_min = partner->stealing_deques + min_level;
 
@@ -2175,10 +2175,10 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::steal_for
 	StealingDeque<DequeItem>** partner_queue;
 	StealingDeque<DequeItem>** partner_min;
 
-	if(partner->num_levels < num_levels) {
-		min_level += num_levels - partner->num_levels;
+	if(partner->num_levels > num_levels) {
+		min_level += partner->num_levels - num_levels;
 
-		assert(min_level < num_levels);
+		assert(min_level < partner->num_levels);
 	}
 	partner_min = partner->stealing_deques + min_level;
 
