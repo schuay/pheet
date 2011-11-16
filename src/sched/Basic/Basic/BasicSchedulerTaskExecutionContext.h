@@ -35,6 +35,9 @@ struct BasicSchedulerTaskExecutionContextStackElement {
 
 	// Pointer to num_finished_remote of another thread (the one we stole tasks from)
 	BasicSchedulerTaskExecutionContextStackElement* parent;
+
+	// Counter to update atomically when finalizing this element (ABA problem)
+	size_t version;
 };
 
 template <class TaskExecutionContext>
@@ -121,7 +124,7 @@ private:
 	void empty_stack();
 	StackElement* create_non_blocking_finish_region(StackElement* parent);
 	void signal_task_completion(StackElement* stack_element);
-	void finalize_stack_element(StackElement* element, StackElement* parent);
+	void finalize_stack_element(StackElement* element, StackElement* parent, size_t version);
 
 	void start_finish_region();
 	void end_finish_region();
@@ -133,6 +136,7 @@ private:
 	StackElement* current_task_parent;
 	size_t stack_filled_left;
 	size_t stack_filled_right;
+	size_t stack_init_left;
 
 	LevelDescription* levels;
 	procs_t num_levels;
@@ -398,6 +402,11 @@ BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::create_non_blockin
 	stack[stack_filled_left].num_spawned = 1;
 	stack[stack_filled_left].parent = parent;
 
+	if(stack_filled_left >= stack_init_left/* && stack_filled_left < stack_init_right*/) {
+		stack[stack_filled_left].version = 0;
+		++stack_init_left;
+	}
+
 	++stack_filled_left;
 
 	return &(stack[stack_filled_left - 1]);
@@ -430,6 +439,7 @@ template <class Scheduler, template <typename T> class StealingDeque>
 void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::signal_task_completion(StackElement* stack_element) {
 	performance_counters.num_completion_signals.incr();
 	StackElement* parent = stack_element->parent;
+	size_t version = stack_element->version;
 
 	if(stack_element >= stack && (stack_element < (stack + stack_size))) {
 		--(stack_element->num_spawned);
@@ -443,22 +453,23 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::signal_task_c
 		SIZET_ATOMIC_ADD(&(stack_element->num_finished_remote), 1);
 	}
 	if(stack_element->num_spawned == stack_element->num_finished_remote) {
-		finalize_stack_element(stack_element, parent);
+		finalize_stack_element(stack_element, parent, version);
 	}
 }
 
 template <class Scheduler, template <typename T> class StealingDeque>
-void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::finalize_stack_element(StackElement* element, StackElement* parent) {
+void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::finalize_stack_element(StackElement* element, StackElement* parent, size_t version) {
 	if(parent != NULL) {
 		if(element->num_spawned == 0) {
 			assert(element >= stack && element < (stack + stack_size));
 			// No tasks processed remotely - no need for atomic ops
-			element->parent = NULL;
+		//	element->parent = NULL;
+			++(element->version);
 			performance_counters.num_chained_completion_signals.incr();
 			signal_task_completion(parent);
 		}
 		else {
-			if(PTR_CAS(&(element->parent), parent, NULL)) {
+			if(PTR_CAS(&(element->version), version, version + 1)) {
 				performance_counters.num_chained_completion_signals.incr();
 				performance_counters.num_remote_chained_completion_signals.incr();
 				signal_task_completion(parent);

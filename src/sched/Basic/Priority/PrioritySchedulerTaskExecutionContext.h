@@ -35,6 +35,9 @@ struct PrioritySchedulerTaskExecutionContextStackElement {
 
 	// Pointer to num_finished_remote of another thread (the one we stole tasks from)
 	PrioritySchedulerTaskExecutionContextStackElement* parent;
+
+	// Counter to update atomically when finalizing this element (ABA problem)
+	size_t version;
 };
 
 template <class TaskExecutionContext>
@@ -124,7 +127,7 @@ private:
 	void empty_stack();
 	StackElement* create_non_blocking_finish_region(StackElement* parent);
 	void signal_task_completion(StackElement* stack_element);
-	void finalize_stack_element(StackElement* element, StackElement* parent);
+	void finalize_stack_element(StackElement* element, StackElement* parent, size_t version);
 
 	void start_finish_region();
 	void end_finish_region();
@@ -136,6 +139,8 @@ private:
 	StackElement* current_task_parent;
 	size_t stack_filled_left;
 	size_t stack_filled_right;
+	size_t stack_init_left;
+//	size_t stack_init_right;
 	// The use of the freed_stack_elements vector should lead to less usage of the stack by non-blocking tasks
 	std::vector<StackElement*> freed_stack_elements;
 
@@ -160,7 +165,7 @@ size_t const PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, Defa
 
 template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy>
 PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::PrioritySchedulerTaskExecutionContext(std::vector<LevelDescription*> const* levels, std::vector<typename CPUHierarchy::CPUDescriptor*> const* cpus, typename Scheduler::State* scheduler_state, PerformanceCounters& perf_count)
-: performance_counters(perf_count), stack_filled_left(0), stack_filled_right(stack_size), num_levels(levels->size()), thread_executor(cpus, this), scheduler_state(scheduler_state), max_queue_length(find_last_bit_set((*levels)[0]->total_size + 8) << 4), task_storage(max_queue_length) {
+: performance_counters(perf_count), stack_filled_left(0), stack_filled_right(stack_size), stack_init_left(0)/*, stack_init_right(stack_size)*/, num_levels(levels->size()), thread_executor(cpus, this), scheduler_state(scheduler_state), max_queue_length(find_last_bit_set((*levels)[0]->total_size + 8) << 4), task_storage(max_queue_length) {
 	performance_counters.total_time.start_timer();
 
 	stack = new StackElement[stack_size];
@@ -385,6 +390,11 @@ PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>:
 		stack[stack_filled_left].num_spawned = 1;
 		stack[stack_filled_left].parent = parent;
 
+		if(stack_filled_left >= stack_init_left/* && stack_filled_left < stack_init_right*/) {
+			stack[stack_filled_left].version = 0;
+			++stack_init_left;
+		}
+
 		++stack_filled_left;
 		performance_counters.finish_stack_nonblocking_max.add_value(stack_filled_left);
 
@@ -430,6 +440,7 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrat
 template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy>
 void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::signal_task_completion(StackElement* stack_element) {
 	StackElement* parent = stack_element->parent;
+	size_t version = stack_element->version;
 
 	if(stack_element >= stack && (stack_element < (stack + stack_size))) {
 		--(stack_element->num_spawned);
@@ -443,21 +454,23 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrat
 		SIZET_ATOMIC_ADD(&(stack_element->num_finished_remote), 1);
 	}
 	if(stack_element->num_spawned == stack_element->num_finished_remote) {
-		finalize_stack_element(stack_element, parent);
+		finalize_stack_element(stack_element, parent, version);
 	}
 }
 
 template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy>
-void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::finalize_stack_element(StackElement* element, StackElement* parent) {
+void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>::finalize_stack_element(StackElement* element, StackElement* parent, size_t version) {
 	if(parent != NULL) {
 		if(element->num_spawned == 0) {
+			assert(element->num_finished_remote == 0);
 			// No tasks processed remotely - no need for atomic ops
-			element->parent = NULL;
+		//	element->parent = NULL;
+			++(element->version);
 			freed_stack_elements.push_back(element);
 			signal_task_completion(parent);
 		}
 		else {
-			if(PTR_CAS(&(element->parent), parent, NULL)) {
+			if(PTR_CAS(&(element->version), version, version + 1)) {
 				signal_task_completion(parent);
 			}
 		}
@@ -485,6 +498,13 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrat
 	// We add 1 to make sure finishes are not propagated to the parent (as we wait manually and then execute a continuation)
 	stack[stack_filled_right].num_spawned = 1;
 	stack[stack_filled_right].parent = current_task_parent;
+
+	// version not needed for finish, as finish blocks anyway
+/*
+	if(stack_filled_right >= stack_init_left && stack_filled_right < stack_init_right) {
+		stack[stack_filled_left].version = 0;
+		--stack_init_right;
+	}*/
 
 	current_task_parent = stack + stack_filled_right;
 	performance_counters.task_time.start_timer();
