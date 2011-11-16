@@ -454,10 +454,13 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::finalize_stac
 			assert(element >= stack && element < (stack + stack_size));
 			// No tasks processed remotely - no need for atomic ops
 			element->parent = NULL;
+			performance_counters.num_chained_completion_signals.incr();
 			signal_task_completion(parent);
 		}
 		else {
 			if(PTR_CAS(&(element->parent), parent, NULL)) {
+				performance_counters.num_chained_completion_signals.incr();
+				performance_counters.num_remote_chained_completion_signals.incr();
 				signal_task_completion(parent);
 			}
 		}
