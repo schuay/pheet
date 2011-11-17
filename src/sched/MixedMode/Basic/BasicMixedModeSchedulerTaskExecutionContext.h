@@ -472,6 +472,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::init
 	team_task_reuse[num_levels - 1]->next = NULL;
 	team_task_reuse[num_levels - 1]->executed_countdown = 0;
 	team_announcement_reuse[num_levels - 1]->level = num_levels - 1;
+	team_announcement_reuse[num_levels - 1]->coordinator = this;
 
 	// Initialize team_info structure
 	default_team_info = new TeamInfo();
