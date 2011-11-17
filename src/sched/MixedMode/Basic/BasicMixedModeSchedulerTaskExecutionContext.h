@@ -1593,7 +1593,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::foll
 			current_team = current_team->next_team;
 			if(current_team->level >= num_levels ||
 					(current_team->coordinator->levels[0].local_id - current_team->coordinator->levels[current_team->level].local_id)
-					== (levels[0].local_id - levels[current_team->level].local_id)) {
+					!= (levels[0].local_id - levels[current_team->level].local_id)) {
 				current_team = NULL;
 				performance_counters.queue_processing_time.stop_timer();
 				break;
