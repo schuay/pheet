@@ -1474,6 +1474,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::join
 		}
 		assert(smaller != larger);
 		procs_t diff = larger->levels[team->level].local_id - smaller->levels[team->level].local_id;
+		assert(diff > 0);
 		procs_t lvl = team->level + 1;
 		while(smaller->levels[lvl].local_id + diff == larger->levels[lvl].local_id) {
 			++lvl;
