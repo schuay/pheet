@@ -345,9 +345,6 @@ private:
 	TeamInfo* default_team_info;
 	TeamInfo* solo_team_info;
 
-	// Maximum level at which we stay in the team (for current coordinator)
-	procs_t max_team_level;
-
 	StealingDeque<DequeItem>** stealing_deques;
 	StealingDeque<DequeItem>** lowest_level_deque;
 	StealingDeque<DequeItem>** highest_level_deque;
@@ -372,7 +369,7 @@ template <class Scheduler, template <typename T> class StealingDeque>
 BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::BasicMixedModeSchedulerTaskExecutionContext(std::vector<LevelDescription*> const* levels, std::vector<typename CPUHierarchy::CPUDescriptor*> const* cpus, typename Scheduler::State* scheduler_state, BasicMixedModeSchedulerPerformanceCounters& perf_count)
 : performance_counters(perf_count),
   finish_stack_filled_left(0), finish_stack_filled_right(finish_stack_size), finish_stack_init_left(0), num_levels(levels->size()), current_team_task(NULL), current_team(NULL),
-  /*team_announcement_index(0),*/ waiting_for_finish(NULL), team_info(NULL), max_team_level(num_levels), lowest_level_deque(NULL),
+  /*team_announcement_index(0),*/ waiting_for_finish(NULL), team_info(NULL), lowest_level_deque(NULL),
   highest_level_deque(NULL)/*, current_deque(NULL)*/, thread_executor(cpus, this), scheduler_state(scheduler_state)
   {
 	performance_counters.total_time.start_timer();
@@ -1459,7 +1456,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::join
 	assert(team->level == 0 || team->coordinator->levels[team->level - 1].partners == levels[team->level - 1].partners);
 
 	// Calculate the team_level at which we have to drop out
-	{
+/*	{
 		assert(levels[team->level].local_id != team->coordinator->levels[team->level].local_id);
 
 		TaskExecutionContext* smaller;
@@ -1481,9 +1478,9 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::join
 			assert(lvl < smaller->num_levels && lvl < larger->num_levels);
 		}
 		max_team_level = lvl - 1;
-	}
+	}*/
 
-	assert(current_team->level <= max_team_level);
+//	assert(current_team->level <= max_team_level);
 
 	prepare_team_info(team);
 
@@ -1593,7 +1590,9 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::foll
 
 			// Update team information
 			current_team = current_team->next_team;
-			if(current_team->level > max_team_level) {
+			if(current_team->level >= num_levels ||
+					(current_team->coordinator->levels[0].local_id - current_team->coordinator->levels[current_team->level].local_id)
+					== (levels[0].local_id - levels[current_team->level].local_id)) {
 				current_team = NULL;
 				performance_counters.queue_processing_time.stop_timer();
 				break;
