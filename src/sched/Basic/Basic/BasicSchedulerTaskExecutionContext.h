@@ -408,6 +408,7 @@ BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::create_non_blockin
 	}
 
 	++stack_filled_left;
+	performance_counters.finish_stack_nonblocking_max.add_value(stack_filled_left);
 
 	return &(stack[stack_filled_left - 1]);
 }
@@ -492,6 +493,7 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::start_finish_
 
 	assert(stack_filled_left < stack_filled_right);
 	--stack_filled_right;
+	performance_counters.finish_stack_blocking_min.add_value(stack_filled_right);
 
 	stack[stack_filled_right].num_finished_remote = 0;
 	// We add 1 to make sure finishes are not propagated to the parent (as we wait manually and then execute a continuation)

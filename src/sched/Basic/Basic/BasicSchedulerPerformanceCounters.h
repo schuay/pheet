@@ -34,7 +34,9 @@ public:
 		  num_dequeued_tasks(other.num_dequeued_tasks),
 		  num_steal_executed_tasks(other.num_steal_executed_tasks),
 		  total_time(other.total_time), task_time(other.task_time),
-		  idle_time(other.idle_time) {}
+		  idle_time(other.idle_time),
+		  finish_stack_nonblocking_max(other.finish_stack_nonblocking_max),
+		  finish_stack_blocking_min(other.finish_stack_blocking_min){}
 
 	void print_headers();
 	void print_values();
@@ -61,6 +63,9 @@ public:
 	TimePerformanceCounter<scheduler_measure_total_time> total_time;
 	TimePerformanceCounter<scheduler_measure_task_time> task_time;
 	TimePerformanceCounter<scheduler_measure_idle_time> idle_time;
+
+	MaxPerformanceCounter<size_t, scheduler_measure_finish_stack_nonblocking_max> finish_stack_nonblocking_max;
+	MinPerformanceCounter<size_t, scheduler_measure_finish_stack_blocking_min> finish_stack_blocking_min;
 };
 
 inline void BasicSchedulerPerformanceCounters::print_headers() {
@@ -85,6 +90,9 @@ inline void BasicSchedulerPerformanceCounters::print_headers() {
 	TimePerformanceCounter<scheduler_measure_total_time>::print_header("scheduler_total_time\t");
 	TimePerformanceCounter<scheduler_measure_task_time>::print_header("total_task_time\t");
 	TimePerformanceCounter<scheduler_measure_idle_time>::print_header("total_idle_time\t");
+
+	MaxPerformanceCounter<size_t, scheduler_measure_finish_stack_nonblocking_max>::print_header("finish_stack_nonblocking_max\t");
+	MinPerformanceCounter<size_t, scheduler_measure_finish_stack_blocking_min>::print_header("finish_stack_blocking_min\t");
 }
 
 inline void BasicSchedulerPerformanceCounters::print_values() {
@@ -106,6 +114,9 @@ inline void BasicSchedulerPerformanceCounters::print_values() {
 	total_time.print("%f\t");
 	task_time.print("%f\t");
 	idle_time.print("%f\t");
+
+	finish_stack_nonblocking_max.print("%lu\t");
+	finish_stack_blocking_min.print("%lu\t");
 }
 
 }
