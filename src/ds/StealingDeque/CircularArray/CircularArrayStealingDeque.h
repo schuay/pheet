@@ -87,6 +87,7 @@ CircularArrayStealingDeque<TT, CircularArray>::~CircularArrayStealingDeque() {
 
 template <typename TT, template <typename S> class CircularArray>
 void CircularArrayStealingDeque<TT, CircularArray>::push(T item) {
+	assert(bottom >= (top & top_mask));
 	if((bottom - (top & top_mask)) >= (data.get_capacity()))
 	{
 		data.grow(bottom, top & top_mask);
@@ -142,6 +143,10 @@ TT CircularArrayStealingDeque<TT, CircularArray>::pop() {
 			// Some other process was faster - the queue is now empty
 			bottom++;
 		}
+	}
+	else {
+		assert(bottom == masked_top - 1);
+		bottom = masked_top;
 	}
 	return null_element;
 }
