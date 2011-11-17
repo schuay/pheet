@@ -2149,7 +2149,7 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::steal_tas
 				// try steal
 				DequeItem ret = partner_queue->steal_push(*my_queue);
 				if(ret.task != NULL) {
-					assert(highest_level_deque == NULL || highest_level_deque < my_queue);
+					assert(highest_level_deque == NULL || highest_level_deque < stealing_deques + my_level);
 				//	current_deque = my_queue;
 					highest_level_deque = stealing_deques + my_level;
 					if(lowest_level_deque == NULL) {
@@ -2266,7 +2266,7 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::steal_for
 				// try steal
 				DequeItem ret = partner_queue->steal_push(*my_queue);
 				if(ret.task != NULL) {
-					assert(highest_level_deque == NULL || highest_level_deque < my_queue);
+					assert(highest_level_deque == NULL || highest_level_deque < stealing_deques + my_level);
 				//	current_deque = my_queue;
 					highest_level_deque = stealing_deques + my_level;
 					if(lowest_level_deque == NULL) {
