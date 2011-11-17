@@ -145,7 +145,9 @@ private:
 
 	typename Scheduler::State* scheduler_state;
 
+	size_t preferred_queue_length;
 	size_t max_queue_length;
+	bool call_mode;
 	StealingDeque<DequeItem> stealing_deque;
 
 	boost::mt19937 rng;
@@ -164,7 +166,7 @@ thread_local BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>* Basic
 
 template <class Scheduler, template <typename T> class StealingDeque>
 BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::BasicSchedulerTaskExecutionContext(std::vector<LevelDescription*> const* levels, std::vector<typename CPUHierarchy::CPUDescriptor*> const* cpus, typename Scheduler::State* scheduler_state, BasicSchedulerPerformanceCounters& perf_count)
-: performance_counters(perf_count), stack_filled_left(0), stack_filled_right(stack_size), num_levels(levels->size()), thread_executor(cpus, this), scheduler_state(scheduler_state), max_queue_length(find_last_bit_set((*levels)[0]->total_size - 1) << 4), stealing_deque(max_queue_length, performance_counters.num_steals, performance_counters.num_stealing_deque_pop_cas) {
+: performance_counters(perf_count), stack_filled_left(0), stack_filled_right(stack_size), num_levels(levels->size()), thread_executor(cpus, this), scheduler_state(scheduler_state), preferred_queue_length(find_last_bit_set((*levels)[0]->total_size - 1) << 4), max_queue_length(preferred_queue_length << 1), call_mode(false), stealing_deque(max_queue_length, performance_counters.num_steals, performance_counters.num_stealing_deque_pop_cas) {
 	performance_counters.total_time.start_timer();
 
 	stack = new StackElement[stack_size];
@@ -542,11 +544,14 @@ template<class CallTaskType, typename ... TaskParams>
 void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::spawn(TaskParams&& ... params) {
 	performance_counters.num_spawns.incr();
 
-	if(stealing_deque.get_length() >= max_queue_length) {
+	size_t limit = call_mode?preferred_queue_length:max_queue_length;
+	if(stealing_deque.get_length() >= limit) {
+		call_mode = true;
 		performance_counters.num_spawns_to_call.incr();
 		call<CallTaskType>(static_cast<TaskParams&&>(params) ...);
 	}
 	else {
+		call_mode = false;
 		performance_counters.num_actual_spawns.incr();
 
 		CallTaskType* task = new CallTaskType(params ...);
