@@ -70,7 +70,7 @@ bool const scheduler_count_finishes = false;
 bool const scheduler_count_completion_signals = false;
 bool const scheduler_count_chained_completion_signals = false;
 bool const scheduler_count_remote_chained_completion_signals = false;
-bool const scheduler_count_non_blocking_finish_regions = false;
+bool const scheduler_count_non_blocking_finish_regions = true;
 bool const stealing_deque_count_steals = false;
 bool const stealing_deque_count_steal_calls = false;
 bool const stealing_deque_count_unsuccessful_steal_calls = false;
@@ -100,8 +100,8 @@ bool const task_storage_count_size_steal = false;
 bool const task_storage_measure_pop_time = false;
 bool const task_storage_measure_steal_time = false;
 
-bool const scheduler_measure_finish_stack_nonblocking_max = false;
-bool const scheduler_measure_finish_stack_blocking_min = false;
+bool const scheduler_measure_finish_stack_nonblocking_max = true;
+bool const scheduler_measure_finish_stack_blocking_min = true;
 
 #endif
 

@@ -178,6 +178,9 @@ BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::BasicSchedulerTask
 		this->levels[i].total_size = (*levels)[i]->total_size;
 	}
 
+	performance_counters.finish_stack_blocking_min.add_value(stack_size);
+	performance_counters.finish_stack_nonblocking_max.add_value(0);
+
 	thread_executor.run();
 }
 
