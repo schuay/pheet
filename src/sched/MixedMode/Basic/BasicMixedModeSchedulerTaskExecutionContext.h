@@ -637,9 +637,9 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::wait
 				// Execute a single task. This will create a team if there was a task
 				if(execute_next_queue_task(min_level)) {
 					// Coordinate the current team if existing until it's empty
-					performance_counters.queue_processing_time.stop_timer();
+//					performance_counters.queue_processing_time.stop_timer();
 					coordinate_team();
-					performance_counters.queue_processing_time.start_timer();
+	//				performance_counters.queue_processing_time.start_timer();
 				}
 				performance_counters.sync_time.start_timer();
 			} while(has_local_work(min_level));
