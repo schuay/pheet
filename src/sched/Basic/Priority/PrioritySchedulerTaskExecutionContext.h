@@ -406,9 +406,9 @@ PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>:
 		StackElement* ret = freed_stack_elements.back();
 		freed_stack_elements.pop_back();
 
+		assert(ret->num_finished_remote == 0);
 		ret->num_spawned = 1;
 		ret->parent = parent;
-		assert(ret->num_finished_remote == 0);
 
 		return ret;
 	}
