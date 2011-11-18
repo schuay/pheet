@@ -151,6 +151,9 @@ void BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex>::prepare_s
 		set1_size = unfinished_size;
 	}
 
+	assert(set1_size == k);
+	assert(set2_size == size - k);
+
 	for(size_t i = 0; i < set1_size; ++i) {
 		size_t node = set1[i];
 		size_t i2 = i + 1;
@@ -217,6 +220,7 @@ size_t* BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex>::create
 template <class Task, class LowerBound, class NextVertex>
 size_t* BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex>::clone_set(size_t* set, size_t set_size, size_t max_size) {
 	size_t* ret = new size_t[max_size];
+	assert(set_size <= max_size);
 	for(size_t i = 0; i < set_size; ++i) {
 		ret[i] = set[i];
 	}

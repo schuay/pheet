@@ -2117,13 +2117,14 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::steal_tas
 	performance_counters.num_steal_calls.incr();
 	performance_counters.num_steal_calls_per_thread.incr(get_global_id());
 
-	if(partner->highest_level_deque == NULL) {
+	StealingDeque<DequeItem>** phld = partner->highest_level_deque;
+	if(phld == NULL) {
 		performance_counters.num_unsuccessful_steal_calls.incr();
 		performance_counters.num_unsuccessful_steal_calls_per_thread.incr(get_global_id());
 		return nullable_traits<DequeItem>::null_value;
 	}
 
-	procs_t partner_level = partner->highest_level_deque - partner->stealing_deques;
+	procs_t partner_level = phld - partner->stealing_deques;
 	procs_t my_level = partner_level;
 
 	if(num_levels > partner->num_levels) {
@@ -2227,13 +2228,14 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::steal_for
 	performance_counters.num_steal_calls.incr();
 	performance_counters.num_steal_calls_per_thread.incr(get_global_id());
 
-	if(partner->highest_level_deque == NULL) {
+	StealingDeque<DequeItem>** phld = partner->highest_level_deque;
+	if(phld == NULL) {
 		performance_counters.num_unsuccessful_steal_calls.incr();
 		performance_counters.num_unsuccessful_steal_calls_per_thread.incr(get_global_id());
 		return nullable_traits<DequeItem>::null_value;
 	}
 
-	procs_t partner_level = partner->highest_level_deque - partner->stealing_deques;
+	procs_t partner_level = phld - partner->stealing_deques;
 	procs_t my_level = partner_level;
 
 	if(num_levels > partner->num_levels) {
