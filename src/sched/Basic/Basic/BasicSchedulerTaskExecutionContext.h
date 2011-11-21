@@ -166,7 +166,7 @@ thread_local BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>* Basic
 
 template <class Scheduler, template <typename T> class StealingDeque>
 BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::BasicSchedulerTaskExecutionContext(std::vector<LevelDescription*> const* levels, std::vector<typename CPUHierarchy::CPUDescriptor*> const* cpus, typename Scheduler::State* scheduler_state, BasicSchedulerPerformanceCounters& perf_count)
-: performance_counters(perf_count), stack_filled_left(0), stack_filled_right(stack_size), num_levels(levels->size()), thread_executor(cpus, this), scheduler_state(scheduler_state), preferred_queue_length(find_last_bit_set((*levels)[0]->total_size - 1) << 4), max_queue_length(preferred_queue_length << 1), call_mode(false), stealing_deque(max_queue_length, performance_counters.num_steals, performance_counters.num_stealing_deque_pop_cas) {
+: performance_counters(perf_count), stack_filled_left(0), stack_filled_right(stack_size), stack_init_left(0), num_levels(levels->size()), thread_executor(cpus, this), scheduler_state(scheduler_state), preferred_queue_length(find_last_bit_set((*levels)[0]->total_size - 1) << 4), max_queue_length(preferred_queue_length << 1), call_mode(false), stealing_deque(max_queue_length, performance_counters.num_steals, performance_counters.num_stealing_deque_pop_cas) {
 	performance_counters.total_time.start_timer();
 
 	stack = new StackElement[stack_size];
@@ -411,6 +411,10 @@ BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::create_non_blockin
 		stack[stack_filled_left].version = 0;
 		++stack_init_left;
 	}
+	else {
+		++(stack[stack_filled_left].version);
+	}
+	assert((stack[stack_filled_left].version & 1) == 0);
 
 	++stack_filled_left;
 	performance_counters.finish_stack_nonblocking_max.add_value(stack_filled_left);
@@ -426,7 +430,7 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::empty_stack()
 	while(stack_filled_left > 0) {
 		size_t se = stack_filled_left - 1;
 		if(stack[se].num_spawned == stack[se].num_finished_remote
-				&& stack[stack_filled_left].parent == NULL) {
+				&& (stack[stack_filled_left].version & 1)) {
 		//	finalize_stack_element(&(stack[se]), stack[se].parent);
 
 			stack_filled_left = se;

@@ -396,6 +396,10 @@ PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>:
 			stack[stack_filled_left].version = 0;
 			++stack_init_left;
 		}
+		else {
+			++(stack[stack_filled_left].version);
+		}
+		assert((stack[stack_filled_left].version & 1) == 0);
 
 		++stack_filled_left;
 		performance_counters.finish_stack_nonblocking_max.add_value(stack_filled_left);
@@ -409,6 +413,8 @@ PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>:
 		assert(ret->num_finished_remote == 0);
 		ret->num_spawned = 1;
 		ret->parent = parent;
+		++(ret->version);
+		assert((ret->version & 1) == 0);
 
 		return ret;
 	}
@@ -424,7 +430,7 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrat
 	while(stack_filled_left > 0) {
 		size_t se = stack_filled_left - 1;
 		if(stack[se].num_spawned == stack[se].num_finished_remote
-				&& stack[stack_filled_left].parent == NULL) {
+				&& (stack[stack_filled_left].version & 1)) {
 	//		finalize_stack_element(&(stack[se]), stack[se].parent);
 
 			stack_filled_left = se;
@@ -470,7 +476,13 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrat
 			// No tasks processed remotely - no need for atomic ops
 		//	element->parent = NULL;
 			++(element->version);
-			freed_stack_elements.push_back(element);
+			assert(element >= stack && (element < (stack + stack_size)));
+			if((unsigned)(element - stack) + 1 == stack_filled_left) {
+				--stack_filled_left;
+			}
+			else {
+				freed_stack_elements.push_back(element);
+			}
 			signal_task_completion(parent);
 		}
 		else {
