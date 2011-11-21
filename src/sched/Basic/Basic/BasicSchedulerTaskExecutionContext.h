@@ -430,7 +430,7 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::empty_stack()
 	while(stack_filled_left > 0) {
 		size_t se = stack_filled_left - 1;
 		if(stack[se].num_spawned == stack[se].num_finished_remote
-				&& (stack[stack_filled_left].version & 1)) {
+				&& (stack[se].version & 1)) {
 		//	finalize_stack_element(&(stack[se]), stack[se].parent);
 
 			stack_filled_left = se;
