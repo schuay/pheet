@@ -387,19 +387,20 @@ PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>:
 
 		assert(stack_filled_left < stack_filled_right);
 
-		stack[stack_filled_left].num_finished_remote = 0;
-		// As we create it out of a parent region that is waiting for completion of a single task, we can already add this one task here
-		stack[stack_filled_left].num_spawned = 1;
-		stack[stack_filled_left].parent = parent;
-
 		if(stack_filled_left >= stack_init_left/* && stack_filled_left < stack_init_right*/) {
 			stack[stack_filled_left].version = 0;
 			++stack_init_left;
 		}
 		else {
+			assert((stack[stack_filled_left].version & 1) == 1);
 			++(stack[stack_filled_left].version);
 		}
 		assert((stack[stack_filled_left].version & 1) == 0);
+
+		stack[stack_filled_left].num_finished_remote = 0;
+		// As we create it out of a parent region that is waiting for completion of a single task, we can already add this one task here
+		stack[stack_filled_left].num_spawned = 1;
+		stack[stack_filled_left].parent = parent;
 
 		++stack_filled_left;
 		performance_counters.finish_stack_nonblocking_max.add_value(stack_filled_left);
@@ -411,10 +412,12 @@ PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy>:
 		freed_stack_elements.pop_back();
 
 		assert(ret->num_finished_remote == 0);
-		ret->num_spawned = 1;
-		ret->parent = parent;
+		assert((ret->version & 1) == 1);
 		++(ret->version);
 		assert((ret->version & 1) == 0);
+
+		ret->num_spawned = 1;
+		ret->parent = parent;
 
 		return ret;
 	}
@@ -475,7 +478,10 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrat
 			assert(element->num_finished_remote == 0);
 			// No tasks processed remotely - no need for atomic ops
 		//	element->parent = NULL;
+			assert((element->version & 1) == 0);
 			++(element->version);
+			assert((element->version & 1) == 1);
+			assert(element->version == version + 1);
 			assert(element >= stack && (element < (stack + stack_size)));
 			if((unsigned)(element - stack) + 1 == stack_filled_left) {
 				--stack_filled_left;
