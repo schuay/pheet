@@ -492,6 +492,7 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrat
 			signal_task_completion(parent);
 		}
 		else {
+			assert((version & 1) == 0);
 			if(PTR_CAS(&(element->version), version, version + 1)) {
 				signal_task_completion(parent);
 			}
