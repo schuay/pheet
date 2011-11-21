@@ -1155,6 +1155,10 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::create_no
 		finish_stack[finish_stack_filled_left].version = 0;
 		++finish_stack_init_left;
 	}
+	else {
+		++(finish_stack[finish_stack_filled_left].version);
+	}
+	assert((finish_stack[finish_stack_filled_left].version & 1) == 0);
 
 	++finish_stack_filled_left;
 
@@ -1169,7 +1173,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::empt
 	while(finish_stack_filled_left > 0) {
 		size_t se = finish_stack_filled_left - 1;
 		if(finish_stack[se].num_spawned == finish_stack[se].num_finished_remote &&
-				finish_stack[se].parent == NULL) {
+				(finish_stack[se].version & 1)) {
 		//	finalize_finish_stack_element(&(finish_stack[se]), finish_stack[se].parent);
 
 			finish_stack_filled_left = se;
