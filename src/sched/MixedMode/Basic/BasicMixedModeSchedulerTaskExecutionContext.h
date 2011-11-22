@@ -2134,8 +2134,11 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::steal_tas
 	if(num_levels > partner->num_levels) {
 		my_level += num_levels - partner->num_levels;
 	}
+	else if(my_level >= num_levels) {
+		my_level = num_levels - 1;
+	}
 
-	while(my_level >= min_level) {
+	while(true /*my_level >= min_level*/) {
 		while(this->levels[my_level].total_size < partner->levels[partner_level].total_size) {
 			--my_level;
 		}
@@ -2171,7 +2174,7 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::steal_tas
 				}
 			}
 		}
-		--my_level;
+//		--my_level;
 		--partner_level;
 	}
 	/*
@@ -2245,8 +2248,11 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::steal_for
 	if(num_levels > partner->num_levels) {
 		my_level += num_levels - partner->num_levels;
 	}
+	else if(my_level >= num_levels) {
+		my_level = num_levels - 1;
+	}
 
-	while(my_level >= min_level) {
+	while(true /*my_level >= min_level*/) {
 		while(this->levels[my_level].total_size < partner->levels[partner_level].total_size) {
 			--my_level;
 		}
@@ -2291,7 +2297,7 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::steal_for
 			// stealing failed - reregister and continue
 			register_for_team(my_team);
 		}
-		--my_level;
+	//	--my_level;
 		--partner_level;
 	}
 

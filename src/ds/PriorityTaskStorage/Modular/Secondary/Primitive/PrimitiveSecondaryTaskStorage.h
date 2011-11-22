@@ -63,6 +63,7 @@ TT PrimitiveSecondaryTaskStorage<TT, Primary>::steal(typename Primary<TT>::Perfo
 	typename Primary<T>::iterator begin = primary->begin(ppc);
 	typename Primary<T>::iterator end = primary->end(ppc);
 	pc.total_size_steal.add(end - begin);
+	// g++ 4.4 unfortunately generates a compiler warning for this. Just ignore it, 4.6.1 seems to be more intelligent.
 	typename Primary<T>::iterator best;
 	prio_t best_prio = 0;
 

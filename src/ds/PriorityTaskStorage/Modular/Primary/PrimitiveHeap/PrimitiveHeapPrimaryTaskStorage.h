@@ -262,6 +262,8 @@ inline TT PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::pop(PerformanceCou
 		ret = local_take(el, pc);
 	} while(ret == null_element);
 
+	clean(pc);
+
 	pc.num_successful_pops.incr();
 	pc.pop_time.stop_timer();
 	return ret;

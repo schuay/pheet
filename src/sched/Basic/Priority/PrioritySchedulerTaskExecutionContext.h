@@ -585,6 +585,7 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrat
 	else {
 		CallTaskType* task = new CallTaskType(params ...);
 		assert(current_task_parent != NULL);
+		assert(current_task_parent >= stack && (current_task_parent < (stack + stack_size)));
 		++(current_task_parent->num_spawned);
 		DequeItem di;
 		di.task = task;
