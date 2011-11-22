@@ -95,19 +95,19 @@ public:
 };
 
 template <typename T>
-class DefaultPrimitivePrimaryTaskStorage : public PrimitivePrimaryTaskStorage<T, MyTwoLevelGrowingCircularArray> {
+class DefaultPrimitivePrimaryTaskStorage : public PrimitivePrimaryTaskStorage<T, FixedSizeCircularArray> {
 public:
 	template <typename ... ConsParams>
 	DefaultPrimitivePrimaryTaskStorage(ConsParams&& ... params)
-	: PrimitivePrimaryTaskStorage<T, MyTwoLevelGrowingCircularArray>(static_cast<ConsParams&&>(params) ...) {}
+	: PrimitivePrimaryTaskStorage<T, FixedSizeCircularArray>(static_cast<ConsParams&&>(params) ...) {}
 };
 
 template <typename T>
-class DefaultPrimitiveHeapPrimaryTaskStorage : public PrimitiveHeapPrimaryTaskStorage<T, MyTwoLevelGrowingCircularArray> {
+class DefaultPrimitiveHeapPrimaryTaskStorage : public PrimitiveHeapPrimaryTaskStorage<T, FixedSizeCircularArray> {
 public:
 	template <typename ... ConsParams>
 	DefaultPrimitiveHeapPrimaryTaskStorage(ConsParams&& ... params)
-	: PrimitiveHeapPrimaryTaskStorage<T, MyTwoLevelGrowingCircularArray>(static_cast<ConsParams&&>(params) ...) {}
+	: PrimitiveHeapPrimaryTaskStorage<T, FixedSizeCircularArray>(static_cast<ConsParams&&>(params) ...) {}
 };
 
 template <typename T>

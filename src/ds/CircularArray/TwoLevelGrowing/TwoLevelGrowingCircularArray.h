@@ -16,7 +16,7 @@
 
 namespace pheet {
 
-template <typename TT, size_t MAX_BUCKETS = 24>
+template <typename TT, size_t MAX_BUCKETS = 32>
 class TwoLevelGrowingCircularArray {
 public:
 	typedef TT T;
@@ -27,7 +27,8 @@ public:
 	size_t get_capacity();
 	bool is_growable();
 
-	T& get(size_t i);
+	// return value NEEDS to be const. When growing we cannot guarantee that the reference won't change
+	T const& get(size_t i);
 	void put(size_t i, T value);
 
 	void grow(size_t bottom, size_t top);
@@ -72,8 +73,9 @@ bool TwoLevelGrowingCircularArray<T, MAX_BUCKETS>::is_growable() {
 	return buckets < MAX_BUCKETS;
 }
 
+// return value NEEDS to be const. When growing we cannot guarantee that the reference won't change
 template <typename T, size_t MAX_BUCKETS>
-inline T& TwoLevelGrowingCircularArray<T, MAX_BUCKETS>::get(size_t i) {
+inline T const& TwoLevelGrowingCircularArray<T, MAX_BUCKETS>::get(size_t i) {
 	i = i % capacity;
 	size_t hb = find_last_bit_set(i);
 	return data[hb][i ^ ((1 << (hb)) >> 1)];

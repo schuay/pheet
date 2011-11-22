@@ -287,8 +287,8 @@ inline TT PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::peek(PerformanceCo
 
 template <typename TT, template <typename S> class CircularArray>
 inline size_t PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::get_length(PerformanceCounters& pc) {
-	clean_heap(pc);
-	return heap.size();
+	clean(pc);
+	return bottom - top;
 }
 
 template <typename TT, template <typename S> class CircularArray>
