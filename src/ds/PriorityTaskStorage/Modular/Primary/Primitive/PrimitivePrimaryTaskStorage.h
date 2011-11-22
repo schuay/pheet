@@ -32,8 +32,8 @@ public:
 	typedef size_t iterator;
 	typedef PrimitivePrimaryTaskStoragePerformanceCounters PerformanceCounters;
 
-	PrimitivePrimaryTaskStorage(size_t initial_capacity);
-//	PrimitivePrimaryTaskStorage(size_t initial_capacity, PerformanceCounters& perf_count);
+	PrimitivePrimaryTaskStorage(size_t expected_capacity);
+//	PrimitivePrimaryTaskStorage(size_t expected_capacity, PerformanceCounters& perf_count);
 	~PrimitivePrimaryTaskStorage();
 
 	iterator begin(PerformanceCounters& pc);
@@ -72,14 +72,14 @@ template <typename TT, template <typename S> class CircularArray>
 const TT PrimitivePrimaryTaskStorage<TT, CircularArray>::null_element = nullable_traits<T>::null_value;
 
 template <typename TT, template <typename S> class CircularArray>
-inline PrimitivePrimaryTaskStorage<TT, CircularArray>::PrimitivePrimaryTaskStorage(size_t initial_capacity)
-: top(0), bottom(0), data(initial_capacity) {
+inline PrimitivePrimaryTaskStorage<TT, CircularArray>::PrimitivePrimaryTaskStorage(size_t expected_capacity)
+: top(0), bottom(0), data(expected_capacity) {
 
 }
 /*
 template <typename TT, template <typename S> class CircularArray>
-inline PrimitivePrimaryTaskStorage<TT, CircularArray>::PrimitivePrimaryTaskStorage(size_t initial_capacity, PerformanceCounters& perf_count)
-: top(0), bottom(0), data(initial_capacity), perf_count(perf_count) {
+inline PrimitivePrimaryTaskStorage<TT, CircularArray>::PrimitivePrimaryTaskStorage(size_t expected_capacity, PerformanceCounters& perf_count)
+: top(0), bottom(0), data(expected_capacity), perf_count(perf_count) {
 
 }*/
 
@@ -146,6 +146,7 @@ size_t PrimitivePrimaryTaskStorage<TT, CircularArray>::get_task_id(iterator item
 template <typename TT, template <typename S> class CircularArray>
 template <class Strategy>
 inline void PrimitivePrimaryTaskStorage<TT, CircularArray>::push(Strategy& s, T item, PerformanceCounters& pc) {
+	pc.push_time.start_timer();
 	if(bottom - top == data.get_capacity()) {
 		clean(pc);
 		if(bottom - top == data.get_capacity()) {
@@ -166,6 +167,7 @@ inline void PrimitivePrimaryTaskStorage<TT, CircularArray>::push(Strategy& s, T 
 	MEMORY_FENCE();
 
 	bottom++;
+	pc.push_time.stop_timer();
 }
 
 template <typename TT, template <typename S> class CircularArray>

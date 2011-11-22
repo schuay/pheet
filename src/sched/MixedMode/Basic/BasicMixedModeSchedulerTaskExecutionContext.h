@@ -362,7 +362,7 @@ private:
 };
 
 template <class Scheduler, template <typename T> class StealingDeque>
-size_t const BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::finish_stack_size = 2048;
+size_t const BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::finish_stack_size = 8192;
 
 
 template <class Scheduler, template <typename T> class StealingDeque>

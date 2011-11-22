@@ -159,7 +159,7 @@ private:
 };
 
 template <class Scheduler, template <typename T> class StealingDeque>
-size_t const BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::stack_size = 2048;
+size_t const BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::stack_size = 8192;
 
 template <class Scheduler, template <typename T> class StealingDeque>
 thread_local BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>* BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::local_context = NULL;

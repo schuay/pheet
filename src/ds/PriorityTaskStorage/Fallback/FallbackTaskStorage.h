@@ -25,8 +25,8 @@ public:
 		void print_values() {}
 	} PerformanceCounters;
 
-	FallbackTaskStorage(size_t initial_capacity);
-//	FallbackTaskStorage(size_t initial_capacity, PerformanceCounters& perf_count);
+	FallbackTaskStorage(size_t expected_capacity);
+//	FallbackTaskStorage(size_t expected_capacity, PerformanceCounters& perf_count);
 	~FallbackTaskStorage();
 
 	template <class Strategy>
@@ -59,14 +59,14 @@ private:
 };
 
 template <typename TT, template <typename S> class BaseType>
-inline FallbackTaskStorage<TT, BaseType>::FallbackTaskStorage(size_t initial_capacity)
-: data(initial_capacity) {
+inline FallbackTaskStorage<TT, BaseType>::FallbackTaskStorage(size_t expected_capacity)
+: data(expected_capacity) {
 
 }
 /*
 template <typename TT, template <typename S> class BaseType>
-inline FallbackTaskStorage<TT, BaseType>::FallbackTaskStorage(size_t initial_capacity, PerformanceCounters& perf_count)
-: data(initial_capacity), perf_count(perf_count) {
+inline FallbackTaskStorage<TT, BaseType>::FallbackTaskStorage(size_t expected_capacity, PerformanceCounters& perf_count)
+: data(expected_capacity), perf_count(perf_count) {
 
 }*/
 

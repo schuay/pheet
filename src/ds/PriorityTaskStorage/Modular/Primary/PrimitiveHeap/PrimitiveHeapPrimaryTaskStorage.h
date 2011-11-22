@@ -92,15 +92,15 @@ template <typename TT, template <typename S> class CircularArray>
 const TT PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::null_element = nullable_traits<T>::null_value;
 
 template <typename TT, template <typename S> class CircularArray>
-inline PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::PrimitiveHeapPrimaryTaskStorage(size_t initial_capacity)
-: top(0), bottom(0), data(initial_capacity),
+inline PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::PrimitiveHeapPrimaryTaskStorage(size_t expected_capacity)
+: top(0), bottom(0), data(expected_capacity),
   heap(PrimitiveHeapPrimaryTaskStorageComparator<CircularArray<PrimitiveHeapPrimaryTaskStorageItem<T> > >(&data)) {
 
 }
 /*
 template <typename TT, template <typename S> class CircularArray>
-inline PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::PrimitiveHeapPrimaryTaskStorage(size_t initial_capacity, PerformanceCounters& perf_count)
-: top(0), bottom(0), data(initial_capacity),
+inline PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::PrimitiveHeapPrimaryTaskStorage(size_t expected_capacity, PerformanceCounters& perf_count)
+: top(0), bottom(0), data(expected_capacity),
   heap(PrimitiveHeapPrimaryTaskStorageComparator<CircularArray<PrimitiveHeapPrimaryTaskStorageItem<T> > >(&data)),
   perf_count(perf_count) {
 
