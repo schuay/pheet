@@ -236,6 +236,9 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrat
 	(*task)(*this);
 	performance_counters.task_time.stop_timer();
 
+	// Check whether current_task_parent still is parent (if not, there is some error)
+	assert(current_task_parent == parent);
+
 	// Signal that we finished executing this task
 	signal_task_completion(parent);
 }

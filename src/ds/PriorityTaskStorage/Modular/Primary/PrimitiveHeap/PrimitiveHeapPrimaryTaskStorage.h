@@ -74,6 +74,7 @@ public:
 	static void print_name();
 
 private:
+	T local_take(iterator item, PerformanceCounters& pc);
 	void clean_heap(PerformanceCounters& pc);
 	void clean(PerformanceCounters& pc);
 
@@ -121,6 +122,29 @@ typename PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::iterator PrimitiveH
 	return bottom;
 }
 
+/*
+ * Same as take, but is only safe to be called by the owning thread (but is faster)
+ */
+template <typename TT, template <typename S> class CircularArray>
+TT PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::local_take(iterator item, PerformanceCounters& pc) {
+	assert(item < bottom);
+
+	PrimitiveHeapPrimaryTaskStorageItem<T>& ptsi = data.get(item);
+
+	if(ptsi.index != item) {
+		pc.num_unsuccessful_takes.incr();
+		return null_element;
+	}
+	if(!SIZET_CAS(&(ptsi.index), item, item + 1)) {
+		pc.num_unsuccessful_takes.incr();
+		return null_element;
+	}
+	delete ptsi.s;
+
+	pc.num_successful_takes.incr();
+	return ptsi.data;
+}
+
 template <typename TT, template <typename S> class CircularArray>
 TT PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::take(iterator item, PerformanceCounters& pc) {
 	assert(item < bottom);
@@ -131,6 +155,9 @@ TT PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::take(iterator item, Perfo
 		pc.num_unsuccessful_takes.incr();
 		return null_element;
 	}
+	// Make sure we really get the current item
+	MEMORY_FENCE();
+
 	T ret = ptsi.data;
 	BaseStrategy* s = ptsi.s;
 	if(!SIZET_CAS(&(ptsi.index), item, item + 1)) {
@@ -232,7 +259,7 @@ inline TT PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::pop(PerformanceCou
 		size_t el = heap.top();
 		heap.pop();
 
-		ret = take(el, pc);
+		ret = local_take(el, pc);
 	} while(ret == null_element);
 
 	pc.num_successful_pops.incr();
