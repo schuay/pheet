@@ -28,6 +28,10 @@ const int graph_bipartitioning_test_types[] = {0};
 
 const bool inarow_test = false;
 
+const bool    nqueens_test        = true;
+const procs_t nqueens_test_cpus[] = {1, 2};
+const size_t  nqueens_test_n[]    = {8, 16, 32};
+
 }
 
 #endif /* DEBUG_H_ */

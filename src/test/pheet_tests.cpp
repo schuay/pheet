@@ -9,6 +9,7 @@
 #include "sorting/SortingTests.h"
 #include "graph_bipartitioning/GraphBipartitioningTests.h"
 #include "inarow/InARowTests.h"
+#include "n-queens/NQueensTests.h"
 
 using namespace pheet;
 
@@ -21,6 +22,9 @@ int main(int argc, char* argv[]) {
 
 	InARowTests iarts;
 	iarts.run_test();
+
+	NQueensTests nqt;
+	nqt.run_test();
 
 	return 0;
 }

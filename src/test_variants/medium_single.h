@@ -26,6 +26,11 @@ const double graph_bipartitioning_test_p[] = {0.5};
 const int graph_bipartitioning_test_types[] = {0};
 
 const bool inarow_test = false;
+
+const bool    nqueens_test        = false;
+const procs_t nqueens_test_cpus[] = {1, 2, 4, 8, 16, 32};
+const size_t  nqueens_test_n[]    = {32};
+
 }
 
 #endif /* MEDIUM_SINGLE_H_ */
