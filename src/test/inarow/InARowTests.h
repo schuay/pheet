@@ -15,13 +15,13 @@
 
 namespace pheet {
 
-	class InARowTests : Test
+	class InARowTests
 	{
 	public:
 		void run_test();
 	private:
 		template <class Scheduler>
-		void test(unsigned int width, unsigned int height, unsigned int rowlength, unsigned int lookahead, procs_t cpus, unsigned int* scenario);
+		void test(unsigned int width, unsigned int height, unsigned int rowlength, unsigned int* scenario);
 	};
 
 }

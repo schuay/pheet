@@ -7,7 +7,9 @@
 */
 
 #include "InARowTests.h"
-#include "InARowGameTask.h"
+#include "InARowTest.h"
+#include "RecursiveSearch/InARowGame.h"
+
 #include "../test_schedulers.h"
 #include <iostream>
 
@@ -15,19 +17,17 @@ namespace pheet {
 
 	const unsigned int scenario1[] = {2,4,3,1,1,2,3,4,5,4,1,0};
 	const unsigned int scenario2[] = {3,2,1,1,4,1,2,4,3,4,4,3,1,5,6,7,0};
-	template <class Scheduler>
-	void InARowTests::test(unsigned int width, unsigned int height, unsigned int rowlength, unsigned int lookahead, procs_t cpus, unsigned int* scenario)
+	template <class Test>
+	void InARowTests::test(unsigned int width, unsigned int height, unsigned int rowlength, unsigned int* scenario)
 	{
-		typename Scheduler::CPUHierarchy hier(cpus);
-		Scheduler s(&hier);
-		Time start, end;
-		check_time(start);
-		s.template finish<InARowGameTask<typename Scheduler::Task> >(width, height, rowlength, lookahead, scenario);
-		check_time(end);
-		std::cout << "Time: " << calculate_seconds(start, end) << std::endl;
-		s.print_performance_counter_headers();
-		std::cout << endl;
-		s.print_performance_counter_values();
+		for(size_t la = 0; la < sizeof(inarow_test_lookaheads)/sizeof(inarow_test_lookaheads[0]); la++) {
+			for(size_t c = 0; c < sizeof(inarow_test_cpus)/sizeof(inarow_test_cpus[0]); c++) {
+				if(inarow_test_cpus[c] <= Test::max_cpus) {
+					InARowTest<Test> iart(inarow_test_cpus[c], width, height, rowlength, inarow_test_lookaheads[la], scenario);
+					iart.run_test();
+				}
+			}
+		}
 	}
 
 	void InARowTests::run_test()
@@ -40,10 +40,8 @@ namespace pheet {
 			//		return;
 			//test<DefaultBasicScheduler>(8,8,4,7,8,(unsigned int*)scenario2);
 
-			test<PrimitivePriorityScheduler>(8,8,4,7,1,(unsigned int*)scenario2);
-			test<PrimitivePriorityScheduler>(8,8,4,7,2,(unsigned int*)scenario2);
-			test<PrimitivePriorityScheduler>(8,8,4,7,8,(unsigned int*)scenario2);
-			test<PrimitiveHeapPriorityScheduler>(8,8,4,7,8,(unsigned int*)scenario2);
+			test<InARowGame<PrimitivePriorityScheduler> >(8,8,4,(unsigned int*)scenario2);
+			test<InARowGame<PrimitiveHeapPriorityScheduler> >(8,8,4,(unsigned int*)scenario2);
 		//	test<DefaultBasicScheduler>(8,8,4,7,8,(unsigned int*)scenario2);
 		}
 	}

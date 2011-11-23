@@ -9,8 +9,9 @@
 #ifndef INAROWGAMETASK_H_
 #define INAROWGAMETASK_H_
 
-#include "../../misc/types.h"
-#include "../../misc/atomics.h"
+#include "../../../settings.h"
+#include "../../../misc/types.h"
+#include "../../../misc/atomics.h"
 #include <string.h>
 #include <stdlib.h>
 #include <iostream>

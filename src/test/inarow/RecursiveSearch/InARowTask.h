@@ -9,9 +9,10 @@
 #ifndef INAROWTASK_H_
 #define INAROWTASK_H_
 
-#include "../../misc/types.h"
-#include "../../misc/atomics.h"
-#include "../test_schedulers.h"
+#include "../../../settings.h"
+#include "../../../misc/types.h"
+#include "../../../misc/atomics.h"
+#include "../../test_schedulers.h"
 #include <string.h>
 #include <stdlib.h>
 #include <iostream>

@@ -3,7 +3,7 @@
  *
  *  Created on: 07.09.2011
  *   Author(s): Martin Wimmer
- *     License: Ask author
+ *     License: Pheet License
  */
 
 #ifndef GRAPHBIPARTITIONINGTEST_H_
