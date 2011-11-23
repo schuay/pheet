@@ -27,6 +27,7 @@ public:
 	BasicPerformanceCounter<task_storage_count_successful_takes> num_successful_takes;
 	BasicPerformanceCounter<task_storage_count_size_pop> total_size_pop;
 	TimePerformanceCounter<task_storage_measure_pop_time> pop_time;
+	TimePerformanceCounter<task_storage_measure_push_time> push_time;
 };
 
 inline PrimitiveHeapPrimaryTaskStoragePerformanceCounters::PrimitiveHeapPrimaryTaskStoragePerformanceCounters() {
@@ -39,7 +40,8 @@ inline PrimitiveHeapPrimaryTaskStoragePerformanceCounters::PrimitiveHeapPrimaryT
  num_unsuccessful_takes(other.num_unsuccessful_takes),
  num_successful_takes(other.num_successful_takes),
  total_size_pop(other.total_size_pop),
- pop_time(other.pop_time)
+ pop_time(other.pop_time),
+ push_time(other.push_time)
 {
 
 }
@@ -55,6 +57,7 @@ inline void PrimitiveHeapPrimaryTaskStoragePerformanceCounters::print_headers() 
 	BasicPerformanceCounter<task_storage_count_successful_takes>::print_header("num_successful_takes\t");
 	BasicPerformanceCounter<task_storage_count_size_pop>::print_header("total_size_pop\t");
 	TimePerformanceCounter<task_storage_measure_pop_time>::print_header("pop_time\t");
+	TimePerformanceCounter<task_storage_measure_push_time>::print_header("push_time\t");
 }
 
 inline void PrimitiveHeapPrimaryTaskStoragePerformanceCounters::print_values() {
@@ -64,6 +67,7 @@ inline void PrimitiveHeapPrimaryTaskStoragePerformanceCounters::print_values() {
 	num_successful_takes.print("%d\t");
 	total_size_pop.print("%d\t");
 	pop_time.print("%f\t");
+	push_time.print("%f\t");
 }
 
 }
