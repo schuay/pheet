@@ -37,7 +37,13 @@ struct PrioritySchedulerTaskExecutionContextStackElement {
 	PrioritySchedulerTaskExecutionContextStackElement* parent;
 
 	// Counter to update atomically when finalizing this element (ABA problem)
+	// Unused on the right side
 	size_t version;
+
+	// When a finish hasn't yet spawned any tasks, we don't need to create a new block for the next level
+	// instead we just increment this counter
+	// unused on the left side
+	size_t reused_finish_depth;
 };
 
 template <class TaskExecutionContext>
@@ -163,7 +169,7 @@ private:
 };
 
 template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy, uint8_t CallThreshold>
-size_t const PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy, CallThreshold>::stack_size = 8192;
+size_t const PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy, CallThreshold>::stack_size = (8192 > (64 << CallThreshold))?8192:(64 << CallThreshold);
 
 template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy, uint8_t CallThreshold>
 PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy, CallThreshold>::PrioritySchedulerTaskExecutionContext(std::vector<LevelDescription*> const* levels, std::vector<typename CPUHierarchy::CPUDescriptor*> const* cpus, typename Scheduler::State* scheduler_state, PerformanceCounters& perf_count)
@@ -299,11 +305,7 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrat
 
 template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy, uint8_t CallThreshold>
 void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy, CallThreshold>::wait_for_finish(StackElement* parent) {
-	while(true) {
-		if(parent->num_finished_remote + 1 == parent->num_spawned) {
-			return;
-		}
-
+	while(parent->num_finished_remote + 1 != parent->num_spawned) {
 		// Make sure our queue is empty
 		if(!process_queue_until_finished(parent))
 		{	// Local scope so we have a new backoff object
@@ -520,29 +522,37 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrat
 	// Not allowed any more. may only be called if freed_stack_elements is empty
 //	empty_stack();
 
-	assert(stack_filled_left < stack_filled_right);
-	--stack_filled_right;
-	performance_counters.finish_stack_blocking_min.add_value(stack_filled_right);
+	if(stack_filled_right < stack_size && stack[stack_filled_right].num_spawned == 1) {
+		++(stack[stack_filled_right].reused_finish_depth);
+	}
+	else {
+		assert(stack_filled_left < stack_filled_right);
+		--stack_filled_right;
+		performance_counters.finish_stack_blocking_min.add_value(stack_filled_right);
 
-	stack[stack_filled_right].num_finished_remote = 0;
-	// We add 1 to make sure finishes are not propagated to the parent (as we wait manually and then execute a continuation)
-	stack[stack_filled_right].num_spawned = 1;
-	stack[stack_filled_right].parent = current_task_parent;
+		stack[stack_filled_right].num_finished_remote = 0;
+		// We add 1 to make sure finishes are not propagated to the parent (as we wait manually and then execute a continuation)
+		stack[stack_filled_right].num_spawned = 1;
+		stack[stack_filled_right].parent = current_task_parent;
+		stack[stack_filled_right].reused_finish_depth = 0;
 
-	// version not needed for finish, as finish blocks anyway
-/*
-	if(stack_filled_right >= stack_init_left && stack_filled_right < stack_init_right) {
-		stack[stack_filled_left].version = 0;
-		--stack_init_right;
-	}*/
+		// version not needed for finish, as finish blocks anyway
+	/*
+		if(stack_filled_right >= stack_init_left && stack_filled_right < stack_init_right) {
+			stack[stack_filled_left].version = 0;
+			--stack_init_right;
+		}*/
 
-	current_task_parent = stack + stack_filled_right;
+		current_task_parent = stack + stack_filled_right;
+	}
 	performance_counters.task_time.start_timer();
 }
 
 template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy, uint8_t CallThreshold>
 void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy, CallThreshold>::end_finish_region() {
 	performance_counters.task_time.stop_timer();
+
+	// Make sure current_task_parent has the correct value
 	assert(current_task_parent == &(stack[stack_filled_right]));
 
 	if(current_task_parent->num_spawned > 1) {
@@ -550,13 +560,20 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrat
 
 		// Process other tasks until this task has been finished
 		wait_for_finish(current_task_parent);
+
+		// Repair pointer to current_task_parent (might be changed while waiting)
+		current_task_parent = &(stack[stack_filled_right]);
 	}
+	if(current_task_parent->reused_finish_depth > 0) {
+		--(current_task_parent->reused_finish_depth);
+	}
+	else {
+		// Restore old parent
+		current_task_parent = current_task_parent->parent;
 
-	// Restore old parent
-	current_task_parent = stack[stack_filled_right].parent;
-
-	// Remove stack element
-	++stack_filled_right;
+		// Remove stack element
+		++stack_filled_right;
+	}
 	performance_counters.task_time.start_timer();
 }
 

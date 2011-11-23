@@ -55,13 +55,14 @@ namespace pheet {
 				//cout << "Depth: " << depth << " Boardval: "<< boardval << endl;
 
 			char* newboard = new char[iar->getBoardWidth()*iar->getBoardHeight()];
-			memcpy(newboard,board,iar->getBoardWidth()*iar->getBoardHeight());
+			memcpy(newboard,board,iar->getBoardWidth()*iar->getBoardHeight()*sizeof(char));
 
 	//		bool found = false;
 
 			unsigned int pos = 0;
 			for(unsigned int i=0;i<iar->getBoardHeight();i++)
 			{
+				assert(move < iar->getBoardWidth());
 				if(newboard[i*iar->getBoardWidth()+move]==0)
 				{
 					pos = i;
@@ -79,7 +80,7 @@ namespace pheet {
 			if(win)
 			{
 				*val = player?(0x7fffffff):(0x80000000);
-				delete newboard;
+				delete[] newboard;
 				return;
 			}
 
@@ -87,7 +88,7 @@ namespace pheet {
 			{
 			//	if(debug)
 			//	iar->printBoard(newboard);
-				delete newboard;
+				delete[] newboard;
 				*val = boardval+1;
 				return;
 			}
@@ -133,8 +134,8 @@ namespace pheet {
 
 			//if(debug)
 				//cout << endl;
-			delete newboard;
-			delete vals;
+			delete[] newboard;
+			delete[] vals;
 		}
 
 	private:

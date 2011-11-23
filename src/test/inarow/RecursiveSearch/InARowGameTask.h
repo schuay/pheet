@@ -162,7 +162,8 @@ namespace pheet {
 		unsigned int connected(char* board, unsigned int x, unsigned int y, unsigned int modx, unsigned int mody)
 		{
 			unsigned int ctr = 0;
-
+			assert(y < getBoardHeight());
+			assert(x < getBoardWidth());
 			char type = board[y*getBoardWidth()+x];
 
 			while(x<getBoardWidth() && y<getBoardHeight() && x>=0 && y>=0)
