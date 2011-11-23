@@ -124,7 +124,7 @@ private:
 	void empty_stack();
 	StackElement* create_non_blocking_finish_region(StackElement* parent);
 	void signal_task_completion(StackElement* stack_element);
-	void finalize_stack_element(StackElement* element, StackElement* parent, size_t version);
+	void finalize_stack_element(StackElement* element, StackElement* parent, size_t version, bool local);
 
 	void start_finish_region();
 	void end_finish_region();
@@ -451,7 +451,8 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::signal_task_c
 	StackElement* parent = stack_element->parent;
 	size_t version = stack_element->version;
 
-	if(stack_element >= stack && (stack_element < (stack + stack_size))) {
+	bool local = stack_element >= stack && (stack_element < (stack + stack_size));
+	if(local) {
 		--(stack_element->num_spawned);
 
 		// Memory fence is unfortunately required to guarantee that some thread finalizes the stack_element
@@ -463,14 +464,17 @@ void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::signal_task_c
 		SIZET_ATOMIC_ADD(&(stack_element->num_finished_remote), 1);
 	}
 	if(stack_element->num_spawned == stack_element->num_finished_remote) {
-		finalize_stack_element(stack_element, parent, version);
+		finalize_stack_element(stack_element, parent, version, local);
 	}
 }
 
 template <class Scheduler, template <typename T> class StealingDeque>
-void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::finalize_stack_element(StackElement* element, StackElement* parent, size_t version) {
+inline void BasicSchedulerTaskExecutionContext<Scheduler, StealingDeque>::finalize_stack_element(StackElement* element, StackElement* parent, size_t version, bool local) {
 	if(parent != NULL) {
-		if(element->num_spawned == 0) {
+		// We have to check if we are local too!
+		// (otherwise the owner might already have modified element, and then num_spawned might be 0)
+		// Rarely happens, but it happens!
+		if(local && element->num_spawned == 0) {
 			assert(element >= stack && element < (stack + stack_size));
 			// No tasks processed remotely - no need for atomic ops
 		//	element->parent = NULL;

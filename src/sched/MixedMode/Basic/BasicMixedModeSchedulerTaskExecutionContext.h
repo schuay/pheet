@@ -282,7 +282,7 @@ private:
 	FinishStackElement* create_non_blocking_finish_region(FinishStackElement* parent);
 	void empty_finish_stack();
 	void signal_task_completion(FinishStackElement* finish_stack_element);
-	void finalize_finish_stack_element(FinishStackElement* element, FinishStackElement* parent, size_t version);
+	void finalize_finish_stack_element(FinishStackElement* element, FinishStackElement* parent, size_t version, bool local);
 	void visit_partners();
 	void visit_partners_until_finished(FinishStackElement* parent);
 	void visit_partners_until_synced(TeamAnnouncement* team);
@@ -1194,7 +1194,8 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::sign
 	FinishStackElement* parent = finish_stack_element->parent;
 	size_t version = finish_stack_element->version;
 
-	if(finish_stack_element >= finish_stack && (finish_stack_element < (finish_stack + finish_stack_size))) {
+	bool local = finish_stack_element >= finish_stack && (finish_stack_element < (finish_stack + finish_stack_size));
+	if(local) {
 		assert(finish_stack_element->num_spawned > 0);
 		--(finish_stack_element->num_spawned);
 
@@ -1207,14 +1208,17 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::sign
 		SIZET_ATOMIC_ADD(&(finish_stack_element->num_finished_remote), 1);
 	}
 	if(finish_stack_element->num_spawned == finish_stack_element->num_finished_remote) {
-		finalize_finish_stack_element(finish_stack_element, parent, version);
+		finalize_finish_stack_element(finish_stack_element, parent, version, local);
 	}
 }
 
 template <class Scheduler, template <typename T> class StealingDeque>
-void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::finalize_finish_stack_element(FinishStackElement* element, FinishStackElement* parent, size_t version) {
+inline void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::finalize_finish_stack_element(FinishStackElement* element, FinishStackElement* parent, size_t version, bool local) {
 	if(parent != NULL) {
-		if(element->num_spawned == 0) {
+		// We have to check if we are local too!
+		// (otherwise the owner might already have modified element, and then num_spawned might be 0)
+		// Rarely happens, but it happens!
+		if(local && element->num_spawned == 0) {
 			// No tasks processed remotely - no need for atomic ops
 		//	element->parent = NULL;
 			++(element->version);
