@@ -50,7 +50,15 @@ inline UserDefinedPriority BranchBoundGraphBipartitioningBestFirstStrategy::oper
 	// Difference to upper bound - larger is better
 	// One maybe good, maybe bad decision: Always use the value relative to the current upper bound
 	// Why: gives older elements a slight advantage. They will be rechecked and maybe dropped altogether
+	// Also problematic if upper bound is near the limits of size_t as we may have an overflow (shouldn't be a problem in our case)
 	size_t bound_diff = ubc - lb;
+
+	// Make sure we don't overflow
+	size_t limit = (std::numeric_limits< prio_t >::max() - 1) / size;
+	if(bound_diff > limit) {
+		// No upper bound available yet
+		bound_diff = limit;
+	}
 
 	prio_t prio_pop = 1 + depth * bound_diff;
 	prio_t prio_steal = 1 + (size - depth) * bound_diff;

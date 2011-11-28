@@ -48,6 +48,8 @@ public:
 
 private:
 	Primary<T> primary;
+	// The destructor if the secondary structure is called first (C++ standard) - That's exactly what we want
+	// (Destruction happens in reverse order of construction)
 	Secondary<T, Primary> secondary;
 
 	PerformanceCounters perf_count;

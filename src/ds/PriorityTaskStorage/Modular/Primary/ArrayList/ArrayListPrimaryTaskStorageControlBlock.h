@@ -19,7 +19,7 @@ struct ArrayListPrimaryTaskStorageControlBlockItem {
 	size_t offset;
 	// First active index in data (if equals Storage::block_size delete when cleaning up block
 	size_t first;
-	Storage::Item data[Storage::block_size];
+	typename Storage::Item* data;
 };
 
 template <class Storage>
@@ -31,24 +31,30 @@ public:
 	ArrayListPrimaryTaskStorageControlBlock();
 	~ArrayListPrimaryTaskStorageControlBlock();
 
-	bool register_iterator();
+	bool try_register_iterator();
 	void deregister_iterator();
 
 	Item* get_data();
 	size_t get_length();
+	size_t get_new_item_index();
 
-	void configure_as_successor(ThisType* prev);
+	size_t configure_as_successor(ThisType* prev);
 	void init_empty(size_t offset);
 
 	bool try_cleanup();
-private:
 	void clean_item(size_t item);
+	void clean_item_until(size_t item, size_t limit);
+	void finalize();
+	void finalize_item(size_t item);
+	void finalize_item_until(size_t item, size_t limit);
+private:
 
 	size_t num_iterators;
 	size_t num_passed_iterators;
 
 	Item* data;
 	size_t length;
+	size_t new_item_index;
 };
 
 template <class Storage>
@@ -63,7 +69,7 @@ ArrayListPrimaryTaskStorageControlBlock<Storage>::~ArrayListPrimaryTaskStorageCo
 }
 
 template <class Storage>
-inline bool ArrayListPrimaryTaskStorageControlBlock<Storage>::register_iterator() {
+inline bool ArrayListPrimaryTaskStorageControlBlock<Storage>::try_register_iterator() {
 	size_t ni = num_iterators;
 	if(ni != std::numeric_limits<size_t>::max()) {
 		return SIZET_CAS(&(num_iterators), ni, ni + 1);
@@ -72,7 +78,7 @@ inline bool ArrayListPrimaryTaskStorageControlBlock<Storage>::register_iterator(
 }
 
 template <class Storage>
-inline bool ArrayListPrimaryTaskStorageControlBlock<Storage>::deregister_iterator() {
+inline void ArrayListPrimaryTaskStorageControlBlock<Storage>::deregister_iterator() {
 	SIZET_ATOMIC_ADD(&num_passed_iterators, 1);
 }
 
@@ -87,6 +93,11 @@ inline size_t ArrayListPrimaryTaskStorageControlBlock<Storage>::get_length() {
 }
 
 template <class Storage>
+inline size_t ArrayListPrimaryTaskStorageControlBlock<Storage>::get_new_item_index() {
+	return new_item_index;
+}
+
+template <class Storage>
 void ArrayListPrimaryTaskStorageControlBlock<Storage>::clean_item(size_t item) {
 	size_t limit = data[item].offset + Storage::block_size;
 	clean_item_until(item, limit);
@@ -94,10 +105,34 @@ void ArrayListPrimaryTaskStorageControlBlock<Storage>::clean_item(size_t item) {
 
 template <class Storage>
 void ArrayListPrimaryTaskStorageControlBlock<Storage>::clean_item_until(size_t item, size_t limit) {
-	while(data[item].first != limit && data[item].data[data[item].first].index != data[item].first) {
-		assert(data[item].data[data[item].first].index == data[item].first + 1);
+	size_t offset = data[item].offset;
+	while(data[item].first != limit && data[item].data[data[item].first - offset].index != data[item].first) {
+		assert(data[item].data[data[item].first - offset].index == data[item].first + 1);
 		++(data[item].first);
 	}
+}
+template <class Storage>
+void ArrayListPrimaryTaskStorageControlBlock<Storage>::finalize() {
+	assert(num_iterators == num_passed_iterators);
+	delete[] data;
+}
+
+template <class Storage>
+void ArrayListPrimaryTaskStorageControlBlock<Storage>::finalize_item(size_t item) {
+	assert(num_iterators == num_passed_iterators);
+	size_t limit = data[item].offset + Storage::block_size;
+	finalize_item_until(item, limit);
+}
+
+template <class Storage>
+void ArrayListPrimaryTaskStorageControlBlock<Storage>::finalize_item_until(size_t item, size_t limit) {
+	assert(num_iterators == num_passed_iterators);
+	size_t offset = data[item].offset;
+	for(size_t i = offset; i != limit; ++i) {
+		assert(data[item].data[i - offset].index == i + 1);
+		delete data[item].data[i - offset].s;
+	}
+	delete[] data[item].data;
 }
 
 template <class Storage>
@@ -129,13 +164,19 @@ size_t ArrayListPrimaryTaskStorageControlBlock<Storage>::configure_as_successor(
 			}
 		}
 
+		new_item_index = num_active;
 		size_t last_offset = prev->data[prev->length - 1].offset;
 		for(size_t i = num_active; i < length; ++i) {
 			last_offset += Storage::block_size;
 			data[i].offset = last_offset;
 			data[i].first = last_offset;
+			data[i].data = new typename Storage::Item[Storage::block_size];
 		}
 	}
+
+	// We don't need a fence before this, as the pointer to this block is only made available after a fence
+	num_iterators = 0;
+
 	// Returns an estimate of the number of remaining elements
 	return remaining_elements;
 }
@@ -145,11 +186,16 @@ void ArrayListPrimaryTaskStorageControlBlock<Storage>::init_empty(size_t offset)
 	assert(num_iterators == std::numeric_limits<size_t>::max());
 	assert(num_passed_iterators == 0);
 
+	// We don't need a fence before this, as the pointer to this block is only made available after a fence
+	num_iterators = 0;
+	new_item_index = 0;
+
 	data = new Item[1];
 	length = 1;
 
 	data[0].offset = offset;
 	data[0].first = offset;
+	data[0].data = new typename Storage::Item[Storage::block_size];
 }
 
 template <class Storage>
@@ -164,10 +210,12 @@ bool ArrayListPrimaryTaskStorageControlBlock<Storage>::try_cleanup() {
 					for(size_t j = 0; j < Storage::block_size; ++j) {
 						delete data[i].data[j].s;
 					}
+					delete[] data[i].data;
 				}
 			}
 			delete[] data;
 			num_passed_iterators = 0;
+			return true;
 		}
 	}
 	return false;

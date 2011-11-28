@@ -28,7 +28,7 @@ struct ArrayListPrimaryTaskStorageItem {
 };
 
 // BLOCK_SIZE has to be a power of 2 to work with wrap-around of index
-template <typename TT, size_t BLOCK_SIZE = 64>
+template <typename TT, size_t BLOCK_SIZE = 128>
 class ArrayListPrimaryTaskStorage {
 public:
 	typedef TT T;
@@ -36,9 +36,9 @@ public:
 	// Not completely a standard iterator, as it doesn't support a dereference operation, but this makes implementation simpler for now (and even more lightweight)
 	typedef ArrayListPrimaryTaskStorageIterator<ThisType> iterator;
 	typedef ArrayListPrimaryTaskStoragePerformanceCounters PerformanceCounters;
-	typedef ArrayListPrimaryTaskControlBlock<ThisType> ControlBlock;
+	typedef ArrayListPrimaryTaskStorageControlBlock<ThisType> ControlBlock;
 	typedef ArrayListPrimaryTaskStorageItem<T> Item;
-	typedef ExponentialBackoff Backoff;
+	typedef ExponentialBackoff<> Backoff;
 
 	ArrayListPrimaryTaskStorage(size_t expected_capacity);
 //	ArrayListPrimaryTaskStorage(size_t expected_capacity, PerformanceCounters& perf_count);
@@ -51,6 +51,7 @@ public:
 	bool is_taken(iterator item, PerformanceCounters& pc);
 	prio_t get_steal_priority(iterator item, PerformanceCounters& pc);
 	size_t get_task_id(iterator item, PerformanceCounters& pc);
+	void deactivate_iterator(iterator item, PerformanceCounters& pc);
 
 	template <class Strategy>
 	void push(Strategy& s, T item, PerformanceCounters& pc);
@@ -68,7 +69,7 @@ public:
 
 	static size_t const block_size;
 private:
-	T local_take(iterator item, PerformanceCounters& pc);
+	T local_take(size_t block, size_t block_index, PerformanceCounters& pc);
 	void clean(PerformanceCounters& pc);
 
 	ControlBlock* acquire_control_block();
@@ -79,9 +80,11 @@ private:
 
 	size_t start_index;
 	size_t end_index;
-	// Updated on pushes and pops, but doesn't reflect steals, therefore this number is an estimate.
-	// If estimated length of current control block is smaller, use this number instead
-	// When clean() is called and queue is already empty, length is guaranteed to be 0
+	/*
+	 * Updated on pushes and pops, but doesn't reflect steals, therefore this number is an estimate.
+	 * If estimated length of current control block is smaller, use this number instead
+	 * When clean() is called and queue is already empty, length is guaranteed to be 0
+	 */
 	size_t length;
 
 	size_t current_control_block_id;
@@ -93,7 +96,7 @@ private:
 
 	static const T null_element;
 
-	friend class iterator;
+	friend class ArrayListPrimaryTaskStorageIterator<ThisType>;
 };
 
 template <typename TT, size_t BLOCK_SIZE>
@@ -116,7 +119,31 @@ inline ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::ArrayListPrimaryTaskStorage(
 
 template <typename TT, size_t BLOCK_SIZE>
 inline ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::~ArrayListPrimaryTaskStorage() {
+	Backoff bo;
+	while(cleanup_control_block_id != current_control_block_id) {
+		if(!control_blocks[cleanup_control_block_id].try_cleanup()) {
+			bo.backoff();
+		}
+		else {
+			++cleanup_control_block_id;
+		}
+	}
 
+	size_t l = current_control_block->get_length();
+	typename ControlBlock::Item* ccb_data = current_control_block->get_data();
+	for(size_t i = 0; i < l; ++i) {
+		size_t end_pos = end_index - ccb_data[i].offset;
+		if(end_pos < block_size) {
+			current_control_block->clean_item_until(i, end_index);
+			current_control_block->finalize_item_until(i, end_index);
+			break;
+		}
+		else {
+			current_control_block->clean_item(i);
+			current_control_block->finalize_item(i);
+		}
+	}
+	current_control_block->finalize();
 }
 
 template <typename TT, size_t BLOCK_SIZE>
@@ -130,20 +157,21 @@ typename ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::iterator ArrayListPrimaryT
 }
 
 template <typename TT, size_t BLOCK_SIZE>
-TT ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::local_take(iterator item, PerformanceCounters& pc) {
-	assert(item < bottom);
+TT ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::local_take(size_t block, size_t block_index, PerformanceCounters& pc) {
+	assert(block < current_control_block->get_length());
+	typename ControlBlock::Item* ccb_data = current_control_block->get_data();
+	assert(block_index - ccb_data[block].offset < block_size);
 
-	ArrayListPrimaryTaskStorageItem<T>& ptsi = data.get(item);
+	ArrayListPrimaryTaskStorageItem<T>& ptsi = ccb_data[block].data[block_index - ccb_data[block].offset];
 
-	if(ptsi.index != item) {
+	if(ptsi.index != block_index) {
 		pc.num_unsuccessful_takes.incr();
 		return null_element;
 	}
-	if(!SIZET_CAS(&(ptsi.index), item, item + 1)) {
+	if(!SIZET_CAS(&(ptsi.index), block_index, block_index + 1)) {
 		pc.num_unsuccessful_takes.incr();
 		return null_element;
 	}
-	delete ptsi.s;
 
 	pc.num_successful_takes.incr();
 	return ptsi.data;
@@ -151,31 +179,32 @@ TT ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::local_take(iterator item, Perfor
 
 template <typename TT, size_t BLOCK_SIZE>
 TT ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::take(iterator item, PerformanceCounters& pc) {
-	assert(item != end());
+	assert(item != end(pc));
 
 	ArrayListPrimaryTaskStorageItem<T>* ptsi = item.dereference(this);
 
-	if(ptsi == NULL || ptsi->index != item) {
+	if(ptsi == NULL || ptsi->index != item.get_index()) {
 		pc.num_unsuccessful_takes.incr();
 		return null_element;
 	}
-	if(!SIZET_CAS(&(ptsi->index), item, item + 1)) {
+	if(!SIZET_CAS(&(ptsi->index), item.get_index(), item.get_index() + 1)) {
 		pc.num_unsuccessful_takes.incr();
 		return null_element;
 	}
 
+	// No danger in using the pointer. As long as the iterator is active, it may not be overwritten
 	pc.num_successful_takes.incr();
 	return ptsi->data;
 }
 
 template <typename TT, size_t BLOCK_SIZE>
 bool ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::is_taken(iterator item, PerformanceCounters& pc) {
-	return item.dereference(this)->index != item;
+	return item.dereference(this)->index != item.get_index();
 }
 
 template <typename TT, size_t BLOCK_SIZE>
 prio_t ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::get_steal_priority(iterator item, PerformanceCounters& pc) {
-	return item.dereference(this)->s->get_steal_priority();
+	return item.dereference(this)->s->get_steal_priority(item.get_index());
 }
 
 /*
@@ -187,8 +216,13 @@ prio_t ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::get_steal_priority(iterator 
  * inserted in the previous insertion order! (by increasing task_id)
  */
 template <typename TT, size_t BLOCK_SIZE>
-size_t ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::get_task_id(iterator item, PerformanceCounters& pc) {
+inline size_t ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::get_task_id(iterator item, PerformanceCounters& pc) {
 	return item.get_index();
+}
+
+template <typename TT, size_t BLOCK_SIZE>
+inline void ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::deactivate_iterator(iterator item, PerformanceCounters& pc) {
+	return item.deactivate();
 }
 
 template <typename TT, size_t BLOCK_SIZE>
@@ -200,7 +234,7 @@ inline void ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::push(Strategy& s, T ite
 	if(end_index - offset == block_size) {
 		++current_control_block_item_index;
 		if(current_control_block_item_index == current_control_block->get_length()) {
-			create_next_control_block();
+			create_next_control_block(pc);
 		}
 		offset = current_control_block->get_data()[current_control_block_item_index].offset;
 	}
@@ -210,7 +244,7 @@ inline void ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::push(Strategy& s, T ite
 	ArrayListPrimaryTaskStorageItem<TT> to_put;
 	to_put.data = item;
 	to_put.s = new Strategy(s);
-	to_put.pop_prio = s.get_pop_priority(bottom);
+	to_put.pop_prio = s.get_pop_priority(end_index);
 	to_put.index = end_index;
 
 	current_control_block->get_data()[current_control_block_item_index].data[item_index] = to_put;
@@ -224,35 +258,54 @@ inline void ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::push(Strategy& s, T ite
 
 template <typename TT, size_t BLOCK_SIZE>
 inline TT ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::pop(PerformanceCounters& pc) {
-	pc.total_size_pop.add(bottom - top);
+	pc.total_size_pop.add(length);
 	pc.pop_time.start_timer();
 	T ret;
-	do {
-		iterator i = begin(pc);
-		while(i != end(pc) && is_taken(i, pc)) {
-			++i;
-		}
 
-		if(i == end(pc)) {
+	do {
+		size_t upper_bound_length = 0;
+		size_t l = current_control_block->get_length();
+		typename ControlBlock::Item* ccb_data = current_control_block->get_data();
+		size_t block_limit;
+		prio_t best_prio = 0;
+		size_t best_block = 0;
+		size_t best_index = 0;
+		for(size_t i = 0; i < l; ++i) {
+
+			size_t end_pos = end_index - ccb_data[i].offset;
+			if(end_pos < block_size) {
+				block_limit = ccb_data[i].offset + end_pos;
+				// Last block to process!
+				l = i + 1;
+			}
+			else {
+				block_limit = ccb_data[i].offset + block_size;
+			}
+			current_control_block->clean_item_until(i, block_limit);
+			upper_bound_length += block_limit - ccb_data[i].first;
+			size_t offset = ccb_data[i].offset;
+
+			for(size_t j = ccb_data[i].first; j != block_limit; ++j) {
+				if(ccb_data[i].data[j - offset].index == j) {
+					if(ccb_data[i].data[j - offset].pop_prio > best_prio) {
+						best_prio = ccb_data[i].data[j - offset].pop_prio;
+						best_block = i;
+						best_index = j;
+					}
+				}
+			}
+		}
+		if(upper_bound_length < length) {
+			length = upper_bound_length;
+		}
+		if(best_prio > 0) {
+			ret = local_take(best_block, best_index, pc);
+		}
+		else {
 			pc.num_unsuccessful_pops.incr();
 			pc.pop_time.stop_timer();
 			return null_element;
 		}
-		top = i;
-
-		iterator best = i;
-		prio_t best_prio = data.get(i).pop_prio;
-		++i;
-		for(; i != end(pc); ++i) {
-			if(!is_taken(i, pc)) {
-				prio_t tmp_prio = data.get(i).pop_prio;
-				if(tmp_prio > best_prio) {
-					best = i;
-					best_prio = tmp_prio;
-				}
-			}
-		}
-		ret = local_take(best, pc);
 	} while(ret == null_element);
 
 	--length;
@@ -263,33 +316,40 @@ inline TT ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::pop(PerformanceCounters& 
 
 template <typename TT, size_t BLOCK_SIZE>
 inline TT ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::peek(PerformanceCounters& pc) {
-	iterator i = begin(pc);
-	while(i != end(pc) && is_taken(top, pc)) {
-		++i;
-	}
+	size_t l = current_control_block->get_length();
+	typename ControlBlock::Item* ccb_data = current_control_block->get_data();
+	size_t block_limit;
+	prio_t best_prio = 0;
+	size_t best_block = 0;
+	size_t best_index = 0;
 
-	if(i == end(pc)) {
-		return null_element;
-	}
-	top = i;
+	for(size_t i = 0; i < l; ++i) {
+		size_t end_pos = end_index - ccb_data[i].offset;
+		if(end_pos < block_size) {
+			block_limit = ccb_data[i].offset + end_pos;
+		}
+		else {
+			block_limit = ccb_data[i].offset + block_size;
+		}
+		current_control_block->clean_item_until_limit(i, block_limit);
+		size_t offset = ccb_data[i].offset;
 
-	iterator best = i;
-	ArrayListPrimaryTaskStorageItem<T> ret_item = data.get(i);
-	prio_t best_prio = ret_item.pop_prio;
-	++i;
-	for(; i != end(pc); ++i) {
-		if(!is_taken(i, pc)) {
-			ArrayListPrimaryTaskStorageItem<T> tmp_item = data.get(i);
-			prio_t tmp_prio = tmp_item.pop_prio;
-			if(tmp_prio > best_prio) {
-				best = i;
-				best_prio = tmp_prio;
-				ret_item = tmp_item;
+		for(size_t j = ccb_data[i].first; j != block_limit; ++j) {
+			if(ccb_data[i].data[j - offset].index == j) {
+				if(ccb_data[i].data[j - offset].pop_prio > best_prio) {
+					best_prio = ccb_data[i].data[j - offset].pop_prio;
+					best_block = i;
+					best_index = j;
+				}
 			}
 		}
 	}
-
-	return ret_item.data;
+	if(best_prio > 0) {
+		return ccb_data[best_block].data[best_index - ccb_data[best_block].offset].data;
+	}
+	else {
+		return null_element;
+	}
 }
 
 template <typename TT, size_t BLOCK_SIZE>
@@ -314,20 +374,24 @@ void ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::clean(PerformanceCounters& pc)
 		if(!control_blocks[cleanup_control_block_id].try_cleanup()) {
 			break;
 		}
+		else {
+			++cleanup_control_block_id;
+		}
 	}
 
 	size_t upper_bound_length = 0;
 	size_t l = current_control_block->get_length();
-	ControlBlock::Item* ccb_data = current_control_block->get_data();
+	typename ControlBlock::Item* ccb_data = current_control_block->get_data();
 	for(size_t i = 0; i < l; ++i) {
-		size_t end_pos = end_index - current_control_block->offset;
+		size_t end_pos = end_index - ccb_data[i].offset;
 		if(end_pos < block_size) {
-			current_control_block->clean_item_until_limit(i, end_index);
+			current_control_block->clean_item_until(i, end_index);
 			upper_bound_length += end_index - ccb_data[i].first;
+			break;
 		}
 		else {
 			current_control_block->clean_item(i);
-			upper_bound_length += (ccb_data[i].offset + Storage::block_size) - ccb_data[i].first;
+			upper_bound_length += (ccb_data[i].offset + block_size) - ccb_data[i].first;
 		}
 	}
 	if(upper_bound_length < length) {
@@ -341,16 +405,13 @@ void ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::print_name() {
 }
 
 template <typename TT, size_t BLOCK_SIZE>
-ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::ControlBlock* ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::acquire_control_block() {
+typename ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::ControlBlock* ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::acquire_control_block() {
 	Backoff bo;
 	while(true) {
 		ControlBlock* cb = current_control_block;
-		size_t ni = cb->num_iterators;
-		if(ni != std::numeric_limits<size_t>::max()) {
-			// Control block is active. Try acquiring it
-			if(cb->register_iterator()) {
-				return cb;
-			}
+		// Control block is active. Try acquiring it
+		if(cb->try_register_iterator()) {
+			return cb;
 		}
 		bo.backoff();
 	}
@@ -371,6 +432,7 @@ void ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::create_next_control_block(Perf
 
 	current_control_block_id = new_id;
 	current_control_block = control_blocks + new_id;
+	current_control_block_item_index = current_control_block->get_new_item_index();
 }
 
 }
