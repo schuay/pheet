@@ -78,7 +78,6 @@ private:
 	enum {num_control_blocks = 64};
 	ControlBlock control_blocks[num_control_blocks];
 
-	size_t start_index;
 	size_t end_index;
 	/*
 	 * Updated on pushes and pops, but doesn't reflect steals, therefore this number is an estimate.
@@ -107,7 +106,7 @@ const size_t ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::block_size = BLOCK_SIZ
 
 template <typename TT, size_t BLOCK_SIZE>
 inline ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::ArrayListPrimaryTaskStorage(size_t expected_capacity)
-: start_index(0), end_index(0), current_control_block_id(0), cleanup_control_block_id(0), current_control_block(control_blocks), current_control_block_item_index(0) {
+: end_index(0), length(0), current_control_block_id(0), cleanup_control_block_id(0), current_control_block(control_blocks), current_control_block_item_index(0) {
 	current_control_block->init_empty(0);
 }
 /*
@@ -125,7 +124,7 @@ inline ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::~ArrayListPrimaryTaskStorage
 			bo.backoff();
 		}
 		else {
-			++cleanup_control_block_id;
+			cleanup_control_block_id = (cleanup_control_block_id + 1) % num_control_blocks;
 		}
 	}
 
@@ -148,7 +147,7 @@ inline ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::~ArrayListPrimaryTaskStorage
 
 template <typename TT, size_t BLOCK_SIZE>
 typename ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::iterator ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::begin(PerformanceCounters& pc) {
-	return iterator(start_index);
+	return iterator(current_control_block->get_data()[0].first);
 }
 
 template <typename TT, size_t BLOCK_SIZE>
@@ -199,12 +198,17 @@ TT ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::take(iterator item, PerformanceC
 
 template <typename TT, size_t BLOCK_SIZE>
 bool ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::is_taken(iterator item, PerformanceCounters& pc) {
-	return item.dereference(this)->index != item.get_index();
+	Item* deref = item.dereference(this);
+	return deref == NULL || deref->index != item.get_index();
 }
 
 template <typename TT, size_t BLOCK_SIZE>
 prio_t ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::get_steal_priority(iterator item, PerformanceCounters& pc) {
-	return item.dereference(this)->s->get_steal_priority(item.get_index());
+	Item* deref = item.dereference(this);
+	if(deref == NULL) {
+		return 0;
+	}
+	return deref->s->get_steal_priority(item.get_index());
 }
 
 /*
@@ -375,7 +379,7 @@ void ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::clean(PerformanceCounters& pc)
 			break;
 		}
 		else {
-			++cleanup_control_block_id;
+			cleanup_control_block_id = (cleanup_control_block_id + 1) % num_control_blocks;
 		}
 	}
 

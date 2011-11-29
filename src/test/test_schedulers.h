@@ -167,6 +167,10 @@ typedef PriorityScheduler<OversubscribedSimpleCPUHierarchy, PrimitiveHeapModular
 	PrimitiveHeapPrioritySchedulerVeryLongQueues;
 typedef PriorityScheduler<OversubscribedSimpleCPUHierarchy, ArrayListModularTaskStorage, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff, LifoFifoStrategy>
 	ArrayListPriorityScheduler;
+typedef PriorityScheduler<OversubscribedSimpleCPUHierarchy, ArrayListModularTaskStorage, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff, LifoFifoStrategy, 1>
+	ArrayListPrioritySchedulerShortQueues;
+typedef PriorityScheduler<OversubscribedSimpleCPUHierarchy, ArrayListModularTaskStorage, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff, LifoFifoStrategy, 8>
+	ArrayListPrioritySchedulerLongQueues;
 typedef SynchroneousScheduler<OversubscribedSimpleCPUHierarchy>
 	DefaultSynchroneousScheduler;
 

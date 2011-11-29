@@ -158,7 +158,7 @@ size_t ArrayListPrimaryTaskStorageControlBlock<Storage>::configure_as_successor(
 		length = (num_active << 1);
 		data = new Item[length];
 		for(size_t i = 0, j = 0; i < prev->length; ++i) {
-			if(prev->data[i].first != Storage::block_size) {
+			if(prev->data[i].first != prev->data[i].offset + Storage::block_size) {
 				data[j] = prev->data[i];
 				++j;
 			}
