@@ -31,6 +31,9 @@
 #include "../ds/PriorityTaskStorage/Modular/Primary/ArrayList/ArrayListPrimaryTaskStorage.h"
 #include "../ds/PriorityTaskStorage/Modular/Secondary/Primitive/PrimitiveSecondaryTaskStorage.h"
 
+#include "../ds/PriorityQueue/Heap/Heap.h"
+#include "../ds/PriorityQueue/SortedArrayHeap/SortedArrayHeap.h"
+
 #include "../primitives/Backoff/Exponential/ExponentialBackoff.h"
 #include "../primitives/Barrier/Simple/SimpleBarrier.h"
 
@@ -112,6 +115,22 @@ public:
 };
 
 template <typename T>
+class PrimitivePheetHeapPrimaryTaskStorage : public PrimitiveHeapPrimaryTaskStorage<T, FixedSizeCircularArray, Heap> {
+public:
+	template <typename ... ConsParams>
+	PrimitivePheetHeapPrimaryTaskStorage(ConsParams&& ... params)
+	: PrimitiveHeapPrimaryTaskStorage<T, FixedSizeCircularArray, Heap>(static_cast<ConsParams&&>(params) ...) {}
+};
+
+template <typename T>
+class PrimitiveSortedArrayHeapPrimaryTaskStorage : public PrimitiveHeapPrimaryTaskStorage<T, FixedSizeCircularArray, SortedArrayHeap> {
+public:
+	template <typename ... ConsParams>
+	PrimitiveSortedArrayHeapPrimaryTaskStorage(ConsParams&& ... params)
+	: PrimitiveHeapPrimaryTaskStorage<T, FixedSizeCircularArray, SortedArrayHeap>(static_cast<ConsParams&&>(params) ...) {}
+};
+
+template <typename T>
 class DefaultArrayListPrimaryTaskStorage : public ArrayListPrimaryTaskStorage<T> {
 public:
 	template <typename ... ConsParams>
@@ -133,6 +152,22 @@ public:
 	template <typename ... ConsParams>
 	PrimitiveHeapModularTaskStorage(ConsParams&& ... params)
 	: ModularTaskStorage<T, DefaultPrimitiveHeapPrimaryTaskStorage, PrimitiveSecondaryTaskStorage >(static_cast<ConsParams&&>(params) ...) {}
+};
+
+template <typename T>
+class PrimitivePheetHeapModularTaskStorage : public ModularTaskStorage<T, PrimitivePheetHeapPrimaryTaskStorage, PrimitiveSecondaryTaskStorage > {
+public:
+	template <typename ... ConsParams>
+	PrimitivePheetHeapModularTaskStorage(ConsParams&& ... params)
+	: ModularTaskStorage<T, PrimitivePheetHeapPrimaryTaskStorage, PrimitiveSecondaryTaskStorage >(static_cast<ConsParams&&>(params) ...) {}
+};
+
+template <typename T>
+class PrimitiveSortedArrayHeapModularTaskStorage : public ModularTaskStorage<T, PrimitiveSortedArrayHeapPrimaryTaskStorage, PrimitiveSecondaryTaskStorage > {
+public:
+	template <typename ... ConsParams>
+	PrimitiveSortedArrayHeapModularTaskStorage(ConsParams&& ... params)
+	: ModularTaskStorage<T, PrimitiveSortedArrayHeapPrimaryTaskStorage, PrimitiveSecondaryTaskStorage >(static_cast<ConsParams&&>(params) ...) {}
 };
 
 template <typename T>
@@ -165,6 +200,14 @@ typedef PriorityScheduler<OversubscribedSimpleCPUHierarchy, PrimitiveHeapModular
 	PrimitiveHeapPrioritySchedulerLongQueues;
 typedef PriorityScheduler<OversubscribedSimpleCPUHierarchy, PrimitiveHeapModularTaskStorage, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff, LifoFifoStrategy, 16>
 	PrimitiveHeapPrioritySchedulerVeryLongQueues;
+typedef PriorityScheduler<OversubscribedSimpleCPUHierarchy, PrimitivePheetHeapModularTaskStorage, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff, LifoFifoStrategy>
+	PrimitivePheetHeapPriorityScheduler;
+typedef PriorityScheduler<OversubscribedSimpleCPUHierarchy, PrimitiveSortedArrayHeapModularTaskStorage, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff, LifoFifoStrategy>
+	PrimitiveSortedArrayHeapPriorityScheduler;
+typedef PriorityScheduler<OversubscribedSimpleCPUHierarchy, PrimitiveSortedArrayHeapModularTaskStorage, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff, LifoFifoStrategy, 1>
+	PrimitiveSortedArrayHeapPrioritySchedulerShortQueues;
+typedef PriorityScheduler<OversubscribedSimpleCPUHierarchy, PrimitiveSortedArrayHeapModularTaskStorage, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff, LifoFifoStrategy, 8>
+	PrimitiveSortedArrayHeapPrioritySchedulerLongQueues;
 typedef PriorityScheduler<OversubscribedSimpleCPUHierarchy, ArrayListModularTaskStorage, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff, LifoFifoStrategy>
 	ArrayListPriorityScheduler;
 typedef PriorityScheduler<OversubscribedSimpleCPUHierarchy, ArrayListModularTaskStorage, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff, LifoFifoStrategy, 1>

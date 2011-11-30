@@ -12,6 +12,11 @@
 #include "Reference/ReferenceQuicksort.h"
 #include "Dag/DagQuicksort.h"
 #include "MixedMode/MixedModeQuicksort.h"
+#include "Reference/ReferenceHeapSort.h"
+
+#include "../../ds/PriorityQueue/Heap/Heap.h"
+#include "../../ds/PriorityQueue/STLPriorityQueueWrapper/STLPriorityQueueWrapper.h"
+#include "../../ds/PriorityQueue/SortedArrayHeap/SortedArrayHeap.h"
 
 #include "../test_schedulers.h"
 
@@ -40,6 +45,9 @@ void SortingTests::run_test() {
 		this->run_sorter<DagQuicksort<DefaultSynchroneousScheduler> >();
 		this->run_sorter<ReferenceQuicksort>();
 		this->run_sorter<ReferenceSTLSort>();
+		this->run_sorter<ReferenceHeapSort<STLPriorityQueueWrapper> >();
+		this->run_sorter<ReferenceHeapSort<Heap> >();
+		this->run_sorter<ReferenceHeapSort<SortedArrayHeap> >();
 	}
 }
 

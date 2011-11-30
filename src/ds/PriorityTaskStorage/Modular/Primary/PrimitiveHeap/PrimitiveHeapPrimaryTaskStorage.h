@@ -13,6 +13,7 @@
 #include <queue>
 
 #include "PrimitiveHeapPrimaryTaskStoragePerformanceCounters.h"
+#include "../../../../PriorityQueue/STLPriorityQueueWrapper/STLPriorityQueueWrapper.h"
 
 namespace pheet {
 
@@ -42,13 +43,14 @@ private:
 	CircularArray* data;
 };
 
-template <typename TT, template <typename S> class CircularArray>
+template <typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT = STLPriorityQueueWrapper>
 class PrimitiveHeapPrimaryTaskStorage {
 public:
 	typedef TT T;
 	// Not completely a standard iterator, as it doesn't support a dereference operation, but this makes implementation simpler for now (and even more lightweight)
 	typedef size_t iterator;
 	typedef PrimitiveHeapPrimaryTaskStoragePerformanceCounters PerformanceCounters;
+	typedef PriorityQueueT<iterator, PrimitiveHeapPrimaryTaskStorageComparator<CircularArray<PrimitiveHeapPrimaryTaskStorageItem<T> > > > PriorityQueue;
 
 	PrimitiveHeapPrimaryTaskStorage(size_t initial_capacity);
 //	PrimitiveHeapPrimaryTaskStorage(size_t initial_capacity, PerformanceCounters& perf_count);
@@ -75,58 +77,58 @@ public:
 
 private:
 	T local_take(iterator item, PerformanceCounters& pc);
-	void clean_heap(PerformanceCounters& pc);
+	void clean_pq(PerformanceCounters& pc);
 	void clean(PerformanceCounters& pc);
 
 	size_t top;
 	size_t bottom;
 
 	CircularArray<PrimitiveHeapPrimaryTaskStorageItem<T> > data;
-	std::priority_queue<iterator, std::vector<iterator>, PrimitiveHeapPrimaryTaskStorageComparator<CircularArray<PrimitiveHeapPrimaryTaskStorageItem<T> > > > heap;
+	PriorityQueue pq;
 
 //	PerformanceCounters perf_count;
 
 	static const T null_element;
 };
 
-template <typename TT, template <typename S> class CircularArray>
-const TT PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::null_element = nullable_traits<T>::null_value;
+template <typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+const TT PrimitiveHeapPrimaryTaskStorage<TT, CircularArray, PriorityQueueT>::null_element = nullable_traits<T>::null_value;
 
-template <typename TT, template <typename S> class CircularArray>
-inline PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::PrimitiveHeapPrimaryTaskStorage(size_t expected_capacity)
+template <typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+inline PrimitiveHeapPrimaryTaskStorage<TT, CircularArray, PriorityQueueT>::PrimitiveHeapPrimaryTaskStorage(size_t expected_capacity)
 : top(0), bottom(0), data(expected_capacity),
-  heap(PrimitiveHeapPrimaryTaskStorageComparator<CircularArray<PrimitiveHeapPrimaryTaskStorageItem<T> > >(&data)) {
+  pq(PrimitiveHeapPrimaryTaskStorageComparator<CircularArray<PrimitiveHeapPrimaryTaskStorageItem<T> > >(&data)) {
 
 }
 /*
-template <typename TT, template <typename S> class CircularArray>
-inline PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::PrimitiveHeapPrimaryTaskStorage(size_t expected_capacity, PerformanceCounters& perf_count)
+template <typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+inline PrimitiveHeapPrimaryTaskStorage<TT, CircularArray, PriorityQueueT>::PrimitiveHeapPrimaryTaskStorage(size_t expected_capacity, PerformanceCounters& perf_count)
 : top(0), bottom(0), data(expected_capacity),
   heap(PrimitiveHeapPrimaryTaskStorageComparator<CircularArray<PrimitiveHeapPrimaryTaskStorageItem<T> > >(&data)),
   perf_count(perf_count) {
 
 }*/
 
-template <typename TT, template <typename S> class CircularArray>
-inline PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::~PrimitiveHeapPrimaryTaskStorage() {
+template <typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+inline PrimitiveHeapPrimaryTaskStorage<TT, CircularArray, PriorityQueueT>::~PrimitiveHeapPrimaryTaskStorage() {
 
 }
 
-template <typename TT, template <typename S> class CircularArray>
-typename PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::iterator PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::begin(PerformanceCounters& pc) {
+template <typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+typename PrimitiveHeapPrimaryTaskStorage<TT, CircularArray, PriorityQueueT>::iterator PrimitiveHeapPrimaryTaskStorage<TT, CircularArray, PriorityQueueT>::begin(PerformanceCounters& pc) {
 	return top;
 }
 
-template <typename TT, template <typename S> class CircularArray>
-typename PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::iterator PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::end(PerformanceCounters& pc) {
+template <typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+typename PrimitiveHeapPrimaryTaskStorage<TT, CircularArray, PriorityQueueT>::iterator PrimitiveHeapPrimaryTaskStorage<TT, CircularArray, PriorityQueueT>::end(PerformanceCounters& pc) {
 	return bottom;
 }
 
 /*
  * Same as take, but is only safe to be called by the owning thread (but is faster)
  */
-template <typename TT, template <typename S> class CircularArray>
-TT PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::local_take(iterator item, PerformanceCounters& pc) {
+template <typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+TT PrimitiveHeapPrimaryTaskStorage<TT, CircularArray, PriorityQueueT>::local_take(iterator item, PerformanceCounters& pc) {
 	assert(item < bottom);
 
 	PrimitiveHeapPrimaryTaskStorageItem<T>& ptsi = data.get(item);
@@ -145,8 +147,8 @@ TT PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::local_take(iterator item,
 	return ptsi.data;
 }
 
-template <typename TT, template <typename S> class CircularArray>
-TT PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::take(iterator item, PerformanceCounters& pc) {
+template <typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+TT PrimitiveHeapPrimaryTaskStorage<TT, CircularArray, PriorityQueueT>::take(iterator item, PerformanceCounters& pc) {
 	assert(item < bottom);
 
 	PrimitiveHeapPrimaryTaskStorageItem<T>& ptsi = data.get(item);
@@ -170,13 +172,13 @@ TT PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::take(iterator item, Perfo
 	return ret;
 }
 
-template <typename TT, template <typename S> class CircularArray>
-bool PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::is_taken(iterator item, PerformanceCounters& pc) {
+template <typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+bool PrimitiveHeapPrimaryTaskStorage<TT, CircularArray, PriorityQueueT>::is_taken(iterator item, PerformanceCounters& pc) {
 	return data.get(item).index != item;
 }
 
-template <typename TT, template <typename S> class CircularArray>
-prio_t PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::get_steal_priority(iterator item, PerformanceCounters& pc) {
+template <typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+prio_t PrimitiveHeapPrimaryTaskStorage<TT, CircularArray, PriorityQueueT>::get_steal_priority(iterator item, PerformanceCounters& pc) {
 	return data.get(item).steal_prio;
 }
 
@@ -188,14 +190,15 @@ prio_t PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::get_steal_priority(it
  * Warning! If multiple tasks are stolen and inserted into another queue, they have to be
  * inserted in the previous insertion order! (by increasing task_id)
  */
-template <typename TT, template <typename S> class CircularArray>
-size_t PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::get_task_id(iterator item, PerformanceCounters& pc) {
+template <typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+size_t PrimitiveHeapPrimaryTaskStorage<TT, CircularArray, PriorityQueueT>::get_task_id(iterator item, PerformanceCounters& pc) {
 	return item;
 }
 
-template <typename TT, template <typename S> class CircularArray>
+template <typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
 template <class Strategy>
-inline void PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::push(Strategy& s, T item, PerformanceCounters& pc) {
+inline void PrimitiveHeapPrimaryTaskStorage<TT, CircularArray, PriorityQueueT>::push(Strategy& s, T item, PerformanceCounters& pc) {
+	pc.push_time.start_timer();
 	if(bottom - top == data.get_capacity()) {
 		clean(pc);
 		if(bottom - top == data.get_capacity()) {
@@ -212,16 +215,17 @@ inline void PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::push(Strategy& s
 	to_put.index = bottom;
 
 	data.put(bottom, to_put);
-	heap.push(bottom);
+	pq.push(bottom);
 
 	MEMORY_FENCE();
 
 	bottom++;
+	pc.push_time.stop_timer();
 }
 
-template <typename TT, template <typename S> class CircularArray>
-inline TT PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::pop(PerformanceCounters& pc) {
-	pc.total_size_pop.add(heap.size());
+template <typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+inline TT PrimitiveHeapPrimaryTaskStorage<TT, CircularArray, PriorityQueueT>::pop(PerformanceCounters& pc) {
+	pc.total_size_pop.add(pq.get_length());
 	pc.pop_time.start_timer();
 	T ret;
 /*	do {
@@ -250,14 +254,13 @@ inline TT PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::pop(PerformanceCou
 		ret = take(best);
 	} while(ret == null_element);*/
 	do {
-		if(heap.empty()) {
+		if(pq.is_empty()) {
 			pc.num_unsuccessful_pops.incr();
 			pc.pop_time.stop_timer();
 			return null_element;
 		}
 
-		size_t el = heap.top();
-		heap.pop();
+		size_t el = pq.pop();
 
 		ret = local_take(el, pc);
 	} while(ret == null_element);
@@ -269,8 +272,8 @@ inline TT PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::pop(PerformanceCou
 	return ret;
 }
 
-template <typename TT, template <typename S> class CircularArray>
-inline TT PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::peek(PerformanceCounters& pc) {
+template <typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+inline TT PrimitiveHeapPrimaryTaskStorage<TT, CircularArray, PriorityQueueT>::peek(PerformanceCounters& pc) {
 /*	iterator i = begin();
 	while(i != end() && is_taken(top)) {
 		++i;
@@ -297,58 +300,57 @@ inline TT PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::peek(PerformanceCo
 		}
 	}*/
 
-	if(heap.empty()) {
+	if(pq.is_empty()) {
 		return null_element;
 	}
-	size_t el = heap.top();
+	size_t el = pq.pop();
 	TT ret;
 	while(is_taken(el, pc)) {
-		heap.pop();
-		if(heap.empty()) {
+		if(pq.is_empty()) {
 			return null_element;
 		}
-		el = heap.top();
-		ret = data.get(el);
+		el = pq.pop();
 	}
+	ret = data.get(el);
 
 	return ret;
 }
 
-template <typename TT, template <typename S> class CircularArray>
-inline size_t PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::get_length(PerformanceCounters& pc) {
+template <typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+inline size_t PrimitiveHeapPrimaryTaskStorage<TT, CircularArray, PriorityQueueT>::get_length(PerformanceCounters& pc) {
 	clean(pc);
 	return bottom - top;
 }
 
-template <typename TT, template <typename S> class CircularArray>
-inline bool PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::is_empty(PerformanceCounters& pc) {
-	clean_heap(pc);
-	return heap.empty();
+template <typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+inline bool PrimitiveHeapPrimaryTaskStorage<TT, CircularArray, PriorityQueueT>::is_empty(PerformanceCounters& pc) {
+	clean_pq(pc);
+	return pq.is_empty();
 }
 
-template <typename TT, template <typename S> class CircularArray>
-inline bool PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::is_full(PerformanceCounters& pc) {
-	clean_heap(pc);
+template <typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+inline bool PrimitiveHeapPrimaryTaskStorage<TT, CircularArray, PriorityQueueT>::is_full(PerformanceCounters& pc) {
+	clean(pc);
 	return (!data.is_growable()) && (bottom - top == data.get_capacity());
 }
 
-template <typename TT, template <typename S> class CircularArray>
-void PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::clean_heap(PerformanceCounters& pc) {
-	if(heap.empty()) {
+template <typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+void PrimitiveHeapPrimaryTaskStorage<TT, CircularArray, PriorityQueueT>::clean_pq(PerformanceCounters& pc) {
+	if(pq.is_empty()) {
 		return;
 	}
-	size_t el = heap.top();
+	size_t el = pq.peek();
 	while(is_taken(el, pc)) {
-		heap.pop();
-		if(heap.empty()) {
+		pq.pop();
+		if(pq.is_empty()) {
 			return;
 		}
-		el = heap.top();
+		el = pq.peek();
 	}
 }
 
-template <typename TT, template <typename S> class CircularArray>
-void PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::clean(PerformanceCounters& pc) {
+template <typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+void PrimitiveHeapPrimaryTaskStorage<TT, CircularArray, PriorityQueueT>::clean(PerformanceCounters& pc) {
 	size_t i = top;
 	while(i < bottom && is_taken(i, pc)) {
 		++i;
@@ -356,9 +358,11 @@ void PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::clean(PerformanceCounte
 	top = i;
 }
 
-template <typename TT, template <typename S> class CircularArray>
-void PrimitiveHeapPrimaryTaskStorage<TT, CircularArray>::print_name() {
-	std::cout << "PrimitiveHeapPrimaryTaskStorage";
+template <typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+void PrimitiveHeapPrimaryTaskStorage<TT, CircularArray, PriorityQueueT>::print_name() {
+	std::cout << "PrimitiveHeapPrimaryTaskStorage<";
+	PriorityQueue::print_name();
+	std::cout << ">";
 }
 
 }
