@@ -19,14 +19,14 @@
  */
 namespace pheet {
 
-template <class Scheduler, class LowerBound, class NextVertex>
+template <class Scheduler, class LowerBound, class NextVertex, size_t MAX_SIZE = 64>
 class BranchBoundGraphBipartitioning {
 public:
 	BranchBoundGraphBipartitioning(procs_t cpus, GraphVertex* data, size_t size);
 	~BranchBoundGraphBipartitioning();
 
 	void partition();
-	GraphBipartitioningSolution const& get_solution();
+	GraphBipartitioningSolution<MAX_SIZE> const& get_solution();
 
 	void print_results();
 	void print_headers();
@@ -42,53 +42,53 @@ private:
 	size_t size;
 	typename Scheduler::CPUHierarchy cpu_hierarchy;
 	Scheduler scheduler;
-	GraphBipartitioningSolution solution;
+	GraphBipartitioningSolution<MAX_SIZE> solution;
 };
 
-template <class Scheduler, class LowerBound, class NextVertex>
-procs_t const BranchBoundGraphBipartitioning<Scheduler, LowerBound, NextVertex>::max_cpus = Scheduler::max_cpus;
+template <class Scheduler, class LowerBound, class NextVertex, size_t MAX_SIZE>
+procs_t const BranchBoundGraphBipartitioning<Scheduler, LowerBound, NextVertex, MAX_SIZE>::max_cpus = Scheduler::max_cpus;
 
-template <class Scheduler, class LowerBound, class NextVertex>
-char const BranchBoundGraphBipartitioning<Scheduler, LowerBound, NextVertex>::name[] = "BranchBoundGraphBipartitioning";
+template <class Scheduler, class LowerBound, class NextVertex, size_t MAX_SIZE>
+char const BranchBoundGraphBipartitioning<Scheduler, LowerBound, NextVertex, MAX_SIZE>::name[] = "BranchBoundGraphBipartitioning";
 
-template <class Scheduler, class LowerBound, class NextVertex>
-char const * const BranchBoundGraphBipartitioning<Scheduler, LowerBound, NextVertex>::scheduler_name = Scheduler::name;
+template <class Scheduler, class LowerBound, class NextVertex, size_t MAX_SIZE>
+char const * const BranchBoundGraphBipartitioning<Scheduler, LowerBound, NextVertex, MAX_SIZE>::scheduler_name = Scheduler::name;
 
-template <class Scheduler, class LowerBound, class NextVertex>
-BranchBoundGraphBipartitioning<Scheduler, LowerBound, NextVertex>::BranchBoundGraphBipartitioning(procs_t cpus, GraphVertex* data, size_t size)
+template <class Scheduler, class LowerBound, class NextVertex, size_t MAX_SIZE>
+BranchBoundGraphBipartitioning<Scheduler, LowerBound, NextVertex, MAX_SIZE>::BranchBoundGraphBipartitioning(procs_t cpus, GraphVertex* data, size_t size)
 : data(data), size(size), cpu_hierarchy(cpus), scheduler(&cpu_hierarchy) {
 
 }
 
-template <class Scheduler, class LowerBound, class NextVertex>
-BranchBoundGraphBipartitioning<Scheduler, LowerBound, NextVertex>::~BranchBoundGraphBipartitioning() {
+template <class Scheduler, class LowerBound, class NextVertex, size_t MAX_SIZE>
+BranchBoundGraphBipartitioning<Scheduler, LowerBound, NextVertex, MAX_SIZE>::~BranchBoundGraphBipartitioning() {
 
 }
 
-template <class Scheduler, class LowerBound, class NextVertex>
-void BranchBoundGraphBipartitioning<Scheduler, LowerBound, NextVertex>::partition() {
-	scheduler.template finish<BranchBoundGraphBipartitioningRootTask<typename Scheduler::Task, LowerBound, NextVertex> >(data, size, &solution);
+template <class Scheduler, class LowerBound, class NextVertex, size_t MAX_SIZE>
+void BranchBoundGraphBipartitioning<Scheduler, LowerBound, NextVertex, MAX_SIZE>::partition() {
+	scheduler.template finish<BranchBoundGraphBipartitioningRootTask<typename Scheduler::Task, LowerBound, NextVertex, MAX_SIZE> >(data, size, &solution);
 }
 
-template <class Scheduler, class LowerBound, class NextVertex>
-GraphBipartitioningSolution const& BranchBoundGraphBipartitioning<Scheduler, LowerBound, NextVertex>::get_solution() {
+template <class Scheduler, class LowerBound, class NextVertex, size_t MAX_SIZE>
+GraphBipartitioningSolution<MAX_SIZE> const& BranchBoundGraphBipartitioning<Scheduler, LowerBound, NextVertex, MAX_SIZE>::get_solution() {
 	return solution;
 }
 
-template <class Scheduler, class LowerBound, class NextVertex>
-void BranchBoundGraphBipartitioning<Scheduler, LowerBound, NextVertex>::print_results() {
+template <class Scheduler, class LowerBound, class NextVertex, size_t MAX_SIZE>
+void BranchBoundGraphBipartitioning<Scheduler, LowerBound, NextVertex, MAX_SIZE>::print_results() {
 	std::cout << LowerBound::name << "\t" << NextVertex::name << "\t";
 	scheduler.print_performance_counter_values();
 }
 
-template <class Scheduler, class LowerBound, class NextVertex>
-void BranchBoundGraphBipartitioning<Scheduler, LowerBound, NextVertex>::print_headers() {
+template <class Scheduler, class LowerBound, class NextVertex, size_t MAX_SIZE>
+void BranchBoundGraphBipartitioning<Scheduler, LowerBound, NextVertex, MAX_SIZE>::print_headers() {
 	std::cout << "lower_bound\tnext_vertex\t";
 	scheduler.print_performance_counter_headers();
 }
 
-template <class Scheduler, class LowerBound, class NextVertex>
-void BranchBoundGraphBipartitioning<Scheduler, LowerBound, NextVertex>::print_scheduler_name() {
+template <class Scheduler, class LowerBound, class NextVertex, size_t MAX_SIZE>
+void BranchBoundGraphBipartitioning<Scheduler, LowerBound, NextVertex, MAX_SIZE>::print_scheduler_name() {
 	Scheduler::print_name();
 }
 

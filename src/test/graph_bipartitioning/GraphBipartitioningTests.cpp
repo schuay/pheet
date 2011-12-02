@@ -13,6 +13,8 @@
 #include "StrategyBranchBound/StrategyBranchBoundGraphBipartitioning.h"
 #include "StrategyBranchBound/BranchBoundGraphBipartitioningAutoStrategy.h"
 #include "StrategyBranchBound/BranchBoundGraphBipartitioningBestFirstStrategy.h"
+#include "ImprovedBranchBound/ImprovedBranchBoundGraphBipartitioning.h"
+#include "ImprovedBranchBound/ImprovedBranchBoundGraphBipartitioningBasicLogic.h"
 #include "../../sched/strategies/Fifo/FifoStrategy.h"
 #include "../../sched/strategies/Lifo/LifoStrategy.h"
 #include "../../sched/strategies/LifoFifo/LifoFifoStrategy.h"
@@ -32,6 +34,8 @@ GraphBipartitioningTests::~GraphBipartitioningTests() {
 void GraphBipartitioningTests::run_test() {
 	if(graph_bipartitioning_test) {
 		std::cout << "----" << std::endl;
+
+		this->run_partitioner<ImprovedBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningBasicLogic<64>, 64 > >();
 
 		this->run_partitioner<StrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, BasicLowerBound, BasicNextVertex, BranchBoundGraphBipartitioningBestFirstStrategy > >();
 		this->run_partitioner<StrategyBranchBoundGraphBipartitioning<ArrayListPrioritySchedulerShortQueues, BasicLowerBound, BasicNextVertex, BranchBoundGraphBipartitioningBestFirstStrategy > >();

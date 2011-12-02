@@ -251,7 +251,7 @@ bool SortedArrayHeap<TT, Comparator>::max_heap_put(size_t index, T item) {
 	size_t valid = index;
 	SortedArrayHeapArray<TT>* el = max_heap[index];
 
-	while(is_less(item, el->data[el->start % el->capacity])) {
+	while(is_less(el->data[el->start % el->capacity], item)) {
 		valid = index;
 		index = (index - 1) >> 1;
 		if(valid == 0) {
@@ -278,7 +278,7 @@ bool SortedArrayHeap<TT, Comparator>::min_heap_put(size_t index, T item) {
 	size_t valid = index;
 	SortedArrayHeapArray<TT>* el = min_heap[index];
 
-	while(is_less(el->data[(el->end - 1) % el->capacity], item)) {
+	while(is_less(item, el->data[(el->end - 1) % el->capacity])) {
 		valid = index;
 		index = (index - 1) >> 1;
 		if(valid == 0) {
@@ -338,7 +338,7 @@ void SortedArrayHeap<TT, Comparator>::bubble_down_max(size_t index) {
 		SortedArrayHeapArray<TT>* nel = max_heap[next];
 		T nel_item = nel->data[nel->start % nel->capacity];
 		if(nnext < heap_length) {
-			SortedArrayHeapArray<TT>* nnel = max_heap[next];
+			SortedArrayHeapArray<TT>* nnel = max_heap[nnext];
 			T nnel_item = nnel->data[nnel->start % nnel->capacity];
 			if(is_less(nel_item, nnel_item)) {
 				next = nnext;
@@ -367,7 +367,7 @@ void SortedArrayHeap<TT, Comparator>::bubble_down_min(size_t index) {
 		SortedArrayHeapArray<TT>* nel = min_heap[next];
 		T nel_item = nel->data[(nel->end - 1) % nel->capacity];
 		if(nnext < heap_length) {
-			SortedArrayHeapArray<TT>* nnel = min_heap[next];
+			SortedArrayHeapArray<TT>* nnel = min_heap[nnext];
 			T nnel_item = nnel->data[(nnel->end - 1) % nnel->capacity];
 			if(is_less(nnel_item, nel_item)) {
 				next = nnext;

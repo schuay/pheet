@@ -13,7 +13,6 @@
 #include "../../../primitives/Reducer/Max/MaxReducer.h"
 #include "../../../primitives/Backoff/Exponential/ExponentialBackoff.h"
 
-#include <set>
 #include <algorithm>
 
 /*
@@ -23,13 +22,13 @@ namespace pheet {
 
 
 
-template <class Task, class LowerBound, class NextVertex>
+template <class Task, class LowerBound, class NextVertex, size_t MAX_SIZE>
 class BranchBoundGraphBipartitioningTask : public Task {
 public:
-	typedef BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex> BBTask;
+	typedef BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex, MAX_SIZE> BBTask;
 	typedef ExponentialBackoff<> Backoff;
 
-	BranchBoundGraphBipartitioningTask(GraphVertex* graph, size_t size, size_t k, MaxReducer<GraphBipartitioningSolution>& best, size_t* set1, size_t set1_size, size_t* set2, size_t set2_size, size_t* ub, size_t lb);
+	BranchBoundGraphBipartitioningTask(GraphVertex* graph, size_t size, size_t k, MaxReducer<GraphBipartitioningSolution<MAX_SIZE> >& best, size_t* set1, size_t set1_size, size_t* set2, size_t set2_size, size_t* ub, size_t lb);
 	virtual ~BranchBoundGraphBipartitioningTask();
 
 	virtual void operator()(typename Task::TEC& tec);
@@ -42,7 +41,7 @@ private:
 	GraphVertex* graph;
 	size_t size;
 	size_t k;
-	MaxReducer<GraphBipartitioningSolution> best;
+	MaxReducer<GraphBipartitioningSolution<MAX_SIZE> > best;
 	size_t* set1;
 	size_t set1_size;
 	size_t* set2;
@@ -54,20 +53,20 @@ private:
 	NextVertex nv_calc;
 };
 
-template <class Task, class LowerBound, class NextVertex>
-BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex>::BranchBoundGraphBipartitioningTask(GraphVertex* graph, size_t size, size_t k, MaxReducer<GraphBipartitioningSolution>& best, size_t* set1, size_t set1_size, size_t* set2, size_t set2_size, size_t* ub, size_t lb)
+template <class Task, class LowerBound, class NextVertex, size_t MAX_SIZE>
+BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex, MAX_SIZE>::BranchBoundGraphBipartitioningTask(GraphVertex* graph, size_t size, size_t k, MaxReducer<GraphBipartitioningSolution<MAX_SIZE> >& best, size_t* set1, size_t set1_size, size_t* set2, size_t set2_size, size_t* ub, size_t lb)
 : graph(graph), size(size), k(k), best(best), set1(set1), set1_size(set1_size), set2(set2), set2_size(set2_size), ub(ub), lb(lb) {
 
 }
 
-template <class Task, class LowerBound, class NextVertex>
-BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex>::~BranchBoundGraphBipartitioningTask() {
+template <class Task, class LowerBound, class NextVertex, size_t MAX_SIZE>
+BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex, MAX_SIZE>::~BranchBoundGraphBipartitioningTask() {
 	delete[] set1;
 	delete[] set2;
 }
 
-template <class Task, class LowerBound, class NextVertex>
-void BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex>::operator()(typename Task::TEC& tec) {
+template <class Task, class LowerBound, class NextVertex, size_t MAX_SIZE>
+void BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex, MAX_SIZE>::operator()(typename Task::TEC& tec) {
 	if(lb >= *ub) {
 		return;
 	}
@@ -111,11 +110,11 @@ void BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex>::operator(
 	}
 }
 
-template <class Task, class LowerBound, class NextVertex>
-void BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex>::prepare_solution(size_t* set1, size_t set1_size, size_t* set2, size_t set2_size) {
+template <class Task, class LowerBound, class NextVertex, size_t MAX_SIZE>
+void BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex, MAX_SIZE>::prepare_solution(size_t* set1, size_t set1_size, size_t* set2, size_t set2_size) {
 	size_t* unfinished;
 	size_t unfinished_size;
-	GraphBipartitioningSolution sol;
+	GraphBipartitioningSolution<MAX_SIZE> sol;
 	sol.weight = 0;
 
 	if(set1_size == k) {
@@ -159,11 +158,13 @@ void BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex>::prepare_s
 		size_t i2 = i + 1;
 		for(size_t j = 0; j < graph[node].num_edges; ++j) {
 			size_t target = graph[node].edges[j].target;
-			while(i2 < set1_size && set1[i2] < target) {
-				++i2;
-			}
-			if(i2 == set1_size || set1[i2] > target) {
-				sol.weight += graph[node].edges[j].weight;
+			if(target > i) {
+				while(i2 < set1_size && set1[i2] < target) {
+					++i2;
+				}
+				if(i2 == set1_size || set1[i2] > target) {
+					sol.weight += graph[node].edges[j].weight;
+				}
 			}
 		}
 	}
@@ -172,11 +173,13 @@ void BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex>::prepare_s
 		size_t i2 = i + 1;
 		for(size_t j = 0; j < graph[node].num_edges; ++j) {
 			size_t target = graph[node].edges[j].target;
-			while(i2 < set2_size && set2[i2] < target) {
-				++i2;
-			}
-			if(i2 == set2_size || set2[i2] > target) {
-				sol.weight += graph[node].edges[j].weight;
+			if(target > i) {
+				while(i2 < set2_size && set2[i2] < target) {
+					++i2;
+				}
+				if(i2 == set2_size || set2[i2] > target) {
+					sol.weight += graph[node].edges[j].weight;
+				}
 			}
 		}
 	}
@@ -187,6 +190,12 @@ void BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex>::prepare_s
 		size_t old_ub = *ub;
 		if(old_ub > sol.weight) {
 			if(SIZET_CAS(ub, old_ub, sol.weight)) {
+				for(size_t i = 0; i < set1_size; ++i) {
+					sol.sets[0].set(set1[i]);
+				}
+				for(size_t i = 0; i < set2_size; ++i) {
+					sol.sets[1].set(set2[i]);
+				}
 				best.add_value(sol);
 				break;
 			}
@@ -198,8 +207,8 @@ void BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex>::prepare_s
 	}
 }
 
-template <class Task, class LowerBound, class NextVertex>
-size_t* BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex>::create_new_set(size_t* set, size_t new_el, size_t set_size, size_t max_size) {
+template <class Task, class LowerBound, class NextVertex, size_t MAX_SIZE>
+size_t* BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex, MAX_SIZE>::create_new_set(size_t* set, size_t new_el, size_t set_size, size_t max_size) {
 	size_t* ret = new size_t[max_size];
 	size_t i, j;
 	for(i = 0, j = 0; i < set_size; ++i, ++j) {
@@ -217,8 +226,8 @@ size_t* BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex>::create
 	return ret;
 }
 
-template <class Task, class LowerBound, class NextVertex>
-size_t* BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex>::clone_set(size_t* set, size_t set_size, size_t max_size) {
+template <class Task, class LowerBound, class NextVertex, size_t MAX_SIZE>
+size_t* BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex, MAX_SIZE>::clone_set(size_t* set, size_t set_size, size_t max_size) {
 	size_t* ret = new size_t[max_size];
 	assert(set_size <= max_size);
 	for(size_t i = 0; i < set_size; ++i) {

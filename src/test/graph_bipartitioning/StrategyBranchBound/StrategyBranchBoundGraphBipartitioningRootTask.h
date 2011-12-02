@@ -18,12 +18,12 @@
  */
 namespace pheet {
 
-template <class Task, class LowerBound, class NextVertex, class SchedulingStrategy>
+template <class Task, class LowerBound, class NextVertex, class SchedulingStrategy, size_t MAX_SIZE>
 class StrategyBranchBoundGraphBipartitioningRootTask : public Task {
 public:
-	typedef StrategyBranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex, SchedulingStrategy> BBTask;
+	typedef StrategyBranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex, SchedulingStrategy, MAX_SIZE> BBTask;
 
-	StrategyBranchBoundGraphBipartitioningRootTask(GraphVertex* graph, size_t size, GraphBipartitioningSolution* out);
+	StrategyBranchBoundGraphBipartitioningRootTask(GraphVertex* graph, size_t size, GraphBipartitioningSolution<MAX_SIZE>* out);
 	virtual ~StrategyBranchBoundGraphBipartitioningRootTask();
 
 	virtual void operator()(typename Task::TEC& tec);
@@ -31,24 +31,24 @@ public:
 private:
 	GraphVertex* graph;
 	size_t size;
-	GraphBipartitioningSolution* out;
+	GraphBipartitioningSolution<MAX_SIZE>* out;
 };
 
-template <class Task, class LowerBound, class NextVertex, class SchedulingStrategy>
-StrategyBranchBoundGraphBipartitioningRootTask<Task, LowerBound, NextVertex, SchedulingStrategy>::StrategyBranchBoundGraphBipartitioningRootTask(GraphVertex* graph, size_t size, GraphBipartitioningSolution* out)
+template <class Task, class LowerBound, class NextVertex, class SchedulingStrategy, size_t MAX_SIZE>
+StrategyBranchBoundGraphBipartitioningRootTask<Task, LowerBound, NextVertex, SchedulingStrategy, MAX_SIZE>::StrategyBranchBoundGraphBipartitioningRootTask(GraphVertex* graph, size_t size, GraphBipartitioningSolution<MAX_SIZE>* out)
 : graph(graph), size(size), out(out) {
 
 
 }
 
-template <class Task, class LowerBound, class NextVertex, class SchedulingStrategy>
-StrategyBranchBoundGraphBipartitioningRootTask<Task, LowerBound, NextVertex, SchedulingStrategy>::~StrategyBranchBoundGraphBipartitioningRootTask() {
+template <class Task, class LowerBound, class NextVertex, class SchedulingStrategy, size_t MAX_SIZE>
+StrategyBranchBoundGraphBipartitioningRootTask<Task, LowerBound, NextVertex, SchedulingStrategy, MAX_SIZE>::~StrategyBranchBoundGraphBipartitioningRootTask() {
 
 }
 
-template <class Task, class LowerBound, class NextVertex, class SchedulingStrategy>
-void StrategyBranchBoundGraphBipartitioningRootTask<Task, LowerBound, NextVertex, SchedulingStrategy>::operator()(typename Task::TEC& tec) {
-	MaxReducer<GraphBipartitioningSolution> best;
+template <class Task, class LowerBound, class NextVertex, class SchedulingStrategy, size_t MAX_SIZE>
+void StrategyBranchBoundGraphBipartitioningRootTask<Task, LowerBound, NextVertex, SchedulingStrategy, MAX_SIZE>::operator()(typename Task::TEC& tec) {
+	MaxReducer<GraphBipartitioningSolution<MAX_SIZE> > best;
 	size_t ub = std::numeric_limits< size_t >::max();
 
 	size_t k = size >> 1;

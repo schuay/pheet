@@ -47,7 +47,7 @@ void SortingTests::run_test() {
 		this->run_sorter<ReferenceSTLSort>();
 		this->run_sorter<ReferenceHeapSort<STLPriorityQueueWrapper> >();
 		this->run_sorter<ReferenceHeapSort<Heap> >();
-		this->run_sorter<ReferenceHeapSort<SortedArrayHeap> >();
+//		this->run_sorter<ReferenceHeapSort<SortedArrayHeap> >();
 	}
 }
 
