@@ -74,13 +74,16 @@ GraphBipartitioningSolution<MAX_SIZE> const& ImprovedStrategyBranchBoundGraphBip
 
 template <class Scheduler, class Logic, template <class SubProblem> class SchedulingStrategy, size_t MAX_SIZE>
 void ImprovedStrategyBranchBoundGraphBipartitioning<Scheduler, Logic, SchedulingStrategy, MAX_SIZE>::print_results() {
-//	std::cout << LowerBound::name << "\t" << NextVertex::name << "\t";
+	Logic::print_name();
+	std::cout << "\t";
+	SchedulingStrategy<void>::print_name();
+	std::cout << "\t";
 	scheduler.print_performance_counter_values();
 }
 
 template <class Scheduler, class Logic, template <class SubProblem> class SchedulingStrategy, size_t MAX_SIZE>
 void ImprovedStrategyBranchBoundGraphBipartitioning<Scheduler, Logic, SchedulingStrategy, MAX_SIZE>::print_headers() {
-//	std::cout << "lower_bound\tnext_vertex\t";
+	std::cout << "logic\tstrategy\t";
 	scheduler.print_performance_counter_headers();
 }
 

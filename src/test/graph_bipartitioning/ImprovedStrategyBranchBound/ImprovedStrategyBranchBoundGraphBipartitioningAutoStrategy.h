@@ -10,38 +10,37 @@
 #define IMPROVEDSTRATEGYBRANCHBOUNDGRAPHBIPARTITIONINGAUTOSTRATEGY_H_
 
 #include "../../../settings.h"
-#include "../ImprovedBranchBound/ImprovedBranchBoundGraphBipartitioningSubproblem.h"
 
 namespace pheet {
 
-template <class Strategy>
+template <class Strategy, class SubProblem>
 class ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy {
 public:
 	ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy();
 	~ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy();
 
-	Strategy operator()(ImprovedBranchBoundGraphBipartitioningSubproblem* sub_problem, size_t* upper_bound);
+	Strategy operator()(SubProblem* sub_problem, size_t* upper_bound);
 
 	static void print_name();
 };
 
-template <class Strategy>
-inline ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<Strategy>::ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy() {
+template <class Strategy, class SubProblem>
+inline ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<Strategy, SubProblem>::ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy() {
 
 }
 
-template <class Strategy>
-inline ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<Strategy>::~ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy() {
+template <class Strategy, class SubProblem>
+inline ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<Strategy, SubProblem>::~ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy() {
 
 }
 
-template <class Strategy>
-inline Strategy ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<Strategy>::operator()(ImprovedBranchBoundGraphBipartitioningSubproblem* sub_problem, size_t* upper_bound) {
+template <class Strategy, class SubProblem>
+inline Strategy ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<Strategy, SubProblem>::operator()(SubProblem* sub_problem, size_t* upper_bound) {
 	return Strategy();
 }
 
-template <class Strategy>
-void ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<Strategy>::print_name() {
+template <class Strategy, class SubProblem>
+void ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<Strategy, SubProblem>::print_name() {
 	std::cout << "AutoStrategy<";
 	Strategy::print_name();
 	std::cout << ">";

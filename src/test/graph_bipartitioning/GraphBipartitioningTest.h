@@ -126,7 +126,7 @@ GraphVertex* GraphBipartitioningTest<Partitioner>::generate_data() {
 
 template <class Partitioner>
 void GraphBipartitioningTest<Partitioner>::delete_data(GraphVertex* data) {
-	for(size_t i = 0; i < size - 1; ++i) {
+	for(size_t i = 0; i < size; ++i) {
 		if(data[i].edges != NULL) {
 			delete[] data[i].edges;
 		}

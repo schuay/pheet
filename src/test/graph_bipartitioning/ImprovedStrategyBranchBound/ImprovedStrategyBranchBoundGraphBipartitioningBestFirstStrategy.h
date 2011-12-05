@@ -11,7 +11,6 @@
 
 #include "../../../settings.h"
 #include "../../../sched/strategies/UserDefinedPriority/UserDefinedPriority.h"
-#include "../ImprovedBranchBound/ImprovedBranchBoundGraphBipartitioningSubproblem.h"
 
 namespace pheet {
 

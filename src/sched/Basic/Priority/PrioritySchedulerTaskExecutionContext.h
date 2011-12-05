@@ -173,7 +173,7 @@ size_t const PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, Defa
 
 template <class Scheduler, template <typename T> class TaskStorageT, class DefaultStrategy, uint8_t CallThreshold>
 PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy, CallThreshold>::PrioritySchedulerTaskExecutionContext(std::vector<LevelDescription*> const* levels, std::vector<typename CPUHierarchy::CPUDescriptor*> const* cpus, typename Scheduler::State* scheduler_state, PerformanceCounters& perf_count)
-: performance_counters(perf_count), stack_filled_left(0), stack_filled_right(stack_size), stack_init_left(0)/*, stack_init_right(stack_size)*/, num_levels(levels->size()), thread_executor(cpus, this), scheduler_state(scheduler_state), preferred_queue_length(find_last_bit_set((*levels)[0]->total_size + 2) << CallThreshold), max_queue_length(preferred_queue_length << 1), task_storage(max_queue_length) {
+: performance_counters(perf_count), stack_filled_left(0), stack_filled_right(stack_size), stack_init_left(0)/*, stack_init_right(stack_size)*/, num_levels(levels->size()), thread_executor(cpus, this), scheduler_state(scheduler_state), preferred_queue_length(find_last_bit_set((*levels)[0]->total_size + 2) << CallThreshold), max_queue_length(preferred_queue_length << 1), call_mode(false), task_storage(max_queue_length) {
 	performance_counters.total_time.start_timer();
 
 	stack = new StackElement[stack_size];
@@ -600,10 +600,12 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrat
 
 	size_t limit = call_mode?preferred_queue_length:max_queue_length;
 	if(task_storage.get_length(performance_counters.task_storage_performance_counters) >= limit) {
+		call_mode = true;
 		performance_counters.num_spawns_to_call.incr();
 		call<CallTaskType>(static_cast<TaskParams&&>(params) ...);
 	}
 	else {
+		call_mode = false;
 		CallTaskType* task = new CallTaskType(params ...);
 		assert(current_task_parent != NULL);
 		assert(current_task_parent >= stack && (current_task_parent < (stack + stack_size)));

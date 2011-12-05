@@ -17,7 +17,7 @@
 #include "ImprovedBranchBound/ImprovedBranchBoundGraphBipartitioningBasicLogic.h"
 #include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioning.h"
 #include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy.h"
-//#include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy.h"
+#include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy.h"
 #include "../../sched/strategies/Fifo/FifoStrategy.h"
 #include "../../sched/strategies/Lifo/LifoStrategy.h"
 #include "../../sched/strategies/LifoFifo/LifoFifoStrategy.h"
@@ -25,6 +25,31 @@
 #include "../test_schedulers.h"
 
 namespace pheet {
+
+
+template <typename T>
+class AutoLifoStrategy : public ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<LifoStrategy, T> {
+public:
+	template <typename ... ConsParams>
+	AutoLifoStrategy(ConsParams&& ... params)
+	: ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<LifoStrategy, T >(static_cast<ConsParams&&>(params) ...) {}
+};
+
+template <typename T>
+class AutoFifoStrategy : public ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<FifoStrategy, T> {
+public:
+	template <typename ... ConsParams>
+	AutoFifoStrategy(ConsParams&& ... params)
+	: ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<FifoStrategy, T >(static_cast<ConsParams&&>(params) ...) {}
+};
+
+template <typename T>
+class AutoLifoFifoStrategy : public ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<LifoFifoStrategy, T> {
+public:
+	template <typename ... ConsParams>
+	AutoLifoFifoStrategy(ConsParams&& ... params)
+	: ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<LifoFifoStrategy, T >(static_cast<ConsParams&&>(params) ...) {}
+};
 
 GraphBipartitioningTests::GraphBipartitioningTests() {
 
@@ -39,7 +64,9 @@ void GraphBipartitioningTests::run_test() {
 		std::cout << "----" << std::endl;
 
 		this->run_partitioner<ImprovedBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningBasicLogic<64>, 64 > >();
-	//	this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningBasicLogic<64>, ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<LifoFifoStrategy>, 64 > >();
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningBasicLogic<64>, AutoFifoStrategy, 64 > >();
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningBasicLogic<64>, AutoLifoStrategy, 64 > >();
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningBasicLogic<64>, AutoLifoFifoStrategy, 64 > >();
 		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningBasicLogic<64>, ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy, 64 > >();
 
 		this->run_partitioner<StrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, BasicLowerBound, BasicNextVertex, BranchBoundGraphBipartitioningBestFirstStrategy > >();

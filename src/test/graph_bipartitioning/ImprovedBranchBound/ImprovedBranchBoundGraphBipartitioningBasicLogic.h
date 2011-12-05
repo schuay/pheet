@@ -31,6 +31,8 @@ public:
 	size_t get_lower_bound();
 	void update(uint8_t set, size_t pos);
 	void bulk_update(uint8_t set, std::bitset<MAX_SIZE> positions);
+
+	static void print_name();
 private:
 	Subproblem* sub_problem;
 };
@@ -89,6 +91,11 @@ void ImprovedBranchBoundGraphBipartitioningBasicLogic<MAX_SIZE>::bulk_update(uin
 		update(set, current_bit);
 		current_bit = positions._Find_next(current_bit);
 	}
+}
+
+template <size_t MAX_SIZE>
+void ImprovedBranchBoundGraphBipartitioningBasicLogic<MAX_SIZE>::print_name() {
+	std::cout << "BasicLogic";
 }
 
 }
