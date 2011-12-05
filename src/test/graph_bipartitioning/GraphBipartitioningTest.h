@@ -37,7 +37,7 @@ public:
 private:
 	GraphVertex* generate_data();
 	void delete_data(GraphVertex* data);
-	size_t check_solution(GraphBipartitioningSolution<64> const& solution);
+	size_t check_solution(GraphVertex* data, GraphBipartitioningSolution<64> const& solution);
 
 	procs_t cpus;
 	int type;
@@ -73,7 +73,7 @@ void GraphBipartitioningTest<Partitioner>::run_test() {
 	part.partition();
 	check_time(end);
 
-	size_t weight = check_solution(part.get_solution());
+	size_t weight = check_solution(data, part.get_solution());
 	double seconds = calculate_seconds(start, end);
 	std::cout << "test\tpartitioner\tscheduler\ttype\tsize\tp\tseed\tcpus\ttotal_time\tweight\t";
 	part.print_headers();
@@ -97,13 +97,14 @@ GraphVertex* GraphBipartitioningTest<Partitioner>::generate_data() {
     boost::uniform_int<size_t> rnd_st(0, 2048);
 
 	std::vector<GraphEdge>* edges = new std::vector<GraphEdge>[size];
-	for(size_t i = 0; i < size - 1; ++i) {
+	for(size_t i = 0; i < size; ++i) {
 		for(size_t j = i + 1; j < size; ++j) {
 			if(rnd_f(rng) < p) {
 				GraphEdge e;
 				e.target = j;
 				e.weight = rnd_st(rng);
 				edges[i].push_back(e);
+				e.target = i;
 				edges[j].push_back(e);
 			}
 		}
@@ -118,8 +119,6 @@ GraphVertex* GraphBipartitioningTest<Partitioner>::generate_data() {
 			data[i].edges = NULL;
 		}
 	}
-	data[size - 1].num_edges = 0;
-	data[size - 1].edges = NULL;
 	delete[] edges;
 
 	return data;
@@ -136,7 +135,36 @@ void GraphBipartitioningTest<Partitioner>::delete_data(GraphVertex* data) {
 }
 
 template <class Partitioner>
-size_t GraphBipartitioningTest<Partitioner>::check_solution(GraphBipartitioningSolution<64> const& solution) {
+size_t GraphBipartitioningTest<Partitioner>::check_solution(GraphVertex* data, GraphBipartitioningSolution<64> const& solution) {
+
+	size_t k = size >> 1;
+
+	if(solution.sets[0].count() != k) {
+		std::cout << "invalid solution" << std::endl;
+	}
+	if(solution.sets[1].count() != size - k) {
+		std::cout << "invalid solution" << std::endl;
+	}
+
+	size_t weight = 0;
+	size_t current_bit = solution.sets[0]._Find_first();
+	while(current_bit != solution.sets[0].size()) {
+		for(size_t i = 0; i < data[current_bit].num_edges; ++i) {
+			if(solution.sets[1].test(data[current_bit].edges[i].target)) {
+				assert(!solution.sets[0].test(data[current_bit].edges[i].target));
+				weight += data[current_bit].edges[i].weight;
+			}
+			else {
+				assert(solution.sets[0].test(data[current_bit].edges[i].target));
+			}
+		}
+		current_bit = solution.sets[0]._Find_next(current_bit);
+	}
+
+	if(weight != solution.weight) {
+		std::cout << "weight doesn't match" << std::endl;
+	}
+
 	// todo recheck weights
 	return solution.weight;
 }

@@ -162,11 +162,13 @@ void StrategyBranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex, Sc
 		size_t i2 = i + 1;
 		for(size_t j = 0; j < graph[node].num_edges; ++j) {
 			size_t target = graph[node].edges[j].target;
-			while(i2 < set1_size && set1[i2] < target) {
-				++i2;
-			}
-			if(i2 == set1_size || set1[i2] > target) {
-				sol.weight += graph[node].edges[j].weight;
+			if(target > node) {
+				while(i2 < set1_size && set1[i2] < target) {
+					++i2;
+				}
+				if(i2 == set1_size || set1[i2] > target) {
+					sol.weight += graph[node].edges[j].weight;
+				}
 			}
 		}
 	}
@@ -175,11 +177,13 @@ void StrategyBranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex, Sc
 		size_t i2 = i + 1;
 		for(size_t j = 0; j < graph[node].num_edges; ++j) {
 			size_t target = graph[node].edges[j].target;
-			while(i2 < set2_size && set2[i2] < target) {
-				++i2;
-			}
-			if(i2 == set2_size || set2[i2] > target) {
-				sol.weight += graph[node].edges[j].weight;
+			if(target > node) {
+				while(i2 < set2_size && set2[i2] < target) {
+					++i2;
+				}
+				if(i2 == set2_size || set2[i2] > target) {
+					sol.weight += graph[node].edges[j].weight;
+				}
 			}
 		}
 	}
