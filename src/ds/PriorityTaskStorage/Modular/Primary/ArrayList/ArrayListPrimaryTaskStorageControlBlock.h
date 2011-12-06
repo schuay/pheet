@@ -49,8 +49,7 @@ public:
 	void finalize();
 	void finalize_item(size_t item, std::vector<typename Storage::Item*>& block_reuse, size_t max_reuse);
 	void finalize_item_until(size_t item, size_t limit, std::vector<typename Storage::Item*>& block_reuse, size_t max_reuse);
-
-	void set_block_reuse(std::vector<typename Storage::Item*>& block_reuse);
+	void finalize_unused_item(size_t item, std::vector<typename Storage::Item*>& block_reuse, size_t max_reuse);
 private:
 
 	size_t num_iterators;
@@ -136,6 +135,17 @@ void ArrayListPrimaryTaskStorageControlBlock<Storage>::finalize_item_until(size_
 		assert(data[item].data[i - offset].index == i + 1);
 		delete data[item].data[i - offset].s;
 	}
+	if(block_reuse.size() < max_reuse) {
+		block_reuse.push_back(data[item].data);
+	}
+	else {
+		delete[] data[item].data;
+	}
+}
+
+template <class Storage>
+void ArrayListPrimaryTaskStorageControlBlock<Storage>::finalize_unused_item(size_t item, std::vector<typename Storage::Item*>& block_reuse, size_t max_reuse) {
+	assert(num_iterators == num_passed_iterators);
 	if(block_reuse.size() < max_reuse) {
 		block_reuse.push_back(data[item].data);
 	}

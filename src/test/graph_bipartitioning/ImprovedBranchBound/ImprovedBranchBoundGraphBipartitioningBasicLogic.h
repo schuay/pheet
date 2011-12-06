@@ -26,6 +26,7 @@ public:
 	ImprovedBranchBoundGraphBipartitioningBasicLogic(Subproblem* sub_problem, Self const& other);
 	~ImprovedBranchBoundGraphBipartitioningBasicLogic();
 
+	void init_root();
 	size_t get_next_vertex();
 	size_t get_cut();
 	size_t get_lower_bound();
@@ -51,6 +52,11 @@ ImprovedBranchBoundGraphBipartitioningBasicLogic<MAX_SIZE>::ImprovedBranchBoundG
 
 template <size_t MAX_SIZE>
 ImprovedBranchBoundGraphBipartitioningBasicLogic<MAX_SIZE>::~ImprovedBranchBoundGraphBipartitioningBasicLogic() {
+
+}
+
+template <size_t MAX_SIZE>
+void ImprovedBranchBoundGraphBipartitioningBasicLogic<MAX_SIZE>::init_root() {
 
 }
 

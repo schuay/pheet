@@ -70,6 +70,10 @@ public:
 	static void print_name();
 
 	static size_t const block_size;
+protected:
+	// can be overridden by child
+//	T local_take_best(PerformanceCounters& pc);
+
 private:
 	T local_take(size_t block, size_t block_index, PerformanceCounters& pc);
 	void clean(PerformanceCounters& pc);
@@ -134,16 +138,20 @@ inline ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::~ArrayListPrimaryTaskStorage
 
 	size_t l = current_control_block->get_length();
 	typename ControlBlock::Item* ccb_data = current_control_block->get_data();
+	bool pre_end = true;
 	for(size_t i = 0; i < l; ++i) {
 		size_t end_pos = end_index - ccb_data[i].offset;
 		if(end_pos < block_size) {
-			current_control_block->clean_item_until(i, end_index);
+		//	current_control_block->clean_item_until(i, end_index);
 			current_control_block->finalize_item_until(i, end_index, block_reuse, 0);
-			break;
+			pre_end = false;
+		}
+		else if(pre_end) {
+		//	current_control_block->clean_item(i);
+			current_control_block->finalize_item(i, block_reuse, 0);
 		}
 		else {
-			current_control_block->clean_item(i);
-			current_control_block->finalize_item(i, block_reuse, 0);
+			current_control_block->finalize_unused_item(i, block_reuse, 0);
 		}
 	}
 	current_control_block->finalize();
@@ -256,6 +264,8 @@ inline void ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::push(Strategy& s, T ite
 
 	ArrayListPrimaryTaskStorageItem<TT> to_put;
 	to_put.data = item;
+	// TODO: custom memory management for strategies with placement new. This would allow for bulk deallocations
+	// as strategies are always deallocated with their control_block_item (meaning we can deallocation BLOCK_SIZE strategies in one step)
 	to_put.s = new Strategy(s);
 	to_put.pop_prio = s.get_pop_priority(end_index);
 	to_put.index = end_index;
@@ -270,7 +280,7 @@ inline void ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::push(Strategy& s, T ite
 }
 
 template <typename TT, size_t BLOCK_SIZE>
-inline TT ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::pop(PerformanceCounters& pc) {
+TT ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::pop(PerformanceCounters& pc) {
 	pc.total_size_pop.add(length);
 	pc.pop_time.start_timer();
 	T ret;
@@ -326,6 +336,53 @@ inline TT ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::pop(PerformanceCounters& 
 	pc.pop_time.stop_timer();
 	return ret;
 }
+/*
+template <typename TT, size_t BLOCK_SIZE>
+inline TT ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::local_take_best(PerformanceCounters& pc) {
+	size_t upper_bound_length = 0;
+	size_t l = current_control_block->get_length();
+	typename ControlBlock::Item* ccb_data = current_control_block->get_data();
+	size_t block_limit;
+	prio_t best_prio = 0;
+	size_t best_block = 0;
+	size_t best_index = 0;
+	for(size_t i = 0; i < l; ++i) {
+
+		size_t end_pos = end_index - ccb_data[i].offset;
+		if(end_pos < block_size) {
+			block_limit = ccb_data[i].offset + end_pos;
+			// Last block to process!
+			l = i + 1;
+		}
+		else {
+			block_limit = ccb_data[i].offset + block_size;
+		}
+		current_control_block->clean_item_until(i, block_limit);
+		upper_bound_length += block_limit - ccb_data[i].first;
+		size_t offset = ccb_data[i].offset;
+
+		for(size_t j = ccb_data[i].first; j != block_limit; ++j) {
+			if(ccb_data[i].data[j - offset].index == j) {
+				if(ccb_data[i].data[j - offset].pop_prio > best_prio) {
+					best_prio = ccb_data[i].data[j - offset].pop_prio;
+					best_block = i;
+					best_index = j;
+				}
+			}
+		}
+	}
+	if(upper_bound_length < length) {
+		length = upper_bound_length;
+	}
+	if(best_prio > 0) {
+		ret = local_take(best_block, best_index, pc);
+	}
+	else {
+		pc.num_unsuccessful_pops.incr();
+		pc.pop_time.stop_timer();
+		return null_element;
+	}
+}*/
 
 template <typename TT, size_t BLOCK_SIZE>
 inline TT ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::peek(PerformanceCounters& pc) {
