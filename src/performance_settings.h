@@ -54,6 +54,7 @@ bool const task_storage_count_size_steal = true;
 bool const task_storage_measure_push_time = true;
 bool const task_storage_measure_pop_time = true;
 bool const task_storage_measure_steal_time = true;
+bool const task_storage_count_skipped_cleanups = true;
 
 bool const scheduler_measure_finish_stack_nonblocking_max = true;
 bool const scheduler_measure_finish_stack_blocking_min = true;
@@ -101,6 +102,7 @@ bool const task_storage_count_size_steal = false;
 bool const task_storage_measure_push_time = false;
 bool const task_storage_measure_pop_time = false;
 bool const task_storage_measure_steal_time = false;
+bool const task_storage_count_skipped_cleanups = true;
 
 bool const scheduler_measure_finish_stack_nonblocking_max = false;
 bool const scheduler_measure_finish_stack_blocking_min = false;

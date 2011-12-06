@@ -17,6 +17,8 @@
 #include "ArrayListPrimaryTaskStorageIterator.h"
 #include "ArrayListPrimaryTaskStorageControlBlock.h"
 
+#include <vector>
+
 namespace pheet {
 
 template <typename TT>
@@ -28,7 +30,7 @@ struct ArrayListPrimaryTaskStorageItem {
 };
 
 // BLOCK_SIZE has to be a power of 2 to work with wrap-around of index
-template <typename TT, size_t BLOCK_SIZE = 128>
+template <typename TT, size_t BLOCK_SIZE = 256>
 class ArrayListPrimaryTaskStorage {
 public:
 	typedef TT T;
@@ -75,7 +77,7 @@ private:
 	ControlBlock* acquire_control_block();
 	void create_next_control_block(PerformanceCounters& pc);
 
-	enum {num_control_blocks = 64};
+	enum {num_control_blocks = 128};
 	ControlBlock control_blocks[num_control_blocks];
 
 	size_t end_index;
@@ -90,6 +92,8 @@ private:
 	size_t cleanup_control_block_id;
 	ControlBlock* current_control_block;
 	size_t current_control_block_item_index;
+
+	std::vector<Item*> block_reuse;
 
 //	PerformanceCounters perf_count;
 
@@ -107,7 +111,7 @@ const size_t ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::block_size = BLOCK_SIZ
 template <typename TT, size_t BLOCK_SIZE>
 inline ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::ArrayListPrimaryTaskStorage(size_t expected_capacity)
 : end_index(0), length(0), current_control_block_id(0), cleanup_control_block_id(0), current_control_block(control_blocks), current_control_block_item_index(0) {
-	current_control_block->init_empty(0);
+	current_control_block->init_empty(0, block_reuse);
 }
 /*
 template <typename TT, size_t BLOCK_SIZE>
@@ -120,7 +124,7 @@ template <typename TT, size_t BLOCK_SIZE>
 inline ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::~ArrayListPrimaryTaskStorage() {
 	Backoff bo;
 	while(cleanup_control_block_id != current_control_block_id) {
-		if(!control_blocks[cleanup_control_block_id].try_cleanup()) {
+		if(!control_blocks[cleanup_control_block_id].try_cleanup(block_reuse, 0)) {
 			bo.backoff();
 		}
 		else {
@@ -134,15 +138,20 @@ inline ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::~ArrayListPrimaryTaskStorage
 		size_t end_pos = end_index - ccb_data[i].offset;
 		if(end_pos < block_size) {
 			current_control_block->clean_item_until(i, end_index);
-			current_control_block->finalize_item_until(i, end_index);
+			current_control_block->finalize_item_until(i, end_index, block_reuse, 0);
 			break;
 		}
 		else {
 			current_control_block->clean_item(i);
-			current_control_block->finalize_item(i);
+			current_control_block->finalize_item(i, block_reuse, 0);
 		}
 	}
 	current_control_block->finalize();
+
+	while(!block_reuse.empty()) {
+		delete[] block_reuse.back();
+		block_reuse.pop_back();
+	}
 }
 
 template <typename TT, size_t BLOCK_SIZE>
@@ -375,7 +384,7 @@ inline bool ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::is_full(PerformanceCoun
 template <typename TT, size_t BLOCK_SIZE>
 void ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::clean(PerformanceCounters& pc) {
 	while(cleanup_control_block_id != current_control_block_id) {
-		if(!control_blocks[cleanup_control_block_id].try_cleanup()) {
+		if(!control_blocks[cleanup_control_block_id].try_cleanup(block_reuse, current_control_block->get_length())) {
 			break;
 		}
 		else {
@@ -426,8 +435,16 @@ void ArrayListPrimaryTaskStorage<TT, BLOCK_SIZE>::create_next_control_block(Perf
 	clean(pc);
 
 	size_t new_id = (current_control_block_id + 1) % num_control_blocks;
+	while(new_id == cleanup_control_block_id) {
+		// The next control block we want to use is still blocked - skip it
+		// Will be cleaned up in the next round
+		pc.num_skipped_cleanups.incr();
+		cleanup_control_block_id = (cleanup_control_block_id + 1) % num_control_blocks;
+		clean(pc);
+		new_id = (new_id + 1) % num_control_blocks;
+	}
 	assert(new_id != cleanup_control_block_id);
-	size_t upper_bound_length = control_blocks[new_id].configure_as_successor(current_control_block);
+	size_t upper_bound_length = control_blocks[new_id].configure_as_successor(current_control_block, block_reuse);
 	if(upper_bound_length < length) {
 		length = upper_bound_length;
 	}

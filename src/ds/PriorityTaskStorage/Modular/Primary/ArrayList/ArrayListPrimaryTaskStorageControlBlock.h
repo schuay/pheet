@@ -11,6 +11,8 @@
 
 #include "../../../../../settings.h"
 
+#include <vector>
+
 namespace pheet {
 
 template <class Storage>
@@ -38,15 +40,17 @@ public:
 	size_t get_length();
 	size_t get_new_item_index();
 
-	size_t configure_as_successor(ThisType* prev);
-	void init_empty(size_t offset);
+	size_t configure_as_successor(ThisType* prev, std::vector<typename Storage::Item*>& block_reuse);
+	void init_empty(size_t offset, std::vector<typename Storage::Item*>& block_reuse);
 
-	bool try_cleanup();
+	bool try_cleanup(std::vector<typename Storage::Item*>& block_reuse, size_t max_reuse);
 	void clean_item(size_t item);
 	void clean_item_until(size_t item, size_t limit);
 	void finalize();
-	void finalize_item(size_t item);
-	void finalize_item_until(size_t item, size_t limit);
+	void finalize_item(size_t item, std::vector<typename Storage::Item*>& block_reuse, size_t max_reuse);
+	void finalize_item_until(size_t item, size_t limit, std::vector<typename Storage::Item*>& block_reuse, size_t max_reuse);
+
+	void set_block_reuse(std::vector<typename Storage::Item*>& block_reuse);
 private:
 
 	size_t num_iterators;
@@ -118,25 +122,30 @@ void ArrayListPrimaryTaskStorageControlBlock<Storage>::finalize() {
 }
 
 template <class Storage>
-void ArrayListPrimaryTaskStorageControlBlock<Storage>::finalize_item(size_t item) {
+void ArrayListPrimaryTaskStorageControlBlock<Storage>::finalize_item(size_t item, std::vector<typename Storage::Item*>& block_reuse, size_t max_reuse) {
 	assert(num_iterators == num_passed_iterators);
 	size_t limit = data[item].offset + Storage::block_size;
-	finalize_item_until(item, limit);
+	finalize_item_until(item, limit, block_reuse, max_reuse);
 }
 
 template <class Storage>
-void ArrayListPrimaryTaskStorageControlBlock<Storage>::finalize_item_until(size_t item, size_t limit) {
+void ArrayListPrimaryTaskStorageControlBlock<Storage>::finalize_item_until(size_t item, size_t limit, std::vector<typename Storage::Item*>& block_reuse, size_t max_reuse) {
 	assert(num_iterators == num_passed_iterators);
 	size_t offset = data[item].offset;
 	for(size_t i = offset; i != limit; ++i) {
 		assert(data[item].data[i - offset].index == i + 1);
 		delete data[item].data[i - offset].s;
 	}
-	delete[] data[item].data;
+	if(block_reuse.size() < max_reuse) {
+		block_reuse.push_back(data[item].data);
+	}
+	else {
+		delete[] data[item].data;
+	}
 }
 
 template <class Storage>
-size_t ArrayListPrimaryTaskStorageControlBlock<Storage>::configure_as_successor(ThisType* prev) {
+size_t ArrayListPrimaryTaskStorageControlBlock<Storage>::configure_as_successor(ThisType* prev, std::vector<typename Storage::Item*>& block_reuse) {
 	assert(num_iterators == std::numeric_limits<size_t>::max());
 	assert(num_passed_iterators == 0);
 
@@ -152,7 +161,7 @@ size_t ArrayListPrimaryTaskStorageControlBlock<Storage>::configure_as_successor(
 	}
 
 	if(num_active == 0) {
-		init_empty(prev->data[prev->length - 1].offset + Storage::block_size);
+		init_empty(prev->data[prev->length - 1].offset + Storage::block_size, block_reuse);
 	}
 	else {
 		length = (num_active << 1);
@@ -170,7 +179,13 @@ size_t ArrayListPrimaryTaskStorageControlBlock<Storage>::configure_as_successor(
 			last_offset += Storage::block_size;
 			data[i].offset = last_offset;
 			data[i].first = last_offset;
-			data[i].data = new typename Storage::Item[Storage::block_size];
+			if(!block_reuse.empty()) {
+				data[i].data = block_reuse.back();
+				block_reuse.pop_back();
+			}
+			else {
+				data[i].data = new typename Storage::Item[Storage::block_size];
+			}
 		}
 	}
 
@@ -182,7 +197,7 @@ size_t ArrayListPrimaryTaskStorageControlBlock<Storage>::configure_as_successor(
 }
 
 template <class Storage>
-void ArrayListPrimaryTaskStorageControlBlock<Storage>::init_empty(size_t offset) {
+void ArrayListPrimaryTaskStorageControlBlock<Storage>::init_empty(size_t offset, std::vector<typename Storage::Item*>& block_reuse) {
 	assert(num_iterators == std::numeric_limits<size_t>::max());
 	assert(num_passed_iterators == 0);
 
@@ -195,11 +210,17 @@ void ArrayListPrimaryTaskStorageControlBlock<Storage>::init_empty(size_t offset)
 
 	data[0].offset = offset;
 	data[0].first = offset;
-	data[0].data = new typename Storage::Item[Storage::block_size];
+	if(!block_reuse.empty()) {
+		data[0].data = block_reuse.back();
+		block_reuse.pop_back();
+	}
+	else {
+		data[0].data = new typename Storage::Item[Storage::block_size];
+	}
 }
 
 template <class Storage>
-bool ArrayListPrimaryTaskStorageControlBlock<Storage>::try_cleanup() {
+bool ArrayListPrimaryTaskStorageControlBlock<Storage>::try_cleanup(std::vector<typename Storage::Item*>& block_reuse, size_t max_reuse) {
 	size_t ni = num_iterators;
 	assert(ni != std::numeric_limits<size_t>::max());
 	if(ni == num_passed_iterators) {
@@ -210,7 +231,12 @@ bool ArrayListPrimaryTaskStorageControlBlock<Storage>::try_cleanup() {
 					for(size_t j = 0; j < Storage::block_size; ++j) {
 						delete data[i].data[j].s;
 					}
-					delete[] data[i].data;
+					if(block_reuse.size() < max_reuse) {
+						block_reuse.push_back(data[i].data);
+					}
+					else {
+						delete[] data[i].data;
+					}
 				}
 			}
 			delete[] data;

@@ -27,6 +27,7 @@ public:
 	BasicPerformanceCounter<task_storage_count_size_pop> total_size_pop;
 	TimePerformanceCounter<task_storage_measure_pop_time> pop_time;
 	TimePerformanceCounter<task_storage_measure_push_time> push_time;
+	BasicPerformanceCounter<task_storage_count_skipped_cleanups> num_skipped_cleanups;
 };
 
 inline ArrayListPrimaryTaskStoragePerformanceCounters::ArrayListPrimaryTaskStoragePerformanceCounters() {
@@ -40,7 +41,8 @@ inline ArrayListPrimaryTaskStoragePerformanceCounters::ArrayListPrimaryTaskStora
  num_successful_takes(other.num_successful_takes),
  total_size_pop(other.total_size_pop),
  pop_time(other.pop_time),
- push_time(other.push_time)
+ push_time(other.push_time),
+ num_skipped_cleanups(other.num_skipped_cleanups)
 {
 
 }
@@ -57,6 +59,7 @@ inline void ArrayListPrimaryTaskStoragePerformanceCounters::print_headers() {
 	BasicPerformanceCounter<task_storage_count_size_pop>::print_header("total_size_pop\t");
 	TimePerformanceCounter<task_storage_measure_pop_time>::print_header("pop_time\t");
 	TimePerformanceCounter<task_storage_measure_push_time>::print_header("push_time\t");
+	TimePerformanceCounter<task_storage_count_skipped_cleanups>::print_header("num_skipped_cleanups\t");
 }
 
 inline void ArrayListPrimaryTaskStoragePerformanceCounters::print_values() {
@@ -67,6 +70,7 @@ inline void ArrayListPrimaryTaskStoragePerformanceCounters::print_values() {
 	total_size_pop.print("%d\t");
 	pop_time.print("%f\t");
 	push_time.print("%f\t");
+	num_skipped_cleanups.print("%d\t");
 }
 }
 
