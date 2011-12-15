@@ -44,6 +44,8 @@ public:
 
 	static void print_performance_counter_headers();
 
+	static TaskExecutionContext* get_context();
+
 	static char const name[];
 	static procs_t const max_cpus;
 
@@ -101,6 +103,11 @@ template<class CallTaskType, typename ... TaskParams>
 void SynchroneousScheduler<CPUHierarchyT>::finish(TaskParams ... params) {
 	CallTaskType task(params ...);
 	task(tec);
+}
+
+template <class CPUHierarchyT>
+SynchroneousSchedulerTaskExecutionContext<SynchroneousScheduler<CPUHierarchyT> >* SynchroneousScheduler<CPUHierarchyT>::get_context() {
+	return SynchroneousSchedulerTaskExecutionContext<SynchroneousScheduler<CPUHierarchyT> >::get();
 }
 
 template <class CPUHierarchyT>

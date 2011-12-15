@@ -43,15 +43,16 @@ BasicMixedModeSchedulerState<Task, Barrier>::BasicMixedModeSchedulerState()
 /*
  * May only be used once
  */
-template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
+template <class CPUHierarchyT, template <class Scheduler, typename T> class StealingDeque, class Barrier, class BackoffT>
 class BasicMixedModeScheduler {
 public:
 	typedef BackoffT Backoff;
 	typedef CPUHierarchyT CPUHierarchy;
-	typedef SchedulerTask<BasicMixedModeScheduler<CPUHierarchy, StealingDeque, Barrier, Backoff> > Task;
-	typedef BasicMixedModeSchedulerTaskExecutionContext<BasicMixedModeScheduler<CPUHierarchy, StealingDeque, Barrier, Backoff>, StealingDeque> TaskExecutionContext;
+	typedef BasicMixedModeScheduler<CPUHierarchy, StealingDeque, Barrier, Backoff> Self;
+	typedef SchedulerTask<Self> Task;
+	typedef BasicMixedModeSchedulerTaskExecutionContext<Self, StealingDeque> TaskExecutionContext;
 	typedef BasicMixedModeSchedulerState<Task, Barrier> State;
-	typedef FinishRegion<BasicMixedModeScheduler<CPUHierarchy, StealingDeque, Barrier, Backoff> > Finish;
+	typedef FinishRegion<Self> Finish;
 
 	/*
 	 * CPUHierarchyT must be accessible throughout the lifetime of the scheduler
@@ -74,6 +75,8 @@ public:
 
 	void print_performance_counter_headers();
 
+	static TaskExecutionContext* get_context();
+
 	static char const name[];
 	static procs_t const max_cpus;
 private:
@@ -85,16 +88,16 @@ private:
 
 	State state;
 
-	BasicMixedModeSchedulerPerformanceCounters performance_counters;
+	BasicMixedModeSchedulerPerformanceCounters<Self> performance_counters;
 };
 
-template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
+template <class CPUHierarchyT, template <class Scheduler, typename T> class StealingDeque, class Barrier, class BackoffT>
 char const BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::name[] = "BasicMixedModeScheduler";
 
-template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
+template <class CPUHierarchyT, template <class Scheduler, typename T> class StealingDeque, class Barrier, class BackoffT>
 procs_t const BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::max_cpus = std::numeric_limits<procs_t>::max() >> 1;
 
-template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
+template <class CPUHierarchyT, template <class Scheduler, typename T> class StealingDeque, class Barrier, class BackoffT>
 BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::BasicMixedModeScheduler(CPUHierarchy* cpus)
 : cpu_hierarchy(cpus), num_threads(cpus->get_size()),
   performance_counters(/* don't expect the compiler to understand that get_depth is side-effect free, so add this conditional statement */
@@ -106,12 +109,12 @@ BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::BasicM
 	initialize_tecs(&cpu_hierarchy, 0, &levels);
 }
 
-template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
+template <class CPUHierarchyT, template <class Scheduler, typename T> class StealingDeque, class Barrier, class BackoffT>
 BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::~BasicMixedModeScheduler() {
 
 }
 
-template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
+template <class CPUHierarchyT, template <class Scheduler, typename T> class StealingDeque, class Barrier, class BackoffT>
 void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::initialize_tecs(BinaryTreeCPUHierarchy<CPUHierarchy>* ch, size_t offset, std::vector<typename TaskExecutionContext::LevelDescription*>* levels) {
 	if(ch->get_size() > 1) {
 		std::vector<BinaryTreeCPUHierarchy<CPUHierarchy>*> const* sub = ch->get_subsets();
@@ -157,13 +160,13 @@ void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::i
 	}
 }
 
-template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
+template <class CPUHierarchyT, template <class Scheduler, typename T> class StealingDeque, class Barrier, class BackoffT>
 template<class CallTaskType, typename ... TaskParams>
 void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::finish(TaskParams&& ... params) {
 	finish_nt<CallTaskType, TaskParams ...>((procs_t)1, static_cast<TaskParams&&>(params) ...);
 }
 
-template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
+template <class CPUHierarchyT, template <class Scheduler, typename T> class StealingDeque, class Barrier, class BackoffT>
 template<class CallTaskType, typename ... TaskParams>
 void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::finish_nt(procs_t nt, TaskParams&& ... params) {
 	CallTaskType* task = new CallTaskType(static_cast<TaskParams&&>(params) ...);
@@ -181,17 +184,17 @@ void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::f
 	delete[] threads;
 }
 
-template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
+template <class CPUHierarchyT, template <class Scheduler, typename T> class StealingDeque, class Barrier, class BackoffT>
 procs_t BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::get_max_team_size() {
 	return num_threads;
 }
 
-template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
+template <class CPUHierarchyT, template <class Scheduler, typename T> class StealingDeque, class Barrier, class BackoffT>
 void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::print_name() {
 	std::cout << name;
 }
 
-template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
+template <class CPUHierarchyT, template <class Scheduler, typename T> class StealingDeque, class Barrier, class BackoffT>
 void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::print_performance_counter_values() {
 	performance_counters.num_spawns.print("%d\t");
 	performance_counters.num_calls.print("%d\t");
@@ -228,26 +231,26 @@ void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::p
 	}
 }
 
-template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
+template <class CPUHierarchyT, template <class Scheduler, typename T> class StealingDeque, class Barrier, class BackoffT>
 void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::print_performance_counter_headers() {
-	BasicPerformanceCounter<scheduler_count_spawns>::print_header("spawns\t");
-	BasicPerformanceCounter<scheduler_count_spawns_to_call>::print_header("calls\t");
-	BasicPerformanceCounter<scheduler_count_calls>::print_header("spawns->call\t");
-	BasicPerformanceCounter<scheduler_count_finishes>::print_header("finishes\t");
+	BasicPerformanceCounter<Self, scheduler_count_spawns>::print_header("spawns\t");
+	BasicPerformanceCounter<Self, scheduler_count_spawns_to_call>::print_header("calls\t");
+	BasicPerformanceCounter<Self, scheduler_count_calls>::print_header("spawns->call\t");
+	BasicPerformanceCounter<Self, scheduler_count_finishes>::print_header("finishes\t");
 
-	BasicPerformanceCounter<stealing_deque_count_steals>::print_header("stolen\t");
-	BasicPerformanceCounter<stealing_deque_count_steal_calls>::print_header("steal_calls\t");
-	BasicPerformanceCounter<stealing_deque_count_unsuccessful_steal_calls>::print_header("unsuccessful_steal_calls\t");
-	BasicPerformanceCounter<stealing_deque_count_pop_cas>::print_header("stealing_deque_pop_cas\t");
+	BasicPerformanceCounter<Self, stealing_deque_count_steals>::print_header("stolen\t");
+	BasicPerformanceCounter<Self, stealing_deque_count_steal_calls>::print_header("steal_calls\t");
+	BasicPerformanceCounter<Self, stealing_deque_count_unsuccessful_steal_calls>::print_header("unsuccessful_steal_calls\t");
+	BasicPerformanceCounter<Self, stealing_deque_count_pop_cas>::print_header("stealing_deque_pop_cas\t");
 
-	TimePerformanceCounter<scheduler_measure_total_time>::print_header("scheduler_total_time\t");
-	TimePerformanceCounter<scheduler_measure_task_time>::print_header("total_task_time\t");
-	TimePerformanceCounter<scheduler_measure_sync_time>::print_header("total_sync_time\t");
-	TimePerformanceCounter<scheduler_measure_idle_time>::print_header("total_idle_time\t");
-	TimePerformanceCounter<scheduler_measure_queue_processing_time>::print_header("queue_processing_time\t");
-	TimePerformanceCounter<scheduler_measure_visit_partners_time>::print_header("visit_partners_time\t");
-	TimePerformanceCounter<scheduler_measure_wait_for_finish_time>::print_header("wait_for_finish_time\t");
-	TimePerformanceCounter<scheduler_measure_wait_for_coordinator_time>::print_header("wait_for_coordinator_time\t");
+	TimePerformanceCounter<Self, scheduler_measure_total_time>::print_header("scheduler_total_time\t");
+	TimePerformanceCounter<Self, scheduler_measure_task_time>::print_header("total_task_time\t");
+	TimePerformanceCounter<Self, scheduler_measure_sync_time>::print_header("total_sync_time\t");
+	TimePerformanceCounter<Self, scheduler_measure_idle_time>::print_header("total_idle_time\t");
+	TimePerformanceCounter<Self, scheduler_measure_queue_processing_time>::print_header("queue_processing_time\t");
+	TimePerformanceCounter<Self, scheduler_measure_visit_partners_time>::print_header("visit_partners_time\t");
+	TimePerformanceCounter<Self, scheduler_measure_wait_for_finish_time>::print_header("wait_for_finish_time\t");
+	TimePerformanceCounter<Self, scheduler_measure_wait_for_coordinator_time>::print_header("wait_for_coordinator_time\t");
 
 	if(scheduler_count_tasks_at_level) {
 		procs_t depth = cpu_hierarchy.get_max_depth();
@@ -266,6 +269,12 @@ void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::p
 			printf("unsuccessful_steal_calls_at_thread_%d\t", (int)i);
 		}
 	}
+}
+
+template <class CPUHierarchyT, template <class Scheduler, typename T> class StealingDeque, class Barrier, class BackoffT>
+typename BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::TaskExecutionContext*
+BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::get_context() {
+	return TaskExecutionContext::get();
 }
 
 }

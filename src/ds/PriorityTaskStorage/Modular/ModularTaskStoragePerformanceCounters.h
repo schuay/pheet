@@ -15,7 +15,7 @@
 
 namespace pheet {
 
-template <class PrimaryPerformanceCounters, class SecondaryPerformanceCounters>
+template <class Scheduler, class PrimaryPerformanceCounters, class SecondaryPerformanceCounters>
 class ModularTaskStoragePerformanceCounters {
 public:
 	ModularTaskStoragePerformanceCounters();
@@ -30,31 +30,31 @@ public:
 	SecondaryPerformanceCounters secondary_perf_count;
 };
 
-template <class PrimaryPerformanceCounters, class SecondaryPerformanceCounters>
-inline ModularTaskStoragePerformanceCounters<PrimaryPerformanceCounters, SecondaryPerformanceCounters>::ModularTaskStoragePerformanceCounters() {
+template <class Scheduler, class PrimaryPerformanceCounters, class SecondaryPerformanceCounters>
+inline ModularTaskStoragePerformanceCounters<Scheduler, PrimaryPerformanceCounters, SecondaryPerformanceCounters>::ModularTaskStoragePerformanceCounters() {
 
 }
 
-template <class PrimaryPerformanceCounters, class SecondaryPerformanceCounters>
-inline ModularTaskStoragePerformanceCounters<PrimaryPerformanceCounters, SecondaryPerformanceCounters>::ModularTaskStoragePerformanceCounters(ModularTaskStoragePerformanceCounters& other)
+template <class Scheduler, class PrimaryPerformanceCounters, class SecondaryPerformanceCounters>
+inline ModularTaskStoragePerformanceCounters<Scheduler, PrimaryPerformanceCounters, SecondaryPerformanceCounters>::ModularTaskStoragePerformanceCounters(ModularTaskStoragePerformanceCounters& other)
 :primary_perf_count(other.primary_perf_count),
  secondary_perf_count(other.secondary_perf_count)
 {
 
 }
 
-template <class PrimaryPerformanceCounters, class SecondaryPerformanceCounters>
-inline ModularTaskStoragePerformanceCounters<PrimaryPerformanceCounters, SecondaryPerformanceCounters>::~ModularTaskStoragePerformanceCounters() {
+template <class Scheduler, class PrimaryPerformanceCounters, class SecondaryPerformanceCounters>
+inline ModularTaskStoragePerformanceCounters<Scheduler, PrimaryPerformanceCounters, SecondaryPerformanceCounters>::~ModularTaskStoragePerformanceCounters() {
 }
 
-template <class PrimaryPerformanceCounters, class SecondaryPerformanceCounters>
-inline void ModularTaskStoragePerformanceCounters<PrimaryPerformanceCounters, SecondaryPerformanceCounters>::print_headers() {
+template <class Scheduler, class PrimaryPerformanceCounters, class SecondaryPerformanceCounters>
+inline void ModularTaskStoragePerformanceCounters<Scheduler, PrimaryPerformanceCounters, SecondaryPerformanceCounters>::print_headers() {
 	primary_perf_count.print_headers();
 	secondary_perf_count.print_headers();
 }
 
-template <class PrimaryPerformanceCounters, class SecondaryPerformanceCounters>
-inline void ModularTaskStoragePerformanceCounters<PrimaryPerformanceCounters, SecondaryPerformanceCounters>::print_values() {
+template <class Scheduler, class PrimaryPerformanceCounters, class SecondaryPerformanceCounters>
+inline void ModularTaskStoragePerformanceCounters<Scheduler, PrimaryPerformanceCounters, SecondaryPerformanceCounters>::print_values() {
 	primary_perf_count.print_values();
 	secondary_perf_count.print_values();
 }

@@ -19,19 +19,19 @@ public:
 	typedef ImprovedBranchBoundGraphBipartitioningTask<Task, Logic, MAX_SIZE> BBTask;
 	typedef ExponentialBackoff<> Backoff;
 
-	ImprovedBranchBoundGraphBipartitioningTask(ImprovedBranchBoundGraphBipartitioningSubproblem<Logic, MAX_SIZE>* sub_problem, size_t* upper_bound, MaxReducer<GraphBipartitioningSolution<MAX_SIZE> >& best);
+	ImprovedBranchBoundGraphBipartitioningTask(ImprovedBranchBoundGraphBipartitioningSubproblem<typename Task::Scheduler, Logic, MAX_SIZE>* sub_problem, size_t* upper_bound, MaxReducer<typename Task::Scheduler, GraphBipartitioningSolution<MAX_SIZE> >& best);
 	virtual ~ImprovedBranchBoundGraphBipartitioningTask();
 
 	virtual void operator()(typename Task::TEC& tec);
 
 private:
-	ImprovedBranchBoundGraphBipartitioningSubproblem<Logic, MAX_SIZE>* sub_problem;
+	ImprovedBranchBoundGraphBipartitioningSubproblem<typename Task::Scheduler, Logic, MAX_SIZE>* sub_problem;
 	size_t* upper_bound;
-	MaxReducer<GraphBipartitioningSolution<MAX_SIZE> > best;
+	MaxReducer<typename Task::Scheduler, GraphBipartitioningSolution<MAX_SIZE> > best;
 };
 
 template <class Task, class Logic, size_t MAX_SIZE>
-ImprovedBranchBoundGraphBipartitioningTask<Task, Logic, MAX_SIZE>::ImprovedBranchBoundGraphBipartitioningTask(ImprovedBranchBoundGraphBipartitioningSubproblem<Logic, MAX_SIZE>* sub_problem, size_t* upper_bound, MaxReducer<GraphBipartitioningSolution<MAX_SIZE> >& best)
+ImprovedBranchBoundGraphBipartitioningTask<Task, Logic, MAX_SIZE>::ImprovedBranchBoundGraphBipartitioningTask(ImprovedBranchBoundGraphBipartitioningSubproblem<typename Task::Scheduler, Logic, MAX_SIZE>* sub_problem, size_t* upper_bound, MaxReducer<typename Task::Scheduler, GraphBipartitioningSolution<MAX_SIZE> >& best)
 : sub_problem(sub_problem), upper_bound(upper_bound), best(best) {
 
 }
@@ -49,7 +49,7 @@ void ImprovedBranchBoundGraphBipartitioningTask<Task, Logic, MAX_SIZE>::operator
 		return;
 	}
 
-	ImprovedBranchBoundGraphBipartitioningSubproblem<Logic, MAX_SIZE>* sub_problem2 =
+	ImprovedBranchBoundGraphBipartitioningSubproblem<typename Task::Scheduler, Logic, MAX_SIZE>* sub_problem2 =
 			sub_problem->split();
 
 	if(sub_problem->is_solution()) {
@@ -66,7 +66,7 @@ void ImprovedBranchBoundGraphBipartitioningTask<Task, Logic, MAX_SIZE>::operator
 		delete sub_problem2;
 	}
 	else if(sub_problem2->get_lower_bound() < *upper_bound) {
-		tec.template spawn<BBTask>(sub_problem2, upper_bound, best);
+		tec.template call<BBTask>(sub_problem2, upper_bound, best);
 	}
 	else {
 		delete sub_problem2;

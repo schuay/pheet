@@ -12,6 +12,7 @@
 
 namespace pheet {
 
+template <class Scheduler>
 class PrimitiveSecondaryTaskStoragePerformanceCounters {
 public:
 	PrimitiveSecondaryTaskStoragePerformanceCounters();
@@ -21,18 +22,20 @@ public:
 	void print_headers();
 	void print_values();
 
-	BasicPerformanceCounter<task_storage_count_steals> num_stolen;
-	BasicPerformanceCounter<task_storage_count_unsuccessful_steals> num_unsuccessful_steals;
-	BasicPerformanceCounter<task_storage_count_successful_steals> num_successful_steals;
-	BasicPerformanceCounter<task_storage_count_size_steal> total_size_steal;
-	TimePerformanceCounter<task_storage_measure_steal_time> steal_time;
+	BasicPerformanceCounter<Scheduler, task_storage_count_steals> num_stolen;
+	BasicPerformanceCounter<Scheduler, task_storage_count_unsuccessful_steals> num_unsuccessful_steals;
+	BasicPerformanceCounter<Scheduler, task_storage_count_successful_steals> num_successful_steals;
+	BasicPerformanceCounter<Scheduler, task_storage_count_size_steal> total_size_steal;
+	TimePerformanceCounter<Scheduler, task_storage_measure_steal_time> steal_time;
 };
 
-inline PrimitiveSecondaryTaskStoragePerformanceCounters::PrimitiveSecondaryTaskStoragePerformanceCounters() {
+template <class Scheduler>
+inline PrimitiveSecondaryTaskStoragePerformanceCounters<Scheduler>::PrimitiveSecondaryTaskStoragePerformanceCounters() {
 
 }
 
-inline PrimitiveSecondaryTaskStoragePerformanceCounters::PrimitiveSecondaryTaskStoragePerformanceCounters(PrimitiveSecondaryTaskStoragePerformanceCounters& other)
+template <class Scheduler>
+inline PrimitiveSecondaryTaskStoragePerformanceCounters<Scheduler>::PrimitiveSecondaryTaskStoragePerformanceCounters(PrimitiveSecondaryTaskStoragePerformanceCounters& other)
 :num_stolen(other.num_stolen),
  num_unsuccessful_steals(other.num_unsuccessful_steals),
  num_successful_steals(other.num_successful_steals),
@@ -42,19 +45,22 @@ inline PrimitiveSecondaryTaskStoragePerformanceCounters::PrimitiveSecondaryTaskS
 
 }
 
-inline PrimitiveSecondaryTaskStoragePerformanceCounters::~PrimitiveSecondaryTaskStoragePerformanceCounters() {
+template <class Scheduler>
+inline PrimitiveSecondaryTaskStoragePerformanceCounters<Scheduler>::~PrimitiveSecondaryTaskStoragePerformanceCounters() {
 
 }
 
-inline void PrimitiveSecondaryTaskStoragePerformanceCounters::print_headers() {
-	BasicPerformanceCounter<task_storage_count_steals>::print_header("num_stolen\t");
-	BasicPerformanceCounter<task_storage_count_unsuccessful_steals>::print_header("num_unsuccessful_steals\t");
-	BasicPerformanceCounter<task_storage_count_successful_steals>::print_header("num_successful_steals\t");
-	BasicPerformanceCounter<task_storage_count_size_steal>::print_header("total_size_steal\t");
-	TimePerformanceCounter<task_storage_measure_steal_time>::print_header("steal_time\t");
+template <class Scheduler>
+inline void PrimitiveSecondaryTaskStoragePerformanceCounters<Scheduler>::print_headers() {
+	BasicPerformanceCounter<Scheduler, task_storage_count_steals>::print_header("num_stolen\t");
+	BasicPerformanceCounter<Scheduler, task_storage_count_unsuccessful_steals>::print_header("num_unsuccessful_steals\t");
+	BasicPerformanceCounter<Scheduler, task_storage_count_successful_steals>::print_header("num_successful_steals\t");
+	BasicPerformanceCounter<Scheduler, task_storage_count_size_steal>::print_header("total_size_steal\t");
+	TimePerformanceCounter<Scheduler, task_storage_measure_steal_time>::print_header("steal_time\t");
 }
 
-inline void PrimitiveSecondaryTaskStoragePerformanceCounters::print_values() {
+template <class Scheduler>
+inline void PrimitiveSecondaryTaskStoragePerformanceCounters<Scheduler>::print_values() {
 	num_stolen.print("%d\t");
 	num_unsuccessful_steals.print("%d\t");
 	num_successful_steals.print("%d\t");

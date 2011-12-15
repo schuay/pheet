@@ -34,6 +34,7 @@ public:
 	void reduce();
 	bool is_reduced();
 	void set_finished();
+	void set_local_predecessor(OrderedReducerView<Monoid>* pred);
 	void set_predecessor(OrderedReducerView<Monoid>* pred);
 	template <typename ... PutParams>
 	void add_data(PutParams&& ... params);
@@ -42,22 +43,23 @@ private:
 	typedef OrderedReducerView<Monoid> View;
 
 	Monoid data;
+	OrderedReducerView<Monoid>* local_pred;
 	OrderedReducerView<Monoid>* pred;
 	OrderedReducerView<Monoid>* reuse;
-	// Bit 1: has unfinished child, Bit 2: has been used (Bit 0 isn't used any more)
+	// Bit 1: has a child, Bit 2: has been used, Bit 3: has been connected to a non-local parent (Bit 0 isn't used any more)
 	uint8_t state;
 };
 
 template <class Monoid>
 template <typename ... ConsParams>
 OrderedReducerView<Monoid>::OrderedReducerView(ConsParams&& ... params)
-:data(static_cast<ConsParams&&>(params) ...), pred(NULL), reuse(NULL), state(0x0u) {
+:data(static_cast<ConsParams&&>(params) ...), local_pred(NULL), pred(NULL), reuse(NULL), state(0x0u) {
 
 }
 
 template <class Monoid>
 OrderedReducerView<Monoid>::OrderedReducerView(Monoid const& template_monoid)
-:data(template_monoid), pred(NULL), reuse(NULL), state(0x2u) {
+:data(template_monoid), local_pred(NULL), pred(NULL), reuse(NULL), state(0x2u) {
 
 }
 
@@ -70,6 +72,22 @@ OrderedReducerView<Monoid>::~OrderedReducerView() {
 
 template <class Monoid>
 OrderedReducerView<Monoid>* OrderedReducerView<Monoid>::fold() {
+	OrderedReducerView<Monoid>* ret = this;
+	while((ret->state & 0x4) == 0x0 && ret->local_pred != NULL) {
+		OrderedReducerView<Monoid>* tmp = ret->local_pred;
+		if(tmp->reuse != NULL) {
+			delete tmp->reuse;
+		}
+		tmp->reuse = ret;
+	//	delete ret;
+		ret = tmp;
+	}
+/*	if(ret->pred != NULL) {
+		ret->pred->reduce();
+	}*/
+	return ret;
+
+
 /*	OrderedReducerView<Monoid>* ret = this;
 	while((ret->state & 0x4) == 0 && ret->pred != NULL) {
 		OrderedReducerView<Monoid>* tmp = ret->pred;
@@ -110,7 +128,7 @@ OrderedReducerView<Monoid>* OrderedReducerView<Monoid>::fold() {
 	}
 	return this;*/
 	// refactored as the previous implementation seemed to generate too long lists of reuse views
-	if((state & 0x4) == 0 && pred != NULL) {
+/*	if((state & 0x4) == 0 && pred != NULL) {
 		OrderedReducerView<Monoid>* tmp = pred;
 
 		// Delete intermediate foldable elements
@@ -132,7 +150,7 @@ OrderedReducerView<Monoid>* OrderedReducerView<Monoid>::fold() {
 	else if(pred != NULL) {
 		pred->reduce();
 	}
-	return this;
+	return this;*/
 }
 
 template <class Monoid>
@@ -141,6 +159,7 @@ OrderedReducerView<Monoid>* OrderedReducerView<Monoid>::create_parent_view() {
 	if(ret != NULL) {
 		reuse = ret->reuse;
 		ret->data.reset();
+		ret->local_pred = NULL;
 		ret->pred = NULL;
 	//	ret->parent = NULL;
 		ret->reuse = NULL;
@@ -155,25 +174,90 @@ OrderedReducerView<Monoid>* OrderedReducerView<Monoid>::create_parent_view() {
 
 template <class Monoid>
 void OrderedReducerView<Monoid>::reduce() {
-	if(pred != NULL) {
-		// Definitely not waiting for a child any more
-		state &= 0xFD;
-
-		if((pred->state & 0x2) == 0x0) {
-			do {
-				data.left_reduce(pred->data);
-				View* tmp = pred->pred;
-				// No memory reclamation as this view is from another fork
-				delete pred;
-				pred = tmp;
-			}while(pred != NULL && ((pred->state & 0x2) == 0x0 || pred->pred != NULL));
-
-			// The pred pointer is the only dangerous pointer, as the parent might read an old value while folding/reducing
-			// This means we need a fence. The good thing is that reduction only happens when there was a
-			// fork previously, so this fence should be rare
-			MEMORY_FENCE();
+	if(local_pred != NULL) {
+		while(local_pred->local_pred != NULL) {
+			data.left_reduce(local_pred->data);
+			View* tmp = local_pred->local_pred;
+			delete local_pred;
+			local_pred = tmp;
+		}
+		if(local_pred->pred != NULL) {
+			data.left_reduce(local_pred->data);
+			View* tmp = local_pred->pred;
+			delete local_pred;
+			local_pred = NULL;
+			pred = tmp;
+		}
+		else if((local_pred->state & 0x2) == 0x0) {
+			data.left_reduce(local_pred->data);
+			delete local_pred;
+			local_pred = NULL;
+			// No more children
+			state &= 0xFD;
 		}
 	}
+	// TODO: manual unrolling to reduce number of fences used (a single fence should be enough,
+	// as long as we know all pointers have been read before the fence.)
+	if(pred != NULL) {
+		state |= 0x4;
+		bool active;
+		do {
+			active = false;
+			while(pred->pred != NULL) {
+				MEMORY_FENCE();
+				data.left_reduce(pred->data);
+				View* tmp = pred->pred;
+				delete pred;
+				pred = tmp;
+				active = true;
+			}
+			while(pred->local_pred != NULL) {
+				MEMORY_FENCE();
+				data.left_reduce(pred->data);
+				View* tmp = pred->local_pred;
+				delete pred;
+				pred = tmp;
+				active = true;
+			}
+		}while(active);
+		if((pred->state & 0x2) == 0x0) {
+			MEMORY_FENCE();
+			data.left_reduce(pred->data);
+			delete pred;
+			pred = NULL;
+			// No more children
+			state &= 0xFD;
+		}
+	}
+
+/*
+	if(pred != NULL && (pred->pred != NULL || (pred->state & 0x2) == 0x0)) {
+		bool local = (state & 0x1) == 0x1;
+		// Definitely not waiting for a child any more. and maybe not local any more
+		state &= 0xFC;
+
+		do {
+			if(!local) {
+				MEMORY_FENCE();
+			}
+			if((pred->state & 0x4) == 0x4) {
+				data.left_reduce(pred->data);
+				state |= 0x4;
+			}
+			local = local && ((pred->state & 0x1) == 0x1);
+			View* tmp = pred->pred;
+			// No memory reclamation as this view is from another fork
+			delete pred;
+			pred = tmp;
+		}while(pred != NULL && (pred->pred != NULL || (pred->state & 0x2) == 0x0));
+*/
+	/*	if(local) {
+			state |= 0x1;
+		}
+		else {*/
+	//		state &= 0xFE;
+		//}
+//	}
 }
 
 template <class Monoid>
@@ -182,9 +266,29 @@ bool OrderedReducerView<Monoid>::is_reduced() {
 }
 
 template <class Monoid>
+void OrderedReducerView<Monoid>::set_local_predecessor(OrderedReducerView<Monoid>* local_pred) {
+	if((state & 0x8) == 0x8) {
+		// This element has already been connected to some non-local element.
+		// Therefore we have to treat it like something non-local
+		set_predecessor(local_pred);
+	}
+	else {
+		assert(this->pred == NULL);
+		assert(pred != this);
+		this->local_pred = local_pred;
+	}
+}
+
+template <class Monoid>
 void OrderedReducerView<Monoid>::set_predecessor(OrderedReducerView<Monoid>* pred) {
 	assert(this->pred == NULL);
 	assert(pred != this);
+	// Warn other local elements that this element is connected to something non-local
+	// OrderedReducer takes care that local elements are folded before the call to set_predecessor
+	// As local elements live in a sequential world we are guaranteed to have them either folded now, or
+	// warned if they are connected later
+	state |= 0x8;
+	MEMORY_FENCE();
 	this->pred = pred;
 }
 

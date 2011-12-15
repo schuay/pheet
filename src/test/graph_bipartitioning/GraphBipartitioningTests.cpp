@@ -64,9 +64,22 @@ void GraphBipartitioningTests::run_test() {
 	if(graph_bipartitioning_test) {
 		std::cout << "----" << std::endl;
 
-		this->run_partitioner<ImprovedBranchBoundGraphBipartitioning<DefaultBasicScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<64>, 64 > >();
-		this->run_partitioner<ImprovedBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<64>, 64 > >();
-		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<64>, ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy, 64 > >();
+		this->run_partitioner<ImprovedBranchBoundGraphBipartitioning<DefaultBasicScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<DefaultBasicScheduler, 64>, 64 > >();
+		this->run_partitioner<ImprovedBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<ArrayListPriorityScheduler, 64>, 64 > >();
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<ArrayListPriorityScheduler, 64>, AutoFifoStrategy, 64 > >();
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<ArrayListPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy, 64 > >();
+		this->run_partitioner<ImprovedBranchBoundGraphBipartitioning<ArrayListHeapPriorityScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<ArrayListHeapPriorityScheduler, 64>, 64 > >();
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapPriorityScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<ArrayListHeapPriorityScheduler, 64>, AutoFifoStrategy, 64 > >();
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapPriorityScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<ArrayListHeapPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy, 64 > >();
+		this->run_partitioner<ImprovedBranchBoundGraphBipartitioning<PrimitiveHeapPriorityScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<PrimitiveHeapPriorityScheduler, 64>, 64 > >();
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<PrimitiveHeapPriorityScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<PrimitiveHeapPriorityScheduler, 64>, AutoFifoStrategy, 64 > >();
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<PrimitiveHeapPriorityScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<PrimitiveHeapPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy, 64 > >();
+		this->run_partitioner<ImprovedBranchBoundGraphBipartitioning<PrimitiveHeapPriorityScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<PrimitiveHeapPriorityScheduler, 64>, 64 > >();
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<PrimitiveHeapPriorityScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<PrimitiveHeapPriorityScheduler, 64>, AutoFifoStrategy, 64 > >();
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<PrimitiveHeapPriorityScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<PrimitiveHeapPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy, 64 > >();
+
+
+		// All to slow compared to newer implementations
 /*		this->run_partitioner<ImprovedBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningBasicLogic<64>, 64 > >();
 		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningBasicLogic<64>, AutoFifoStrategy, 64 > >();
 		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningBasicLogic<64>, AutoLifoStrategy, 64 > >();

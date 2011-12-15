@@ -28,35 +28,35 @@ T MinOperation<T>::get_identity() {
 	return std::numeric_limits<T>::max();
 }
 
-template <typename T, template <typename S> class M = MinOperation >
-class MinReducer : public MaxReducer<T, M> {
+template <class Scheduler, typename T, template <typename S> class M = MinOperation >
+class MinReducer : public MaxReducer<Scheduler, T, M> {
 public:
 	MinReducer();
-	MinReducer(MinReducer<T, M>& other);
+	MinReducer(MinReducer<Scheduler, T, M>& other);
 	~MinReducer();
 
 	T const& get_min();
 };
 
-template <typename T, template <typename S> class M>
-inline MinReducer<T, M>::MinReducer() {
+template <class Scheduler, typename T, template <typename S> class M>
+inline MinReducer<Scheduler, T, M>::MinReducer() {
 
 }
 
-template <typename T, template <typename S> class M>
-inline MinReducer<T, M>::MinReducer(MinReducer<T, M>& other)
-: MaxReducer<T, M>(other) {
+template <class Scheduler, typename T, template <typename S> class M>
+inline MinReducer<Scheduler, T, M>::MinReducer(MinReducer<Scheduler, T, M>& other)
+: MaxReducer<Scheduler, T, M>(other) {
 
 }
 
-template <typename T, template <typename S> class M>
-inline MinReducer<T, M>::~MinReducer() {
+template <class Scheduler, typename T, template <typename S> class M>
+inline MinReducer<Scheduler, T, M>::~MinReducer() {
 
 }
 
-template <typename T, template <typename S> class M>
-inline T const& MinReducer<T, M>::get_min() {
-	return MaxReducer<T, M>::get_max();
+template <class Scheduler, typename T, template <typename S> class M>
+inline T const& MinReducer<Scheduler, T, M>::get_min() {
+	return MaxReducer<Scheduler, T, M>::get_max();
 }
 
 }

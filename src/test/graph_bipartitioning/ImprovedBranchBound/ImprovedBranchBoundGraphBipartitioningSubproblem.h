@@ -17,7 +17,7 @@
 
 namespace pheet {
 
-template <class Logic, size_t MAX_SIZE = 64>
+template <class Scheduler, class Logic, size_t MAX_SIZE = 64>
 class ImprovedBranchBoundGraphBipartitioningSubproblem {
 public:
 	typedef std::bitset<MAX_SIZE> Set;
@@ -25,9 +25,9 @@ public:
 	ImprovedBranchBoundGraphBipartitioningSubproblem(ImprovedBranchBoundGraphBipartitioningSubproblem const& other);
 	~ImprovedBranchBoundGraphBipartitioningSubproblem();
 
-	ImprovedBranchBoundGraphBipartitioningSubproblem<Logic, MAX_SIZE>* split();
+	ImprovedBranchBoundGraphBipartitioningSubproblem<Scheduler, Logic, MAX_SIZE>* split();
 	bool is_solution();
-	void update_solution(size_t* upper_bound, MaxReducer<GraphBipartitioningSolution<MAX_SIZE> >& best);
+	void update_solution(size_t* upper_bound, MaxReducer<Scheduler, GraphBipartitioningSolution<MAX_SIZE> >& best);
 	size_t get_lower_bound();
 
 	GraphVertex const* const graph;
@@ -41,30 +41,30 @@ private:
 	Logic logic;
 };
 
-template <class Logic, size_t MAX_SIZE>
-ImprovedBranchBoundGraphBipartitioningSubproblem<Logic, MAX_SIZE>::ImprovedBranchBoundGraphBipartitioningSubproblem(GraphVertex const* graph, size_t size, size_t k)
+template <class Scheduler, class Logic, size_t MAX_SIZE>
+ImprovedBranchBoundGraphBipartitioningSubproblem<Scheduler, Logic, MAX_SIZE>::ImprovedBranchBoundGraphBipartitioningSubproblem(GraphVertex const* graph, size_t size, size_t k)
 : graph(graph), size(size), k(k), logic(this) {
 	for(size_t i = 0; i < size; ++i) {
 		sets[2].set(i);
 	}
 }
 
-template <class Logic, size_t MAX_SIZE>
-ImprovedBranchBoundGraphBipartitioningSubproblem<Logic, MAX_SIZE>::ImprovedBranchBoundGraphBipartitioningSubproblem(ImprovedBranchBoundGraphBipartitioningSubproblem const& other)
+template <class Scheduler, class Logic, size_t MAX_SIZE>
+ImprovedBranchBoundGraphBipartitioningSubproblem<Scheduler, Logic, MAX_SIZE>::ImprovedBranchBoundGraphBipartitioningSubproblem(ImprovedBranchBoundGraphBipartitioningSubproblem const& other)
 : graph(other.graph), size(other.size), k(other.k), logic(this, other.logic) {
 	for(size_t i = 0; i < 3; ++i) {
 		sets[i] = other.sets[i];
 	}
 }
 
-template <class Logic, size_t MAX_SIZE>
-ImprovedBranchBoundGraphBipartitioningSubproblem<Logic, MAX_SIZE>::~ImprovedBranchBoundGraphBipartitioningSubproblem() {
+template <class Scheduler, class Logic, size_t MAX_SIZE>
+ImprovedBranchBoundGraphBipartitioningSubproblem<Scheduler, Logic, MAX_SIZE>::~ImprovedBranchBoundGraphBipartitioningSubproblem() {
 
 }
 
-template <class Logic, size_t MAX_SIZE>
-ImprovedBranchBoundGraphBipartitioningSubproblem<Logic, MAX_SIZE>* ImprovedBranchBoundGraphBipartitioningSubproblem<Logic, MAX_SIZE>::split() {
-	ImprovedBranchBoundGraphBipartitioningSubproblem<Logic, MAX_SIZE>* other = new ImprovedBranchBoundGraphBipartitioningSubproblem<Logic, MAX_SIZE>(*this);
+template <class Scheduler, class Logic, size_t MAX_SIZE>
+ImprovedBranchBoundGraphBipartitioningSubproblem<Scheduler, Logic, MAX_SIZE>* ImprovedBranchBoundGraphBipartitioningSubproblem<Scheduler, Logic, MAX_SIZE>::split() {
+	ImprovedBranchBoundGraphBipartitioningSubproblem<Scheduler, Logic, MAX_SIZE>* other = new ImprovedBranchBoundGraphBipartitioningSubproblem<Scheduler, Logic, MAX_SIZE>(*this);
 
 	size_t nv = logic.get_next_vertex();
 	update(0, nv);
@@ -73,8 +73,8 @@ ImprovedBranchBoundGraphBipartitioningSubproblem<Logic, MAX_SIZE>* ImprovedBranc
 	return other;
 }
 
-template <class Logic, size_t MAX_SIZE>
-void ImprovedBranchBoundGraphBipartitioningSubproblem<Logic, MAX_SIZE>::update(uint8_t set, size_t pos) {
+template <class Scheduler, class Logic, size_t MAX_SIZE>
+void ImprovedBranchBoundGraphBipartitioningSubproblem<Scheduler, Logic, MAX_SIZE>::update(uint8_t set, size_t pos) {
 	assert((set & 1) == set);
 	assert(pos < size);
 	assert(!sets[set].test(pos));
@@ -88,13 +88,13 @@ void ImprovedBranchBoundGraphBipartitioningSubproblem<Logic, MAX_SIZE>::update(u
 	logic.update(set, pos);
 }
 
-template <class Logic, size_t MAX_SIZE>
-bool ImprovedBranchBoundGraphBipartitioningSubproblem<Logic, MAX_SIZE>::is_solution() {
+template <class Scheduler, class Logic, size_t MAX_SIZE>
+bool ImprovedBranchBoundGraphBipartitioningSubproblem<Scheduler, Logic, MAX_SIZE>::is_solution() {
 	return (sets[0].count() == k) || (sets[1].count() == (size - k));
 }
 
-template <class Logic, size_t MAX_SIZE>
-void ImprovedBranchBoundGraphBipartitioningSubproblem<Logic, MAX_SIZE>::update_solution(size_t* upper_bound, MaxReducer<GraphBipartitioningSolution<MAX_SIZE> >& best) {
+template <class Scheduler, class Logic, size_t MAX_SIZE>
+void ImprovedBranchBoundGraphBipartitioningSubproblem<Scheduler, Logic, MAX_SIZE>::update_solution(size_t* upper_bound, MaxReducer<Scheduler, GraphBipartitioningSolution<MAX_SIZE> >& best) {
 	if(sets[0].count() == k) {
 		sets[1] |= sets[2];
 		Set tmp = sets[2];
@@ -112,6 +112,9 @@ void ImprovedBranchBoundGraphBipartitioningSubproblem<Logic, MAX_SIZE>::update_s
 	size_t old_ub = *upper_bound;
 	if(cut < old_ub) {
 		if(SIZET_CAS(upper_bound, old_ub, cut)) {
+			if(cut == 49236) {
+
+			}
 			GraphBipartitioningSolution<MAX_SIZE> my_best;
 			my_best.weight = cut;
 			my_best.sets[0] = sets[0];
@@ -121,8 +124,8 @@ void ImprovedBranchBoundGraphBipartitioningSubproblem<Logic, MAX_SIZE>::update_s
 	}
 }
 
-template <class Logic, size_t MAX_SIZE>
-size_t ImprovedBranchBoundGraphBipartitioningSubproblem<Logic, MAX_SIZE>::get_lower_bound() {
+template <class Scheduler, class Logic, size_t MAX_SIZE>
+size_t ImprovedBranchBoundGraphBipartitioningSubproblem<Scheduler, Logic, MAX_SIZE>::get_lower_bound() {
 	return logic.get_lower_bound();
 }
 

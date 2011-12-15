@@ -19,20 +19,20 @@ public:
 	typedef ImprovedStrategyBranchBoundGraphBipartitioningTask<Task, Logic, SchedulingStrategy, MAX_SIZE> BBTask;
 	typedef ExponentialBackoff<> Backoff;
 
-	ImprovedStrategyBranchBoundGraphBipartitioningTask(ImprovedBranchBoundGraphBipartitioningSubproblem<Logic, MAX_SIZE>* sub_problem, size_t* upper_bound, MaxReducer<GraphBipartitioningSolution<MAX_SIZE> >& best);
+	ImprovedStrategyBranchBoundGraphBipartitioningTask(ImprovedBranchBoundGraphBipartitioningSubproblem<typename Task::Scheduler, Logic, MAX_SIZE>* sub_problem, size_t* upper_bound, MaxReducer<typename Task::Scheduler, GraphBipartitioningSolution<MAX_SIZE> >& best);
 	virtual ~ImprovedStrategyBranchBoundGraphBipartitioningTask();
 
 	virtual void operator()(typename Task::TEC& tec);
 
 private:
-	ImprovedBranchBoundGraphBipartitioningSubproblem<Logic, MAX_SIZE>* sub_problem;
+	ImprovedBranchBoundGraphBipartitioningSubproblem<typename Task::Scheduler, Logic, MAX_SIZE>* sub_problem;
 	size_t* upper_bound;
-	MaxReducer<GraphBipartitioningSolution<MAX_SIZE> > best;
-	SchedulingStrategy<ImprovedBranchBoundGraphBipartitioningSubproblem<Logic, MAX_SIZE> > strategy;
+	MaxReducer<typename Task::Scheduler, GraphBipartitioningSolution<MAX_SIZE> > best;
+	SchedulingStrategy<ImprovedBranchBoundGraphBipartitioningSubproblem<typename Task::Scheduler, Logic, MAX_SIZE> > strategy;
 };
 
 template <class Task, class Logic, template <class SubProblem> class SchedulingStrategy, size_t MAX_SIZE>
-ImprovedStrategyBranchBoundGraphBipartitioningTask<Task, Logic, SchedulingStrategy, MAX_SIZE>::ImprovedStrategyBranchBoundGraphBipartitioningTask(ImprovedBranchBoundGraphBipartitioningSubproblem<Logic, MAX_SIZE>* sub_problem, size_t* upper_bound, MaxReducer<GraphBipartitioningSolution<MAX_SIZE> >& best)
+ImprovedStrategyBranchBoundGraphBipartitioningTask<Task, Logic, SchedulingStrategy, MAX_SIZE>::ImprovedStrategyBranchBoundGraphBipartitioningTask(ImprovedBranchBoundGraphBipartitioningSubproblem<typename Task::Scheduler, Logic, MAX_SIZE>* sub_problem, size_t* upper_bound, MaxReducer<typename Task::Scheduler, GraphBipartitioningSolution<MAX_SIZE> >& best)
 : sub_problem(sub_problem), upper_bound(upper_bound), best(best) {
 
 }
@@ -50,7 +50,7 @@ void ImprovedStrategyBranchBoundGraphBipartitioningTask<Task, Logic, SchedulingS
 		return;
 	}
 
-	ImprovedBranchBoundGraphBipartitioningSubproblem<Logic, MAX_SIZE>* sub_problem2 =
+	ImprovedBranchBoundGraphBipartitioningSubproblem<typename Task::Scheduler, Logic, MAX_SIZE>* sub_problem2 =
 			sub_problem->split();
 
 	if(sub_problem->is_solution()) {

@@ -65,6 +65,7 @@ ImprovedBranchBoundGraphBipartitioning<Scheduler, Logic, MAX_SIZE>::~ImprovedBra
 template <class Scheduler, class Logic, size_t MAX_SIZE>
 void ImprovedBranchBoundGraphBipartitioning<Scheduler, Logic, MAX_SIZE>::partition() {
 	scheduler.template finish<ImprovedBranchBoundGraphBipartitioningRootTask<typename Scheduler::Task, Logic, MAX_SIZE> >(data, size, &solution);
+	MEMORY_FENCE();
 }
 
 template <class Scheduler, class Logic, size_t MAX_SIZE>

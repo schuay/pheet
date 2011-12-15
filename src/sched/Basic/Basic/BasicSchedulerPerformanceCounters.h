@@ -17,6 +17,7 @@
 
 namespace pheet {
 
+template <class Scheduler>
 class BasicSchedulerPerformanceCounters {
 public:
 	BasicSchedulerPerformanceCounters() {}
@@ -42,60 +43,62 @@ public:
 	void print_values();
 
 //private:
-	BasicPerformanceCounter<scheduler_count_spawns> num_spawns;
-	BasicPerformanceCounter<scheduler_count_actual_spawns> num_actual_spawns;
-	BasicPerformanceCounter<scheduler_count_spawns_to_call> num_spawns_to_call;
-	BasicPerformanceCounter<scheduler_count_calls> num_calls;
-	BasicPerformanceCounter<scheduler_count_finishes> num_finishes;
-	BasicPerformanceCounter<scheduler_count_completion_signals> num_completion_signals;
-	BasicPerformanceCounter<scheduler_count_chained_completion_signals> num_chained_completion_signals;
-	BasicPerformanceCounter<scheduler_count_remote_chained_completion_signals> num_remote_chained_completion_signals;
-	BasicPerformanceCounter<scheduler_count_non_blocking_finish_regions> num_non_blocking_finish_regions;
+	BasicPerformanceCounter<Scheduler, scheduler_count_spawns> num_spawns;
+	BasicPerformanceCounter<Scheduler, scheduler_count_actual_spawns> num_actual_spawns;
+	BasicPerformanceCounter<Scheduler, scheduler_count_spawns_to_call> num_spawns_to_call;
+	BasicPerformanceCounter<Scheduler, scheduler_count_calls> num_calls;
+	BasicPerformanceCounter<Scheduler, scheduler_count_finishes> num_finishes;
+	BasicPerformanceCounter<Scheduler, scheduler_count_completion_signals> num_completion_signals;
+	BasicPerformanceCounter<Scheduler, scheduler_count_chained_completion_signals> num_chained_completion_signals;
+	BasicPerformanceCounter<Scheduler, scheduler_count_remote_chained_completion_signals> num_remote_chained_completion_signals;
+	BasicPerformanceCounter<Scheduler, scheduler_count_non_blocking_finish_regions> num_non_blocking_finish_regions;
 
-	BasicPerformanceCounter<stealing_deque_count_steals> num_steals;
-	BasicPerformanceCounter<stealing_deque_count_steal_calls> num_steal_calls;
-	BasicPerformanceCounter<stealing_deque_count_unsuccessful_steal_calls> num_unsuccessful_steal_calls;
-	BasicPerformanceCounter<stealing_deque_count_pop_cas> num_stealing_deque_pop_cas;
+	BasicPerformanceCounter<Scheduler, stealing_deque_count_steals> num_steals;
+	BasicPerformanceCounter<Scheduler, stealing_deque_count_steal_calls> num_steal_calls;
+	BasicPerformanceCounter<Scheduler, stealing_deque_count_unsuccessful_steal_calls> num_unsuccessful_steal_calls;
+	BasicPerformanceCounter<Scheduler, stealing_deque_count_pop_cas> num_stealing_deque_pop_cas;
 
-	BasicPerformanceCounter<stealing_deque_count_dequeued_tasks> num_dequeued_tasks;
-	BasicPerformanceCounter<stealing_deque_count_steal_executed_tasks> num_steal_executed_tasks;
+	BasicPerformanceCounter<Scheduler, stealing_deque_count_dequeued_tasks> num_dequeued_tasks;
+	BasicPerformanceCounter<Scheduler, stealing_deque_count_steal_executed_tasks> num_steal_executed_tasks;
 
-	TimePerformanceCounter<scheduler_measure_total_time> total_time;
-	TimePerformanceCounter<scheduler_measure_task_time> task_time;
-	TimePerformanceCounter<scheduler_measure_idle_time> idle_time;
+	TimePerformanceCounter<Scheduler, scheduler_measure_total_time> total_time;
+	TimePerformanceCounter<Scheduler, scheduler_measure_task_time> task_time;
+	TimePerformanceCounter<Scheduler, scheduler_measure_idle_time> idle_time;
 
-	MaxPerformanceCounter<size_t, scheduler_measure_finish_stack_nonblocking_max> finish_stack_nonblocking_max;
-	MinPerformanceCounter<size_t, scheduler_measure_finish_stack_blocking_min> finish_stack_blocking_min;
+	MaxPerformanceCounter<Scheduler, size_t, scheduler_measure_finish_stack_nonblocking_max> finish_stack_nonblocking_max;
+	MinPerformanceCounter<Scheduler, size_t, scheduler_measure_finish_stack_blocking_min> finish_stack_blocking_min;
 };
 
-inline void BasicSchedulerPerformanceCounters::print_headers() {
-	BasicPerformanceCounter<scheduler_count_spawns>::print_header("spawns\t");
-	BasicPerformanceCounter<scheduler_count_actual_spawns>::print_header("actual_spawns\t");
-	BasicPerformanceCounter<scheduler_count_spawns_to_call>::print_header("calls\t");
-	BasicPerformanceCounter<scheduler_count_calls>::print_header("spawns->call\t");
-	BasicPerformanceCounter<scheduler_count_finishes>::print_header("finishes\t");
-	BasicPerformanceCounter<scheduler_count_completion_signals>::print_header("num_completion_signals\t");
-	BasicPerformanceCounter<scheduler_count_chained_completion_signals>::print_header("num_chained_completion_signals\t");
-	BasicPerformanceCounter<scheduler_count_remote_chained_completion_signals>::print_header("num_remote_chained_completion_signals\t");
-	BasicPerformanceCounter<scheduler_count_non_blocking_finish_regions>::print_header("num_non_blocking_finish_regions\t");
+template <class Scheduler>
+inline void BasicSchedulerPerformanceCounters<Scheduler>::print_headers() {
+	BasicPerformanceCounter<Scheduler, scheduler_count_spawns>::print_header("spawns\t");
+	BasicPerformanceCounter<Scheduler, scheduler_count_actual_spawns>::print_header("actual_spawns\t");
+	BasicPerformanceCounter<Scheduler, scheduler_count_spawns_to_call>::print_header("calls\t");
+	BasicPerformanceCounter<Scheduler, scheduler_count_calls>::print_header("spawns->call\t");
+	BasicPerformanceCounter<Scheduler, scheduler_count_finishes>::print_header("finishes\t");
+	BasicPerformanceCounter<Scheduler, scheduler_count_completion_signals>::print_header("num_completion_signals\t");
+	BasicPerformanceCounter<Scheduler, scheduler_count_chained_completion_signals>::print_header("num_chained_completion_signals\t");
+	BasicPerformanceCounter<Scheduler, scheduler_count_remote_chained_completion_signals>::print_header("num_remote_chained_completion_signals\t");
+	BasicPerformanceCounter<Scheduler, scheduler_count_non_blocking_finish_regions>::print_header("num_non_blocking_finish_regions\t");
 
-	BasicPerformanceCounter<stealing_deque_count_steals>::print_header("stolen\t");
-	BasicPerformanceCounter<stealing_deque_count_steal_calls>::print_header("steal_calls\t");
-	BasicPerformanceCounter<stealing_deque_count_unsuccessful_steal_calls>::print_header("unsuccessful_steal_calls\t");
-	BasicPerformanceCounter<stealing_deque_count_pop_cas>::print_header("stealing_deque_pop_cas\t");
+	BasicPerformanceCounter<Scheduler, stealing_deque_count_steals>::print_header("stolen\t");
+	BasicPerformanceCounter<Scheduler, stealing_deque_count_steal_calls>::print_header("steal_calls\t");
+	BasicPerformanceCounter<Scheduler, stealing_deque_count_unsuccessful_steal_calls>::print_header("unsuccessful_steal_calls\t");
+	BasicPerformanceCounter<Scheduler, stealing_deque_count_pop_cas>::print_header("stealing_deque_pop_cas\t");
 
-	BasicPerformanceCounter<stealing_deque_count_dequeued_tasks>::print_header("num_dequeued_tasks\t");
-	BasicPerformanceCounter<stealing_deque_count_steal_executed_tasks>::print_header("num_steal_executed_tasks\t");
+	BasicPerformanceCounter<Scheduler, stealing_deque_count_dequeued_tasks>::print_header("num_dequeued_tasks\t");
+	BasicPerformanceCounter<Scheduler, stealing_deque_count_steal_executed_tasks>::print_header("num_steal_executed_tasks\t");
 
-	TimePerformanceCounter<scheduler_measure_total_time>::print_header("scheduler_total_time\t");
-	TimePerformanceCounter<scheduler_measure_task_time>::print_header("total_task_time\t");
-	TimePerformanceCounter<scheduler_measure_idle_time>::print_header("total_idle_time\t");
+	TimePerformanceCounter<Scheduler, scheduler_measure_total_time>::print_header("scheduler_total_time\t");
+	TimePerformanceCounter<Scheduler, scheduler_measure_task_time>::print_header("total_task_time\t");
+	TimePerformanceCounter<Scheduler, scheduler_measure_idle_time>::print_header("total_idle_time\t");
 
-	MaxPerformanceCounter<size_t, scheduler_measure_finish_stack_nonblocking_max>::print_header("finish_stack_nonblocking_max\t");
-	MinPerformanceCounter<size_t, scheduler_measure_finish_stack_blocking_min>::print_header("finish_stack_blocking_min\t");
+	MaxPerformanceCounter<Scheduler, size_t, scheduler_measure_finish_stack_nonblocking_max>::print_header("finish_stack_nonblocking_max\t");
+	MinPerformanceCounter<Scheduler, size_t, scheduler_measure_finish_stack_blocking_min>::print_header("finish_stack_blocking_min\t");
 }
 
-inline void BasicSchedulerPerformanceCounters::print_values() {
+template <class Scheduler>
+inline void BasicSchedulerPerformanceCounters<Scheduler>::print_values() {
 	num_spawns.print("%lu\t");
 	num_actual_spawns.print("%lu\t");
 	num_calls.print("%lu\t");

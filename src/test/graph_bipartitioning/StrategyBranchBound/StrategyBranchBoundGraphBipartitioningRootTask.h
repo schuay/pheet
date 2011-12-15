@@ -48,7 +48,7 @@ StrategyBranchBoundGraphBipartitioningRootTask<Task, LowerBound, NextVertex, Sch
 
 template <class Task, class LowerBound, class NextVertex, class SchedulingStrategy, size_t MAX_SIZE>
 void StrategyBranchBoundGraphBipartitioningRootTask<Task, LowerBound, NextVertex, SchedulingStrategy, MAX_SIZE>::operator()(typename Task::TEC& tec) {
-	MaxReducer<GraphBipartitioningSolution<MAX_SIZE> > best;
+	MaxReducer<typename Task::Scheduler, GraphBipartitioningSolution<MAX_SIZE> > best;
 	size_t ub = std::numeric_limits< size_t >::max();
 
 	size_t k = size >> 1;

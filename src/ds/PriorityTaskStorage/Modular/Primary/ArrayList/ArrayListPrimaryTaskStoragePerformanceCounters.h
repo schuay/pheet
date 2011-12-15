@@ -11,6 +11,7 @@
 
 namespace pheet {
 
+template <class Scheduler>
 class ArrayListPrimaryTaskStoragePerformanceCounters {
 public:
 	ArrayListPrimaryTaskStoragePerformanceCounters();
@@ -20,21 +21,24 @@ public:
 	void print_headers();
 	void print_values();
 
-	BasicPerformanceCounter<task_storage_count_unsuccessful_pops> num_unsuccessful_pops;
-	BasicPerformanceCounter<task_storage_count_successful_pops> num_successful_pops;
-	BasicPerformanceCounter<task_storage_count_unsuccessful_takes> num_unsuccessful_takes;
-	BasicPerformanceCounter<task_storage_count_successful_takes> num_successful_takes;
-	BasicPerformanceCounter<task_storage_count_size_pop> total_size_pop;
-	TimePerformanceCounter<task_storage_measure_pop_time> pop_time;
-	TimePerformanceCounter<task_storage_measure_push_time> push_time;
-	BasicPerformanceCounter<task_storage_count_skipped_cleanups> num_skipped_cleanups;
+	BasicPerformanceCounter<Scheduler, task_storage_count_unsuccessful_pops> num_unsuccessful_pops;
+	BasicPerformanceCounter<Scheduler, task_storage_count_successful_pops> num_successful_pops;
+	BasicPerformanceCounter<Scheduler, task_storage_count_unsuccessful_takes> num_unsuccessful_takes;
+	BasicPerformanceCounter<Scheduler, task_storage_count_successful_takes> num_successful_takes;
+	BasicPerformanceCounter<Scheduler, task_storage_count_size_pop> total_size_pop;
+	TimePerformanceCounter<Scheduler, task_storage_measure_pop_time> pop_time;
+	TimePerformanceCounter<Scheduler, task_storage_measure_push_time> push_time;
+	BasicPerformanceCounter<Scheduler, task_storage_count_skipped_cleanups> num_skipped_cleanups;
+	MaxPerformanceCounter<Scheduler, size_t, task_storage_measure_max_control_block_items> max_control_block_items;
 };
 
-inline ArrayListPrimaryTaskStoragePerformanceCounters::ArrayListPrimaryTaskStoragePerformanceCounters() {
+template <class Scheduler>
+inline ArrayListPrimaryTaskStoragePerformanceCounters<Scheduler>::ArrayListPrimaryTaskStoragePerformanceCounters() {
 
 }
 
-inline ArrayListPrimaryTaskStoragePerformanceCounters::ArrayListPrimaryTaskStoragePerformanceCounters(ArrayListPrimaryTaskStoragePerformanceCounters& other)
+template <class Scheduler>
+ArrayListPrimaryTaskStoragePerformanceCounters<Scheduler>::ArrayListPrimaryTaskStoragePerformanceCounters(ArrayListPrimaryTaskStoragePerformanceCounters& other)
 :num_unsuccessful_pops(other.num_unsuccessful_pops),
  num_successful_pops(other.num_successful_pops),
  num_unsuccessful_takes(other.num_unsuccessful_takes),
@@ -42,27 +46,32 @@ inline ArrayListPrimaryTaskStoragePerformanceCounters::ArrayListPrimaryTaskStora
  total_size_pop(other.total_size_pop),
  pop_time(other.pop_time),
  push_time(other.push_time),
- num_skipped_cleanups(other.num_skipped_cleanups)
+ num_skipped_cleanups(other.num_skipped_cleanups),
+ max_control_block_items(other.max_control_block_items)
 {
 
 }
 
-inline ArrayListPrimaryTaskStoragePerformanceCounters::~ArrayListPrimaryTaskStoragePerformanceCounters() {
+template <class Scheduler>
+inline ArrayListPrimaryTaskStoragePerformanceCounters<Scheduler>::~ArrayListPrimaryTaskStoragePerformanceCounters() {
 
 }
 
-inline void ArrayListPrimaryTaskStoragePerformanceCounters::print_headers() {
-	BasicPerformanceCounter<task_storage_count_unsuccessful_pops>::print_header("num_unsuccessful_pops\t");
-	BasicPerformanceCounter<task_storage_count_successful_pops>::print_header("num_successful_pops\t");
-	BasicPerformanceCounter<task_storage_count_unsuccessful_takes>::print_header("num_unsuccessful_takes\t");
-	BasicPerformanceCounter<task_storage_count_successful_takes>::print_header("num_successful_takes\t");
-	BasicPerformanceCounter<task_storage_count_size_pop>::print_header("total_size_pop\t");
-	TimePerformanceCounter<task_storage_measure_pop_time>::print_header("pop_time\t");
-	TimePerformanceCounter<task_storage_measure_push_time>::print_header("push_time\t");
-	TimePerformanceCounter<task_storage_count_skipped_cleanups>::print_header("num_skipped_cleanups\t");
+template <class Scheduler>
+void ArrayListPrimaryTaskStoragePerformanceCounters<Scheduler>::print_headers() {
+	BasicPerformanceCounter<Scheduler, task_storage_count_unsuccessful_pops>::print_header("num_unsuccessful_pops\t");
+	BasicPerformanceCounter<Scheduler, task_storage_count_successful_pops>::print_header("num_successful_pops\t");
+	BasicPerformanceCounter<Scheduler, task_storage_count_unsuccessful_takes>::print_header("num_unsuccessful_takes\t");
+	BasicPerformanceCounter<Scheduler, task_storage_count_successful_takes>::print_header("num_successful_takes\t");
+	BasicPerformanceCounter<Scheduler, task_storage_count_size_pop>::print_header("total_size_pop\t");
+	TimePerformanceCounter<Scheduler, task_storage_measure_pop_time>::print_header("pop_time\t");
+	TimePerformanceCounter<Scheduler, task_storage_measure_push_time>::print_header("push_time\t");
+	TimePerformanceCounter<Scheduler, task_storage_count_skipped_cleanups>::print_header("num_skipped_cleanups\t");
+	MaxPerformanceCounter<Scheduler, size_t, task_storage_measure_max_control_block_items>::print_header("max_control_block_items\t");
 }
 
-inline void ArrayListPrimaryTaskStoragePerformanceCounters::print_values() {
+template <class Scheduler>
+void ArrayListPrimaryTaskStoragePerformanceCounters<Scheduler>::print_values() {
 	num_unsuccessful_pops.print("%d\t");
 	num_successful_pops.print("%d\t");
 	num_unsuccessful_takes.print("%d\t");
@@ -71,7 +80,9 @@ inline void ArrayListPrimaryTaskStoragePerformanceCounters::print_values() {
 	pop_time.print("%f\t");
 	push_time.print("%f\t");
 	num_skipped_cleanups.print("%d\t");
+	max_control_block_items.print("%d\t");
 }
+
 }
 
 #endif /* LINKEDARRAYLISTPRIMARYTASKSTORAGEPERFORMANCECOUNTERS_H_ */

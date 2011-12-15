@@ -46,14 +46,19 @@ ImprovedStrategyBranchBoundGraphBipartitioningRootTask<Task, Logic, SchedulingSt
 
 template <class Task, class Logic, template <class SubProblem> class SchedulingStrategy, size_t MAX_SIZE>
 void ImprovedStrategyBranchBoundGraphBipartitioningRootTask<Task, Logic, SchedulingStrategy, MAX_SIZE>::operator()(typename Task::TEC& tec) {
-	MaxReducer<GraphBipartitioningSolution<MAX_SIZE> > best;
+	MaxReducer<typename Task::Scheduler, GraphBipartitioningSolution<MAX_SIZE> > best;
 	size_t ub = std::numeric_limits< size_t >::max();
 
 	size_t k = size >> 1;
-	ImprovedBranchBoundGraphBipartitioningSubproblem<Logic, MAX_SIZE>* prob = new ImprovedBranchBoundGraphBipartitioningSubproblem<Logic, MAX_SIZE>(graph, size, k);
+	ImprovedBranchBoundGraphBipartitioningSubproblem<typename Task::Scheduler, Logic, MAX_SIZE>* prob = new ImprovedBranchBoundGraphBipartitioningSubproblem<typename Task::Scheduler, Logic, MAX_SIZE>(graph, size, k);
 	tec.template finish<BBTask>(prob, &ub, best);
 
 	(*out) = best.get_max();
+	assert(out->weight == ub);
+	assert(ub != std::numeric_limits< size_t >::max());
+	assert(out->weight != std::numeric_limits< size_t >::max());
+	assert(out->sets[0].count() == k);
+	assert(out->sets[1].count() == size - k);
 }
 
 }

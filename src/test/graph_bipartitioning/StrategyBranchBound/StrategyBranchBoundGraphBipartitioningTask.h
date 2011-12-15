@@ -29,7 +29,7 @@ public:
 	typedef StrategyBranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex, SchedulingStrategy, MAX_SIZE> BBTask;
 	typedef ExponentialBackoff<> Backoff;
 
-	StrategyBranchBoundGraphBipartitioningTask(GraphVertex* graph, size_t size, size_t k, MaxReducer<GraphBipartitioningSolution<MAX_SIZE> >& best, size_t* set1, size_t set1_size, size_t* set2, size_t set2_size, size_t* ub, size_t lb);
+	StrategyBranchBoundGraphBipartitioningTask(GraphVertex* graph, size_t size, size_t k, MaxReducer<typename Task::Scheduler, GraphBipartitioningSolution<MAX_SIZE> >& best, size_t* set1, size_t set1_size, size_t* set2, size_t set2_size, size_t* ub, size_t lb);
 	virtual ~StrategyBranchBoundGraphBipartitioningTask();
 
 	virtual void operator()(typename Task::TEC& tec);
@@ -42,7 +42,7 @@ private:
 	GraphVertex* graph;
 	size_t size;
 	size_t k;
-	MaxReducer<GraphBipartitioningSolution<MAX_SIZE> > best;
+	MaxReducer<typename Task::Scheduler, GraphBipartitioningSolution<MAX_SIZE> > best;
 	size_t* set1;
 	size_t set1_size;
 	size_t* set2;
@@ -56,7 +56,7 @@ private:
 };
 
 template <class Task, class LowerBound, class NextVertex, class SchedulingStrategy, size_t MAX_SIZE>
-StrategyBranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex, SchedulingStrategy, MAX_SIZE>::StrategyBranchBoundGraphBipartitioningTask(GraphVertex* graph, size_t size, size_t k, MaxReducer<GraphBipartitioningSolution<MAX_SIZE> >& best, size_t* set1, size_t set1_size, size_t* set2, size_t set2_size, size_t* ub, size_t lb)
+StrategyBranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex, SchedulingStrategy, MAX_SIZE>::StrategyBranchBoundGraphBipartitioningTask(GraphVertex* graph, size_t size, size_t k, MaxReducer<typename Task::Scheduler, GraphBipartitioningSolution<MAX_SIZE> >& best, size_t* set1, size_t set1_size, size_t* set2, size_t set2_size, size_t* ub, size_t lb)
 : graph(graph), size(size), k(k), best(best), set1(set1), set1_size(set1_size), set2(set2), set2_size(set2_size), ub(ub), lb(lb) {
 
 }

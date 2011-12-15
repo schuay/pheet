@@ -20,13 +20,13 @@
  */
 namespace pheet {
 
-template <bool> class BasicPerformanceCounterVector;
+template <class Scheduler, bool> class BasicPerformanceCounterVector;
 
-template <>
-class BasicPerformanceCounterVector<false> {
+template <class Scheduler>
+class BasicPerformanceCounterVector<Scheduler, false> {
 public:
 	BasicPerformanceCounterVector(size_t length);
-	BasicPerformanceCounterVector(BasicPerformanceCounterVector<false>& other);
+	BasicPerformanceCounterVector(BasicPerformanceCounterVector<Scheduler, false>& other);
 	~BasicPerformanceCounterVector();
 
 	void incr(size_t i);
@@ -36,45 +36,51 @@ public:
 //	size_t get_length();
 };
 
+template <class Scheduler>
 inline
-BasicPerformanceCounterVector<false>::BasicPerformanceCounterVector(size_t length) {
+BasicPerformanceCounterVector<Scheduler, false>::BasicPerformanceCounterVector(size_t length) {
 
 }
 
+template <class Scheduler>
 inline
-BasicPerformanceCounterVector<false>::BasicPerformanceCounterVector(BasicPerformanceCounterVector<false>& other) {
+BasicPerformanceCounterVector<Scheduler, false>::BasicPerformanceCounterVector(BasicPerformanceCounterVector<Scheduler, false>& other) {
 
 }
 
+template <class Scheduler>
 inline
-BasicPerformanceCounterVector<false>::~BasicPerformanceCounterVector() {
+BasicPerformanceCounterVector<Scheduler, false>::~BasicPerformanceCounterVector() {
 
 }
 
+template <class Scheduler>
 inline
-void BasicPerformanceCounterVector<false>::incr(size_t i) {
+void BasicPerformanceCounterVector<Scheduler, false>::incr(size_t i) {
 
 }
 
+template <class Scheduler>
 inline
-void BasicPerformanceCounterVector<false>::print(size_t i, char const* const formatting_string) {
+void BasicPerformanceCounterVector<Scheduler, false>::print(size_t i, char const* const formatting_string) {
 
 }
 
+template <class Scheduler>
 inline
-void BasicPerformanceCounterVector<false>::print_header(size_t i, char const* const string) {
+void BasicPerformanceCounterVector<Scheduler, false>::print_header(size_t i, char const* const string) {
 
 }
 /*
-size_t BasicPerformanceCounterVector<false>::get_length() {
+size_t BasicPerformanceCounterVector<Scheduler, false>::get_length() {
 	return 0;
 }*/
 
-template <>
-class BasicPerformanceCounterVector<true> {
+template <class Scheduler>
+class BasicPerformanceCounterVector<Scheduler, true> {
 public:
 	BasicPerformanceCounterVector(size_t length);
-	BasicPerformanceCounterVector(BasicPerformanceCounterVector<true> & other);
+	BasicPerformanceCounterVector(BasicPerformanceCounterVector<Scheduler, true> & other);
 	~BasicPerformanceCounterVector();
 
 	void incr(size_t i);
@@ -83,43 +89,49 @@ public:
 
 //	size_t get_length();
 private:
-	VectorSumReducer<size_t> reducer;
+	VectorSumReducer<Scheduler, size_t> reducer;
 };
 
+template <class Scheduler>
 inline
-BasicPerformanceCounterVector<true>::BasicPerformanceCounterVector(size_t length)
+BasicPerformanceCounterVector<Scheduler, true>::BasicPerformanceCounterVector(size_t length)
 : reducer(length) {
 
 }
 
+template <class Scheduler>
 inline
-BasicPerformanceCounterVector<true>::BasicPerformanceCounterVector(BasicPerformanceCounterVector<true>& other)
+BasicPerformanceCounterVector<Scheduler, true>::BasicPerformanceCounterVector(BasicPerformanceCounterVector<Scheduler, true>& other)
 : reducer(other.reducer) {
 
 }
 
+template <class Scheduler>
 inline
-BasicPerformanceCounterVector<true>::~BasicPerformanceCounterVector() {
+BasicPerformanceCounterVector<Scheduler, true>::~BasicPerformanceCounterVector() {
 
 }
 
+template <class Scheduler>
 inline
-void BasicPerformanceCounterVector<true>::incr(size_t i) {
+void BasicPerformanceCounterVector<Scheduler, true>::incr(size_t i) {
 	reducer.incr(i);
 }
 
+template <class Scheduler>
 inline
-void BasicPerformanceCounterVector<true>::print(size_t i, char const* const formatting_string) {
+void BasicPerformanceCounterVector<Scheduler, true>::print(size_t i, char const* const formatting_string) {
 	size_t const* data = reducer.get_sum();
 	printf(formatting_string, data[i]);
 }
 
+template <class Scheduler>
 inline
-void BasicPerformanceCounterVector<true>::print_header(char const* const string) {
+void BasicPerformanceCounterVector<Scheduler, true>::print_header(char const* const string) {
 	std::cout << string;
 }
 /*
-size_t BasicPerformanceCounterVector<true>::get_length() {
+size_t BasicPerformanceCounterVector<Scheduler, true>::get_length() {
 	return reducer.get_length();
 }*/
 

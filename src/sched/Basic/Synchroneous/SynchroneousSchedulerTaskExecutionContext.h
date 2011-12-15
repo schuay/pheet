@@ -20,6 +20,8 @@ public:
 	SynchroneousSchedulerTaskExecutionContext(Scheduler *sched);
 	~SynchroneousSchedulerTaskExecutionContext();
 
+	static SynchroneousSchedulerTaskExecutionContext<Scheduler>* get();
+
 	template<class CallTaskType, typename ... TaskParams>
 		void finish(TaskParams ... params);
 
@@ -39,18 +41,33 @@ private:
 
 	boost::mt19937 rng;
 
+	// In case a synchroneous scheduler is launched inside another one. Not a good style, but anyway...
+	SynchroneousSchedulerTaskExecutionContext<Scheduler>* prev_context;
+
+	static thread_local SynchroneousSchedulerTaskExecutionContext<Scheduler>* local_context;
+
 	friend class Scheduler::Finish;
 };
 
 template <class Scheduler>
+thread_local SynchroneousSchedulerTaskExecutionContext<Scheduler>*
+SynchroneousSchedulerTaskExecutionContext<Scheduler>::local_context = NULL;
+
+template <class Scheduler>
 SynchroneousSchedulerTaskExecutionContext<Scheduler>::SynchroneousSchedulerTaskExecutionContext(Scheduler *sched)
 : sched(sched){
-
+	prev_context = local_context;
+	local_context = this;
 }
 
 template <class Scheduler>
 SynchroneousSchedulerTaskExecutionContext<Scheduler>::~SynchroneousSchedulerTaskExecutionContext() {
+	local_context = prev_context;
+}
 
+template <class Scheduler>
+SynchroneousSchedulerTaskExecutionContext<Scheduler>* SynchroneousSchedulerTaskExecutionContext<Scheduler>::get() {
+	return local_context;
 }
 
 template <class Scheduler>

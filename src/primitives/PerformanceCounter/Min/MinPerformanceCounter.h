@@ -16,13 +16,13 @@
 
 namespace pheet {
 
-template <typename T, bool> class MinPerformanceCounter;
+template <class Scheduler, typename T, bool> class MinPerformanceCounter;
 
-template <typename T>
-class MinPerformanceCounter<T, false> {
+template <class Scheduler, typename T>
+class MinPerformanceCounter<Scheduler, T, false> {
 public:
 	MinPerformanceCounter();
-	MinPerformanceCounter(MinPerformanceCounter<T, false> const& other);
+	MinPerformanceCounter(MinPerformanceCounter<Scheduler, T, false> const& other);
 	~MinPerformanceCounter();
 
 	void add_value(size_t value);
@@ -30,90 +30,90 @@ public:
 	static void print_header(char const* const string);
 };
 
-template <typename T>
+template <class Scheduler, typename T>
 inline
-MinPerformanceCounter<T, false>::MinPerformanceCounter() {
+MinPerformanceCounter<Scheduler, T, false>::MinPerformanceCounter() {
 
 }
 
-template <typename T>
+template <class Scheduler, typename T>
 inline
-MinPerformanceCounter<T, false>::MinPerformanceCounter(MinPerformanceCounter<T, false> const& other) {
+MinPerformanceCounter<Scheduler, T, false>::MinPerformanceCounter(MinPerformanceCounter<Scheduler, T, false> const& other) {
 
 }
 
-template <typename T>
+template <class Scheduler, typename T>
 inline
-MinPerformanceCounter<T, false>::~MinPerformanceCounter() {
+MinPerformanceCounter<Scheduler, T, false>::~MinPerformanceCounter() {
 
 }
 
-template <typename T>
+template <class Scheduler, typename T>
 inline
-void MinPerformanceCounter<T, false>::add_value(size_t value) {
+void MinPerformanceCounter<Scheduler, T, false>::add_value(size_t value) {
 
 }
 
-template <typename T>
+template <class Scheduler, typename T>
 inline
-void MinPerformanceCounter<T, false>::print(char const* const formatting_string) {
+void MinPerformanceCounter<Scheduler, T, false>::print(char const* const formatting_string) {
 
 }
 
-template <typename T>
+template <class Scheduler, typename T>
 inline
-void MinPerformanceCounter<T, false>::print_header(char const* const string) {
+void MinPerformanceCounter<Scheduler, T, false>::print_header(char const* const string) {
 
 }
 
-template <typename T>
-class MinPerformanceCounter<T, true> {
+template <class Scheduler, typename T>
+class MinPerformanceCounter<Scheduler, T, true> {
 public:
 	MinPerformanceCounter();
-	MinPerformanceCounter(MinPerformanceCounter<T, true>& other);
+	MinPerformanceCounter(MinPerformanceCounter<Scheduler, T, true>& other);
 	~MinPerformanceCounter();
 
 	void add_value(size_t value);
 	void print(char const* const formatting_string);
 	static void print_header(char const* const string);
 private:
-	MinReducer<size_t> reducer;
+	MinReducer<Scheduler, size_t> reducer;
 };
 
-template <typename T>
+template <class Scheduler, typename T>
 inline
-MinPerformanceCounter<T, true>::MinPerformanceCounter() {
+MinPerformanceCounter<Scheduler, T, true>::MinPerformanceCounter() {
 
 }
 
-template <typename T>
+template <class Scheduler, typename T>
 inline
-MinPerformanceCounter<T, true>::MinPerformanceCounter(MinPerformanceCounter<T, true>& other)
+MinPerformanceCounter<Scheduler, T, true>::MinPerformanceCounter(MinPerformanceCounter<Scheduler, T, true>& other)
 : reducer(other.reducer) {
 
 }
 
-template <typename T>
+template <class Scheduler, typename T>
 inline
-MinPerformanceCounter<T, true>::~MinPerformanceCounter() {
+MinPerformanceCounter<Scheduler, T, true>::~MinPerformanceCounter() {
 
 }
 
-template <typename T>
+template <class Scheduler, typename T>
 inline
-void MinPerformanceCounter<T, true>::add_value(size_t value) {
+void MinPerformanceCounter<Scheduler, T, true>::add_value(size_t value) {
 	reducer.add_value(value);
 }
 
-template <typename T>
+template <class Scheduler, typename T>
 inline
-void MinPerformanceCounter<T, true>::print(char const* const formatting_string) {
+void MinPerformanceCounter<Scheduler, T, true>::print(char const* const formatting_string) {
 	printf(formatting_string, reducer.get_min());
 }
 
-template <typename T>
+template <class Scheduler, typename T>
 inline
-void MinPerformanceCounter<T, true>::print_header(char const* const string) {
+void MinPerformanceCounter<Scheduler, T, true>::print_header(char const* const string) {
 	std::cout << string;
 }
 
