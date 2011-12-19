@@ -75,9 +75,10 @@ OrderedReducerView<Monoid>* OrderedReducerView<Monoid>::fold() {
 	OrderedReducerView<Monoid>* ret = this;
 	while((ret->state & 0x4) == 0x0 && ret->local_pred != NULL) {
 		OrderedReducerView<Monoid>* tmp = ret->local_pred;
-		if(tmp->reuse != NULL) {
-			delete tmp->reuse;
+		if(ret->reuse != NULL) {
+			delete ret->reuse;
 		}
+		ret->reuse = tmp->reuse;
 		tmp->reuse = ret;
 	//	delete ret;
 		ret = tmp;
@@ -199,6 +200,7 @@ void OrderedReducerView<Monoid>::reduce() {
 	// TODO: manual unrolling to reduce number of fences used (a single fence should be enough,
 	// as long as we know all pointers have been read before the fence.)
 	if(pred != NULL) {
+		assert(local_pred == NULL);
 		state |= 0x4;
 		bool active;
 		do {
@@ -274,13 +276,15 @@ void OrderedReducerView<Monoid>::set_local_predecessor(OrderedReducerView<Monoid
 	}
 	else {
 		assert(this->pred == NULL);
-		assert(pred != this);
+		assert(this->local_pred == NULL);
+		assert(local_pred != this);
 		this->local_pred = local_pred;
 	}
 }
 
 template <class Monoid>
 void OrderedReducerView<Monoid>::set_predecessor(OrderedReducerView<Monoid>* pred) {
+	assert(this->local_pred == NULL);
 	assert(this->pred == NULL);
 	assert(pred != this);
 	// Warn other local elements that this element is connected to something non-local
