@@ -18,11 +18,11 @@
  */
 namespace pheet {
 
-template <typename T, template <typename S> class Op = SumOperation>
+template <class Scheduler, typename T, template <typename S> class Op = SumOperation>
 class SumReducer {
 public:
 	SumReducer();
-	SumReducer(SumReducer<T, Op>& other);
+	SumReducer(SumReducer<Scheduler, T, Op>& other);
 	~SumReducer();
 
 	void incr();
@@ -32,48 +32,48 @@ public:
 
 	T const& get_sum();
 private:
-	typedef OrderedReducer<ScalarMonoid<T, Op> > Reducer;
+	typedef OrderedReducer<Scheduler, ScalarMonoid<T, Op> > Reducer;
 	Reducer reducer;
 };
 
-template <typename T, template <typename S> class Op>
-SumReducer<T, Op>::SumReducer() {
+template <class Scheduler, typename T, template <typename S> class Op>
+SumReducer<Scheduler, T, Op>::SumReducer() {
 
 }
 
-template <typename T, template <typename S> class Op>
-SumReducer<T, Op>::SumReducer(SumReducer<T, Op>& other)
+template <class Scheduler, typename T, template <typename S> class Op>
+SumReducer<Scheduler, T, Op>::SumReducer(SumReducer<Scheduler, T, Op>& other)
 : reducer(other.reducer) {
 
 }
 
-template <typename T, template <typename S> class Op>
-SumReducer<T, Op>::~SumReducer() {
+template <class Scheduler, typename T, template <typename S> class Op>
+SumReducer<Scheduler, T, Op>::~SumReducer() {
 
 }
 
-template <typename T, template <typename S> class Op>
-void SumReducer<T, Op>::add(T const& value) {
+template <class Scheduler, typename T, template <typename S> class Op>
+void SumReducer<Scheduler, T, Op>::add(T const& value) {
 	reducer.add_data(value);
 }
 
-template <typename T, template <typename S> class Op>
-void SumReducer<T, Op>::sub(T const& value) {
+template <class Scheduler, typename T, template <typename S> class Op>
+void SumReducer<Scheduler, T, Op>::sub(T const& value) {
 	reducer.add_data(-value);
 }
 
-template <typename T, template <typename S> class Op>
-void SumReducer<T, Op>::incr() {
+template <class Scheduler, typename T, template <typename S> class Op>
+void SumReducer<Scheduler, T, Op>::incr() {
 	reducer.add_data(1);
 }
 
-template <typename T, template <typename S> class Op>
-void SumReducer<T, Op>::decr() {
+template <class Scheduler, typename T, template <typename S> class Op>
+void SumReducer<Scheduler, T, Op>::decr() {
 	reducer.add_data(-1);
 }
 
-template <typename T, template <typename S> class Op>
-T const& SumReducer<T, Op>::get_sum() {
+template <class Scheduler, typename T, template <typename S> class Op>
+T const& SumReducer<Scheduler, T, Op>::get_sum() {
 	return reducer.get_data();
 }
 }

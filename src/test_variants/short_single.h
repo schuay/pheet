@@ -6,8 +6,8 @@
  *     License: Pheet license
  */
 
-#ifndef LONG_SINGLE_H_
-#define LONG_SINGLE_H_
+#ifndef SHORT_SINGLE_H_
+#define SHORT_SINGLE_H_
 
 #include "../misc/types.h"
 
@@ -26,6 +26,21 @@ const size_t graph_bipartitioning_test_n[] = {24};
 const double graph_bipartitioning_test_p[] = {0.5};
 const int graph_bipartitioning_test_types[] = {0};
 
+const bool inarow_test = true;
+const procs_t inarow_test_cpus[] = {1, 2, 4, 8};
+const unsigned int inarow_test_lookaheads[] = {5};
+
+const bool    nqueens_test        = true;
+const procs_t nqueens_test_cpus[] = {1, 2, 4, 8};
+const size_t  nqueens_test_n[]    = {24};
+
+#define COMPILE_LUPIV_TEST	true
+const bool    lupiv_test        = true;
+const procs_t lupiv_test_cpus[] = {1, 2, 4, 8};
+const unsigned int lupiv_test_seeds[] = {0};
+const size_t lupiv_test_n[] = {1024};
+const int lupiv_test_types[] = {0};
+
 }
 
-#endif /* LONG_SINGLE_H_ */
+#endif /* SHORT_SINGLE_H_ */

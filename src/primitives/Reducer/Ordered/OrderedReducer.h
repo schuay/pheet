@@ -20,7 +20,7 @@
  */
 namespace pheet {
 
-template <class Monoid>
+template <class Scheduler, class Monoid>
 class OrderedReducer {
 public:
 	template <typename ... ConsParams>
@@ -28,81 +28,79 @@ public:
 	OrderedReducer(OrderedReducer& other);
 	~OrderedReducer();
 
-//	void bind(OrderedReducer& other);
-
 	template <typename ... PutParams>
 	void add_data(PutParams&& ... params);
 	typename Monoid::OutputType get_data();
 private:
-//	void init();
 	void finalize();
+	void minimize();
 
 	typedef OrderedReducerView<Monoid> View;
 	typedef ExponentialBackoff<> Backoff;
 	View* my_view;
 	View* parent_view;
-//	bool root;
+	typename Scheduler::TaskExecutionContext* tec;
 };
 
-template <class Monoid>
+template <class Scheduler, class Monoid>
 template <typename ... ConsParams>
-OrderedReducer<Monoid>::OrderedReducer(ConsParams&& ... params)
-:my_view(new View(static_cast<ConsParams&&>(params) ...)), parent_view(NULL)
+OrderedReducer<Scheduler, Monoid>::OrderedReducer(ConsParams&& ... params)
+:my_view(new View(static_cast<ConsParams&&>(params) ...)), parent_view(NULL), tec(Scheduler::get_context())
 {
 
 }
 
-template <class Monoid>
-OrderedReducer<Monoid>::OrderedReducer(OrderedReducer& other) {
+template <class Scheduler, class Monoid>
+OrderedReducer<Scheduler, Monoid>::OrderedReducer(OrderedReducer& other)
+: tec(Scheduler::get_context()){
+	// Before we create a new view, we should minimize. Maybe this provides us with a view to reuse
+	other.minimize();
+
 	my_view = other.my_view;
 	parent_view = my_view->create_parent_view();
 	other.my_view = parent_view;
 }
 
-template <class Monoid>
-OrderedReducer<Monoid>::~OrderedReducer() {
+template <class Scheduler, class Monoid>
+OrderedReducer<Scheduler, Monoid>::~OrderedReducer() {
 	finalize();
 }
-/*
-template <class Monoid>
-void OrderedReducer<Monoid>::bind(OrderedReducer& other) {
-	finalize();
 
-	my_view = other.my_view;
-	parent_view = my_view->create_parent_view();
-	other.my_view = parent_view;
-}*/
-/*
-template <class Monoid>
-void OrderedReducer<Monoid>::init() {
-	my_view = new View(false);
-}*/
-
-template <class Monoid>
-void OrderedReducer<Monoid>::finalize() {
-	my_view->reduce();
-//	my_view->notify_parent();
+template <class Scheduler, class Monoid>
+void OrderedReducer<Scheduler, Monoid>::finalize() {
+	minimize();
 	if(parent_view == NULL) {
 		assert(my_view->is_reduced());
 		delete my_view;
 	}
+	else if(tec == Scheduler::get_context()) {
+		// This reducer has only been used locally. No need for sync
+		parent_view->set_local_predecessor(my_view);
+	}
 	else {
-		// Fence in reduce method (only executed if necessary) ensures that parent gets a consistent view
-
 		// Notify parent view
 		parent_view->set_predecessor(my_view);
 	}
 }
 
-template <class Monoid>
+/*
+ * Do folding and reduce if possible. May free some memory that we can reuse
+ */
+template <class Scheduler, class Monoid>
+void OrderedReducer<Scheduler, Monoid>::minimize() {
+	my_view = my_view->fold();
+	my_view->reduce();
+}
+
+template <class Scheduler, class Monoid>
 template <typename ... PutParams>
-void OrderedReducer<Monoid>::add_data(PutParams&& ... params) {
+void OrderedReducer<Scheduler, Monoid>::add_data(PutParams&& ... params) {
 	my_view = my_view->fold();
 	my_view->add_data(static_cast<PutParams&&>(params) ...);
 }
 
-template <class Monoid>
-typename Monoid::OutputType OrderedReducer<Monoid>::get_data() {
+template <class Scheduler, class Monoid>
+typename Monoid::OutputType OrderedReducer<Scheduler, Monoid>::get_data() {
 	Backoff bo;
 	if(!my_view->is_reduced()) {
 		while(true) {

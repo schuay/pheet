@@ -18,12 +18,12 @@
  */
 namespace pheet {
 
-template <class Task, class LowerBound, class NextVertex>
+template <class Task, class LowerBound, class NextVertex, size_t MAX_SIZE>
 class BranchBoundGraphBipartitioningRootTask : public Task {
 public:
-	typedef BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex> BBTask;
+	typedef BranchBoundGraphBipartitioningTask<Task, LowerBound, NextVertex, MAX_SIZE> BBTask;
 
-	BranchBoundGraphBipartitioningRootTask(GraphVertex* graph, size_t size, GraphBipartitioningSolution* out);
+	BranchBoundGraphBipartitioningRootTask(GraphVertex* graph, size_t size, GraphBipartitioningSolution<MAX_SIZE>* out);
 	virtual ~BranchBoundGraphBipartitioningRootTask();
 
 	virtual void operator()(typename Task::TEC& tec);
@@ -31,24 +31,24 @@ public:
 private:
 	GraphVertex* graph;
 	size_t size;
-	GraphBipartitioningSolution* out;
+	GraphBipartitioningSolution<MAX_SIZE>* out;
 };
 
-template <class Task, class LowerBound, class NextVertex>
-BranchBoundGraphBipartitioningRootTask<Task, LowerBound, NextVertex>::BranchBoundGraphBipartitioningRootTask(GraphVertex* graph, size_t size, GraphBipartitioningSolution* out)
+template <class Task, class LowerBound, class NextVertex, size_t MAX_SIZE>
+BranchBoundGraphBipartitioningRootTask<Task, LowerBound, NextVertex, MAX_SIZE>::BranchBoundGraphBipartitioningRootTask(GraphVertex* graph, size_t size, GraphBipartitioningSolution<MAX_SIZE>* out)
 : graph(graph), size(size), out(out) {
 
 
 }
 
-template <class Task, class LowerBound, class NextVertex>
-BranchBoundGraphBipartitioningRootTask<Task, LowerBound, NextVertex>::~BranchBoundGraphBipartitioningRootTask() {
+template <class Task, class LowerBound, class NextVertex, size_t MAX_SIZE>
+BranchBoundGraphBipartitioningRootTask<Task, LowerBound, NextVertex, MAX_SIZE>::~BranchBoundGraphBipartitioningRootTask() {
 
 }
 
-template <class Task, class LowerBound, class NextVertex>
-void BranchBoundGraphBipartitioningRootTask<Task, LowerBound, NextVertex>::operator()(typename Task::TEC& tec) {
-	MaxReducer<GraphBipartitioningSolution> best;
+template <class Task, class LowerBound, class NextVertex, size_t MAX_SIZE>
+void BranchBoundGraphBipartitioningRootTask<Task, LowerBound, NextVertex, MAX_SIZE>::operator()(typename Task::TEC& tec) {
+	MaxReducer<typename Task::Scheduler, GraphBipartitioningSolution<MAX_SIZE> > best;
 	size_t ub = std::numeric_limits< size_t >::max();
 
 	size_t k = size >> 1;

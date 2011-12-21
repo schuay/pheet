@@ -17,12 +17,12 @@
 
 namespace pheet {
 
-template <typename TT, template <typename S> class CircularArray>
+template <class Scheduler, typename TT, template <typename S> class CircularArray>
 class CircularArrayStealingDeque {
 public:
 	typedef TT T;
 	CircularArrayStealingDeque(size_t initial_capacity);
-	CircularArrayStealingDeque(size_t initial_capacity, BasicPerformanceCounter<stealing_deque_count_steals>& num_stolen, BasicPerformanceCounter<stealing_deque_count_pop_cas>& num_pop_cas);
+	CircularArrayStealingDeque(size_t initial_capacity, BasicPerformanceCounter<Scheduler, stealing_deque_count_steals>& num_stolen, BasicPerformanceCounter<Scheduler, stealing_deque_count_pop_cas>& num_pop_cas);
 	~CircularArrayStealingDeque();
 
 	void push(T item);
@@ -30,7 +30,7 @@ public:
 	T peek();
 	T steal();
 
-	T steal_push(CircularArrayStealingDeque<TT, CircularArray> &other);
+	T steal_push(CircularArrayStealingDeque<Scheduler, TT, CircularArray> &other);
 
 	size_t get_length();
 	bool is_empty();
@@ -48,45 +48,46 @@ private:
 
 	CircularArray<T> data;
 
-	BasicPerformanceCounter<stealing_deque_count_steals> num_stolen;
-	BasicPerformanceCounter<stealing_deque_count_steals> num_pop_cas;
+	BasicPerformanceCounter<Scheduler, stealing_deque_count_steals> num_stolen;
+	BasicPerformanceCounter<Scheduler, stealing_deque_count_steals> num_pop_cas;
 };
 
 // Upper 4th of size_t is reserved for stamp. The rest is for the actual content
-template <typename TT, template <typename S> class CircularArray>
-const size_t CircularArrayStealingDeque<TT, CircularArray>::top_mask =
+template <class Scheduler, typename TT, template <typename S> class CircularArray>
+const size_t CircularArrayStealingDeque<Scheduler, TT, CircularArray>::top_mask =
 		(std::numeric_limits<size_t>::max() >> (std::numeric_limits<size_t>::digits >> 2));
 
-template <typename TT, template <typename S> class CircularArray>
-const size_t CircularArrayStealingDeque<TT, CircularArray>::top_stamp_mask =
-		(std::numeric_limits<size_t>::max() ^ CircularArrayStealingDeque<TT, CircularArray>::top_mask);
+template <class Scheduler, typename TT, template <typename S> class CircularArray>
+const size_t CircularArrayStealingDeque<Scheduler, TT, CircularArray>::top_stamp_mask =
+		(std::numeric_limits<size_t>::max() ^ CircularArrayStealingDeque<Scheduler, TT, CircularArray>::top_mask);
 
-template <typename TT, template <typename S> class CircularArray>
-const size_t CircularArrayStealingDeque<TT, CircularArray>::top_stamp_add =
+template <class Scheduler, typename TT, template <typename S> class CircularArray>
+const size_t CircularArrayStealingDeque<Scheduler, TT, CircularArray>::top_stamp_add =
 		(((size_t)1) << (std::numeric_limits<size_t>::digits - (std::numeric_limits<size_t>::digits >> 2)));
 
-template <typename TT, template <typename S> class CircularArray>
-const TT CircularArrayStealingDeque<TT, CircularArray>::null_element = nullable_traits<T>::null_value;
+template <class Scheduler, typename TT, template <typename S> class CircularArray>
+const TT CircularArrayStealingDeque<Scheduler, TT, CircularArray>::null_element = nullable_traits<T>::null_value;
 
-template <typename TT, template <typename S> class CircularArray>
-CircularArrayStealingDeque<TT, CircularArray>::CircularArrayStealingDeque(size_t initial_capacity)
+template <class Scheduler, typename TT, template <typename S> class CircularArray>
+CircularArrayStealingDeque<Scheduler, TT, CircularArray>::CircularArrayStealingDeque(size_t initial_capacity)
 : top(0), bottom(0), data(initial_capacity) {
 
 }
 
-template <typename TT, template <typename S> class CircularArray>
-CircularArrayStealingDeque<TT, CircularArray>::CircularArrayStealingDeque(size_t initial_capacity, BasicPerformanceCounter<stealing_deque_count_steals>& num_stolen, BasicPerformanceCounter<stealing_deque_count_pop_cas>& num_pop_cas)
+template <class Scheduler, typename TT, template <typename S> class CircularArray>
+CircularArrayStealingDeque<Scheduler, TT, CircularArray>::CircularArrayStealingDeque(size_t initial_capacity, BasicPerformanceCounter<Scheduler, stealing_deque_count_steals>& num_stolen, BasicPerformanceCounter<Scheduler, stealing_deque_count_pop_cas>& num_pop_cas)
 : top(0), bottom(0), data(initial_capacity), num_stolen(num_stolen), num_pop_cas(num_pop_cas) {
 
 }
 
-template <typename TT, template <typename S> class CircularArray>
-CircularArrayStealingDeque<TT, CircularArray>::~CircularArrayStealingDeque() {
+template <class Scheduler, typename TT, template <typename S> class CircularArray>
+CircularArrayStealingDeque<Scheduler, TT, CircularArray>::~CircularArrayStealingDeque() {
 
 }
 
-template <typename TT, template <typename S> class CircularArray>
-void CircularArrayStealingDeque<TT, CircularArray>::push(T item) {
+template <class Scheduler, typename TT, template <typename S> class CircularArray>
+void CircularArrayStealingDeque<Scheduler, TT, CircularArray>::push(T item) {
+	assert(bottom >= (top & top_mask));
 	if((bottom - (top & top_mask)) >= (data.get_capacity()))
 	{
 		data.grow(bottom, top & top_mask);
@@ -108,8 +109,8 @@ void CircularArrayStealingDeque<TT, CircularArray>::push(T item) {
 	bottom++;
 }
 
-template <typename TT, template <typename S> class CircularArray>
-TT CircularArrayStealingDeque<TT, CircularArray>::pop() {
+template <class Scheduler, typename TT, template <typename S> class CircularArray>
+TT CircularArrayStealingDeque<Scheduler, TT, CircularArray>::pop() {
 	if(bottom == (top & top_mask))
 		return null_element;
 
@@ -143,19 +144,23 @@ TT CircularArrayStealingDeque<TT, CircularArray>::pop() {
 			bottom++;
 		}
 	}
+	else {
+		assert(bottom == masked_top - 1);
+		bottom = masked_top;
+	}
 	return null_element;
 }
 
-template <typename TT, template <typename S> class CircularArray>
-TT CircularArrayStealingDeque<TT, CircularArray>::peek() {
+template <class Scheduler, typename TT, template <typename S> class CircularArray>
+TT CircularArrayStealingDeque<Scheduler, TT, CircularArray>::peek() {
 	if(bottom == (top & top_mask))
 		return null_element;
 
 	return data.get(bottom);
 }
 
-template <typename TT, template <typename S> class CircularArray>
-TT CircularArrayStealingDeque<TT, CircularArray>::steal() {
+template <class Scheduler, typename TT, template <typename S> class CircularArray>
+TT CircularArrayStealingDeque<Scheduler, TT, CircularArray>::steal() {
 	size_t old_top = top;
 	MEMORY_FENCE();
 
@@ -178,8 +183,8 @@ TT CircularArrayStealingDeque<TT, CircularArray>::steal() {
 	return null_element;
 }
 
-template <typename TT, template <typename S> class CircularArray>
-TT CircularArrayStealingDeque<TT, CircularArray>::steal_push(CircularArrayStealingDeque<TT, CircularArray> &other) {
+template <class Scheduler, typename TT, template <typename S> class CircularArray>
+TT CircularArrayStealingDeque<Scheduler, TT, CircularArray>::steal_push(CircularArrayStealingDeque<Scheduler, TT, CircularArray> &other) {
 	T prev = null_element;
 	T curr = null_element;
 	size_t max_steal = get_length() / 3;
@@ -201,18 +206,18 @@ TT CircularArrayStealingDeque<TT, CircularArray>::steal_push(CircularArraySteali
 	return prev;
 }
 
-template <typename TT, template <typename S> class CircularArray>
-size_t CircularArrayStealingDeque<TT, CircularArray>::get_length() {
+template <class Scheduler, typename TT, template <typename S> class CircularArray>
+size_t CircularArrayStealingDeque<Scheduler, TT, CircularArray>::get_length() {
 	return (bottom - (top & top_mask));
 }
 
-template <typename TT, template <typename S> class CircularArray>
-bool CircularArrayStealingDeque<TT, CircularArray>::is_empty() {
+template <class Scheduler, typename TT, template <typename S> class CircularArray>
+bool CircularArrayStealingDeque<Scheduler, TT, CircularArray>::is_empty() {
 	return get_length() == 0;
 }
 
-template <typename TT, template <typename S> class CircularArray>
-bool CircularArrayStealingDeque<TT, CircularArray>::is_full() {
+template <class Scheduler, typename TT, template <typename S> class CircularArray>
+bool CircularArrayStealingDeque<Scheduler, TT, CircularArray>::is_full() {
 	return (!data.is_growable()) && (get_length() >= data.get_capacity());
 }
 

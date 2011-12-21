@@ -4,7 +4,7 @@ include settings.mk
 
 OBJS =		
 
-LIBS =		-lpthread
+LIBS =		-lpthread -lblas -llapack
 
 TARGET =	lib/libpheet.o
 

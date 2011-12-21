@@ -27,14 +27,16 @@ size_t BasicLowerBound::operator()(GraphVertex* graph, size_t size, size_t k, si
 		size_t i2 = 0;
 		for(size_t j = 0; j < graph[node].num_edges; ++j) {
 			size_t target = graph[node].edges[j].target;
-			while(i2 < set2_size && set2[i2] < target) {
-				++i2;
-			}
-			if(i2 == set2_size) {
-				break;
-			}
-			if(set2[i2] == target) {
-				lb += graph[node].edges[j].weight;
+			if(target > node) {
+				while(i2 < set2_size && set2[i2] < target) {
+					++i2;
+				}
+				if(i2 == set2_size) {
+					break;
+				}
+				if(set2[i2] == target) {
+					lb += graph[node].edges[j].weight;
+				}
 			}
 		}
 	}
@@ -43,14 +45,16 @@ size_t BasicLowerBound::operator()(GraphVertex* graph, size_t size, size_t k, si
 		size_t i2 = 0;
 		for(size_t j = 0; j < graph[node].num_edges; ++j) {
 			size_t target = graph[node].edges[j].target;
-			while(i2 < set1_size && set1[i2] < target) {
-				++i2;
-			}
-			if(i2 == set1_size) {
-				break;
-			}
-			if(set1[i2] == target) {
-				lb += graph[node].edges[j].weight;
+			if(target > node) {
+				while(i2 < set1_size && set1[i2] < target) {
+					++i2;
+				}
+				if(i2 == set1_size) {
+					break;
+				}
+				if(set1[i2] == target) {
+					lb += graph[node].edges[j].weight;
+				}
 			}
 		}
 	}

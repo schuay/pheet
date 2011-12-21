@@ -18,7 +18,7 @@ public:
 	BranchBoundGraphBipartitioningAutoStrategy();
 	~BranchBoundGraphBipartitioningAutoStrategy();
 
-	Strategy operator()(size_t* set1, size_t set1_size, size_t* set2, size_t set2_size, size_t lb);
+	Strategy operator()(GraphVertex* graph, size_t size, size_t k, size_t* set1, size_t set1_size, size_t* set2, size_t set2_size, size_t* ub, size_t lb);
 
 	static void print_name();
 };
@@ -34,7 +34,7 @@ inline BranchBoundGraphBipartitioningAutoStrategy<Strategy>::~BranchBoundGraphBi
 }
 
 template <class Strategy>
-inline Strategy BranchBoundGraphBipartitioningAutoStrategy<Strategy>::operator()(size_t* set1, size_t set1_size, size_t* set2, size_t set2_size, size_t lb) {
+inline Strategy BranchBoundGraphBipartitioningAutoStrategy<Strategy>::operator()(GraphVertex* graph, size_t size, size_t k, size_t* set1, size_t set1_size, size_t* set2, size_t set2_size, size_t* ub, size_t lb) {
 	return Strategy();
 }
 

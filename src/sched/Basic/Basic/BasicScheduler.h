@@ -9,6 +9,7 @@
 #ifndef BASICSCHEDULER_H_
 #define BASICSCHEDULER_H_
 
+#include "BasicSchedulerPerformanceCounters.h"
 #include "../../common/SchedulerTask.h"
 #include "../../common/FinishRegion.h"
 #include "BasicSchedulerTaskExecutionContext.h"
@@ -40,15 +41,17 @@ BasicSchedulerState<Task, Barrier>::BasicSchedulerState()
 /*
  * May only be used once
  */
-template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
+template <class CPUHierarchyT, template <class Scheduler, typename T> class StealingDeque, class Barrier, class BackoffT>
 class BasicScheduler {
 public:
 	typedef BackoffT Backoff;
 	typedef CPUHierarchyT CPUHierarchy;
-	typedef SchedulerTask<BasicScheduler<CPUHierarchy, StealingDeque, Barrier, Backoff> > Task;
-	typedef BasicSchedulerTaskExecutionContext<BasicScheduler<CPUHierarchy, StealingDeque, Barrier, Backoff>, StealingDeque> TaskExecutionContext;
+	typedef BasicScheduler<CPUHierarchy, StealingDeque, Barrier, Backoff> Self;
+	typedef SchedulerTask<Self> Task;
+	typedef BasicSchedulerTaskExecutionContext<Self, StealingDeque> TaskExecutionContext;
 	typedef BasicSchedulerState<Task, Barrier> State;
 	typedef FinishRegion<BasicScheduler<CPUHierarchy, StealingDeque, Barrier, Backoff> > Finish;
+	typedef BasicSchedulerPerformanceCounters<Self> PerformanceCounters;
 
 	/*
 	 * CPUHierarchyT must be accessible throughout the lifetime of the scheduler
@@ -66,7 +69,7 @@ public:
 
 	void print_performance_counter_headers();
 
-	TaskExecutionContext* get_context();
+	static TaskExecutionContext* get_context();
 
 	static char const name[];
 	static procs_t const max_cpus;
@@ -80,16 +83,16 @@ private:
 
 	State state;
 
-	BasicSchedulerPerformanceCounters performance_counters;
+	PerformanceCounters performance_counters;
 };
 
-template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
+template <class CPUHierarchyT, template <class Scheduler, typename T> class StealingDeque, class Barrier, class BackoffT>
 char const BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::name[] = "BasicScheduler";
 
-template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
+template <class CPUHierarchyT, template <class Scheduler, typename T> class StealingDeque, class Barrier, class BackoffT>
 procs_t const BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::max_cpus = std::numeric_limits<procs_t>::max() >> 1;
 
-template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
+template <class CPUHierarchyT, template <class Scheduler, typename T> class StealingDeque, class Barrier, class BackoffT>
 BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::BasicScheduler(CPUHierarchy* cpus)
 : cpu_hierarchy(cpus), num_threads(cpus->get_size()) {
 
@@ -99,12 +102,12 @@ BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::BasicScheduler(
 	initialize_tecs(&cpu_hierarchy, 0, &levels);
 }
 
-template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
+template <class CPUHierarchyT, template <class Scheduler, typename T> class StealingDeque, class Barrier, class BackoffT>
 BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::~BasicScheduler() {
 
 }
 
-template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
+template <class CPUHierarchyT, template <class Scheduler, typename T> class StealingDeque, class Barrier, class BackoffT>
 void BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::initialize_tecs(BinaryTreeCPUHierarchy<CPUHierarchy>* ch, size_t offset, std::vector<typename TaskExecutionContext::LevelDescription*>* levels) {
 	if(ch->get_size() > 1) {
 		std::vector<BinaryTreeCPUHierarchy<CPUHierarchy>*> const* sub = ch->get_subsets();
@@ -146,7 +149,7 @@ void BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::initialize
 	}
 }
 
-template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
+template <class CPUHierarchyT, template <class Scheduler, typename T> class StealingDeque, class Barrier, class BackoffT>
 template<class CallTaskType, typename ... TaskParams>
 void BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::finish(TaskParams&& ... params) {
 	CallTaskType task(static_cast<TaskParams&&>(params) ...);
@@ -166,44 +169,22 @@ void BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::finish(Tas
 	delete[] threads;
 }
 
-template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
+template <class CPUHierarchyT, template <class Scheduler, typename T> class StealingDeque, class Barrier, class BackoffT>
 void BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::print_name() {
 	std::cout << name;
 }
 
-template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
+template <class CPUHierarchyT, template <class Scheduler, typename T> class StealingDeque, class Barrier, class BackoffT>
 void BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::print_performance_counter_values() {
-	performance_counters.num_spawns.print("%d\t");
-	performance_counters.num_calls.print("%d\t");
-	performance_counters.num_spawns_to_call.print("%d\t");
-	performance_counters.num_finishes.print("%d\t");
-	performance_counters.num_steals.print("%d\t");
-	performance_counters.num_steal_calls.print("%d\t");
-	performance_counters.num_unsuccessful_steal_calls.print("%d\t");
-	performance_counters.num_stealing_deque_pop_cas.print("%d\t");
-	performance_counters.total_time.print("%f\t");
-	performance_counters.task_time.print("%f\t");
-	performance_counters.idle_time.print("%f\t");
+	performance_counters.print_values();
 }
 
-template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
+template <class CPUHierarchyT, template <class Scheduler, typename T> class StealingDeque, class Barrier, class BackoffT>
 void BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::print_performance_counter_headers() {
-	BasicPerformanceCounter<scheduler_count_spawns>::print_header("spawns\t");
-	BasicPerformanceCounter<scheduler_count_spawns_to_call>::print_header("calls\t");
-	BasicPerformanceCounter<scheduler_count_calls>::print_header("spawns->call\t");
-	BasicPerformanceCounter<scheduler_count_finishes>::print_header("finishes\t");
-
-	BasicPerformanceCounter<stealing_deque_count_steals>::print_header("stolen\t");
-	BasicPerformanceCounter<stealing_deque_count_steal_calls>::print_header("steal_calls\t");
-	BasicPerformanceCounter<stealing_deque_count_unsuccessful_steal_calls>::print_header("unsuccessful_steal_calls\t");
-	BasicPerformanceCounter<stealing_deque_count_pop_cas>::print_header("stealing_deque_pop_cas\t");
-
-	TimePerformanceCounter<scheduler_measure_total_time>::print_header("scheduler_total_time\t");
-	TimePerformanceCounter<scheduler_measure_task_time>::print_header("total_task_time\t");
-	TimePerformanceCounter<scheduler_measure_idle_time>::print_header("total_idle_time\t");
+	performance_counters.print_headers();
 }
 
-template <class CPUHierarchyT, template <typename T> class StealingDeque, class Barrier, class BackoffT>
+template <class CPUHierarchyT, template <class Scheduler, typename T> class StealingDeque, class Barrier, class BackoffT>
 typename BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::TaskExecutionContext* BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::get_context() {
 	return TaskExecutionContext::get();
 }

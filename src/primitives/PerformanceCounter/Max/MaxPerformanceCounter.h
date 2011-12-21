@@ -20,105 +20,103 @@
  */
 namespace pheet {
 
-template <typename T, bool> class MaxPerformanceCounter;
+template <class Scheduler, typename T, bool> class MaxPerformanceCounter;
 
-template <typename T>
-class MaxPerformanceCounter<T, false> {
+template <class Scheduler, typename T>
+class MaxPerformanceCounter<Scheduler, T, false> {
 public:
 	MaxPerformanceCounter();
-	MaxPerformanceCounter(MaxPerformanceCounter const& other);
+	MaxPerformanceCounter(MaxPerformanceCounter<Scheduler, T, false> const& other);
 	~MaxPerformanceCounter();
 
-	void add_value();
+	void add_value(size_t value);
 	void print(char const* const formatting_string);
 	static void print_header(char const* const string);
 };
 
-inline
-template <typename T>
-MaxPerformanceCounter<T, false>::MaxPerformanceCounter() {
+template <class Scheduler, typename T>
+inline MaxPerformanceCounter<Scheduler, T, false>::MaxPerformanceCounter() {
 
 }
 
-template <typename T>
-inline
-MaxPerformanceCounter<T, false>::MaxPerformanceCounter(MaxPerformanceCounter const& other) {
+template <class Scheduler, typename T>
+inline MaxPerformanceCounter<Scheduler, T, false>::MaxPerformanceCounter(MaxPerformanceCounter<Scheduler, T, false> const& other) {
 
 }
 
-template <typename T>
+template <class Scheduler, typename T>
 inline
-MaxPerformanceCounter<T, false>::~MaxPerformanceCounter() {
+MaxPerformanceCounter<Scheduler, T, false>::~MaxPerformanceCounter() {
 
 }
 
-template <typename T>
+template <class Scheduler, typename T>
 inline
-void MaxPerformanceCounter<T, false>::incr() {
+void MaxPerformanceCounter<Scheduler, T, false>::add_value(size_t value) {
 
 }
 
-template <typename T>
+template <class Scheduler, typename T>
 inline
-void MaxPerformanceCounter<T, false>::print(char const* const formatting_string) {
+void MaxPerformanceCounter<Scheduler, T, false>::print(char const* const formatting_string) {
 
 }
 
-template <typename T>
+template <class Scheduler, typename T>
 inline
-void MaxPerformanceCounter<T, false>::print_header(char const* const string) {
+void MaxPerformanceCounter<Scheduler, T, false>::print_header(char const* const string) {
 
 }
 
-template <typename T>
-class MaxPerformanceCounter<T, true> {
+template <class Scheduler, typename T>
+class MaxPerformanceCounter<Scheduler, T, true> {
 public:
 	MaxPerformanceCounter();
-	MaxPerformanceCounter(MaxPerformanceCounter<true> const& other);
+	MaxPerformanceCounter(MaxPerformanceCounter<Scheduler, T, true>& other);
 	~MaxPerformanceCounter();
 
-	void incr();
+	void add_value(size_t value);
 	void print(char const* const formatting_string);
 	static void print_header(char const* const string);
 private:
-	MaxReducer<size_t> reducer;
+	MaxReducer<Scheduler, size_t> reducer;
 };
 
-template <typename T>
+template <class Scheduler, typename T>
 inline
-MaxPerformanceCounter<T, true>::MaxPerformanceCounter() {
+MaxPerformanceCounter<Scheduler, T, true>::MaxPerformanceCounter() {
 
 }
 
-template <typename T>
+template <class Scheduler, typename T>
 inline
-MaxPerformanceCounter<T, true>::MaxPerformanceCounter(MaxPerformanceCounter<true> const& other)
+MaxPerformanceCounter<Scheduler, T, true>::MaxPerformanceCounter(MaxPerformanceCounter<Scheduler, T, true>& other)
 : reducer(other.reducer) {
 
 }
 
-template <typename T>
+template <class Scheduler, typename T>
 inline
-MaxPerformanceCounter<T, true>::~MaxPerformanceCounter() {
+MaxPerformanceCounter<Scheduler, T, true>::~MaxPerformanceCounter() {
 
 }
 
-template <typename T>
+template <class Scheduler, typename T>
 inline
-void MaxPerformanceCounter<T, true>::incr() {
-	reducer.incr();
+void MaxPerformanceCounter<Scheduler, T, true>::add_value(size_t value) {
+	reducer.add_value(value);
 }
 
-template <typename T>
+template <class Scheduler, typename T>
 inline
-void MaxPerformanceCounter<T, true>::print(char const* const formatting_string) {
-	printf(formatting_string, reducer.get_sum());
+void MaxPerformanceCounter<Scheduler, T, true>::print(char const* const formatting_string) {
+	printf(formatting_string, reducer.get_max());
 }
 
-template <typename T>
+template <class Scheduler, typename T>
 inline
-void MaxPerformanceCounter<T, true>::print_header(char const* const string) {
-	cout << string;
+void MaxPerformanceCounter<Scheduler, T, true>::print_header(char const* const string) {
+	std::cout << string;
 }
 
 }

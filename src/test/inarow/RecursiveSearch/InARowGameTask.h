@@ -9,8 +9,9 @@
 #ifndef INAROWGAMETASK_H_
 #define INAROWGAMETASK_H_
 
-#include "../../misc/types.h"
-#include "../../misc/atomics.h"
+#include "../../../settings.h"
+#include "../../../misc/types.h"
+#include "../../../misc/atomics.h"
 #include <string.h>
 #include <stdlib.h>
 #include <iostream>
@@ -161,7 +162,8 @@ namespace pheet {
 		unsigned int connected(char* board, unsigned int x, unsigned int y, unsigned int modx, unsigned int mody)
 		{
 			unsigned int ctr = 0;
-
+			assert(y < getBoardHeight());
+			assert(x < getBoardWidth());
 			char type = board[y*getBoardWidth()+x];
 
 			while(x<getBoardWidth() && y<getBoardHeight() && x>=0 && y>=0)
@@ -201,7 +203,7 @@ namespace pheet {
 
 		bool move(unsigned int slot, Player player)
 		{
-			unsigned int pos;
+			unsigned int pos = boardHeight;
 			for(unsigned int i=0;i<boardHeight;i++)
 			{
 				if(currBoard[i*boardWidth+slot]==0)
@@ -211,6 +213,7 @@ namespace pheet {
 					break;
 				}
 			}
+			assert(pos < boardHeight);
 			bool win=false;
 			eval(currBoard,slot,pos,win);
 			return win;

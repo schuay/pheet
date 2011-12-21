@@ -3,7 +3,7 @@
  *
  *  Created on: 07.09.2011
  *   Author(s): Martin Wimmer
- *     License: Ask author
+ *     License: Pheet License
  */
 
 #ifndef GRAPHBIPARTITIONINGTEST_H_
@@ -37,7 +37,7 @@ public:
 private:
 	GraphVertex* generate_data();
 	void delete_data(GraphVertex* data);
-	size_t check_solution(GraphBipartitioningSolution const& solution);
+	size_t check_solution(GraphVertex* data, GraphBipartitioningSolution<64> const& solution);
 
 	procs_t cpus;
 	int type;
@@ -73,9 +73,9 @@ void GraphBipartitioningTest<Partitioner>::run_test() {
 	part.partition();
 	check_time(end);
 
-	size_t weight = check_solution(part.get_solution());
+	size_t weight = check_solution(data, part.get_solution());
 	double seconds = calculate_seconds(start, end);
-	std::cout << "test\tsorter\tscheduler\ttype\tsize\tp\tseed\tcpus\ttotal_time\tweight\t";
+	std::cout << "test\tpartitioner\tscheduler\ttype\tsize\tp\tseed\tcpus\ttotal_time\tweight\t";
 	part.print_headers();
 	std::cout << std::endl;
 	std::cout << "graph_bipartitioning\t" << Partitioner::name << "\t";
@@ -96,37 +96,37 @@ GraphVertex* GraphBipartitioningTest<Partitioner>::generate_data() {
     boost::uniform_real<float> rnd_f(0.0, 1.0);
     boost::uniform_int<size_t> rnd_st(0, 2048);
 
-	std::vector<GraphEdge> edges;
-	for(size_t i = 0; i < size - 1; ++i) {
+	std::vector<GraphEdge>* edges = new std::vector<GraphEdge>[size];
+	for(size_t i = 0; i < size; ++i) {
 		for(size_t j = i + 1; j < size; ++j) {
 			if(rnd_f(rng) < p) {
 				GraphEdge e;
 				e.target = j;
 				e.weight = rnd_st(rng);
-				edges.push_back(e);
+				edges[i].push_back(e);
+				e.target = i;
+				edges[j].push_back(e);
 			}
 		}
-		data[i].num_edges = edges.size();
-		if(edges.size() > 0) {
-			data[i].edges = new GraphEdge[edges.size()];
-			for(size_t j = 0; j < edges.size(); ++j) {
-				data[i].edges[j] = edges[j];
+		data[i].num_edges = edges[i].size();
+		if(edges[i].size() > 0) {
+			data[i].edges = new GraphEdge[edges[i].size()];
+			for(size_t j = 0; j < edges[i].size(); ++j) {
+				data[i].edges[j] = edges[i][j];
 			}
-			edges.clear();
 		}
 		else {
 			data[i].edges = NULL;
 		}
 	}
-	data[size - 1].num_edges = 0;
-	data[size - 1].edges = NULL;
+	delete[] edges;
 
 	return data;
 }
 
 template <class Partitioner>
 void GraphBipartitioningTest<Partitioner>::delete_data(GraphVertex* data) {
-	for(size_t i = 0; i < size - 1; ++i) {
+	for(size_t i = 0; i < size; ++i) {
 		if(data[i].edges != NULL) {
 			delete[] data[i].edges;
 		}
@@ -135,7 +135,36 @@ void GraphBipartitioningTest<Partitioner>::delete_data(GraphVertex* data) {
 }
 
 template <class Partitioner>
-size_t GraphBipartitioningTest<Partitioner>::check_solution(GraphBipartitioningSolution const& solution) {
+size_t GraphBipartitioningTest<Partitioner>::check_solution(GraphVertex* data, GraphBipartitioningSolution<64> const& solution) {
+
+	size_t k = size >> 1;
+
+	if(solution.sets[0].count() != k) {
+		std::cout << "invalid solution" << std::endl;
+	}
+	if(solution.sets[1].count() != size - k) {
+		std::cout << "invalid solution" << std::endl;
+	}
+
+	size_t weight = 0;
+	size_t current_bit = solution.sets[0]._Find_first();
+	while(current_bit != solution.sets[0].size()) {
+		for(size_t i = 0; i < data[current_bit].num_edges; ++i) {
+			if(solution.sets[1].test(data[current_bit].edges[i].target)) {
+				assert(!solution.sets[0].test(data[current_bit].edges[i].target));
+				weight += data[current_bit].edges[i].weight;
+			}
+			else {
+				assert(solution.sets[0].test(data[current_bit].edges[i].target));
+			}
+		}
+		current_bit = solution.sets[0]._Find_next(current_bit);
+	}
+
+	if(weight != solution.weight) {
+		std::cout << "weight doesn't match" << std::endl;
+	}
+
 	// todo recheck weights
 	return solution.weight;
 }
