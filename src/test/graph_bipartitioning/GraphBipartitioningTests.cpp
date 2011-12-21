@@ -16,8 +16,12 @@
 #include "ImprovedBranchBound/ImprovedBranchBoundGraphBipartitioning.h"
 #include "ImprovedBranchBound/ImprovedBranchBoundGraphBipartitioningBasicLogic.h"
 #include "ImprovedBranchBound/ImprovedBranchBoundGraphBipartitioningImprovedLogic.h"
+#include "ImprovedBranchBound/ImprovedBranchBoundGraphBipartitioningDeltaLogic.h"
+#include "ImprovedBranchBound/ImprovedBranchBoundGraphBipartitioningDeltaNVLogic.h"
 #include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioning.h"
 #include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy.h"
+#include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstStrategy.h"
+#include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy.h"
 #include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy.h"
 #include "../../sched/strategies/Fifo/FifoStrategy.h"
 #include "../../sched/strategies/Lifo/LifoStrategy.h"
@@ -64,8 +68,19 @@ void GraphBipartitioningTests::run_test() {
 	if(graph_bipartitioning_test) {
 		std::cout << "----" << std::endl;
 
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstStrategy, 64 > >();
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy, 64 > >();
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy, 64 > >();
+
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListHeapPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstStrategy, 64 > >();
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListHeapPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy, 64 > >();
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListHeapPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy, 64 > >();
+/*		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaLogic<ArrayListPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy, 64 > >();
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<ArrayListPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy, 64 > >();
+		this->run_partitioner<ImprovedBranchBoundGraphBipartitioning<DefaultBasicScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<DefaultBasicScheduler, 64>, 64 > >();
+		this->run_partitioner<ImprovedBranchBoundGraphBipartitioning<DefaultBasicScheduler, ImprovedBranchBoundGraphBipartitioningDeltaLogic<DefaultBasicScheduler, 64>, 64 > >();
 		this->run_partitioner<ImprovedBranchBoundGraphBipartitioning<DefaultBasicScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<DefaultBasicScheduler, 64>, 64 > >();
-		this->run_partitioner<ImprovedBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<ArrayListPriorityScheduler, 64>, 64 > >();
+	/*	this->run_partitioner<ImprovedBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<ArrayListPriorityScheduler, 64>, 64 > >();
 		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<ArrayListPriorityScheduler, 64>, AutoFifoStrategy, 64 > >();
 		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<ArrayListPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy, 64 > >();
 		this->run_partitioner<ImprovedBranchBoundGraphBipartitioning<ArrayListHeapPriorityScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<ArrayListHeapPriorityScheduler, 64>, 64 > >();
@@ -77,7 +92,7 @@ void GraphBipartitioningTests::run_test() {
 		this->run_partitioner<ImprovedBranchBoundGraphBipartitioning<PrimitiveHeapPriorityScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<PrimitiveHeapPriorityScheduler, 64>, 64 > >();
 		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<PrimitiveHeapPriorityScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<PrimitiveHeapPriorityScheduler, 64>, AutoFifoStrategy, 64 > >();
 		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<PrimitiveHeapPriorityScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<PrimitiveHeapPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy, 64 > >();
-
+*/
 
 		// All to slow compared to newer implementations
 /*		this->run_partitioner<ImprovedBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningBasicLogic<64>, 64 > >();

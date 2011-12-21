@@ -112,9 +112,6 @@ void ImprovedBranchBoundGraphBipartitioningSubproblem<Scheduler, Logic, MAX_SIZE
 	size_t old_ub = *upper_bound;
 	if(cut < old_ub) {
 		if(SIZET_CAS(upper_bound, old_ub, cut)) {
-			if(cut == 49236) {
-
-			}
 			GraphBipartitioningSolution<MAX_SIZE> my_best;
 			my_best.weight = cut;
 			my_best.sets[0] = sets[0];
