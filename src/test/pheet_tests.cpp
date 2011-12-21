@@ -16,11 +16,11 @@
 using namespace pheet;
 
 int main(int argc, char* argv[]) {
-	SortingTests st;
-	st.run_test();
+  //	SortingTests st;
+  //	st.run_test();
 
-	GraphBipartitioningTests gpt;
-	gpt.run_test();
+  //	GraphBipartitioningTests gpt;
+  //	gpt.run_test();
 
 	InARowTests iarts;
 	iarts.run_test();
