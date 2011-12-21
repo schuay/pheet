@@ -10,11 +10,12 @@
 #include "graph_bipartitioning/GraphBipartitioningTests.h"
 #include "inarow/InARowTests.h"
 #include "n-queens/NQueensTests.h"
+#include "lupiv/LUPivTests.h"
 
 using namespace pheet;
 
 int main(int argc, char* argv[]) {
-	SortingTests st;
+	SortingTests<sorting_test> st;
 	st.run_test();
 
 	GraphBipartitioningTests gpt;
@@ -25,6 +26,9 @@ int main(int argc, char* argv[]) {
 
 	NQueensTests nqt;
 	nqt.run_test();
+
+	LUPivTests<lupiv_test> lpt;
+	lpt.run_test();
 
 	return 0;
 }

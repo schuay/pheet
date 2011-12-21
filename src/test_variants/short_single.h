@@ -34,6 +34,13 @@ const bool    nqueens_test        = true;
 const procs_t nqueens_test_cpus[] = {1, 2, 4, 8};
 const size_t  nqueens_test_n[]    = {24};
 
+#define COMPILE_LUPIV_TEST	true
+const bool    lupiv_test        = true;
+const procs_t lupiv_test_cpus[] = {1, 2, 4, 8};
+const unsigned int lupiv_test_seeds[] = {0};
+const size_t lupiv_test_n[] = {1024};
+const int lupiv_test_types[] = {0};
+
 }
 
 #endif /* SHORT_SINGLE_H_ */

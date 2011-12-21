@@ -15,7 +15,23 @@
 
 namespace pheet {
 
-class SortingTests : Test {
+template <bool ACTIVE> class SortingTests;
+
+template <>
+class SortingTests<false> : Test {
+public:
+	SortingTests() {}
+	virtual ~SortingTests() {}
+
+	void run_test() {}
+
+private:
+	template<class Sorter>
+	void run_sorter() {}
+};
+
+template <>
+class SortingTests<true> : Test {
 public:
 	SortingTests();
 	virtual ~SortingTests();
@@ -27,9 +43,8 @@ private:
 	void run_sorter();
 };
 
-
 template <class Sorter>
-void SortingTests::run_sorter() {
+void SortingTests<true>::run_sorter() {
 //	std::cout << "test\tsorter\tscheduler\ttype\tsize\tseed\tcpus\ttotal_time\truns\t";
 //	Sorter::print_headers();
 //	std::cout << std::endl;
