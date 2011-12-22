@@ -14,6 +14,8 @@
 #include <boost/random/uniform_real.hpp>
 #include <boost/random/mersenne_twister.hpp>
 
+#include <math.h>
+
 extern "C" {
 void dswap_(int* n, double* sx, int* incx, double* sy, int* incy);
 void dgemm_(char * transA, char* transB, int* m, int* n, int* k, double* alpha, double* a, int* lda, double* b, int* ldb, double* beta, double* c, int* ldc);
