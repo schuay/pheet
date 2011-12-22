@@ -29,7 +29,7 @@ namespace pheet {
 template <class Partitioner>
 class GraphBipartitioningTest : Test {
 public:
-	GraphBipartitioningTest(procs_t cpus, int type, size_t size, float p, unsigned int seed);
+	GraphBipartitioningTest(procs_t cpus, int type, size_t size, float p, size_t max_w, unsigned int seed);
 	~GraphBipartitioningTest();
 
 	void run_test();
@@ -43,6 +43,7 @@ private:
 	int type;
 	size_t size;
 	float p;
+	size_t max_w;
 	unsigned int seed;
 
 	static char const* const types[];
@@ -52,8 +53,8 @@ template <class Partitioner>
 char const* const GraphBipartitioningTest<Partitioner>::types[] = {"random"};
 
 template <class Partitioner>
-GraphBipartitioningTest<Partitioner>::GraphBipartitioningTest(procs_t cpus, int type, size_t size, float p, unsigned int seed)
-: cpus(cpus), type(type), size(size), p(p), seed(seed) {
+GraphBipartitioningTest<Partitioner>::GraphBipartitioningTest(procs_t cpus, int type, size_t size, float p, size_t max_w, unsigned int seed)
+: cpus(cpus), type(type), size(size), p(p), max_w(max_w), seed(seed) {
 
 }
 
@@ -94,7 +95,7 @@ GraphVertex* GraphBipartitioningTest<Partitioner>::generate_data() {
 	boost::mt19937 rng;
 	rng.seed(seed);
     boost::uniform_real<float> rnd_f(0.0, 1.0);
-    boost::uniform_int<size_t> rnd_st(0, 2048);
+    boost::uniform_int<size_t> rnd_st(1, max_w);
 
 	std::vector<GraphEdge>* edges = new std::vector<GraphEdge>[size];
 	for(size_t i = 0; i < size; ++i) {
@@ -136,7 +137,6 @@ void GraphBipartitioningTest<Partitioner>::delete_data(GraphVertex* data) {
 
 template <class Partitioner>
 size_t GraphBipartitioningTest<Partitioner>::check_solution(GraphVertex* data, GraphBipartitioningSolution<64> const& solution) {
-
 	size_t k = size >> 1;
 
 	if(solution.sets[0].count() != k) {
@@ -165,7 +165,6 @@ size_t GraphBipartitioningTest<Partitioner>::check_solution(GraphVertex* data, G
 		std::cout << "weight doesn't match" << std::endl;
 	}
 
-	// todo recheck weights
 	return solution.weight;
 }
 

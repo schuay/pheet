@@ -24,6 +24,7 @@ const procs_t graph_bipartitioning_test_cpus[] = {1, 2, 4, 8, 16};
 const unsigned int graph_bipartitioning_test_seeds[] = {0, 1, 2, 3, 4};
 const size_t graph_bipartitioning_test_n[] = {20, 22, 24};
 const double graph_bipartitioning_test_p[] = {0.1, 0.5, 0.9};
+const double graph_bipartitioning_test_max_w[] = {1, 1000};
 const int graph_bipartitioning_test_types[] = {0};
 
 const bool inarow_test = true;

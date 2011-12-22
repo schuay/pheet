@@ -68,31 +68,197 @@ void GraphBipartitioningTests::run_test() {
 	if(graph_bipartitioning_test) {
 		std::cout << "----" << std::endl;
 
-		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstStrategy, 64 > >();
-		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy, 64 > >();
-		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy, 64 > >();
+		// 1. All data-structures, with prio, DeltaNV logic, all strategies, all queue lengths except very long (very long only for single case)
 
-		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListHeapPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstStrategy, 64 > >();
-		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListHeapPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy, 64 > >();
+		// ArrayListHeap, prio, DeltaNV, BestFirst, 1
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapPrioritySchedulerShortQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListHeapPrioritySchedulerShortQueues, 64>, ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy, 64 > >();
+		// ArrayListHeap, prio, DeltaNV, DepthFirst, 1
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapPrioritySchedulerShortQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListHeapPrioritySchedulerShortQueues, 64>, ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstStrategy, 64 > >();
+		// ArrayListHeap, prio, DeltaNV, LowerBound, 1
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapPrioritySchedulerShortQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListHeapPrioritySchedulerShortQueues, 64>, ImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy, 64 > >();
+		// ArrayListHeap, prio, DeltaNV, FIFO, 1
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapPrioritySchedulerShortQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListHeapPrioritySchedulerShortQueues, 64>, AutoFifoStrategy, 64 > >();
+		// ArrayListHeap, prio, DeltaNV, LIFO, 1
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapPrioritySchedulerShortQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListHeapPrioritySchedulerShortQueues, 64>, AutoLifoStrategy, 64 > >();
+		// ArrayListHeap, prio, DeltaNV, LIFOFIFO, 1
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapPrioritySchedulerShortQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListHeapPrioritySchedulerShortQueues, 64>, AutoLifoFifoStrategy, 64 > >();
+
+		// ArrayListHeap, prio, DeltaNV, BestFirst, 4
 		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListHeapPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy, 64 > >();
-/*		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaLogic<ArrayListPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy, 64 > >();
-		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<ArrayListPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy, 64 > >();
+		// ArrayListHeap, prio, DeltaNV, DepthFirst, 4
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListHeapPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstStrategy, 64 > >();
+		// ArrayListHeap, prio, DeltaNV, LowerBound, 4
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListHeapPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy, 64 > >();
+		// ArrayListHeap, prio, DeltaNV, FIFO, 4
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListHeapPriorityScheduler, 64>, AutoFifoStrategy, 64 > >();
+		// ArrayListHeap, prio, DeltaNV, LIFO, 4
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListHeapPriorityScheduler, 64>, AutoLifoStrategy, 64 > >();
+		// ArrayListHeap, prio, DeltaNV, LIFOFIFO, 4
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListHeapPriorityScheduler, 64>, AutoLifoFifoStrategy, 64 > >();
+
+		// ArrayListHeap, prio, DeltaNV, BestFirst, 8
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapPrioritySchedulerLongQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListHeapPrioritySchedulerLongQueues, 64>, ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy, 64 > >();
+		// ArrayListHeap, prio, DeltaNV, DepthFirst, 8
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapPrioritySchedulerLongQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListHeapPrioritySchedulerLongQueues, 64>, ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstStrategy, 64 > >();
+		// ArrayListHeap, prio, DeltaNV, LowerBound, 8
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapPrioritySchedulerLongQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListHeapPrioritySchedulerLongQueues, 64>, ImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy, 64 > >();
+		// ArrayListHeap, prio, DeltaNV, FIFO, 8
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapPrioritySchedulerLongQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListHeapPrioritySchedulerLongQueues, 64>, AutoFifoStrategy, 64 > >();
+		// ArrayListHeap, prio, DeltaNV, LIFO, 8
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapPrioritySchedulerLongQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListHeapPrioritySchedulerLongQueues, 64>, AutoLifoStrategy, 64 > >();
+		// ArrayListHeap, prio, DeltaNV, LIFOFIFO, 8
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapPrioritySchedulerLongQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListHeapPrioritySchedulerLongQueues, 64>, AutoLifoFifoStrategy, 64 > >();
+
+		// ArrayListHeap, prio, DeltaNV, BestFirst, 16
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapPrioritySchedulerVeryLongQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListHeapPrioritySchedulerVeryLongQueues, 64>, ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy, 64 > >();
+
+		// ArrayList, prio, DeltaNV, BestFirst, 1
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPrioritySchedulerShortQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListPrioritySchedulerShortQueues, 64>, ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy, 64 > >();
+		// ArrayList, prio, DeltaNV, DepthFirst, 1
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPrioritySchedulerShortQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListPrioritySchedulerShortQueues, 64>, ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstStrategy, 64 > >();
+		// ArrayList, prio, DeltaNV, LowerBound, 1
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPrioritySchedulerShortQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListPrioritySchedulerShortQueues, 64>, ImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy, 64 > >();
+		// ArrayList, prio, DeltaNV, FIFO, 1
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPrioritySchedulerShortQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListPrioritySchedulerShortQueues, 64>, AutoFifoStrategy, 64 > >();
+		// ArrayList, prio, DeltaNV, LIFO, 1
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPrioritySchedulerShortQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListPrioritySchedulerShortQueues, 64>, AutoLifoStrategy, 64 > >();
+		// ArrayList, prio, DeltaNV, LIFOFIFO, 1
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPrioritySchedulerShortQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListPrioritySchedulerShortQueues, 64>, AutoLifoFifoStrategy, 64 > >();
+
+		// ArrayList, prio, DeltaNV, BestFirst, 4
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy, 64 > >();
+		// ArrayList, prio, DeltaNV, DepthFirst, 4
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstStrategy, 64 > >();
+		// ArrayList, prio, DeltaNV, LowerBound, 4
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy, 64 > >();
+		// ArrayList, prio, DeltaNV, FIFO, 4
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListPriorityScheduler, 64>, AutoFifoStrategy, 64 > >();
+		// ArrayList, prio, DeltaNV, LIFO, 4
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListPriorityScheduler, 64>, AutoLifoStrategy, 64 > >();
+		// ArrayList, prio, DeltaNV, LIFOFIFO, 4
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListPriorityScheduler, 64>, AutoLifoFifoStrategy, 64 > >();
+
+		// ArrayList, prio, DeltaNV, BestFirst, 8
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPrioritySchedulerLongQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListPrioritySchedulerLongQueues, 64>, ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy, 64 > >();
+		// ArrayList, prio, DeltaNV, DepthFirst, 8
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPrioritySchedulerLongQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListPrioritySchedulerLongQueues, 64>, ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstStrategy, 64 > >();
+		// ArrayList, prio, DeltaNV, LowerBound, 8
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPrioritySchedulerLongQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListPrioritySchedulerLongQueues, 64>, ImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy, 64 > >();
+		// ArrayList, prio, DeltaNV, FIFO, 8
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPrioritySchedulerLongQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListPrioritySchedulerLongQueues, 64>, AutoFifoStrategy, 64 > >();
+		// ArrayList, prio, DeltaNV, LIFO, 8
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPrioritySchedulerLongQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListPrioritySchedulerLongQueues, 64>, AutoLifoStrategy, 64 > >();
+		// ArrayList, prio, DeltaNV, LIFOFIFO, 8
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPrioritySchedulerLongQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListPrioritySchedulerLongQueues, 64>, AutoLifoFifoStrategy, 64 > >();
+
+
+		// PrimitivePheetHeap, prio, DeltaNV, BestFirst, 1
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<PrimitivePheetHeapPrioritySchedulerShortQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<PrimitivePheetHeapPrioritySchedulerShortQueues, 64>, ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy, 64 > >();
+		// PrimitivePheetHeap, prio, DeltaNV, DepthFirst, 1
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<PrimitivePheetHeapPrioritySchedulerShortQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<PrimitivePheetHeapPrioritySchedulerShortQueues, 64>, ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstStrategy, 64 > >();
+		// PrimitivePheetHeap, prio, DeltaNV, LowerBound, 1
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<PrimitivePheetHeapPrioritySchedulerShortQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<PrimitivePheetHeapPrioritySchedulerShortQueues, 64>, ImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy, 64 > >();
+		// PrimitivePheetHeap, prio, DeltaNV, FIFO, 1
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<PrimitivePheetHeapPrioritySchedulerShortQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<PrimitivePheetHeapPrioritySchedulerShortQueues, 64>, AutoFifoStrategy, 64 > >();
+		// PrimitivePheetHeap, prio, DeltaNV, LIFO, 1
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<PrimitivePheetHeapPrioritySchedulerShortQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<PrimitivePheetHeapPrioritySchedulerShortQueues, 64>, AutoLifoStrategy, 64 > >();
+		// PrimitivePheetHeap, prio, DeltaNV, LIFOFIFO, 1
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<PrimitivePheetHeapPrioritySchedulerShortQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<PrimitivePheetHeapPrioritySchedulerShortQueues, 64>, AutoLifoFifoStrategy, 64 > >();
+
+		// PrimitivePheetHeap, prio, DeltaNV, BestFirst, 4
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy, 64 > >();
+		// PrimitivePheetHeap, prio, DeltaNV, DepthFirst, 4
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstStrategy, 64 > >();
+		// PrimitivePheetHeap, prio, DeltaNV, LowerBound, 4
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy, 64 > >();
+		// PrimitivePheetHeap, prio, DeltaNV, FIFO, 4
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListPriorityScheduler, 64>, AutoFifoStrategy, 64 > >();
+		// PrimitivePheetHeap, prio, DeltaNV, LIFO, 4
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListPriorityScheduler, 64>, AutoLifoStrategy, 64 > >();
+		// PrimitivePheetHeap, prio, DeltaNV, LIFOFIFO, 4
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListPriorityScheduler, 64>, AutoLifoFifoStrategy, 64 > >();
+
+		// PrimitivePheetHeap, prio, DeltaNV, BestFirst, 8
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<PrimitivePheetHeapPrioritySchedulerLongQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<PrimitivePheetHeapPrioritySchedulerLongQueues, 64>, ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy, 64 > >();
+		// PrimitivePheetHeap, prio, DeltaNV, DepthFirst, 8
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<PrimitivePheetHeapPrioritySchedulerLongQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<PrimitivePheetHeapPrioritySchedulerLongQueues, 64>, ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstStrategy, 64 > >();
+		// PrimitivePheetHeap, prio, DeltaNV, LowerBound, 8
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<PrimitivePheetHeapPrioritySchedulerLongQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<PrimitivePheetHeapPrioritySchedulerLongQueues, 64>, ImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy, 64 > >();
+		// PrimitivePheetHeap, prio, DeltaNV, FIFO, 8
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<PrimitivePheetHeapPrioritySchedulerLongQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<PrimitivePheetHeapPrioritySchedulerLongQueues, 64>, AutoFifoStrategy, 64 > >();
+		// PrimitivePheetHeap, prio, DeltaNV, LIFO, 8
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<PrimitivePheetHeapPrioritySchedulerLongQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<PrimitivePheetHeapPrioritySchedulerLongQueues, 64>, AutoLifoStrategy, 64 > >();
+		// PrimitivePheetHeap, prio, DeltaNV, LIFOFIFO, 8
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<PrimitivePheetHeapPrioritySchedulerLongQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<PrimitivePheetHeapPrioritySchedulerLongQueues, 64>, AutoLifoFifoStrategy, 64 > >();
+
+
+		// Primitive, prio, DeltaNV, BestFirst, 1
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<PrimitivePrioritySchedulerShortQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<PrimitivePrioritySchedulerShortQueues, 64>, ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy, 64 > >();
+		// Primitive, prio, DeltaNV, DepthFirst, 1
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<PrimitivePrioritySchedulerShortQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<PrimitivePrioritySchedulerShortQueues, 64>, ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstStrategy, 64 > >();
+		// Primitive, prio, DeltaNV, LowerBound, 1
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<PrimitivePrioritySchedulerShortQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<PrimitivePrioritySchedulerShortQueues, 64>, ImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy, 64 > >();
+		// Primitive, prio, DeltaNV, FIFO, 1
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<PrimitivePrioritySchedulerShortQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<PrimitivePrioritySchedulerShortQueues, 64>, AutoFifoStrategy, 64 > >();
+		// Primitive, prio, DeltaNV, LIFO, 1
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<PrimitivePrioritySchedulerShortQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<PrimitivePrioritySchedulerShortQueues, 64>, AutoLifoStrategy, 64 > >();
+		// Primitive, prio, DeltaNV, LIFOFIFO, 1
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<PrimitivePrioritySchedulerShortQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<PrimitivePrioritySchedulerShortQueues, 64>, AutoLifoFifoStrategy, 64 > >();
+
+		// Primitive, prio, DeltaNV, BestFirst, 4
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy, 64 > >();
+		// Primitive, prio, DeltaNV, DepthFirst, 4
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstStrategy, 64 > >();
+		// Primitive, prio, DeltaNV, LowerBound, 4
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy, 64 > >();
+		// Primitive, prio, DeltaNV, FIFO, 4
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListPriorityScheduler, 64>, AutoFifoStrategy, 64 > >();
+		// Primitive, prio, DeltaNV, LIFO, 4
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListPriorityScheduler, 64>, AutoLifoStrategy, 64 > >();
+		// Primitive, prio, DeltaNV, LIFOFIFO, 4
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListPriorityScheduler, 64>, AutoLifoFifoStrategy, 64 > >();
+
+		// Primitive, prio, DeltaNV, BestFirst, 8
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<PrimitivePrioritySchedulerLongQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<PrimitivePrioritySchedulerLongQueues, 64>, ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy, 64 > >();
+		// Primitive, prio, DeltaNV, DepthFirst, 8
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<PrimitivePrioritySchedulerLongQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<PrimitivePrioritySchedulerLongQueues, 64>, ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstStrategy, 64 > >();
+		// Primitive, prio, DeltaNV, LowerBound, 8
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<PrimitivePrioritySchedulerLongQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<PrimitivePrioritySchedulerLongQueues, 64>, ImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy, 64 > >();
+		// Primitive, prio, DeltaNV, FIFO, 8
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<PrimitivePrioritySchedulerLongQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<PrimitivePrioritySchedulerLongQueues, 64>, AutoFifoStrategy, 64 > >();
+		// Primitive, prio, DeltaNV, LIFO, 8
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<PrimitivePrioritySchedulerLongQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<PrimitivePrioritySchedulerLongQueues, 64>, AutoLifoStrategy, 64 > >();
+		// Primitive, prio, DeltaNV, LIFOFIFO, 8
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<PrimitivePrioritySchedulerLongQueues, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<PrimitivePrioritySchedulerLongQueues, 64>, AutoLifoFifoStrategy, 64 > >();
+
+		// 2. ArrayListHeap, with prio, Delta logic, all strategies, 8
+
+		// ArrayListHeap, prio, Delta, BestFirst, 1
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapPrioritySchedulerLongQueues, ImprovedBranchBoundGraphBipartitioningDeltaLogic<ArrayListHeapPrioritySchedulerLongQueues, 64>, ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy, 64 > >();
+		// ArrayListHeap, prio, Delta, DepthFirst, 1
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapPrioritySchedulerLongQueues, ImprovedBranchBoundGraphBipartitioningDeltaLogic<ArrayListHeapPrioritySchedulerLongQueues, 64>, ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstStrategy, 64 > >();
+		// ArrayListHeap, prio, Delta, LowerBound, 1
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapPrioritySchedulerLongQueues, ImprovedBranchBoundGraphBipartitioningDeltaLogic<ArrayListHeapPrioritySchedulerLongQueues, 64>, ImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy, 64 > >();
+		// ArrayListHeap, prio, Delta, FIFO, 1
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapPrioritySchedulerLongQueues, ImprovedBranchBoundGraphBipartitioningDeltaLogic<ArrayListHeapPrioritySchedulerLongQueues, 64>, AutoFifoStrategy, 64 > >();
+		// ArrayListHeap, prio, Delta, LIFO, 1
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapPrioritySchedulerLongQueues, ImprovedBranchBoundGraphBipartitioningDeltaLogic<ArrayListHeapPrioritySchedulerLongQueues, 64>, AutoLifoStrategy, 64 > >();
+		// ArrayListHeap, prio, Delta, LIFOFIFO, 1
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapPrioritySchedulerLongQueues, ImprovedBranchBoundGraphBipartitioningDeltaLogic<ArrayListHeapPrioritySchedulerLongQueues, 64>, AutoLifoFifoStrategy, 64 > >();
+
+		// 3. ArrayListHeap, with prio, improved logic, BestFirst strategy, 8
+
+		// ArrayListHeap, prio, Improved, BestFirst, 8
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapPrioritySchedulerLongQueues, ImprovedBranchBoundGraphBipartitioningImprovedLogic<ArrayListHeapPrioritySchedulerLongQueues, 64>, ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy, 64 > >();
+
+		// 4. -, basic sched, all logics, -, .
+
+		// -, basic, DeltaNV, -, -
 		this->run_partitioner<ImprovedBranchBoundGraphBipartitioning<DefaultBasicScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<DefaultBasicScheduler, 64>, 64 > >();
+		// -, basic, Delta, -, -
 		this->run_partitioner<ImprovedBranchBoundGraphBipartitioning<DefaultBasicScheduler, ImprovedBranchBoundGraphBipartitioningDeltaLogic<DefaultBasicScheduler, 64>, 64 > >();
+		// -, basic, Improved, -, -
 		this->run_partitioner<ImprovedBranchBoundGraphBipartitioning<DefaultBasicScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<DefaultBasicScheduler, 64>, 64 > >();
-	/*	this->run_partitioner<ImprovedBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<ArrayListPriorityScheduler, 64>, 64 > >();
-		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<ArrayListPriorityScheduler, 64>, AutoFifoStrategy, 64 > >();
-		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<ArrayListPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy, 64 > >();
-		this->run_partitioner<ImprovedBranchBoundGraphBipartitioning<ArrayListHeapPriorityScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<ArrayListHeapPriorityScheduler, 64>, 64 > >();
-		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapPriorityScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<ArrayListHeapPriorityScheduler, 64>, AutoFifoStrategy, 64 > >();
-		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapPriorityScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<ArrayListHeapPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy, 64 > >();
-		this->run_partitioner<ImprovedBranchBoundGraphBipartitioning<PrimitiveHeapPriorityScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<PrimitiveHeapPriorityScheduler, 64>, 64 > >();
-		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<PrimitiveHeapPriorityScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<PrimitiveHeapPriorityScheduler, 64>, AutoFifoStrategy, 64 > >();
-		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<PrimitiveHeapPriorityScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<PrimitiveHeapPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy, 64 > >();
-		this->run_partitioner<ImprovedBranchBoundGraphBipartitioning<PrimitiveHeapPriorityScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<PrimitiveHeapPriorityScheduler, 64>, 64 > >();
-		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<PrimitiveHeapPriorityScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<PrimitiveHeapPriorityScheduler, 64>, AutoFifoStrategy, 64 > >();
-		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<PrimitiveHeapPriorityScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<PrimitiveHeapPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy, 64 > >();
-*/
 
 		// All to slow compared to newer implementations
 /*		this->run_partitioner<ImprovedBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningBasicLogic<64>, 64 > >();
