@@ -148,7 +148,7 @@ double LUPivTest<Kernel>::verify(double *matrix, int* pivot) {
 	double eps = 0;
 	for(size_t i = 0; i < size; i++) {	// go through the columns
 		for(size_t j = 0; j < size; j++) {	// go through the rows
-			eps += std::abs((double)(origA[i*n + j] - A[i*n + j]));
+			eps += std::fabs((double)(origA[i*n + j] - A[i*n + j]));
 		}
 	}
 	delete[] origA;
