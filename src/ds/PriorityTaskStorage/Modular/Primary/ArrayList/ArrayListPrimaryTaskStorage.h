@@ -21,10 +21,10 @@
 
 namespace pheet {
 
-template <typename TT>
+template <class Scheduler, typename TT>
 struct ArrayListPrimaryTaskStorageItem {
 	TT data;
-	BaseStrategy* s;
+	BaseStrategy<Scheduler>* s;
 	prio_t pop_prio;
 	size_t index;
 };
@@ -39,7 +39,7 @@ public:
 	typedef ArrayListPrimaryTaskStorageIterator<ThisType> iterator;
 	typedef ArrayListPrimaryTaskStoragePerformanceCounters<Scheduler> PerformanceCounters;
 	typedef ArrayListPrimaryTaskStorageControlBlock<ThisType> ControlBlock;
-	typedef ArrayListPrimaryTaskStorageItem<T> Item;
+	typedef ArrayListPrimaryTaskStorageItem<Scheduler, T> Item;
 	typedef ExponentialBackoff<> Backoff;
 
 	ArrayListPrimaryTaskStorage(size_t expected_capacity);
@@ -51,7 +51,7 @@ public:
 
 	T take(iterator item, PerformanceCounters& pc);
 	bool is_taken(iterator item, PerformanceCounters& pc);
-	prio_t get_steal_priority(iterator item, PerformanceCounters& pc);
+	prio_t get_steal_priority(iterator item, typename Scheduler::StealerDescriptor& sd, PerformanceCounters& pc);
 	size_t get_task_id(iterator item, PerformanceCounters& pc);
 	void deactivate_iterator(iterator item, PerformanceCounters& pc);
 
@@ -178,7 +178,7 @@ TT ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::local_take(size_t blo
 	typename ControlBlock::Item* ccb_data = current_control_block->get_data();
 	assert(block_index - ccb_data[block].offset < block_size);
 
-	ArrayListPrimaryTaskStorageItem<T>& ptsi = ccb_data[block].data[block_index - ccb_data[block].offset];
+	ArrayListPrimaryTaskStorageItem<Scheduler, T>& ptsi = ccb_data[block].data[block_index - ccb_data[block].offset];
 
 	if(ptsi.index != block_index) {
 		pc.num_unsuccessful_takes.incr();
@@ -197,7 +197,7 @@ template <class Scheduler, typename TT, size_t BLOCK_SIZE>
 TT ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::take(iterator item, PerformanceCounters& pc) {
 	assert(item != end(pc));
 
-	ArrayListPrimaryTaskStorageItem<T>* ptsi = item.dereference(this);
+	ArrayListPrimaryTaskStorageItem<Scheduler, T>* ptsi = item.dereference(this);
 
 	if(ptsi == NULL || ptsi->index != item.get_index()) {
 		pc.num_unsuccessful_takes.incr();
@@ -220,12 +220,12 @@ bool ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::is_taken(iterator i
 }
 
 template <class Scheduler, typename TT, size_t BLOCK_SIZE>
-prio_t ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::get_steal_priority(iterator item, PerformanceCounters& pc) {
+prio_t ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::get_steal_priority(iterator item, typename Scheduler::StealerDescriptor& sd, PerformanceCounters& pc) {
 	Item* deref = item.dereference(this);
 	if(deref == NULL) {
 		return 0;
 	}
-	return deref->s->get_steal_priority(item.get_index());
+	return deref->s->get_steal_priority(item.get_index(), sd);
 }
 
 /*
@@ -262,7 +262,7 @@ inline void ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::push(Strateg
 	size_t item_index = end_index - offset;
 	assert(item_index < block_size);
 
-	ArrayListPrimaryTaskStorageItem<TT> to_put;
+	Item to_put;
 	to_put.data = item;
 	// TODO: custom memory management for strategies with placement new. This would allow for bulk deallocations
 	// as strategies are always deallocated with their control_block_item (meaning we can deallocation BLOCK_SIZE strategies in one step)

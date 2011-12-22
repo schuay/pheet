@@ -12,36 +12,36 @@
 
 namespace pheet {
 
-template <class Strategy>
+template <class Scheduler, template <class Scheduler> class Strategy>
 class BranchBoundGraphBipartitioningAutoStrategy {
 public:
 	BranchBoundGraphBipartitioningAutoStrategy();
 	~BranchBoundGraphBipartitioningAutoStrategy();
 
-	Strategy operator()(GraphVertex* graph, size_t size, size_t k, size_t* set1, size_t set1_size, size_t* set2, size_t set2_size, size_t* ub, size_t lb);
+	Strategy<Scheduler> operator()(GraphVertex* graph, size_t size, size_t k, size_t* set1, size_t set1_size, size_t* set2, size_t set2_size, size_t* ub, size_t lb);
 
 	static void print_name();
 };
 
-template <class Strategy>
-inline BranchBoundGraphBipartitioningAutoStrategy<Strategy>::BranchBoundGraphBipartitioningAutoStrategy() {
+template <class Scheduler, template <class Scheduler> class Strategy>
+inline BranchBoundGraphBipartitioningAutoStrategy<Scheduler, Strategy>::BranchBoundGraphBipartitioningAutoStrategy() {
 
 }
 
-template <class Strategy>
-inline BranchBoundGraphBipartitioningAutoStrategy<Strategy>::~BranchBoundGraphBipartitioningAutoStrategy() {
+template <class Scheduler, template <class Scheduler> class Strategy>
+inline BranchBoundGraphBipartitioningAutoStrategy<Scheduler, Strategy>::~BranchBoundGraphBipartitioningAutoStrategy() {
 
 }
 
-template <class Strategy>
-inline Strategy BranchBoundGraphBipartitioningAutoStrategy<Strategy>::operator()(GraphVertex* graph, size_t size, size_t k, size_t* set1, size_t set1_size, size_t* set2, size_t set2_size, size_t* ub, size_t lb) {
-	return Strategy();
+template <class Scheduler, template <class Scheduler> class Strategy>
+inline Strategy<Scheduler> BranchBoundGraphBipartitioningAutoStrategy<Scheduler, Strategy>::operator()(GraphVertex* graph, size_t size, size_t k, size_t* set1, size_t set1_size, size_t* set2, size_t set2_size, size_t* ub, size_t lb) {
+	return Strategy<Scheduler>();
 }
 
-template <class Strategy>
-void BranchBoundGraphBipartitioningAutoStrategy<Strategy>::print_name() {
+template <class Scheduler, template <class Scheduler> class Strategy>
+void BranchBoundGraphBipartitioningAutoStrategy<Scheduler, Strategy>::print_name() {
 	std::cout << "AutoStrategy<";
-	Strategy::print_name();
+	Strategy<Scheduler>::print_name();
 	std::cout << ">";
 }
 

@@ -31,11 +31,11 @@ public:
 	T pop(PerformanceCounters& pc);
 	T peek();
 	T peek(PerformanceCounters& pc);
-	T steal();
-	T steal(PerformanceCounters& pc);
+	T steal(typename Scheduler::StealerDescriptor& sd);
+	T steal(typename Scheduler::StealerDescriptor& sd, PerformanceCounters& pc);
 
-	T steal_push(ModularTaskStorage<Scheduler, TT, Primary, Secondary> &other);
-	T steal_push(ModularTaskStorage<Scheduler, TT, Primary, Secondary> &other, PerformanceCounters& pc);
+	T steal_push(ModularTaskStorage<Scheduler, TT, Primary, Secondary> &other, typename Scheduler::StealerDescriptor& sd);
+	T steal_push(ModularTaskStorage<Scheduler, TT, Primary, Secondary> &other, typename Scheduler::StealerDescriptor& sd, PerformanceCounters& pc);
 
 	size_t get_length();
 	size_t get_length(PerformanceCounters& pc);
@@ -111,27 +111,27 @@ inline TT ModularTaskStorage<Scheduler, TT, Primary, Secondary>::peek(Performanc
 }
 
 template <class Scheduler, typename TT, template <class Scheduler, typename S> class Primary, template <class Scheduler, typename S, template <class S, typename Q> class P> class Secondary>
-inline TT ModularTaskStorage<Scheduler, TT, Primary, Secondary>::steal() {
+inline TT ModularTaskStorage<Scheduler, TT, Primary, Secondary>::steal(typename Scheduler::StealerDescriptor& sd) {
 	PerformanceCounters pc;
-	return secondary.steal(pc.secondary_perf_count);
+	return secondary.steal(sd, pc.primary_perf_count, pc.secondary_perf_count);
 }
 
 template <class Scheduler, typename TT, template <class Scheduler, typename S> class Primary, template <class Scheduler, typename S, template <class S, typename Q> class P> class Secondary>
-inline TT ModularTaskStorage<Scheduler, TT, Primary, Secondary>::steal(PerformanceCounters& pc) {
-	return secondary.steal(pc.primary_perf_count, pc.secondary_perf_count);
+inline TT ModularTaskStorage<Scheduler, TT, Primary, Secondary>::steal(typename Scheduler::StealerDescriptor& sd, PerformanceCounters& pc) {
+	return secondary.steal(sd, pc.primary_perf_count, pc.secondary_perf_count);
 }
 
 template <class Scheduler, typename TT, template <class Scheduler, typename S> class Primary, template <class Scheduler, typename S, template <class S, typename Q> class P> class Secondary>
-inline TT ModularTaskStorage<Scheduler, TT, Primary, Secondary>::steal_push(ModularTaskStorage<Scheduler, TT, Primary, Secondary>& other) {
+inline TT ModularTaskStorage<Scheduler, TT, Primary, Secondary>::steal_push(ModularTaskStorage<Scheduler, TT, Primary, Secondary>& other, typename Scheduler::StealerDescriptor& sd) {
 	// Currently we don't plan to support stealing more than one task, as this would require require reconfiguring the strategies
 	PerformanceCounters pc;
-	return secondary.steal(pc.secondary_perf_count);
+	return secondary.steal(sd, pc.secondary_perf_count);
 }
 
 template <class Scheduler, typename TT, template <class Scheduler, typename S> class Primary, template <class Scheduler, typename S, template <class S, typename Q> class P> class Secondary>
-inline TT ModularTaskStorage<Scheduler, TT, Primary, Secondary>::steal_push(ModularTaskStorage<Scheduler, TT, Primary, Secondary>& other, PerformanceCounters& pc) {
+inline TT ModularTaskStorage<Scheduler, TT, Primary, Secondary>::steal_push(ModularTaskStorage<Scheduler, TT, Primary, Secondary>& other, typename Scheduler::StealerDescriptor& sd, PerformanceCounters& pc) {
 	// Currently we don't plan to support stealing more than one task, as this would require require reconfiguring the strategies
-	return secondary.steal(pc.primary_perf_count, pc.secondary_perf_count);
+	return secondary.steal(sd, pc.primary_perf_count, pc.secondary_perf_count);
 }
 
 template <class Scheduler, typename TT, template <class Scheduler, typename S> class Primary, template <class Scheduler, typename S, template <class S, typename Q> class P> class Secondary>

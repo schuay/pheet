@@ -13,7 +13,8 @@
 
 namespace pheet {
 
-class LifoStrategy : public BaseStrategy {
+template <class Scheduler>
+class LifoStrategy : public BaseStrategy<Scheduler> {
 public:
 	LifoStrategy();
 	LifoStrategy(LifoStrategy& other);
@@ -21,36 +22,43 @@ public:
 	virtual ~LifoStrategy();
 
 	virtual prio_t get_pop_priority(size_t task_id);
-	virtual prio_t get_steal_priority(size_t task_id);
+	virtual prio_t get_steal_priority(size_t task_id, typename Scheduler::StealerDescriptor& desc);
 
 	static void print_name();
 };
 
-inline LifoStrategy::LifoStrategy() {
+template <class Scheduler>
+inline LifoStrategy<Scheduler>::LifoStrategy() {
 
 }
 
-inline LifoStrategy::LifoStrategy(LifoStrategy& other) {
+template <class Scheduler>
+inline LifoStrategy<Scheduler>::LifoStrategy(LifoStrategy& other) {
 
 }
 
-inline LifoStrategy::LifoStrategy(LifoStrategy&& other) {
+template <class Scheduler>
+inline LifoStrategy<Scheduler>::LifoStrategy(LifoStrategy&& other) {
 
 }
 
-inline LifoStrategy::~LifoStrategy() {
+template <class Scheduler>
+inline LifoStrategy<Scheduler>::~LifoStrategy() {
 
 }
 
-inline prio_t LifoStrategy::get_pop_priority(size_t task_id) {
+template <class Scheduler>
+inline prio_t LifoStrategy<Scheduler>::get_pop_priority(size_t task_id) {
 	return task_id + 1;
 }
 
-inline prio_t LifoStrategy::get_steal_priority(size_t task_id) {
+template <class Scheduler>
+inline prio_t LifoStrategy<Scheduler>::get_steal_priority(size_t task_id, typename Scheduler::StealerDescriptor& desc) {
 	return task_id + 1;
 }
 
-inline void LifoStrategy::print_name() {
+template <class Scheduler>
+inline void LifoStrategy<Scheduler>::print_name() {
 	std::cout << "LifoStrategy";
 }
 

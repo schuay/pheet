@@ -14,7 +14,8 @@
 
 namespace pheet {
 
-class FifoStrategy : public BaseStrategy {
+template <class Scheduler>
+class FifoStrategy : public BaseStrategy<Scheduler> {
 public:
 	FifoStrategy();
 	FifoStrategy(FifoStrategy& other);
@@ -22,36 +23,43 @@ public:
 	virtual ~FifoStrategy();
 
 	virtual prio_t get_pop_priority(size_t task_id);
-	virtual prio_t get_steal_priority(size_t task_id);
+	virtual prio_t get_steal_priority(size_t task_id, typename Scheduler::StealerDescriptor& desc);
 
 	static void print_name();
 };
 
-inline FifoStrategy::FifoStrategy() {
+template <class Scheduler>
+inline FifoStrategy<Scheduler>::FifoStrategy() {
 
 }
 
-inline FifoStrategy::FifoStrategy(FifoStrategy& other) {
+template <class Scheduler>
+inline FifoStrategy<Scheduler>::FifoStrategy(FifoStrategy& other) {
 
 }
 
-inline FifoStrategy::FifoStrategy(FifoStrategy&& other) {
+template <class Scheduler>
+inline FifoStrategy<Scheduler>::FifoStrategy(FifoStrategy&& other) {
 
 }
 
-inline FifoStrategy::~FifoStrategy() {
+template <class Scheduler>
+inline FifoStrategy<Scheduler>::~FifoStrategy() {
 
 }
 
-inline prio_t FifoStrategy::get_pop_priority(size_t task_id) {
+template <class Scheduler>
+inline prio_t FifoStrategy<Scheduler>::get_pop_priority(size_t task_id) {
 	return std::numeric_limits< prio_t >::max() - task_id;
 }
 
-inline prio_t FifoStrategy::get_steal_priority(size_t task_id) {
+template <class Scheduler>
+inline prio_t FifoStrategy<Scheduler>::get_steal_priority(size_t task_id, typename Scheduler::StealerDescriptor& desc) {
 	return std::numeric_limits< prio_t >::max() - task_id;
 }
 
-inline void FifoStrategy::print_name() {
+template <class Scheduler>
+inline void FifoStrategy<Scheduler>::print_name() {
 	std::cout << "FifoStrategy";
 }
 

@@ -13,36 +13,36 @@
 
 namespace pheet {
 
-template <class Strategy, class SubProblem>
+template <class Scheduler, template <class Scheduler> class Strategy, class SubProblem>
 class ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy {
 public:
 	ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy();
 	~ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy();
 
-	Strategy operator()(SubProblem* sub_problem, size_t* upper_bound);
+	Strategy<Scheduler> operator()(SubProblem* sub_problem, size_t* upper_bound);
 
 	static void print_name();
 };
 
-template <class Strategy, class SubProblem>
-inline ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<Strategy, SubProblem>::ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy() {
+template <class Scheduler, template <class Scheduler> class Strategy, class SubProblem>
+inline ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<Scheduler, Strategy, SubProblem>::ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy() {
 
 }
 
-template <class Strategy, class SubProblem>
-inline ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<Strategy, SubProblem>::~ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy() {
+template <class Scheduler, template <class Scheduler> class Strategy, class SubProblem>
+inline ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<Scheduler, Strategy, SubProblem>::~ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy() {
 
 }
 
-template <class Strategy, class SubProblem>
-inline Strategy ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<Strategy, SubProblem>::operator()(SubProblem* sub_problem, size_t* upper_bound) {
-	return Strategy();
+template <class Scheduler, template <class Scheduler> class Strategy, class SubProblem>
+inline Strategy<Scheduler> ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<Scheduler, Strategy, SubProblem>::operator()(SubProblem* sub_problem, size_t* upper_bound) {
+	return Strategy<Scheduler>();
 }
 
-template <class Strategy, class SubProblem>
-void ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<Strategy, SubProblem>::print_name() {
+template <class Scheduler, template <class Scheduler> class Strategy, class SubProblem>
+void ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<Scheduler, Strategy, SubProblem>::print_name() {
 	std::cout << "AutoStrategy<";
-	Strategy::print_name();
+	Strategy<Scheduler>::print_name();
 	std::cout << ">";
 }
 

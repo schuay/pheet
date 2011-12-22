@@ -25,7 +25,7 @@ public:
 //	PrimitiveSecondaryTaskStorage(Primary<TT>* primary, PerformanceCounters& perf_count);
 	~PrimitiveSecondaryTaskStorage();
 
-	TT steal(typename Primary<Scheduler, TT>::PerformanceCounters& ppc, PerformanceCounters& pc);
+	TT steal(typename Scheduler::StealerDescriptor& sd, typename Primary<Scheduler, TT>::PerformanceCounters& ppc, PerformanceCounters& pc);
 
 	static void print_name();
 
@@ -58,7 +58,7 @@ inline PrimitiveSecondaryTaskStorage<Scheduler, TT, Primary>::~PrimitiveSecondar
 }
 
 template <class Scheduler, typename TT, template <class Sched, typename S> class Primary>
-TT PrimitiveSecondaryTaskStorage<Scheduler, TT, Primary>::steal(typename Primary<Scheduler, TT>::PerformanceCounters& ppc, PerformanceCounters& pc) {
+TT PrimitiveSecondaryTaskStorage<Scheduler, TT, Primary>::steal(typename Scheduler::StealerDescriptor& sd, typename Primary<Scheduler, TT>::PerformanceCounters& ppc, PerformanceCounters& pc) {
 	pc.steal_time.start_timer();
 	typename Primary<Scheduler, T>::iterator begin = primary->begin(ppc);
 	typename Primary<Scheduler, T>::iterator end = primary->end(ppc);
@@ -69,7 +69,7 @@ TT PrimitiveSecondaryTaskStorage<Scheduler, TT, Primary>::steal(typename Primary
 
 	for(typename Primary<Scheduler, T>::iterator i = begin; i != end; ++i) {
 		if(!primary->is_taken(i, ppc)) {
-			prio_t tmp_prio = primary->get_steal_priority(i, ppc);
+			prio_t tmp_prio = primary->get_steal_priority(i, sd, ppc);
 			if(tmp_prio > best_prio) {
 				best = i;
 				best_prio = tmp_prio;

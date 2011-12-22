@@ -12,7 +12,8 @@
 
 namespace pheet {
 
-class UserDefinedPriority : public BaseStrategy {
+template <class Scheduler>
+class UserDefinedPriority : public BaseStrategy<Scheduler> {
 public:
 	UserDefinedPriority(prio_t pop_priority, prio_t steal_priority);
 	UserDefinedPriority(UserDefinedPriority& other);
@@ -20,36 +21,42 @@ public:
 	virtual ~UserDefinedPriority();
 
 	virtual prio_t get_pop_priority(size_t task_id);
-	virtual prio_t get_steal_priority(size_t task_id);
+	virtual prio_t get_steal_priority(size_t task_id, typename Scheduler::StealerDescriptor& desc);
 private:
 	prio_t pop_priority;
 	prio_t steal_priority;
 };
 
-inline UserDefinedPriority::UserDefinedPriority(prio_t pop_priority, prio_t steal_priority)
+template <class Scheduler>
+inline UserDefinedPriority<Scheduler>::UserDefinedPriority(prio_t pop_priority, prio_t steal_priority)
 : pop_priority(pop_priority), steal_priority(steal_priority) {
 
 }
 
-inline UserDefinedPriority::UserDefinedPriority(UserDefinedPriority& other)
+template <class Scheduler>
+inline UserDefinedPriority<Scheduler>::UserDefinedPriority(UserDefinedPriority& other)
 : pop_priority(other.pop_priority), steal_priority(other.steal_priority) {
 
 }
 
-inline UserDefinedPriority::UserDefinedPriority(UserDefinedPriority&& other)
+template <class Scheduler>
+inline UserDefinedPriority<Scheduler>::UserDefinedPriority(UserDefinedPriority&& other)
 : pop_priority(other.pop_priority), steal_priority(other.steal_priority) {
 
 }
 
-inline UserDefinedPriority::~UserDefinedPriority() {
+template <class Scheduler>
+inline UserDefinedPriority<Scheduler>::~UserDefinedPriority() {
 
 }
 
- inline prio_t UserDefinedPriority::get_pop_priority(size_t task_id) {
+template <class Scheduler>
+inline prio_t UserDefinedPriority<Scheduler>::get_pop_priority(size_t task_id) {
 	return pop_priority;
 }
 
- inline prio_t UserDefinedPriority::get_steal_priority(size_t task_id) {
+template <class Scheduler>
+inline prio_t UserDefinedPriority<Scheduler>::get_steal_priority(size_t task_id, typename Scheduler::StealerDescriptor& desc) {
 	return steal_priority;
 }
 

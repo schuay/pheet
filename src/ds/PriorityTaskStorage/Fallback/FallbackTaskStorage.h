@@ -37,11 +37,11 @@ public:
 	T pop(PerformanceCounters& pc);
 	T peek();
 	T peek(PerformanceCounters& pc);
-	T steal();
-	T steal(PerformanceCounters& pc);
+	T steal(typename Scheduler::StealerDescriptor& sd);
+	T steal(typename Scheduler::StealerDescriptor& sd, PerformanceCounters& pc);
 
-	T steal_push(FallbackTaskStorage<Scheduler, TT, BaseType> &other);
-	T steal_push(FallbackTaskStorage<Scheduler, TT, BaseType> &other, PerformanceCounters& pc);
+	T steal_push(FallbackTaskStorage<Scheduler, TT, BaseType> &other, typename Scheduler::StealerDescriptor& sd);
+	T steal_push(FallbackTaskStorage<Scheduler, TT, BaseType> &other, typename Scheduler::StealerDescriptor& sd, PerformanceCounters& pc);
 
 	size_t get_length();
 	size_t get_length(PerformanceCounters& pc);
@@ -111,22 +111,22 @@ inline TT FallbackTaskStorage<Scheduler, TT, BaseType>::peek(PerformanceCounters
 }
 
 template <class Scheduler, typename TT, template <class Scheduler, typename S> class BaseType>
-inline TT FallbackTaskStorage<Scheduler, TT, BaseType>::steal() {
+inline TT FallbackTaskStorage<Scheduler, TT, BaseType>::steal(typename Scheduler::StealerDescriptor& sd) {
 	return data.steal();
 }
 
 template <class Scheduler, typename TT, template <class Scheduler, typename S> class BaseType>
-inline TT FallbackTaskStorage<Scheduler, TT, BaseType>::steal(PerformanceCounters& pc) {
+inline TT FallbackTaskStorage<Scheduler, TT, BaseType>::steal(typename Scheduler::StealerDescriptor& sd, PerformanceCounters& pc) {
 	return data.steal();
 }
 
 template <class Scheduler, typename TT, template <class Scheduler, typename S> class BaseType>
-inline TT FallbackTaskStorage<Scheduler, TT, BaseType>::steal_push(FallbackTaskStorage<Scheduler, TT, BaseType>& other) {
+inline TT FallbackTaskStorage<Scheduler, TT, BaseType>::steal_push(FallbackTaskStorage<Scheduler, TT, BaseType>& other, typename Scheduler::StealerDescriptor& sd) {
 	return data.steal_push(other.data);
 }
 
 template <class Scheduler, typename TT, template <class Scheduler, typename S> class BaseType>
-inline TT FallbackTaskStorage<Scheduler, TT, BaseType>::steal_push(FallbackTaskStorage<Scheduler, TT, BaseType>& other, PerformanceCounters& pc) {
+inline TT FallbackTaskStorage<Scheduler, TT, BaseType>::steal_push(FallbackTaskStorage<Scheduler, TT, BaseType>& other, typename Scheduler::StealerDescriptor& sd, PerformanceCounters& pc) {
 	return data.steal_push(other.data);
 }
 

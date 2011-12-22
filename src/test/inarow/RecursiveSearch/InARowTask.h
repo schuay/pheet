@@ -105,7 +105,7 @@ namespace pheet {
 						continue;
 
 					
-										tec.template spawn_prio<InARowTask<Task> >(UserDefinedPriority(100-depth,depth), depth-1, newboard, i, !player, &vals[i],iar, boardval, debug&& i==0);
+										tec.template spawn_prio<InARowTask<Task> >(UserDefinedPriority<typename Task::Scheduler>(100-depth,depth), depth-1, newboard, i, !player, &vals[i],iar, boardval, debug&& i==0);
 										//tec.template spawn<InARowTask<Task> >(depth-1, newboard, i, !player, &vals[i],iar, boardval, debug&& i==0);
 				}
 			}

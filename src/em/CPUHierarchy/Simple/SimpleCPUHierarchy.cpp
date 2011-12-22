@@ -13,7 +13,15 @@
 namespace pheet {
 
 SimpleCPUHierarchy::SimpleCPUHierarchy(procs_t np)
-: level(0), num_levels(2), offset(0) {
+: level(0), num_levels(2), offset(0), memory_level(0) {
+	// Generates a flat hierarchy
+	levels = new procs_t[2];
+	levels[0] = np;
+	levels[1] = 1;
+}
+
+SimpleCPUHierarchy::SimpleCPUHierarchy(procs_t np, procs_t memory_level)
+: level(0), num_levels(2), offset(0), memory_level(memory_level) {
 	// Generates a flat hierarchy
 	levels = new procs_t[2];
 	levels[0] = np;
@@ -21,14 +29,21 @@ SimpleCPUHierarchy::SimpleCPUHierarchy(procs_t np)
 }
 
 SimpleCPUHierarchy::SimpleCPUHierarchy(procs_t* levels, procs_t num_levels)
-: level(0), num_levels(num_levels), offset(0) {
+: level(0), num_levels(num_levels), offset(0), memory_level(0) {
+	assert(num_levels >= 1);
+	this->levels = new procs_t[num_levels];
+	memcpy(this->levels, levels, sizeof(procs_t) * num_levels);
+}
+
+SimpleCPUHierarchy::SimpleCPUHierarchy(procs_t* levels, procs_t num_levels, procs_t memory_level)
+: level(0), num_levels(num_levels), offset(0), memory_level(memory_level) {
 	assert(num_levels >= 1);
 	this->levels = new procs_t[num_levels];
 	memcpy(this->levels, levels, sizeof(procs_t) * num_levels);
 }
 
 SimpleCPUHierarchy::SimpleCPUHierarchy(SimpleCPUHierarchy* parent, procs_t offset)
-: level(parent->level + 1), num_levels(parent->num_levels - 1), offset(offset), levels(parent->levels + 1) {
+: level(parent->level + 1), num_levels(parent->num_levels - 1), offset(offset), memory_level(parent->memory_level + 1), levels(parent->levels + 1) {
 
 }
 
@@ -76,6 +91,10 @@ std::vector<SimpleCPUHierarchy::CPUDescriptor*> const* SimpleCPUHierarchy::get_c
 
 procs_t SimpleCPUHierarchy::get_max_depth() {
 	return 1;
+}
+
+procs_t SimpleCPUHierarchy::get_memory_level() {
+	return memory_level;
 }
 
 }

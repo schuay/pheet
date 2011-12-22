@@ -13,30 +13,34 @@
 
 namespace pheet {
 
+template <class Scheduler>
 class BranchBoundGraphBipartitioningBestFirstStrategy {
 public:
 	BranchBoundGraphBipartitioningBestFirstStrategy();
 	~BranchBoundGraphBipartitioningBestFirstStrategy();
 
-	UserDefinedPriority operator()(GraphVertex* graph, size_t size, size_t k, size_t* set1, size_t set1_size, size_t* set2, size_t set2_size, size_t* ub, size_t lb);
+	UserDefinedPriority<Scheduler> operator()(GraphVertex* graph, size_t size, size_t k, size_t* set1, size_t set1_size, size_t* set2, size_t set2_size, size_t* ub, size_t lb);
 
 	static void print_name();
 };
 
-inline BranchBoundGraphBipartitioningBestFirstStrategy::BranchBoundGraphBipartitioningBestFirstStrategy() {
+template <class Scheduler>
+inline BranchBoundGraphBipartitioningBestFirstStrategy<Scheduler>::BranchBoundGraphBipartitioningBestFirstStrategy() {
 
 }
 
-inline BranchBoundGraphBipartitioningBestFirstStrategy::~BranchBoundGraphBipartitioningBestFirstStrategy() {
+template <class Scheduler>
+inline BranchBoundGraphBipartitioningBestFirstStrategy<Scheduler>::~BranchBoundGraphBipartitioningBestFirstStrategy() {
 
 }
 
-inline UserDefinedPriority BranchBoundGraphBipartitioningBestFirstStrategy::operator()(GraphVertex* graph, size_t size, size_t k, size_t* set1, size_t set1_size, size_t* set2, size_t set2_size, size_t* ub, size_t lb) {
+template <class Scheduler>
+inline UserDefinedPriority<Scheduler> BranchBoundGraphBipartitioningBestFirstStrategy<Scheduler>::operator()(GraphVertex* graph, size_t size, size_t k, size_t* set1, size_t set1_size, size_t* set2, size_t set2_size, size_t* ub, size_t lb) {
 	size_t ubc = *ub;
 	if(ubc < lb) {
 		// Prioritize this task, as it will immediatly terminate anyway
 		// Do not allow it to be stolen (not worth it)
-		return UserDefinedPriority(std::numeric_limits< prio_t >::max(), 0);
+		return UserDefinedPriority<Scheduler>(std::numeric_limits< prio_t >::max(), 0);
 	}
 
 	// Depth: assumption: good for pop, bad for steal
@@ -63,10 +67,11 @@ inline UserDefinedPriority BranchBoundGraphBipartitioningBestFirstStrategy::oper
 	prio_t prio_pop = 1 + depth * bound_diff;
 	prio_t prio_steal = 1 + (size - depth) * bound_diff;
 
-	return UserDefinedPriority(prio_pop, prio_steal);
+	return UserDefinedPriority<Scheduler>(prio_pop, prio_steal);
 }
 
-inline void BranchBoundGraphBipartitioningBestFirstStrategy::print_name() {
+template <class Scheduler>
+inline void BranchBoundGraphBipartitioningBestFirstStrategy<Scheduler>::print_name() {
 	std::cout << "BestFirstStrategy";
 }
 

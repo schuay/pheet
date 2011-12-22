@@ -17,10 +17,10 @@
 
 namespace pheet {
 
-template <typename TT>
+template <class Scheduler, typename TT>
 struct PrimitiveHeapPrimaryTaskStorageItem {
 	TT data;
-	BaseStrategy* s;
+	BaseStrategy<Scheduler>* s;
 	prio_t pop_prio;
 	// We won't be able to just store the steal prio statically in the future,
 	// as there might be more types of steal priorities, and calculating those may be expensive!
@@ -50,7 +50,7 @@ public:
 	// Not completely a standard iterator, as it doesn't support a dereference operation, but this makes implementation simpler for now (and even more lightweight)
 	typedef size_t iterator;
 	typedef PrimitiveHeapPrimaryTaskStoragePerformanceCounters<Scheduler> PerformanceCounters;
-	typedef PriorityQueueT<iterator, PrimitiveHeapPrimaryTaskStorageComparator<CircularArray<PrimitiveHeapPrimaryTaskStorageItem<T> > > > PriorityQueue;
+	typedef PriorityQueueT<iterator, PrimitiveHeapPrimaryTaskStorageComparator<CircularArray<PrimitiveHeapPrimaryTaskStorageItem<Scheduler, T> > > > PriorityQueue;
 
 	PrimitiveHeapPrimaryTaskStorage(size_t initial_capacity);
 //	PrimitiveHeapPrimaryTaskStorage(size_t initial_capacity, PerformanceCounters& perf_count);
@@ -61,7 +61,7 @@ public:
 
 	T take(iterator item, PerformanceCounters& pc);
 	bool is_taken(iterator item, PerformanceCounters& pc);
-	prio_t get_steal_priority(iterator item, PerformanceCounters& pc);
+	prio_t get_steal_priority(iterator item, typename Scheduler::StealerDescriptor& sd, PerformanceCounters& pc);
 	size_t get_task_id(iterator item, PerformanceCounters& pc);
 
 	template <class Strategy>
@@ -86,7 +86,7 @@ private:
 	size_t top;
 	size_t bottom;
 
-	CircularArray<PrimitiveHeapPrimaryTaskStorageItem<T> > data;
+	CircularArray<PrimitiveHeapPrimaryTaskStorageItem<Scheduler, T> > data;
 	PriorityQueue pq;
 
 //	PerformanceCounters perf_count;
@@ -100,14 +100,14 @@ const TT PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQ
 template <class Scheduler, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
 inline PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQueueT>::PrimitiveHeapPrimaryTaskStorage(size_t expected_capacity)
 : top(0), bottom(0), data(expected_capacity),
-  pq(PrimitiveHeapPrimaryTaskStorageComparator<CircularArray<PrimitiveHeapPrimaryTaskStorageItem<T> > >(&data)) {
+  pq(PrimitiveHeapPrimaryTaskStorageComparator<CircularArray<PrimitiveHeapPrimaryTaskStorageItem<Scheduler, T> > >(&data)) {
 
 }
 /*
 template <class Scheduler, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
 inline PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQueueT>::PrimitiveHeapPrimaryTaskStorage(size_t expected_capacity, PerformanceCounters& perf_count)
 : top(0), bottom(0), data(expected_capacity),
-  heap(PrimitiveHeapPrimaryTaskStorageComparator<CircularArray<PrimitiveHeapPrimaryTaskStorageItem<T> > >(&data)),
+  heap(PrimitiveHeapPrimaryTaskStorageComparator<CircularArray<PrimitiveHeapPrimaryTaskStorageItem<Scheduler, T> > >(&data)),
   perf_count(perf_count) {
 
 }*/
@@ -134,7 +134,7 @@ template <class Scheduler, typename TT, template <typename S> class CircularArra
 TT PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQueueT>::local_take(iterator item, PerformanceCounters& pc) {
 	assert(item < bottom);
 
-	PrimitiveHeapPrimaryTaskStorageItem<T>& ptsi = data.get(item);
+	PrimitiveHeapPrimaryTaskStorageItem<Scheduler, T>& ptsi = data.get(item);
 
 	if(ptsi.index != item) {
 		pc.num_unsuccessful_takes.incr();
@@ -154,7 +154,7 @@ template <class Scheduler, typename TT, template <typename S> class CircularArra
 TT PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQueueT>::take(iterator item, PerformanceCounters& pc) {
 	assert(item < bottom);
 
-	PrimitiveHeapPrimaryTaskStorageItem<T>& ptsi = data.get(item);
+	PrimitiveHeapPrimaryTaskStorageItem<Scheduler, T>& ptsi = data.get(item);
 
 	if(ptsi.index != item) {
 		pc.num_unsuccessful_takes.incr();
@@ -164,7 +164,7 @@ TT PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQueueT>
 	MEMORY_FENCE();
 
 	T ret = ptsi.data;
-	BaseStrategy* s = ptsi.s;
+	BaseStrategy<Scheduler>* s = ptsi.s;
 	if(!SIZET_CAS(&(ptsi.index), item, item + 1)) {
 		pc.num_unsuccessful_takes.incr();
 		return null_element;
@@ -181,7 +181,7 @@ bool PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQueue
 }
 
 template <class Scheduler, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
-prio_t PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQueueT>::get_steal_priority(iterator item, PerformanceCounters& pc) {
+prio_t PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQueueT>::get_steal_priority(iterator item, typename Scheduler::StealerDescriptor& sd, PerformanceCounters& pc) {
 	return data.get(item).steal_prio;
 }
 
@@ -210,11 +210,12 @@ inline void PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, Priori
 		}
 	}
 
-	PrimitiveHeapPrimaryTaskStorageItem<TT> to_put;
+	PrimitiveHeapPrimaryTaskStorageItem<Scheduler, TT> to_put;
 	to_put.data = item;
 	to_put.s = new Strategy(s);
 	to_put.pop_prio = s.get_pop_priority(bottom);
-	to_put.steal_prio = s.get_steal_priority(bottom);
+	typename Scheduler::StealerDescriptor sd;
+	to_put.steal_prio = s.get_steal_priority(bottom, sd);
 	to_put.index = bottom;
 
 	data.put(bottom, to_put);
@@ -288,12 +289,12 @@ inline TT PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, Priority
 	top = i;
 
 	iterator best = i;
-	PrimitiveHeapPrimaryTaskStorageItem<T> ret_item = data.get(i);
+	PrimitiveHeapPrimaryTaskStorageItem<Scheduler, T> ret_item = data.get(i);
 	prio_t best_prio = ret_item.pop_prio;
 	++i;
 	for(; i != end(); ++i) {
 		if(!is_taken(i)) {
-			PrimitiveHeapPrimaryTaskStorageItem<T> tmp_item = data.get(i);
+			PrimitiveHeapPrimaryTaskStorageItem<Scheduler, T> tmp_item = data.get(i);
 			prio_t tmp_prio = tmp_item.pop_prio;
 			if(tmp_prio > best_prio) {
 				best = i;

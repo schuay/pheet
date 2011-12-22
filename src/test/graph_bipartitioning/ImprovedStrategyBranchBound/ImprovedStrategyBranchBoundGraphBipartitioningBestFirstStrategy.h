@@ -14,35 +14,35 @@
 
 namespace pheet {
 
-template <class SubProblem>
+template <class Scheduler, class SubProblem>
 class ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy {
 public:
 	ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy();
 	~ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy();
 
-	UserDefinedPriority operator()(SubProblem* sub_problem, size_t* upper_bound);
+	UserDefinedPriority<Scheduler> operator()(SubProblem* sub_problem, size_t* upper_bound);
 
 	static void print_name();
 };
 
-template <class SubProblem>
-inline ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy<SubProblem>::ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy() {
+template <class Scheduler, class SubProblem>
+inline ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy<Scheduler, SubProblem>::ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy() {
 
 }
 
-template <class SubProblem>
-inline ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy<SubProblem>::~ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy() {
+template <class Scheduler, class SubProblem>
+inline ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy<Scheduler, SubProblem>::~ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy() {
 
 }
 
-template <class SubProblem>
-UserDefinedPriority ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy<SubProblem>::operator()(SubProblem* sub_problem, size_t* upper_bound) {
+template <class Scheduler, class SubProblem>
+UserDefinedPriority<Scheduler> ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy<Scheduler, SubProblem>::operator()(SubProblem* sub_problem, size_t* upper_bound) {
 	size_t ubc = *upper_bound;
 	size_t lb = sub_problem->get_lower_bound();
 	if(ubc < lb) {
 		// Prioritize this task, as it will immediatly terminate anyway
 		// Do not allow it to be stolen (not worth it)
-		return UserDefinedPriority(std::numeric_limits< prio_t >::max(), 0);
+		return UserDefinedPriority<Scheduler>(std::numeric_limits< prio_t >::max(), 0);
 	}
 
 	// Depth: assumption: good for pop, bad for steal
@@ -69,11 +69,11 @@ UserDefinedPriority ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrat
 	prio_t prio_pop = 1 + depth * bound_diff;
 	prio_t prio_steal = 1 + (sub_problem->size - depth) * bound_diff;
 
-	return UserDefinedPriority(prio_pop, prio_steal);
+	return UserDefinedPriority<Scheduler>(prio_pop, prio_steal);
 }
 
-template <class SubProblem>
-inline void ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy<SubProblem>::print_name() {
+template <class Scheduler, class SubProblem>
+inline void ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy<Scheduler, SubProblem>::print_name() {
 	std::cout << "BestFirstStrategy";
 }
 

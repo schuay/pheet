@@ -29,7 +29,7 @@ The hierarchy object should be lightweight as it is often copied.
 
 Methods:
 procs_t get_size()
-Returns the number of processing units contained in this set.
+Returns the number of (virtual) processing units contained in this set.
 If get_size() returns 1 this means that we reached a leaf-node
 
 vector<CPUHierarchy> get_subsets()
@@ -40,6 +40,10 @@ Returns the CPU descriptors of all CPUs available to this node. Please be aware 
 processing unit may be assigned more than one CPU and that a single CPU may be used by 
 multiple processing units. The implementation may check to return each descriptor only
 once in the return value, but is not required to do so.
+
+procs_t get_memory_levels()
+Returns how many memory levels we have at this level in the hierarchy. Is not necessarily 
+the same as depth in the tree. (e.g. for binary tree hierarchies)
 
 ---------------------------------
 

@@ -13,7 +13,7 @@
 
 namespace pheet {
 
-template <class Task, class Logic, template <class SubProblem> class SchedulingStrategy, size_t MAX_SIZE = 64>
+template <class Task, class Logic, template <class Scheduler, class SubProblem> class SchedulingStrategy, size_t MAX_SIZE = 64>
 class ImprovedStrategyBranchBoundGraphBipartitioningTask : public Task {
 public:
 	typedef ImprovedStrategyBranchBoundGraphBipartitioningTask<Task, Logic, SchedulingStrategy, MAX_SIZE> BBTask;
@@ -28,23 +28,23 @@ private:
 	ImprovedBranchBoundGraphBipartitioningSubproblem<typename Task::Scheduler, Logic, MAX_SIZE>* sub_problem;
 	size_t* upper_bound;
 	MaxReducer<typename Task::Scheduler, GraphBipartitioningSolution<MAX_SIZE> > best;
-	SchedulingStrategy<ImprovedBranchBoundGraphBipartitioningSubproblem<typename Task::Scheduler, Logic, MAX_SIZE> > strategy;
+	SchedulingStrategy<typename Task::Scheduler, ImprovedBranchBoundGraphBipartitioningSubproblem<typename Task::Scheduler, Logic, MAX_SIZE> > strategy;
 };
 
-template <class Task, class Logic, template <class SubProblem> class SchedulingStrategy, size_t MAX_SIZE>
+template <class Task, class Logic, template <class Scheduler, class SubProblem> class SchedulingStrategy, size_t MAX_SIZE>
 ImprovedStrategyBranchBoundGraphBipartitioningTask<Task, Logic, SchedulingStrategy, MAX_SIZE>::ImprovedStrategyBranchBoundGraphBipartitioningTask(ImprovedBranchBoundGraphBipartitioningSubproblem<typename Task::Scheduler, Logic, MAX_SIZE>* sub_problem, size_t* upper_bound, MaxReducer<typename Task::Scheduler, GraphBipartitioningSolution<MAX_SIZE> >& best)
 : sub_problem(sub_problem), upper_bound(upper_bound), best(best) {
 
 }
 
-template <class Task, class Logic, template <class SubProblem> class SchedulingStrategy, size_t MAX_SIZE>
+template <class Task, class Logic, template <class Scheduler, class SubProblem> class SchedulingStrategy, size_t MAX_SIZE>
 ImprovedStrategyBranchBoundGraphBipartitioningTask<Task, Logic, SchedulingStrategy, MAX_SIZE>::~ImprovedStrategyBranchBoundGraphBipartitioningTask() {
 	if(sub_problem != NULL) {
 		delete sub_problem;
 	}
 }
 
-template <class Task, class Logic, template <class SubProblem> class SchedulingStrategy, size_t MAX_SIZE>
+template <class Task, class Logic, template <class Scheduler, class SubProblem> class SchedulingStrategy, size_t MAX_SIZE>
 void ImprovedStrategyBranchBoundGraphBipartitioningTask<Task, Logic, SchedulingStrategy, MAX_SIZE>::operator()(typename Task::TEC& tec) {
 	if(sub_problem->get_lower_bound() >= *upper_bound) {
 		return;

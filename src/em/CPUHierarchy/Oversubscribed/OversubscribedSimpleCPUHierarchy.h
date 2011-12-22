@@ -23,11 +23,13 @@ public:
 	std::vector<OversubscribedSimpleCPUHierarchy*> const* get_subsets();
 	std::vector<CPUDescriptor*> const* get_cpus();
 	procs_t get_max_depth();
+	procs_t get_memory_level();
 
 private:
 	OversubscribedSimpleCPUHierarchy(SimpleCPUHierarchy* simple_hierarchy);
 
 	procs_t np;
+	procs_t memory_levels;
 	SimpleCPUHierarchy* simple_hierarchy;
 	bool allocated_simple_hierarchy;
 

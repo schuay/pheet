@@ -15,21 +15,23 @@ namespace pheet {
 
 typedef uint64_t prio_t;
 
+template <class Scheduler>
 class BaseStrategy {
 public:
 	BaseStrategy();
 	virtual ~BaseStrategy();
 
 	virtual prio_t get_pop_priority(size_t task_id) = 0;
-//	template <class HardwareType>
-	virtual prio_t get_steal_priority/*<HardwareType>*/(size_t task_id) = 0;
+	virtual prio_t get_steal_priority(size_t task_id, typename Scheduler::StealerDescriptor& desc) = 0;
 };
 
-inline BaseStrategy::BaseStrategy() {
+template <class Scheduler>
+inline BaseStrategy<Scheduler>::BaseStrategy() {
 
 }
 
-inline BaseStrategy::~BaseStrategy() {
+template <class Scheduler>
+inline BaseStrategy<Scheduler>::~BaseStrategy() {
 
 }
 

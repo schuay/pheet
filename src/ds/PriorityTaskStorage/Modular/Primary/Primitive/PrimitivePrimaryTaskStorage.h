@@ -15,10 +15,10 @@
 
 namespace pheet {
 
-template <typename TT>
+template <class Scheduler, typename TT>
 struct PrimitivePrimaryTaskStorageItem {
 	TT data;
-	BaseStrategy* s;
+	BaseStrategy<Scheduler>* s;
 	prio_t pop_prio;
 	prio_t steal_prio;
 	size_t index;
@@ -41,7 +41,7 @@ public:
 
 	T take(iterator item, PerformanceCounters& pc);
 	bool is_taken(iterator item, PerformanceCounters& pc);
-	prio_t get_steal_priority(iterator item, PerformanceCounters& pc);
+	prio_t get_steal_priority(iterator item, typename Scheduler::StealerDescriptor& sd, PerformanceCounters& pc);
 	size_t get_task_id(iterator item, PerformanceCounters& pc);
 
 	template <class Strategy>
@@ -65,7 +65,7 @@ private:
 	size_t top;
 	size_t bottom;
 
-	CircularArray<PrimitivePrimaryTaskStorageItem<T> > data;
+	CircularArray<PrimitivePrimaryTaskStorageItem<Scheduler, T> > data;
 
 //	PerformanceCounters perf_count;
 
@@ -106,7 +106,7 @@ template <class Scheduler, typename TT, template <typename S> class CircularArra
 TT PrimitivePrimaryTaskStorage<Scheduler, TT, CircularArray>::local_take(iterator item, PerformanceCounters& pc) {
 	assert(item < bottom);
 
-	PrimitivePrimaryTaskStorageItem<T>& ptsi = data.get(item);
+	PrimitivePrimaryTaskStorageItem<Scheduler, T>& ptsi = data.get(item);
 
 	if(ptsi.index != item) {
 		pc.num_unsuccessful_takes.incr();
@@ -126,7 +126,7 @@ template <class Scheduler, typename TT, template <typename S> class CircularArra
 TT PrimitivePrimaryTaskStorage<Scheduler, TT, CircularArray>::take(iterator item, PerformanceCounters& pc) {
 	assert(item < bottom);
 
-	PrimitivePrimaryTaskStorageItem<T>& ptsi = data.get(item);
+	PrimitivePrimaryTaskStorageItem<Scheduler, T>& ptsi = data.get(item);
 
 	if(ptsi.index != item) {
 		pc.num_unsuccessful_takes.incr();
@@ -136,7 +136,7 @@ TT PrimitivePrimaryTaskStorage<Scheduler, TT, CircularArray>::take(iterator item
 	MEMORY_FENCE();
 
 	T ret = ptsi.data;
-	BaseStrategy* s = ptsi.s;
+	BaseStrategy<Scheduler>* s = ptsi.s;
 	if(!SIZET_CAS(&(ptsi.index), item, item + 1)) {
 		pc.num_unsuccessful_takes.incr();
 		return null_element;
@@ -153,7 +153,7 @@ bool PrimitivePrimaryTaskStorage<Scheduler, TT, CircularArray>::is_taken(iterato
 }
 
 template <class Scheduler, typename TT, template <typename S> class CircularArray>
-prio_t PrimitivePrimaryTaskStorage<Scheduler, TT, CircularArray>::get_steal_priority(iterator item, PerformanceCounters& pc) {
+prio_t PrimitivePrimaryTaskStorage<Scheduler, TT, CircularArray>::get_steal_priority(iterator item, typename Scheduler::StealerDescriptor& sd, PerformanceCounters& pc) {
 	return data.get(item).steal_prio;
 }
 
@@ -182,11 +182,12 @@ inline void PrimitivePrimaryTaskStorage<Scheduler, TT, CircularArray>::push(Stra
 		}
 	}
 
-	PrimitivePrimaryTaskStorageItem<TT> to_put;
+	PrimitivePrimaryTaskStorageItem<Scheduler, TT> to_put;
 	to_put.data = item;
 	to_put.s = new Strategy(s);
 	to_put.pop_prio = s.get_pop_priority(bottom);
-	to_put.steal_prio = s.get_steal_priority(bottom);
+	typename Scheduler::StealerDescriptor sd;
+	to_put.steal_prio = s.get_steal_priority(bottom, sd);
 	to_put.index = bottom;
 
 	data.put(bottom, to_put);
@@ -248,12 +249,12 @@ inline TT PrimitivePrimaryTaskStorage<Scheduler, TT, CircularArray>::peek(Perfor
 	top = i;
 
 	iterator best = i;
-	PrimitivePrimaryTaskStorageItem<T> ret_item = data.get(i);
+	PrimitivePrimaryTaskStorageItem<Scheduler, T> ret_item = data.get(i);
 	prio_t best_prio = ret_item.pop_prio;
 	++i;
 	for(; i != end(pc); ++i) {
 		if(!is_taken(i, pc)) {
-			PrimitivePrimaryTaskStorageItem<T> tmp_item = data.get(i);
+			PrimitivePrimaryTaskStorageItem<Scheduler, T> tmp_item = data.get(i);
 			prio_t tmp_prio = tmp_item.pop_prio;
 			if(tmp_prio > best_prio) {
 				best = i;

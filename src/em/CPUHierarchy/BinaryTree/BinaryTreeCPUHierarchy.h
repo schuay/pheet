@@ -28,6 +28,7 @@ public:
 	std::vector<BinaryTreeCPUHierarchy<BaseCPUHierarchy>*> const* get_subsets();
 	std::vector<CPUDescriptor*> const* get_cpus();
 	procs_t get_max_depth();
+	procs_t get_memory_level();
 
 private:
 	BinaryTreeCPUHierarchy(typename std::vector<BaseCPUHierarchy*>::const_iterator begin, typename std::vector<BaseCPUHierarchy*>::const_iterator end);
@@ -125,6 +126,18 @@ procs_t BinaryTreeCPUHierarchy<BaseCPUHierarchy>::get_max_depth() {
 		}
 	}
 	return depth + 1;
+}
+
+template <class BaseCPUHierarchy>
+procs_t BinaryTreeCPUHierarchy<BaseCPUHierarchy>::get_memory_level() {
+	if(base != NULL) {
+		return base->get_memory_level();
+	}
+	else {
+		std::vector<BinaryTreeCPUHierarchy<BaseCPUHierarchy>*> const* subsets = get_subsets();
+		assert(subsets->size() > 0);
+		return (*subsets)[0]->get_memory_level();
+	}
 }
 
 }

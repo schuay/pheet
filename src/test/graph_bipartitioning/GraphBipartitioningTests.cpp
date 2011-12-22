@@ -32,28 +32,28 @@
 namespace pheet {
 
 
-template <typename T>
-class AutoLifoStrategy : public ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<LifoStrategy, T> {
+template <class Scheduler, typename T>
+class AutoLifoStrategy : public ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<Scheduler, LifoStrategy, T> {
 public:
 	template <typename ... ConsParams>
 	AutoLifoStrategy(ConsParams&& ... params)
-	: ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<LifoStrategy, T >(static_cast<ConsParams&&>(params) ...) {}
+	: ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<Scheduler, LifoStrategy, T >(static_cast<ConsParams&&>(params) ...) {}
 };
 
-template <typename T>
-class AutoFifoStrategy : public ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<FifoStrategy, T> {
+template <class Scheduler, typename T>
+class AutoFifoStrategy : public ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<Scheduler, FifoStrategy, T> {
 public:
 	template <typename ... ConsParams>
 	AutoFifoStrategy(ConsParams&& ... params)
-	: ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<FifoStrategy, T >(static_cast<ConsParams&&>(params) ...) {}
+	: ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<Scheduler, FifoStrategy, T >(static_cast<ConsParams&&>(params) ...) {}
 };
 
-template <typename T>
-class AutoLifoFifoStrategy : public ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<LifoFifoStrategy, T> {
+template <class Scheduler, typename T>
+class AutoLifoFifoStrategy : public ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<Scheduler, LifoFifoStrategy, T> {
 public:
 	template <typename ... ConsParams>
 	AutoLifoFifoStrategy(ConsParams&& ... params)
-	: ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<LifoFifoStrategy, T >(static_cast<ConsParams&&>(params) ...) {}
+	: ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<Scheduler, LifoFifoStrategy, T >(static_cast<ConsParams&&>(params) ...) {}
 };
 
 GraphBipartitioningTests::GraphBipartitioningTests() {
@@ -259,6 +259,11 @@ void GraphBipartitioningTests::run_test() {
 		this->run_partitioner<ImprovedBranchBoundGraphBipartitioning<DefaultBasicScheduler, ImprovedBranchBoundGraphBipartitioningDeltaLogic<DefaultBasicScheduler, 64>, 64 > >();
 		// -, basic, Improved, -, -
 		this->run_partitioner<ImprovedBranchBoundGraphBipartitioning<DefaultBasicScheduler, ImprovedBranchBoundGraphBipartitioningImprovedLogic<DefaultBasicScheduler, 64>, 64 > >();
+
+		// 5. -, synch sched, DeltaNV logic, -, .
+
+		// -, synch, DeltaNV, -, -
+		this->run_partitioner<ImprovedBranchBoundGraphBipartitioning<DefaultSynchroneousScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<DefaultSynchroneousScheduler, 64>, 64 > >();
 
 		// All to slow compared to newer implementations
 /*		this->run_partitioner<ImprovedBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningBasicLogic<64>, 64 > >();

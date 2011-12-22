@@ -10,12 +10,12 @@
 namespace pheet {
 
 OversubscribedSimpleCPUHierarchy::OversubscribedSimpleCPUHierarchy(procs_t np)
-: np(np), simple_hierarchy(NULL), allocated_simple_hierarchy(false) {
+: np(np), memory_levels(0), simple_hierarchy(NULL), allocated_simple_hierarchy(false) {
 
 }
 
 OversubscribedSimpleCPUHierarchy::OversubscribedSimpleCPUHierarchy(SimpleCPUHierarchy* simple_hierarchy)
-: np(simple_hierarchy->get_size()), simple_hierarchy(simple_hierarchy), allocated_simple_hierarchy(false) {
+: np(simple_hierarchy->get_size()), memory_levels(1), simple_hierarchy(simple_hierarchy), allocated_simple_hierarchy(false) {
 
 }
 
@@ -39,7 +39,7 @@ std::vector<OversubscribedSimpleCPUHierarchy*> const* OversubscribedSimpleCPUHie
 	if(subsets.size() == 0) {
 		if(np <= system_max_cpus) {
 			if(simple_hierarchy == NULL) {
-				simple_hierarchy = new SimpleCPUHierarchy(np);
+				simple_hierarchy = new SimpleCPUHierarchy(np, 1);
 				allocated_simple_hierarchy = true;
 			}
 			std::vector<SimpleCPUHierarchy*> const* simple_sub = simple_hierarchy->get_subsets();
@@ -90,6 +90,19 @@ procs_t OversubscribedSimpleCPUHierarchy::get_max_depth() {
 		}
 	}
 	return depth + 1;
+}
+
+procs_t OversubscribedSimpleCPUHierarchy::get_memory_level() {
+	if(np <= system_max_cpus) {
+		if(simple_hierarchy == NULL) {
+			simple_hierarchy = new SimpleCPUHierarchy(np);
+			allocated_simple_hierarchy = true;
+		}
+		return simple_hierarchy->get_memory_level();
+	}
+	else {
+		return 0;
+	}
 }
 
 }

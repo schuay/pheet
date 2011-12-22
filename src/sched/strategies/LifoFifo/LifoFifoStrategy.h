@@ -14,7 +14,8 @@
 
 namespace pheet {
 
-class LifoFifoStrategy : public BaseStrategy {
+template <class Scheduler>
+class LifoFifoStrategy : public BaseStrategy<Scheduler> {
 public:
 	LifoFifoStrategy();
 	LifoFifoStrategy(LifoFifoStrategy& other);
@@ -22,38 +23,45 @@ public:
 	virtual ~LifoFifoStrategy();
 
 	virtual prio_t get_pop_priority(size_t task_id);
-	virtual prio_t get_steal_priority(size_t task_id);
+	virtual prio_t get_steal_priority(size_t task_id, typename Scheduler::StealerDescriptor& desc);
 
 	static void print_name();
 
 private:
 };
 
-inline LifoFifoStrategy::LifoFifoStrategy() {
+template <class Scheduler>
+inline LifoFifoStrategy<Scheduler>::LifoFifoStrategy() {
 
 }
 
-inline LifoFifoStrategy::LifoFifoStrategy(LifoFifoStrategy& other) {
+template <class Scheduler>
+inline LifoFifoStrategy<Scheduler>::LifoFifoStrategy(LifoFifoStrategy& other) {
 
 }
 
-inline LifoFifoStrategy::LifoFifoStrategy(LifoFifoStrategy&& other) {
+template <class Scheduler>
+inline LifoFifoStrategy<Scheduler>::LifoFifoStrategy(LifoFifoStrategy&& other) {
 
 }
 
-inline LifoFifoStrategy::~LifoFifoStrategy() {
+template <class Scheduler>
+inline LifoFifoStrategy<Scheduler>::~LifoFifoStrategy() {
 
 }
 
-inline prio_t LifoFifoStrategy::get_pop_priority(size_t task_id) {
+template <class Scheduler>
+inline prio_t LifoFifoStrategy<Scheduler>::get_pop_priority(size_t task_id) {
 	return task_id + 1;
 }
 
-inline prio_t LifoFifoStrategy::get_steal_priority(size_t task_id) {
+template <class Scheduler>
+inline prio_t LifoFifoStrategy<Scheduler>::get_steal_priority(size_t task_id, typename Scheduler::StealerDescriptor& desc) {
 	return std::numeric_limits< prio_t >::max() - task_id;
 }
 
-inline void LifoFifoStrategy::print_name() {
+template <class Scheduler>
+inline void LifoFifoStrategy<Scheduler>::print_name() {
 	std::cout << "LifoFifoStrategy";
 }
 
