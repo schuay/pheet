@@ -45,6 +45,7 @@ private:
 
 template <class Kernel>
 void LUPivTests<true>::run_kernel() {
+#ifdef LUPIV_TEST
 	for(size_t t = 0; t < sizeof(lupiv_test_types)/sizeof(lupiv_test_types[0]); t++) {
 		for(size_t n = 0; n < sizeof(lupiv_test_n)/sizeof(lupiv_test_n[0]); n++) {
 			for(size_t c = 0; c < sizeof(lupiv_test_cpus)/sizeof(lupiv_test_cpus[0]); c++) {
@@ -57,6 +58,7 @@ void LUPivTests<true>::run_kernel() {
 			}
 		}
 	}
+#endif
 }
 
 
