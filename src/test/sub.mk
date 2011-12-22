@@ -6,3 +6,5 @@ include src/test/sorting/sub.mk
 include src/test/inarow/sub.mk
 include src/test/n-queens/sub.mk
 include src/test/lupiv/sub.mk
+include src/test/uts/sub.mk
+include src/test/sor/sub.mk

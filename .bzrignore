@@ -11,3 +11,4 @@ inc/pheet/test
 inc/pheet/test_settings.h
 inc/pheet/test_variants
 out.txt
+src/test_variants/local.h
