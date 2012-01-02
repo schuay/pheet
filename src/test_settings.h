@@ -9,6 +9,15 @@
 #ifndef TEST_SETTINGS_H_
 #define TEST_SETTINGS_H_
 
+namespace pheet {
+struct GraphBipartitioningProblem {
+	size_t n;
+	double p;
+	size_t max_w;
+};
+
+}
+
 #include "test_variants/full.h"
 
 namespace pheet {

@@ -76,12 +76,12 @@ void GraphBipartitioningTest<Partitioner>::run_test() {
 
 	size_t weight = check_solution(data, part.get_solution());
 	double seconds = calculate_seconds(start, end);
-	std::cout << "test\tpartitioner\tscheduler\ttype\tsize\tp\tseed\tcpus\ttotal_time\tweight\t";
+	std::cout << "test\tpartitioner\tscheduler\ttype\tsize\tp\tmax_w\tseed\tcpus\ttotal_time\tweight\t";
 	part.print_headers();
 	std::cout << std::endl;
 	std::cout << "graph_bipartitioning\t" << Partitioner::name << "\t";
 	Partitioner::print_scheduler_name();
-	std::cout << "\t" << types[type] << "\t" << size << "\t" << p << "\t" << seed << "\t" << cpus << "\t" << seconds << "\t" << weight << "\t";
+	std::cout << "\t" << types[type] << "\t" << size << "\t" << p << "\t" << max_w << "\t" << seed << "\t" << cpus << "\t" << seconds << "\t" << weight << "\t";
 	part.print_results();
 	std::cout << std::endl;
 

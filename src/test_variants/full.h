@@ -22,9 +22,50 @@ const int sorting_test_types[] = {0, 1, 3, 4};
 const bool graph_bipartitioning_test = true;
 const procs_t graph_bipartitioning_test_cpus[] = {1, 2, 4, 8, 16, 32, 64, 128};
 const unsigned int graph_bipartitioning_test_seeds[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-const size_t graph_bipartitioning_test_n[] = {44, 46, 48};
-const double graph_bipartitioning_test_p[] = {0.1, 0.5, 0.9};
-const double graph_bipartitioning_test_max_w[] = {1, 10, 1000};
+
+const GraphBipartitioningProblem graph_bipartitioning_test_problems[] = {
+		// n, p, max_w
+		{44, 0.1, 1},
+		{44, 0.1, 10},
+		{44, 0.1, 1000},
+		{44, 0.5, 1},
+		{44, 0.5, 10},
+		{44, 0.5, 1000},
+		{44, 0.9, 1},
+		{44, 0.9, 10},
+		{44, 0.9, 1000},
+		{46, 0.1, 1},
+		{46, 0.1, 10},
+		{46, 0.1, 1000},
+		{46, 0.5, 1},
+		{46, 0.5, 10},
+		{46, 0.5, 1000},
+		{46, 0.9, 1},
+		{46, 0.9, 10},
+		{46, 0.9, 1000},
+		{48, 0.1, 1},
+		{48, 0.1, 10},
+		{48, 0.1, 1000},
+		{48, 0.5, 1},
+		{48, 0.5, 10},
+		{48, 0.5, 1000},
+		{48, 0.9, 10},
+		{48, 0.9, 1000},
+		{50, 0.1, 1},
+		{50, 0.1, 10},
+		{50, 0.1, 1000},
+		{50, 0.5, 10},
+		{50, 0.5, 1000},
+		{54, 0.1, 1},
+		{54, 0.1, 10},
+		{54, 0.1, 1000},
+		{58, 0.1, 1},
+		{58, 0.1, 10},
+		{58, 0.1, 1000}
+};
+//const size_t graph_bipartitioning_test_n[] = {44, 46, 48};
+//const double graph_bipartitioning_test_p[] = {0.1, 0.5, 0.9};
+//const double graph_bipartitioning_test_max_w[] = {1, 10, 1000};
 const int graph_bipartitioning_test_types[] = {0};
 
 const bool inarow_test = true;
