@@ -231,6 +231,7 @@ PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy, 
 template <class Scheduler, template <class Scheduler, typename T> class TaskStorageT, template <class Scheduler> class DefaultStrategy, uint8_t CallThreshold>
 void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy, CallThreshold>::run() {
 	local_context = this;
+
 	scheduler_state->state_barrier.wait(0, 1);
 
 	Task* startup_task = scheduler_state->startup_task;
@@ -238,6 +239,10 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrat
 		if(PTR_CAS(&(scheduler_state->startup_task), startup_task, NULL)) {
 			execute_task(startup_task, NULL);
 		}
+	}
+	else {
+		// Make sure the original initialization by all threads is visible
+		MEMORY_FENCE();
 	}
 	main_loop();
 

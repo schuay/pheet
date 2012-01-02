@@ -139,9 +139,9 @@ typename Storage::Item* ArrayListPrimaryTaskStorageIterator<Storage>::dereferenc
 			control_block_item_index = 0;
 		}
 		assert(index != storage->end_index);
-		assert(control_block_item_index < control_block->get_length());
 
 		while(true) {
+			assert(control_block_item_index < control_block->get_length());
 			if(index < control_block->get_data()[control_block_item_index].first &&
 					// this second condition should make it work even with wraparound (except with really extreme cases where size_t is much too small anyway)
 					(control_block->get_data()[control_block_item_index].first - index < (std::numeric_limits<size_t>::max() >> 2))) {

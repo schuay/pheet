@@ -181,6 +181,8 @@ size_t ArrayListPrimaryTaskStorageControlBlock<Storage>::configure_as_successor(
 				data[j] = prev->data[i];
 				++j;
 			}
+			assert(j <= num_active);
+			assert(i < (prev->length - 1) || j == num_active);
 		}
 
 		new_item_index = num_active;
