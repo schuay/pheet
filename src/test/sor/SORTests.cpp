@@ -6,9 +6,10 @@
 *     License: Pheet license
 */
 
+#include "SORTests.h"
+
 #ifdef SOR_TEST
 
-#include "SORTests.h"
 #include "SORTest.h"
 #include "PartitionMatrix/SORRun.h"
 
