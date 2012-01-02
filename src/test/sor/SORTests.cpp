@@ -6,12 +6,16 @@
 *     License: Pheet license
 */
 
+#ifdef SOR_TEST
+
 #include "SORTests.h"
 #include "SORTest.h"
 #include "PartitionMatrix/SORRun.h"
 
 #include "../test_schedulers.h"
 #include <iostream>
+
+#endif
 
 namespace pheet {
 
