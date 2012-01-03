@@ -25,6 +25,12 @@ const unsigned int graph_bipartitioning_test_seeds[] = {0, 1, 2, 3, 4, 5, 6, 7, 
 
 const GraphBipartitioningProblem graph_bipartitioning_test_problems[] = {
 		// n, p, max_w
+		{38, 0.5, 1},
+		{38, 0.5, 10},
+		{38, 0.5, 1000},
+		{38, 0.9, 1},
+		{38, 0.9, 10},
+		{38, 0.9, 1000},
 		{40, 0.5, 1},
 		{40, 0.5, 10},
 		{40, 0.5, 1000},
@@ -34,7 +40,6 @@ const GraphBipartitioningProblem graph_bipartitioning_test_problems[] = {
 		{42, 0.5, 1},
 		{42, 0.5, 10},
 		{42, 0.5, 1000},
-		{42, 0.9, 1},
 		{42, 0.9, 10},
 		{42, 0.9, 1000},
 		{44, 0.1, 1},
