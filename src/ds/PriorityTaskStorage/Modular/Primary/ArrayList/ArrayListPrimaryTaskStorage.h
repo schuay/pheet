@@ -84,6 +84,9 @@ private:
 	enum {num_control_blocks = 128};
 	ControlBlock control_blocks[num_control_blocks];
 
+	// Although we could just use the first element of the current control block to find out the start index instead,
+	// there is a race condition that prevents us to do this safely
+	size_t start_index;
 	size_t end_index;
 	/*
 	 * Updated on pushes and pops, but doesn't reflect steals, therefore this number is an estimate.
@@ -114,7 +117,7 @@ const size_t ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::block_size 
 
 template <class Scheduler, typename TT, size_t BLOCK_SIZE>
 inline ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::ArrayListPrimaryTaskStorage(size_t expected_capacity)
-: end_index(0), length(0), current_control_block_id(0), cleanup_control_block_id(0), current_control_block(control_blocks), current_control_block_item_index(0) {
+: start_index(0), end_index(0), length(0), current_control_block_id(0), cleanup_control_block_id(0), current_control_block(control_blocks), current_control_block_item_index(0) {
 	current_control_block->init_empty(0, block_reuse);
 }
 /*
@@ -164,7 +167,7 @@ inline ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::~ArrayListPrimary
 
 template <class Scheduler, typename TT, size_t BLOCK_SIZE>
 typename ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::iterator ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::begin(PerformanceCounters& pc) {
-	return iterator(current_control_block->get_data()[0].first);
+	return iterator(start_index);
 }
 
 template <class Scheduler, typename TT, size_t BLOCK_SIZE>
@@ -467,6 +470,7 @@ void ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::clean(PerformanceCo
 	if(upper_bound_length < length) {
 		length = upper_bound_length;
 	}
+	start_index = current_control_block->get_data()[0].first;
 }
 
 template <class Scheduler, typename TT, size_t BLOCK_SIZE>
@@ -516,6 +520,7 @@ void ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::create_next_control
 	current_control_block_id = new_id;
 	current_control_block = control_blocks + new_id;
 	current_control_block_item_index = current_control_block->get_new_item_index();
+	start_index = current_control_block->get_data()[0].first;
 
 	pc.max_control_block_items.add_value(current_control_block->get_length());
 }

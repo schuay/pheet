@@ -104,6 +104,9 @@ private:
 	enum {num_control_blocks = 128};
 	ControlBlock control_blocks[num_control_blocks];
 
+	// Although we could just use the first element of the current control block to find out the start index instead,
+	// there is a race condition that prevents us to do this safely
+	size_t start_index;
 	size_t end_index;
 	/*
 	 * Updated on pushes and pops, but doesn't reflect steals, therefore this number is an estimate.
@@ -136,7 +139,7 @@ const size_t ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, Priority
 
 template <class Scheduler, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
 inline ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::ArrayListHeapPrimaryTaskStorage(size_t expected_capacity)
-: end_index(0), length(0), current_control_block_id(0), cleanup_control_block_id(0), current_control_block(control_blocks), current_control_block_item_index(0) {
+: start_index(0), end_index(0), length(0), current_control_block_id(0), cleanup_control_block_id(0), current_control_block(control_blocks), current_control_block_item_index(0) {
 	current_control_block->init_empty(0, block_reuse);
 }
 /*
@@ -186,7 +189,7 @@ inline ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT
 
 template <class Scheduler, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
 typename ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::iterator ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::begin(PerformanceCounters& pc) {
-	return iterator(current_control_block->get_data()[0].first);
+	return iterator(start_index);
 }
 
 template <class Scheduler, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
@@ -438,6 +441,7 @@ void ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>:
 	if(upper_bound_length < length) {
 		length = upper_bound_length;
 	}
+	start_index = current_control_block->get_data()[0].first;
 
 	pc.clean_time.stop_timer();
 }
@@ -493,6 +497,7 @@ void ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>:
 	current_control_block_id = new_id;
 	current_control_block = control_blocks + new_id;
 	current_control_block_item_index = current_control_block->get_new_item_index();
+	start_index = current_control_block->get_data()[0].first;
 
 	pc.max_control_block_items.add_value(current_control_block->get_length());
 
