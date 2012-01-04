@@ -70,6 +70,8 @@ public:
 	void print_performance_counter_headers();
 
 	static TaskExecutionContext* get_context();
+	static procs_t get_context_id();
+	TaskExecutionContext* get_context_at(procs_t context_id);
 
 	static char const name[];
 	static procs_t const max_cpus;
@@ -192,6 +194,17 @@ void PriorityScheduler<CPUHierarchyT, TaskStorage, Barrier, BackoffT, DefaultStr
 template <class CPUHierarchyT, template <class Scheduler, typename T> class TaskStorage, class Barrier, class BackoffT, template <class Scheduler> class DefaultStrategy, uint8_t CallThreshold>
 typename PriorityScheduler<CPUHierarchyT, TaskStorage, Barrier, BackoffT, DefaultStrategy, CallThreshold>::TaskExecutionContext* PriorityScheduler<CPUHierarchyT, TaskStorage, Barrier, BackoffT, DefaultStrategy, CallThreshold>::get_context() {
 	return TaskExecutionContext::get();
+}
+
+template <class CPUHierarchyT, template <class Scheduler, typename T> class TaskStorage, class Barrier, class BackoffT, template <class Scheduler> class DefaultStrategy, uint8_t CallThreshold>
+procs_t PriorityScheduler<CPUHierarchyT, TaskStorage, Barrier, BackoffT, DefaultStrategy, CallThreshold>::get_context_id() {
+	return TaskExecutionContext::get()->get_id();
+}
+
+template <class CPUHierarchyT, template <class Scheduler, typename T> class TaskStorage, class Barrier, class BackoffT, template <class Scheduler> class DefaultStrategy, uint8_t CallThreshold>
+typename PriorityScheduler<CPUHierarchyT, TaskStorage, Barrier, BackoffT, DefaultStrategy, CallThreshold>::TaskExecutionContext* PriorityScheduler<CPUHierarchyT, TaskStorage, Barrier, BackoffT, DefaultStrategy, CallThreshold>::get_context_at(procs_t context_id) {
+	assert(context_id < num_threads);
+	return threads[context_id];
 }
 
 }

@@ -8,6 +8,7 @@
 
 #include "LUPivTests.h"
 #include "Simple/SimpleLUPiv.h"
+#include "LocalityStrategy/LocalityStrategyLUPiv.h"
 
 #include "../test_schedulers.h"
 
@@ -24,9 +25,11 @@ LUPivTests<true>::~LUPivTests() {
 }
 
 void LUPivTests<true>::run_test() {
-#ifdef COMPILE_LUPIV_TEST
+#ifdef LUPIV_TEST
 	std::cout << "----" << std::endl;
 
+	this->run_kernel<LocalityStrategyLUPiv<ArrayListHeapPriorityScheduler> >();
+	this->run_kernel<SimpleLUPiv<ArrayListHeapPrioritySchedulerMediumQueues> >();
 	this->run_kernel<SimpleLUPiv<DefaultBasicScheduler> >();
 #endif
 }

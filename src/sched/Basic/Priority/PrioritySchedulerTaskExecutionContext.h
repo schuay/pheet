@@ -111,6 +111,8 @@ public:
 
 	void join();
 
+	procs_t get_id();
+
 	static Self* get();
 
 	template<class CallTaskType, typename ... TaskParams>
@@ -127,7 +129,9 @@ public:
 
 	boost::mt19937& get_rng();
 
+	procs_t get_distance(Self* other);
 	procs_t get_distance(Self* other, procs_t max_granularity_level);
+	procs_t get_max_distance();
 	procs_t get_max_distance(procs_t max_granularity_level);
 
 private:
@@ -187,7 +191,7 @@ PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy, 
 
 template <class Scheduler, template <class Scheduler, typename T> class TaskStorageT, template <class Scheduler> class DefaultStrategy, uint8_t CallThreshold>
 PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy, CallThreshold>::PrioritySchedulerTaskExecutionContext(std::vector<LevelDescription*> const* levels, std::vector<typename CPUHierarchy::CPUDescriptor*> const* cpus, typename Scheduler::State* scheduler_state, PerformanceCounters& perf_count)
-: performance_counters(perf_count), stack_filled_left(0), stack_filled_right(stack_size), stack_init_left(0)/*, stack_init_right(stack_size)*/, num_levels(levels->size()), thread_executor(cpus, this), scheduler_state(scheduler_state), preferred_queue_length(find_last_bit_set((*levels)[0]->total_size + 2) << CallThreshold), max_queue_length(preferred_queue_length << 1), call_mode(false), task_storage(max_queue_length) {
+: performance_counters(perf_count), stack_filled_left(0), stack_filled_right(stack_size), stack_init_left(0)/*, stack_init_right(stack_size)*/, num_levels(levels->size()), thread_executor(cpus, this), scheduler_state(scheduler_state), preferred_queue_length(find_last_bit_set((*levels)[0]->total_size) << CallThreshold), max_queue_length(preferred_queue_length << 1), call_mode(false), task_storage(max_queue_length) {
 	performance_counters.total_time.start_timer();
 
 	stack = new StackElement[stack_size];
@@ -226,6 +230,12 @@ template <class Scheduler, template <class Scheduler, typename T> class TaskStor
 PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy, CallThreshold>*
 PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy, CallThreshold>::get() {
 	return local_context;
+}
+
+template <class Scheduler, template <class Scheduler, typename T> class TaskStorageT, template <class Scheduler> class DefaultStrategy, uint8_t CallThreshold>
+procs_t
+PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy, CallThreshold>::get_id() {
+	return levels[0].global_id;
 }
 
 template <class Scheduler, template <class Scheduler, typename T> class TaskStorageT, template <class Scheduler> class DefaultStrategy, uint8_t CallThreshold>
@@ -303,9 +313,11 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrat
 					assert(levels[level].partners[next_rand] != this);
 
 					performance_counters.num_steal_calls.incr();
+					performance_counters.steal_time.start_timer();
 					typename Scheduler::StealerDescriptor sd(this, levels[level].partners[next_rand], num_levels - 1);
 					di = levels[level].partners[next_rand]->task_storage.steal_push(this->task_storage, sd, performance_counters.task_storage_performance_counters);
 				//	di = levels[level].partners[next_rand % levels[level].num_partners]->task_storage.steal();
+					performance_counters.steal_time.stop_timer();
 
 					if(di.task != NULL) {
 						performance_counters.idle_time.stop_timer();
@@ -668,6 +680,12 @@ boost::mt19937& PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, D
 }
 
 template <class Scheduler, template <class Scheduler, typename T> class TaskStorageT, template <class Scheduler> class DefaultStrategy, uint8_t CallThreshold>
+procs_t PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy, CallThreshold>::get_distance(Self* other) {
+	return get_distance(other, 0);
+}
+
+
+template <class Scheduler, template <class Scheduler, typename T> class TaskStorageT, template <class Scheduler> class DefaultStrategy, uint8_t CallThreshold>
 procs_t PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy, CallThreshold>::get_distance(Self* other, procs_t max_granularity_level) {
 	assert(max_granularity_level < num_levels);
 
@@ -682,7 +700,12 @@ procs_t PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultSt
 }
 
 template <class Scheduler, template <class Scheduler, typename T> class TaskStorageT, template <class Scheduler> class DefaultStrategy, uint8_t CallThreshold>
-procs_t PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy, CallThreshold>::get_max_distance(procs_t max_granularity_level) {
+inline procs_t PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy, CallThreshold>::get_max_distance() {
+	return this->levels[0].memory_level;
+}
+
+template <class Scheduler, template <class Scheduler, typename T> class TaskStorageT, template <class Scheduler> class DefaultStrategy, uint8_t CallThreshold>
+inline procs_t PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy, CallThreshold>::get_max_distance(procs_t max_granularity_level) {
 	assert(max_granularity_level < num_levels);
 
 	return this->levels[max_granularity_level].memory_level;

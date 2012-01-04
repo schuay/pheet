@@ -9,6 +9,8 @@
 #ifndef LUPIVPIVOTTASK_H_
 #define LUPIVPIVOTTASK_H_
 
+#include "../../../settings.h"
+
 extern "C" {
 void dswap_(int* n, double* sx, int* incx, double* sy, int* incy);
 }

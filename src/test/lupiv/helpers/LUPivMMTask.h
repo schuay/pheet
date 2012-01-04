@@ -9,6 +9,8 @@
 #ifndef LUPIVMMTASK_H_
 #define LUPIVMMTASK_H_
 
+#include "../../../settings.h"
+
 extern "C" {
 void dgemm_(char * transA, char* transB, int* m, int* n, int* k, double* alpha, double* a, int* lda, double* b, int* ldb, double* beta, double* c, int* ldc);
 }

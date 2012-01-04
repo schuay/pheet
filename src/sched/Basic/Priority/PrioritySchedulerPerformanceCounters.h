@@ -28,7 +28,7 @@ public:
 		  num_steal_calls(other.num_steal_calls),
 		  num_unsuccessful_steal_calls(other.num_unsuccessful_steal_calls),
 		  total_time(other.total_time), task_time(other.task_time),
-		  idle_time(other.idle_time),
+		  idle_time(other.idle_time), steal_time(other.steal_time),
 		  finish_stack_nonblocking_max(other.finish_stack_nonblocking_max),
 		  finish_stack_blocking_min(other.finish_stack_blocking_min),
 		  task_storage_performance_counters(other.task_storage_performance_counters) {}
@@ -49,6 +49,7 @@ public:
 	TimePerformanceCounter<Scheduler, scheduler_measure_total_time> total_time;
 	TimePerformanceCounter<Scheduler, scheduler_measure_task_time> task_time;
 	TimePerformanceCounter<Scheduler, scheduler_measure_idle_time> idle_time;
+	TimePerformanceCounter<Scheduler, scheduler_measure_idle_time> steal_time;
 
 	MaxPerformanceCounter<Scheduler, size_t, scheduler_measure_finish_stack_nonblocking_max> finish_stack_nonblocking_max;
 	MinPerformanceCounter<Scheduler, size_t, scheduler_measure_finish_stack_blocking_min> finish_stack_blocking_min;
@@ -70,6 +71,7 @@ inline void PrioritySchedulerPerformanceCounters<Scheduler, TaskStoragePerforman
 	TimePerformanceCounter<Scheduler, scheduler_measure_total_time>::print_header("scheduler_total_time\t");
 	TimePerformanceCounter<Scheduler, scheduler_measure_task_time>::print_header("total_task_time\t");
 	TimePerformanceCounter<Scheduler, scheduler_measure_idle_time>::print_header("total_idle_time\t");
+	TimePerformanceCounter<Scheduler, scheduler_measure_steal_time>::print_header("total_steal_time\t");
 
 	MaxPerformanceCounter<Scheduler, size_t, scheduler_measure_finish_stack_nonblocking_max>::print_header("finish_stack_nonblocking_max\t");
 	MinPerformanceCounter<Scheduler, size_t, scheduler_measure_finish_stack_blocking_min>::print_header("finish_stack_blocking_min\t");
@@ -89,6 +91,7 @@ inline void PrioritySchedulerPerformanceCounters<Scheduler, TaskStoragePerforman
 	total_time.print("%f\t");
 	task_time.print("%f\t");
 	idle_time.print("%f\t");
+	steal_time.print("%f\t");
 
 	finish_stack_nonblocking_max.print("%lu\t");
 	finish_stack_blocking_min.print("%lu\t");

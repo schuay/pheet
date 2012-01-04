@@ -49,6 +49,8 @@ SimpleLUPivRootTask<Task, BLOCK_SIZE>::SimpleLUPivRootTask(double* a, int* pivot
 	assert(m > 0);
 	assert(n > 0);
 	assert(lda >= m);
+	// TODO: debug cases n != m  - until then:
+	assert(m == n);
 }
 
 template <class Task, int BLOCK_SIZE>

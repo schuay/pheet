@@ -20,6 +20,9 @@ public:
 
 	// Public interface for programmer
 	procs_t get_distance();
+	procs_t get_max_distance();
+	procs_t get_distance_to(procs_t tec_id);
+	procs_t get_distance_to(typename Scheduler::TaskExecutionContext* tec);
 	bool is_same_pu_type();
 
 	// Interface for task data-structure
@@ -54,6 +57,22 @@ PrioritySchedulerStealerDescriptor<Scheduler>::~PrioritySchedulerStealerDescript
 template <class Scheduler>
 inline procs_t PrioritySchedulerStealerDescriptor<Scheduler>::get_distance() {
 	return owner->get_distance(stealer, max_granularity_level);
+}
+
+template <class Scheduler>
+inline procs_t PrioritySchedulerStealerDescriptor<Scheduler>::get_max_distance() {
+	return owner->get_max_distance(max_granularity_level);
+}
+
+template <class Scheduler>
+inline procs_t PrioritySchedulerStealerDescriptor<Scheduler>::get_distance_to(procs_t tec_id) {
+
+	return owner->get_distance(stealer, max_granularity_level);
+}
+
+template <class Scheduler>
+inline procs_t PrioritySchedulerStealerDescriptor<Scheduler>::get_distance_to(typename Scheduler::TaskExecutionContext* tec) {
+	return tec->get_distance(stealer, max_granularity_level);
 }
 
 template <class Scheduler>

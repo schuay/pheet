@@ -187,7 +187,7 @@ template <class Scheduler, typename TT, template <typename S> class CircularArra
 TT CircularArrayStealingDeque<Scheduler, TT, CircularArray>::steal_push(CircularArrayStealingDeque<Scheduler, TT, CircularArray> &other) {
 	T prev = null_element;
 	T curr = null_element;
-	size_t max_steal = get_length() / 3;
+	size_t max_steal = get_length() / 2;
 
 	for(size_t i = 0; i < max_steal; i++) {
 		curr = steal();

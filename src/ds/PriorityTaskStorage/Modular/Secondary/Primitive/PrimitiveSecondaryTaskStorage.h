@@ -26,6 +26,7 @@ public:
 	~PrimitiveSecondaryTaskStorage();
 
 	TT steal(typename Scheduler::StealerDescriptor& sd, typename Primary<Scheduler, TT>::PerformanceCounters& ppc, PerformanceCounters& pc);
+	TT steal_push(Primary<Scheduler, TT>& other_primary, typename Scheduler::StealerDescriptor& sd, typename Primary<Scheduler, TT>::PerformanceCounters& ppc, PerformanceCounters& pc);
 
 	static void print_name();
 
@@ -98,6 +99,11 @@ TT PrimitiveSecondaryTaskStorage<Scheduler, TT, Primary>::steal(typename Schedul
 	}
 	pc.steal_time.stop_timer();
 	return ret;
+}
+
+template <class Scheduler, typename TT, template <class Sched, typename S> class Primary>
+TT PrimitiveSecondaryTaskStorage<Scheduler, TT, Primary>::steal_push(Primary<Scheduler, TT>& other_primary, typename Scheduler::StealerDescriptor& sd, typename Primary<Scheduler, TT>::PerformanceCounters& ppc, PerformanceCounters& pc) {
+	return steal(sd, ppc, pc);
 }
 
 template <class Scheduler, typename TT, template <class Sched, typename S> class Primary>

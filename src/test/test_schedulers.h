@@ -235,6 +235,8 @@ typedef PriorityScheduler<OversubscribedSimpleCPUHierarchy, ArrayListModularTask
 	ArrayListPriorityScheduler;
 typedef PriorityScheduler<OversubscribedSimpleCPUHierarchy, ArrayListModularTaskStorage, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff, LifoFifoStrategy, 1>
 	ArrayListPrioritySchedulerShortQueues;
+typedef PriorityScheduler<OversubscribedSimpleCPUHierarchy, ArrayListModularTaskStorage, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff, LifoFifoStrategy, 6>
+	ArrayListPrioritySchedulerMediumQueues;
 typedef PriorityScheduler<OversubscribedSimpleCPUHierarchy, ArrayListModularTaskStorage, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff, LifoFifoStrategy, 8>
 	ArrayListPrioritySchedulerLongQueues;
 typedef PriorityScheduler<OversubscribedSimpleCPUHierarchy, ArrayListModularTaskStorage, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff, LifoFifoStrategy, 16>
@@ -243,6 +245,8 @@ typedef PriorityScheduler<OversubscribedSimpleCPUHierarchy, ArrayListHeapModular
 	ArrayListHeapPriorityScheduler;
 typedef PriorityScheduler<OversubscribedSimpleCPUHierarchy, ArrayListHeapModularTaskStorage, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff, LifoFifoStrategy, 1>
 	ArrayListHeapPrioritySchedulerShortQueues;
+typedef PriorityScheduler<OversubscribedSimpleCPUHierarchy, ArrayListHeapModularTaskStorage, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff, LifoFifoStrategy, 6>
+	ArrayListHeapPrioritySchedulerMediumQueues;
 typedef PriorityScheduler<OversubscribedSimpleCPUHierarchy, ArrayListHeapModularTaskStorage, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff, LifoFifoStrategy, 8>
 	ArrayListHeapPrioritySchedulerLongQueues;
 typedef PriorityScheduler<OversubscribedSimpleCPUHierarchy, ArrayListHeapModularTaskStorage, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff, LifoFifoStrategy, 16>
