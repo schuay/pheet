@@ -21,7 +21,7 @@ public:
 		void print_values() {}
 	}*/ PrimitiveSecondaryTaskStoragePerformanceCounters<Scheduler> PerformanceCounters;
 
-	PrimitiveSecondaryTaskStorage(Primary<Scheduler, TT>* primary);
+	PrimitiveSecondaryTaskStorage(Primary<Scheduler, TT>* primary, size_t expected_capacity);
 //	PrimitiveSecondaryTaskStorage(Primary<TT>* primary, PerformanceCounters& perf_count);
 	~PrimitiveSecondaryTaskStorage();
 
@@ -42,7 +42,7 @@ template <class Scheduler, typename TT, template <class Sched, typename S> class
 TT const PrimitiveSecondaryTaskStorage<Scheduler, TT, Primary>::null_element = nullable_traits<TT>::null_value;
 
 template <class Scheduler, typename TT, template <class Sched, typename S> class Primary>
-inline PrimitiveSecondaryTaskStorage<Scheduler, TT, Primary>::PrimitiveSecondaryTaskStorage(Primary<Scheduler, T>* primary)
+inline PrimitiveSecondaryTaskStorage<Scheduler, TT, Primary>::PrimitiveSecondaryTaskStorage(Primary<Scheduler, T>* primary, size_t expected_capacity)
 : primary(primary) {
 
 }

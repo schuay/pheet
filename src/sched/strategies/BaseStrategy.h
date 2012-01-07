@@ -23,6 +23,7 @@ public:
 
 	virtual prio_t get_pop_priority(size_t task_id) = 0;
 	virtual prio_t get_steal_priority(size_t task_id, typename Scheduler::StealerDescriptor& desc) = 0;
+	virtual BaseStrategy<Scheduler>* clone() = 0;
 };
 
 template <class Scheduler>

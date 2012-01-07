@@ -24,6 +24,7 @@ public:
 
 	virtual prio_t get_pop_priority(size_t task_id);
 	virtual prio_t get_steal_priority(size_t task_id, typename Scheduler::StealerDescriptor& desc);
+	virtual BaseStrategy<Scheduler>* clone();
 
 	static void print_name();
 
@@ -58,6 +59,11 @@ inline prio_t LifoFifoStrategy<Scheduler>::get_pop_priority(size_t task_id) {
 template <class Scheduler>
 inline prio_t LifoFifoStrategy<Scheduler>::get_steal_priority(size_t task_id, typename Scheduler::StealerDescriptor& desc) {
 	return std::numeric_limits< prio_t >::max() - task_id;
+}
+
+template <class Scheduler>
+inline BaseStrategy<Scheduler>* LifoFifoStrategy<Scheduler>::clone() {
+	return new LifoFifoStrategy<Scheduler>(this);
 }
 
 template <class Scheduler>

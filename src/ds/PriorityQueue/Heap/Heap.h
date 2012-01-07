@@ -82,12 +82,14 @@ void Heap<TT, Comparator>::push(T item) {
 
 template <typename TT, class Comparator>
 TT Heap<TT, Comparator>::peek() {
+	assert(length > 0);
 	return data[0];
 }
 
 
 template <typename TT, class Comparator>
 TT Heap<TT, Comparator>::pop() {
+	assert(length > 0);
 	T ret = data[0];
 	--length;
 	data[0] = data[length];

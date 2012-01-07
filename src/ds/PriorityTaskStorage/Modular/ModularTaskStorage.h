@@ -19,8 +19,8 @@ public:
 	typedef TT T;
 	typedef ModularTaskStoragePerformanceCounters<Scheduler, typename Primary<Scheduler, T>::PerformanceCounters, typename Secondary<Scheduler, T, Primary>::PerformanceCounters> PerformanceCounters;
 
-	ModularTaskStorage(size_t initial_capacity);
-	ModularTaskStorage(size_t initial_capacity, PerformanceCounters& perf_count);
+	ModularTaskStorage(size_t expected_capacity);
+//	ModularTaskStorage(size_t expected_capacity, PerformanceCounters& perf_count);
 	~ModularTaskStorage();
 
 	template <class Strategy>
@@ -59,16 +59,16 @@ private:
 };
 
 template <class Scheduler, typename TT, template <class Scheduler, typename S> class Primary, template <class Scheduler, typename S, template <class S, typename Q> class P> class Secondary>
-ModularTaskStorage<Scheduler, TT, Primary, Secondary>::ModularTaskStorage(size_t initial_capacity)
-: primary(initial_capacity), secondary(&primary) {
+ModularTaskStorage<Scheduler, TT, Primary, Secondary>::ModularTaskStorage(size_t expected_capacity)
+: primary(expected_capacity), secondary(&primary, expected_capacity) {
 
 }
-
+/*
 template <class Scheduler, typename TT, template <class Scheduler, typename S> class Primary, template <class Scheduler, typename S, template <class S, typename Q> class P> class Secondary>
 ModularTaskStorage<Scheduler, TT, Primary, Secondary>::ModularTaskStorage(size_t initial_capacity, PerformanceCounters& perf_count)
 : primary(initial_capacity, perf_count.primary_perf_count), secondary(&primary, perf_count.secondary_perf_count), perf_count(perf_count) {
 
-}
+}*/
 
 template <class Scheduler, typename TT, template <class Scheduler, typename S> class Primary, template <class Scheduler, typename S, template <class S, typename Q> class P> class Secondary>
 ModularTaskStorage<Scheduler, TT, Primary, Secondary>::~ModularTaskStorage() {

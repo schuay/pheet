@@ -22,6 +22,7 @@ public:
 
 	virtual prio_t get_pop_priority(size_t task_id);
 	virtual prio_t get_steal_priority(size_t task_id, typename Scheduler::StealerDescriptor& desc);
+	virtual BaseStrategy<Scheduler>* clone();
 private:
 	prio_t pop_priority;
 	prio_t steal_priority;
@@ -58,6 +59,11 @@ inline prio_t UserDefinedPriority<Scheduler>::get_pop_priority(size_t task_id) {
 template <class Scheduler>
 inline prio_t UserDefinedPriority<Scheduler>::get_steal_priority(size_t task_id, typename Scheduler::StealerDescriptor& desc) {
 	return steal_priority;
+}
+
+template <class Scheduler>
+inline BaseStrategy<Scheduler>* UserDefinedPriority<Scheduler>::clone() {
+	return new UserDefinedPriority<Scheduler>(this);
 }
 
 }
