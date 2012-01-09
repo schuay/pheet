@@ -22,7 +22,7 @@ void dgetf2_(int *m, int *n, double *a, int *lda, int *piv, int *info);
 
 namespace pheet {
 
-template <class Task, int BLOCK_SIZE = 4>
+template <class Task, int BLOCK_SIZE = 128>
 class SimpleLUPivRootTask : public Task {
 public:
 	SimpleLUPivRootTask(double* a, int* pivot, int m, int lda, int n);

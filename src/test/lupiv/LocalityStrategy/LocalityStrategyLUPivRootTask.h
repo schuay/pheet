@@ -23,7 +23,7 @@ void dgetf2_(int *m, int *n, double *a, int *lda, int *piv, int *info);
 
 namespace pheet {
 
-template <class Task, int BLOCK_SIZE = 4>
+template <class Task, int BLOCK_SIZE = 128>
 class LocalityStrategyLUPivRootTask : public Task {
 public:
 	LocalityStrategyLUPivRootTask(double* a, int* pivot, int m, int lda, int n);
@@ -93,7 +93,7 @@ void LocalityStrategyLUPivRootTask<Task, BLOCK_SIZE>::operator()(typename Task::
 				tec.template
 					spawn_prio<LocalityStrategyLUPivCriticalPathTask<Task, BLOCK_SIZE> >(
 							LUPivLocalityStrategy<typename Task::Scheduler>(column_owners[i], 3, 5),
-							column_owners + i, block_owners + i + (i*num_blocks),
+							column_owners + i, block_owners + (i-1) + (i*num_blocks),
 							cur_a + i*BLOCK_SIZE*lda, cur_a + (i-1)*BLOCK_SIZE*lda, cur_piv, cur_m, lda, (i == num_blocks - 1)?(n - BLOCK_SIZE*i):(BLOCK_SIZE));
 
 				// Workflow for other unfinished columns
@@ -101,7 +101,7 @@ void LocalityStrategyLUPivRootTask<Task, BLOCK_SIZE>::operator()(typename Task::
 					tec.template
 						spawn_prio<LocalityStrategyLUPivStandardPathTask<Task, BLOCK_SIZE> >(
 								LUPivLocalityStrategy<typename Task::Scheduler>(column_owners[j], 2, 4),
-								column_owners + j, block_owners + i + (j*num_blocks),
+								column_owners + j, block_owners + (i-1) + (j*num_blocks),
 								cur_a + j*BLOCK_SIZE*lda, cur_a + (i-1)*BLOCK_SIZE*lda, cur_piv, cur_m, lda, (j == num_blocks - 1)?(n - BLOCK_SIZE*j):(BLOCK_SIZE));
 				}
 
