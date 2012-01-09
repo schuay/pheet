@@ -110,7 +110,7 @@ template <class Storage>
 void ArrayListPrimaryTaskStorageControlBlock<Storage>::clean_item_until(size_t item, size_t limit) {
 	size_t offset = data[item].offset;
 	while(data[item].first != limit && data[item].data[data[item].first - offset].index != data[item].first) {
-		assert(data[item].data[data[item].first - offset].index == data[item].first + 1);
+		assert(data[item].data[data[item].first - offset].index == data[item].first + 1 || data[item].data[data[item].first - offset].index == data[item].first + 2);
 		++(data[item].first);
 	}
 }
@@ -132,8 +132,13 @@ void ArrayListPrimaryTaskStorageControlBlock<Storage>::finalize_item_until(size_
 	assert(num_iterators == num_passed_iterators);
 	size_t offset = data[item].offset;
 	for(size_t i = offset; i != limit; ++i) {
-		assert(data[item].data[i - offset].index == i + 1);
-		delete data[item].data[i - offset].s;
+		if(data[item].data[i - offset].index == i + 1) {
+			delete data[item].data[i - offset].s;
+		}
+		else {
+			// strategy has been rebased. don't delete
+			assert(data[item].data[i - offset].index == i + 2);
+		}
 	}
 	if(block_reuse.size() < max_reuse) {
 		block_reuse.push_back(data[item].data);
@@ -241,7 +246,12 @@ bool ArrayListPrimaryTaskStorageControlBlock<Storage>::try_cleanup(std::vector<t
 			for(size_t i = 0; i < length; ++i) {
 				if(data[i].first == data[i].offset + Storage::block_size) {
 					for(size_t j = 0; j < Storage::block_size; ++j) {
-						delete data[i].data[j].s;
+						if(data[i].data[j].index == data[i].offset + j + 1) {
+							delete data[i].data[j].s;
+						}
+						else {
+							assert(data[i].data[j].index == data[i].offset + j + 2);
+						}
 					}
 					if(block_reuse.size() < max_reuse) {
 						block_reuse.push_back(data[i].data);

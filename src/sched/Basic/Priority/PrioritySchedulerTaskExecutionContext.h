@@ -644,23 +644,34 @@ template<class CallTaskType, class Strategy, typename ... TaskParams>
 void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy, CallThreshold>::spawn_prio(Strategy s, TaskParams&& ... params) {
 	performance_counters.num_spawns.incr();
 
-	size_t limit = call_mode?preferred_queue_length:max_queue_length;
-	if(task_storage.get_length(performance_counters.task_storage_performance_counters) >= limit) {
-		call_mode = true;
+	if(task_storage.is_full(performance_counters.task_storage_performance_counters)) {
+		// Rigid limit in case the data-structure can not grow
 		performance_counters.num_spawns_to_call.incr();
 		call<CallTaskType>(static_cast<TaskParams&&>(params) ...);
 	}
 	else {
-		call_mode = false;
-		performance_counters.num_actual_spawns.incr();
-		CallTaskType* task = new CallTaskType(params ...);
-		assert(current_task_parent != NULL);
-		assert(current_task_parent >= stack && (current_task_parent < (stack + stack_size)));
-		++(current_task_parent->num_spawned);
-		DequeItem di;
-		di.task = task;
-		di.stack_element = current_task_parent;
-		task_storage.push(s, di, performance_counters.task_storage_performance_counters);
+		// Limit dependent on currently not executed tasks of the current finish_stack element
+		// to ensure repeated finish calls don't let the queues explode, each blocking finish call reduces the limit by 1
+		size_t current_tasks = (current_task_parent->num_spawned - current_task_parent->num_finished_remote);
+		size_t blocking_finish_depth = (stack_size - stack_filled_right);
+		size_t limit = call_mode?preferred_queue_length:max_queue_length;
+		if(blocking_finish_depth >= limit || current_tasks >= (limit - blocking_finish_depth)) {
+			call_mode = true;
+			performance_counters.num_spawns_to_call.incr();
+			call<CallTaskType>(static_cast<TaskParams&&>(params) ...);
+		}
+		else {
+			call_mode = false;
+			performance_counters.num_actual_spawns.incr();
+			CallTaskType* task = new CallTaskType(params ...);
+			assert(current_task_parent != NULL);
+			assert(current_task_parent >= stack && (current_task_parent < (stack + stack_size)));
+			++(current_task_parent->num_spawned);
+			DequeItem di;
+			di.task = task;
+			di.stack_element = current_task_parent;
+			task_storage.push(s, di, performance_counters.task_storage_performance_counters);
+		}
 	}
 }
 

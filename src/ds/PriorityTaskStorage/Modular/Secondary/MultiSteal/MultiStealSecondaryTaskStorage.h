@@ -9,6 +9,8 @@
 #ifndef MULTISTEALSECONDARYTASKSTORAGE_H_
 #define MULTISTEALSECONDARYTASKSTORAGE_H_
 
+#include <algorithm>
+
 #include "MultiStealSecondaryTaskStoragePerformanceCounters.h"
 #include "../../../../DePriorityQueue/DeHeap/DeHeap.h"
 
@@ -18,7 +20,7 @@ template <class Iter>
 struct MultiStealSecondaryTaskStorageHeapElement {
 	Iter iter;
 	size_t steal_prio;
-}
+};
 
 template <class HeapEl>
 class MultiStealSecondaryTaskStorageComparator {
@@ -53,7 +55,7 @@ public:
 
 private:
 	Primary<Scheduler, TT>* primary;
-	size_t expected_capacity
+	size_t expected_capacity;
 
 //	PerformanceCounters perf_count;
 
@@ -143,7 +145,7 @@ TT MultiStealSecondaryTaskStorage<Scheduler, TT, Primary>::steal_push(Primary<Sc
 		if(!primary->is_taken(i, ppc)) {
 			HeapElement he;
 			he.steal_prio = primary->get_steal_priority(i, sd, ppc);
-			if(heap.get_length() < expected_capacity) {
+			if(heap.get_length() < threshold) {
 				he.iter = i;
 				heap.push(he);
 			}
@@ -155,31 +157,35 @@ TT MultiStealSecondaryTaskStorage<Scheduler, TT, Primary>::steal_push(Primary<Sc
 		}
 	}
 
-	size_t total_found = num_dropped + heap.get_length();
-	if(heap.length == 0) {
-			pc.steal_time.stop_timer();
-			pc.num_unsuccessful_steals.incr();
-			return null_element;
-		}
-	size_t stolen = 0;
-	typename Primary<Scheduler, T>::iterator prev;
-
-	while(heap.get_length() != 0 && stolen <= (total_found >> 1)) {
+	while(heap.get_length() != 0) {
 		HeapElement he = heap.pop_max();
+
+		TT ret = primary->take(he.iter, ppc);
+		if(ret != null_element) {
+			pc.num_stolen.incr();
+			pc.num_successful_steals.incr();
+
+			size_t to_steal = std::min((num_dropped + heap.get_length()) >> 1, heap.get_length());
+
+			if(to_steal > 0) {
+				typename Primary<Scheduler, T>::iterator* steal_data = new typename Primary<Scheduler, T>::iterator[to_steal];
+
+				for(size_t i = 0; i < to_steal; ++i) {
+					steal_data[i] = heap.pop_max().iter;
+				}
+				std::sort(steal_data, steal_data + to_steal);
+				primary->transfer(other_primary, steal_data, to_steal, ppc);
+				delete[] steal_data;
+			}
+
+			pc.steal_time.stop_timer();
+			return ret;
+		}
 	}
 
-
-	// We don't care if taking fails, this is just stealing, which is allowed to fail
-	TT ret = primary->take(best, ppc);
-	if(ret != null_element) {
-		pc.num_stolen.incr();
-		pc.num_successful_steals.incr();
-	}
-	else {
-		pc.num_unsuccessful_steals.incr();
-	}
+	pc.num_unsuccessful_steals.incr();
 	pc.steal_time.stop_timer();
-	return ret;
+	return null_element;
 }
 
 template <class Scheduler, typename TT, template <class Sched, typename S> class Primary>

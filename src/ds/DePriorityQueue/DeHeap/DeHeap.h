@@ -201,7 +201,7 @@ void DeHeap<TT, Comparator>::bubble_up_min(size_t index) {
 template <typename TT, class Comparator>
 void DeHeap<TT, Comparator>::bubble_up_max(size_t index) {
 	size_t next = ((index - 3) >> 1) | 1;
-	while(index > 0 && is_less(data[next], data[index])) {
+	while(index > 1 && is_less(data[next], data[index])) {
 		std::swap(data[next], data[index]);
 		index = next;
 		next = ((index - 3) >> 1) | 1;
@@ -231,7 +231,7 @@ void DeHeap<TT, Comparator>::bubble_down_min(size_t index) {
 		}
 		assert(max_heap_item < length);
 		if(is_less(data[max_heap_item], data[index])) {
-			swap(data[max_heap_item], data[index]);
+			std::swap(data[max_heap_item], data[index]);
 			bubble_up_max(max_heap_item);
 		}
 	}
@@ -257,7 +257,7 @@ void DeHeap<TT, Comparator>::bubble_down_max(size_t index) {
 		size_t min_heap_item = index - 1;
 		assert(min_heap_item < length);
 		if(is_less(data[index], data[min_heap_item])) {
-			swap(data[min_heap_item], data[index]);
+			std::swap(data[min_heap_item], data[index]);
 			bubble_up_min(min_heap_item);
 		}
 	}

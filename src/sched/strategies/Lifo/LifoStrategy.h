@@ -60,7 +60,7 @@ inline prio_t LifoStrategy<Scheduler>::get_steal_priority(size_t task_id, typena
 
 template <class Scheduler>
 inline BaseStrategy<Scheduler>* LifoStrategy<Scheduler>::clone() {
-	return new LifoStrategy<Scheduler>(this);
+	return new LifoStrategy<Scheduler>(*this);
 }
 
 template <class Scheduler>

@@ -50,6 +50,7 @@ public:
 	iterator end(PerformanceCounters& pc);
 
 	T take(iterator item, PerformanceCounters& pc);
+	void transfer(ThisType& other, iterator* items, size_t num_items, PerformanceCounters& pc);
 	bool is_taken(iterator item, PerformanceCounters& pc);
 	prio_t get_steal_priority(iterator item, typename Scheduler::StealerDescriptor& sd, PerformanceCounters& pc);
 	size_t get_task_id(iterator item, PerformanceCounters& pc);
@@ -77,6 +78,7 @@ protected:
 private:
 	T local_take(size_t block, size_t block_index, PerformanceCounters& pc);
 	void clean(PerformanceCounters& pc);
+	void push_internal(BaseStrategy<Scheduler>* s, T item, PerformanceCounters& pc);
 
 	ControlBlock* acquire_control_block();
 	void create_next_control_block(PerformanceCounters& pc);
@@ -181,6 +183,10 @@ TT ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::local_take(size_t blo
 	typename ControlBlock::Item* ccb_data = current_control_block->get_data();
 	assert(block_index - ccb_data[block].offset < block_size);
 
+	// Even if take fails this means it has been taken by some other thread
+	// so we can always decrease the length
+	--length;
+
 	ArrayListPrimaryTaskStorageItem<Scheduler, T>& ptsi = ccb_data[block].data[block_index - ccb_data[block].offset];
 
 	if(ptsi.index != block_index) {
@@ -214,6 +220,32 @@ TT ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::take(iterator item, P
 	// No danger in using the pointer. As long as the iterator is active, it may not be overwritten
 	pc.num_successful_takes.incr();
 	return ptsi->data;
+}
+
+template <class Scheduler, typename TT, size_t BLOCK_SIZE>
+void ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::transfer(ThisType& other, iterator* items, size_t num_items, PerformanceCounters& pc) {
+	assert(other.is_empty());
+
+	for(size_t i = 0; i < num_items; ++i) {
+		// Items have to be sorted by iterator index
+		assert(i == 0 || items[i].get_index() > items[i-1].get_index());
+
+		assert(items[i] != end(pc));
+		ArrayListPrimaryTaskStorageItem<Scheduler, T>* ptsi = items[i].dereference(this);
+		if(ptsi == NULL || ptsi->index != items[i].get_index()) {
+			pc.num_unsuccessful_takes.incr();
+		}
+		else {
+			// +2 means strategy is being transferred
+			if(!SIZET_CAS(&(ptsi->index), items[i].get_index(), items[i].get_index() + 2)) {
+				pc.num_unsuccessful_takes.incr();
+			}
+			else {
+				pc.num_successful_takes.incr();
+				other.push_internal(ptsi->s, ptsi->data, pc);
+			}
+		}
+	}
 }
 
 template <class Scheduler, typename TT, size_t BLOCK_SIZE>
@@ -283,6 +315,38 @@ inline void ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::push(Strateg
 }
 
 template <class Scheduler, typename TT, size_t BLOCK_SIZE>
+inline void ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::push_internal(BaseStrategy<Scheduler>* s, T item, PerformanceCounters& pc) {
+	pc.push_time.start_timer();
+
+	size_t offset = current_control_block->get_data()[current_control_block_item_index].offset;
+	if(end_index - offset == block_size) {
+		++current_control_block_item_index;
+		if(current_control_block_item_index == current_control_block->get_length()) {
+			create_next_control_block(pc);
+		}
+		offset = current_control_block->get_data()[current_control_block_item_index].offset;
+	}
+	size_t item_index = end_index - offset;
+	assert(item_index < block_size);
+
+	Item to_put;
+	to_put.data = item;
+	// TODO: custom memory management for strategies with placement new. This would allow for bulk deallocations
+	// as strategies are always deallocated with their control_block_item (meaning we can deallocation BLOCK_SIZE strategies in one step)
+	to_put.s = s;
+	to_put.pop_prio = s->get_pop_priority(end_index);
+	to_put.index = end_index;
+
+	current_control_block->get_data()[current_control_block_item_index].data[item_index] = to_put;
+
+	MEMORY_FENCE();
+
+	++length;
+	++end_index;
+	pc.push_time.stop_timer();
+}
+
+template <class Scheduler, typename TT, size_t BLOCK_SIZE>
 TT ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::pop(PerformanceCounters& pc) {
 	pc.total_size_pop.add(length);
 	pc.pop_time.start_timer();
@@ -334,7 +398,6 @@ TT ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::pop(PerformanceCounte
 		}
 	} while(ret == null_element);
 
-	--length;
 	pc.num_successful_pops.incr();
 	pc.pop_time.stop_timer();
 	return ret;

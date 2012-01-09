@@ -31,6 +31,7 @@
 #include "../ds/PriorityTaskStorage/Modular/Primary/ArrayList/ArrayListPrimaryTaskStorage.h"
 #include "../ds/PriorityTaskStorage/Modular/Primary/ArrayListHeap/ArrayListHeapPrimaryTaskStorage.h"
 #include "../ds/PriorityTaskStorage/Modular/Secondary/Primitive/PrimitiveSecondaryTaskStorage.h"
+#include "../ds/PriorityTaskStorage/Modular/Secondary/MultiSteal/MultiStealSecondaryTaskStorage.h"
 
 #include "../ds/PriorityQueue/Heap/Heap.h"
 #include "../ds/PriorityQueue/SortedArrayHeap/SortedArrayHeap.h"
@@ -195,6 +196,14 @@ public:
 	: ModularTaskStorage<Scheduler, T, DefaultArrayListHeapPrimaryTaskStorage, PrimitiveSecondaryTaskStorage >(static_cast<ConsParams&&>(params) ...) {}
 };
 
+template <class Scheduler, typename T>
+class ArrayListHeapMultiStealModularTaskStorage : public ModularTaskStorage<Scheduler, T, DefaultArrayListHeapPrimaryTaskStorage, MultiStealSecondaryTaskStorage > {
+public:
+	template <typename ... ConsParams>
+	ArrayListHeapMultiStealModularTaskStorage(ConsParams&& ... params)
+	: ModularTaskStorage<Scheduler, T, DefaultArrayListHeapPrimaryTaskStorage, MultiStealSecondaryTaskStorage >(static_cast<ConsParams&&>(params) ...) {}
+};
+
 typedef BasicMixedModeScheduler<OversubscribedSimpleCPUHierarchy, TwoLevelGrowingCircularArrayStealingDeque, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff>
 	DefaultMixedModeScheduler;
 typedef BasicScheduler<OversubscribedSimpleCPUHierarchy, FixedSizeCircularArrayStealingDeque, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff>
@@ -251,6 +260,8 @@ typedef PriorityScheduler<OversubscribedSimpleCPUHierarchy, ArrayListHeapModular
 	ArrayListHeapPrioritySchedulerLongQueues;
 typedef PriorityScheduler<OversubscribedSimpleCPUHierarchy, ArrayListHeapModularTaskStorage, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff, LifoFifoStrategy, 16>
 	ArrayListHeapPrioritySchedulerVeryLongQueues;
+typedef PriorityScheduler<OversubscribedSimpleCPUHierarchy, ArrayListHeapMultiStealModularTaskStorage, SimpleBarrier<StandardExponentialBackoff>, StandardExponentialBackoff, LifoFifoStrategy, 3>
+	ArrayListHeapMultiStealPriorityScheduler;
 typedef SynchroneousScheduler<OversubscribedSimpleCPUHierarchy>
 	DefaultSynchroneousScheduler;
 

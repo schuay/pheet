@@ -32,6 +32,7 @@ public:
 	ThisType& operator=(ThisType const& other);
 	bool operator==(ThisType const& other) const;
 	bool operator!=(ThisType const& other) const;
+	bool operator<(ThisType const& other) const;
 
 	typename Storage::Item* dereference(Storage* storage);
 
@@ -116,6 +117,11 @@ inline bool ArrayListPrimaryTaskStorageIterator<Storage>::operator==(ThisType co
 template <class Storage>
 inline bool ArrayListPrimaryTaskStorageIterator<Storage>::operator!=(ThisType const& other) const {
 	return index != other.index;
+}
+
+template <class Storage>
+inline bool ArrayListPrimaryTaskStorageIterator<Storage>::operator<(ThisType const& other) const {
+	return index < other.index;
 }
 
 template <class Storage>

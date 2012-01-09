@@ -61,7 +61,7 @@ inline prio_t FifoStrategy<Scheduler>::get_steal_priority(size_t task_id, typena
 
 template <class Scheduler>
 inline BaseStrategy<Scheduler>* FifoStrategy<Scheduler>::clone() {
-	return new FifoStrategy<Scheduler>(this);
+	return new FifoStrategy<Scheduler>(*this);
 }
 
 template <class Scheduler>

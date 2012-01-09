@@ -28,8 +28,9 @@ void LUPivTests<true>::run_test() {
 #ifdef LUPIV_TEST
 	std::cout << "----" << std::endl;
 
+	this->run_kernel<LocalityStrategyLUPiv<ArrayListHeapMultiStealPriorityScheduler> >();
 	this->run_kernel<LocalityStrategyLUPiv<ArrayListHeapPriorityScheduler> >();
-	this->run_kernel<SimpleLUPiv<ArrayListHeapPrioritySchedulerMediumQueues> >();
+	this->run_kernel<SimpleLUPiv<ArrayListHeapMultiStealPriorityScheduler> >();
 	this->run_kernel<SimpleLUPiv<DefaultBasicScheduler> >();
 #endif
 }

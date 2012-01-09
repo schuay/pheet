@@ -63,7 +63,7 @@ inline prio_t UserDefinedPriority<Scheduler>::get_steal_priority(size_t task_id,
 
 template <class Scheduler>
 inline BaseStrategy<Scheduler>* UserDefinedPriority<Scheduler>::clone() {
-	return new UserDefinedPriority<Scheduler>(this);
+	return new UserDefinedPriority<Scheduler>(*this);
 }
 
 }

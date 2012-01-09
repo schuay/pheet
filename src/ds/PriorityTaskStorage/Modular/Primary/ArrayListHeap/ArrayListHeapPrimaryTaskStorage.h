@@ -68,6 +68,7 @@ public:
 	iterator end(PerformanceCounters& pc);
 
 	T take(iterator item, PerformanceCounters& pc);
+	void transfer(ThisType& other, iterator* items, size_t num_items, PerformanceCounters& pc);
 	bool is_taken(iterator item, PerformanceCounters& pc);
 	prio_t get_steal_priority(iterator item, typename Scheduler::StealerDescriptor& sd, PerformanceCounters& pc);
 	size_t get_task_id(iterator item, PerformanceCounters& pc);
@@ -95,6 +96,7 @@ protected:
 private:
 	T local_take(size_t block, size_t block_index, PerformanceCounters& pc);
 	void clean(PerformanceCounters& pc);
+	void push_internal(BaseStrategy<Scheduler>* s, T item, PerformanceCounters& pc);
 
 	ControlBlock* acquire_control_block();
 	void create_next_control_block(PerformanceCounters& pc);
@@ -239,6 +241,32 @@ TT ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::t
 }
 
 template <class Scheduler, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
+void ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::transfer(ThisType& other, iterator* items, size_t num_items, PerformanceCounters& pc) {
+	assert(other.is_empty(pc));
+
+	for(size_t i = 0; i < num_items; ++i) {
+		// Items have to be sorted by iterator index
+		assert(i == 0 || items[i].get_index() > items[i-1].get_index());
+
+		assert(items[i] != end(pc));
+		Item* ptsi = items[i].dereference(this);
+		if(ptsi == NULL || ptsi->index != items[i].get_index()) {
+			pc.num_unsuccessful_takes.incr();
+		}
+		else {
+			// +2 means strategy is being transferred
+			if(!SIZET_CAS(&(ptsi->index), items[i].get_index(), items[i].get_index() + 2)) {
+				pc.num_unsuccessful_takes.incr();
+			}
+			else {
+				pc.num_successful_takes.incr();
+				other.push_internal(ptsi->s, ptsi->data, pc);
+			}
+		}
+	}
+}
+
+template <class Scheduler, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
 bool ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::is_taken(iterator item, PerformanceCounters& pc) {
 	Item* deref = item.dereference(this);
 	return deref == NULL || deref->index != item.get_index();
@@ -305,6 +333,49 @@ inline void ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQ
 
 	ArrayListHeapPrimaryTaskStorageHeapElement he;
 	he.pop_prio = s.get_pop_priority(end_index);
+	he.index = end_index;
+	pq.push(he);
+
+	pc.heap_push_time.stop_timer();
+	pc.max_heap_length.add_value(pq.get_length());
+
+	MEMORY_FENCE();
+
+	++length;
+	++end_index;
+	pc.push_time.stop_timer();
+}
+
+template <class Scheduler, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
+inline void ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::push_internal(BaseStrategy<Scheduler>* s, T item, PerformanceCounters& pc) {
+	pc.push_time.start_timer();
+
+	size_t offset = current_control_block->get_data()[current_control_block_item_index].offset;
+	if(end_index - offset == block_size) {
+		++current_control_block_item_index;
+		if(current_control_block_item_index == current_control_block->get_length()) {
+			create_next_control_block(pc);
+		}
+		offset = current_control_block->get_data()[current_control_block_item_index].offset;
+	}
+	size_t item_index = end_index - offset;
+	assert(item_index < block_size);
+
+	pc.put_time.start_timer();
+	Item to_put;
+	to_put.data = item;
+	// TODO: custom memory management for strategies with placement new. This would allow for bulk deallocations
+	// as strategies are always deallocated with their control_block_item (meaning we can deallocation BLOCK_SIZE strategies in one step)
+	to_put.s = s;
+	to_put.index = end_index;
+
+	current_control_block->get_data()[current_control_block_item_index].data[item_index] = to_put;
+
+	pc.put_time.stop_timer();
+
+	pc.heap_push_time.start_timer();
+	ArrayListHeapPrimaryTaskStorageHeapElement he;
+	he.pop_prio = s->get_pop_priority(end_index);
 	he.index = end_index;
 	pq.push(he);
 
