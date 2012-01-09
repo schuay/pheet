@@ -11,9 +11,10 @@
 
 #include "misc/types.h"
 
-//#define NDEBUG
+#define NDEBUG
 
 const pheet::procs_t system_max_cpus = 4;
+const pheet::procs_t system_cpu_hierarchy[] = {4};
 
 #define ENV_LINUX_GCC	1
 //#define ENV_LINUX_ICC	1

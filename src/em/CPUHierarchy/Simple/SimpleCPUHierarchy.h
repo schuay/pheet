@@ -38,6 +38,7 @@ public:
 
 private:
 	SimpleCPUHierarchy(SimpleCPUHierarchy* parent, procs_t offset);
+	void autogen_levels(procs_t np);
 
 	procs_t level;
 	procs_t num_levels;

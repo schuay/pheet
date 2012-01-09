@@ -13,19 +13,13 @@
 namespace pheet {
 
 SimpleCPUHierarchy::SimpleCPUHierarchy(procs_t np)
-: level(0), num_levels(2), offset(0), memory_level(0) {
-	// Generates a flat hierarchy
-	levels = new procs_t[2];
-	levels[0] = np;
-	levels[1] = 1;
+: level(0), offset(0), memory_level(0) {
+	autogen_levels(np);
 }
 
 SimpleCPUHierarchy::SimpleCPUHierarchy(procs_t np, procs_t memory_level)
-: level(0), num_levels(2), offset(0), memory_level(memory_level) {
-	// Generates a flat hierarchy
-	levels = new procs_t[2];
-	levels[0] = np;
-	levels[1] = 1;
+: level(0), offset(0), memory_level(memory_level) {
+	autogen_levels(np);
 }
 
 SimpleCPUHierarchy::SimpleCPUHierarchy(procs_t* levels, procs_t num_levels)
@@ -57,6 +51,23 @@ SimpleCPUHierarchy::~SimpleCPUHierarchy() {
 	for(size_t i = 0; i < cpus.size(); i++) {
 		delete cpus[i];
 	}
+}
+
+void SimpleCPUHierarchy::autogen_levels(procs_t np) {
+	size_t num_sys_hier_levels = sizeof(system_cpu_hierarchy)/sizeof(system_cpu_hierarchy[0]);
+
+	while(num_sys_hier_levels > 1 && system_cpu_hierarchy[num_sys_hier_levels-2] >= np) {
+		--num_sys_hier_levels;
+	}
+
+	// Generates a flat hierarchy
+	num_levels = num_sys_hier_levels + 1;
+	levels = new procs_t[num_levels];
+	levels[0] = np;
+	for(procs_t i = 1; i < num_sys_hier_levels; ++i) {
+		levels[i] = system_cpu_hierarchy[num_sys_hier_levels - i - 1];
+	}
+	levels[num_sys_hier_levels] = 1;
 }
 
 procs_t SimpleCPUHierarchy::get_size() {
