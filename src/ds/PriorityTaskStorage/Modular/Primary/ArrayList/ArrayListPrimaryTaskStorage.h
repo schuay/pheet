@@ -236,13 +236,12 @@ void ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::transfer(ThisType& 
 			pc.num_unsuccessful_takes.incr();
 		}
 		else {
-			// +2 means strategy is being transferred
-			if(!SIZET_CAS(&(ptsi->index), items[i].get_index(), items[i].get_index() + 2)) {
+			if(!SIZET_CAS(&(ptsi->index), items[i].get_index(), items[i].get_index() + 1)) {
 				pc.num_unsuccessful_takes.incr();
 			}
 			else {
 				pc.num_successful_takes.incr();
-				other.push_internal(ptsi->s, ptsi->data, pc);
+				other.push_internal(ptsi->s->clone(), ptsi->data, pc);
 			}
 		}
 	}

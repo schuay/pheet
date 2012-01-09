@@ -132,13 +132,8 @@ void ArrayListPrimaryTaskStorageControlBlock<Storage>::finalize_item_until(size_
 	assert(num_iterators == num_passed_iterators);
 	size_t offset = data[item].offset;
 	for(size_t i = offset; i != limit; ++i) {
-		if(data[item].data[i - offset].index == i + 1) {
-			delete data[item].data[i - offset].s;
-		}
-		else {
-			// strategy has been rebased. don't delete
-			assert(data[item].data[i - offset].index == i + 2);
-		}
+		assert(data[item].data[i - offset].index == i + 1);
+		delete data[item].data[i - offset].s;
 	}
 	if(block_reuse.size() < max_reuse) {
 		block_reuse.push_back(data[item].data);
@@ -246,12 +241,8 @@ bool ArrayListPrimaryTaskStorageControlBlock<Storage>::try_cleanup(std::vector<t
 			for(size_t i = 0; i < length; ++i) {
 				if(data[i].first == data[i].offset + Storage::block_size) {
 					for(size_t j = 0; j < Storage::block_size; ++j) {
-						if(data[i].data[j].index == data[i].offset + j + 1) {
-							delete data[i].data[j].s;
-						}
-						else {
-							assert(data[i].data[j].index == data[i].offset + j + 2);
-						}
+						assert(data[i].data[j].index == data[i].offset + j + 1);
+						delete data[i].data[j].s;
 					}
 					if(block_reuse.size() < max_reuse) {
 						block_reuse.push_back(data[i].data);

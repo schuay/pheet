@@ -91,10 +91,10 @@ bool const stealing_deque_count_dequeued_tasks = false;
 bool const stealing_deque_count_steal_executed_tasks = false;
 
 bool const scheduler_measure_total_time = false;
-bool const scheduler_measure_task_time = false;
+bool const scheduler_measure_task_time = true;
 bool const scheduler_measure_sync_time = false;
-bool const scheduler_measure_idle_time = false;
-bool const scheduler_measure_steal_time = false;
+bool const scheduler_measure_idle_time = true;
+bool const scheduler_measure_steal_time = true;
 bool const scheduler_measure_queue_processing_time = false;
 bool const scheduler_measure_visit_partners_time = false;
 bool const scheduler_measure_wait_for_finish_time = false;
