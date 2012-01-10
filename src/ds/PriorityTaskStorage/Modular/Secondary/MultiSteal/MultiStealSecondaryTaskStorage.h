@@ -145,14 +145,16 @@ TT MultiStealSecondaryTaskStorage<Scheduler, TT, Primary>::steal_push(Primary<Sc
 		if(!primary->is_taken(i, ppc)) {
 			HeapElement he;
 			he.steal_prio = primary->get_steal_priority(i, sd, ppc);
-			if(heap.get_length() < threshold) {
-				he.iter = i;
-				heap.push(he);
-			}
-			else if(heap.min().steal_prio < he.steal_prio) {
-				++num_dropped;
-				he.iter = i;
-				heap.replace_min(he);
+			if(he.steal_prio > 0) {
+				if(heap.get_length() < threshold) {
+					he.iter = i;
+					heap.push(he);
+				}
+				else if(heap.min().steal_prio < he.steal_prio) {
+					++num_dropped;
+					he.iter = i;
+					heap.replace_min(he);
+				}
 			}
 		}
 	}
