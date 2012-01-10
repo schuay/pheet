@@ -68,6 +68,11 @@ void GraphBipartitioningTests::run_test() {
 	if(graph_bipartitioning_test) {
 		std::cout << "----" << std::endl;
 
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapMultiStealPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListHeapMultiStealPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy, 64 > >();
+		this->run_partitioner<ImprovedBranchBoundGraphBipartitioning<ArrayListHeapMultiStealPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListHeapMultiStealPriorityScheduler, 64>, 64 > >();
+		this->run_partitioner<ImprovedBranchBoundGraphBipartitioning<DefaultBasicScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<DefaultBasicScheduler, 64>, 64 > >();
+
+		/*
 		// 1. All data-structures, with prio, DeltaNV logic, all strategies, all queue lengths except very long (very long only for single case)
 
 		// ArrayListHeap, prio, DeltaNV, BestFirst, 1
@@ -264,7 +269,7 @@ void GraphBipartitioningTests::run_test() {
 
 		// -, synch, DeltaNV, -, -
 		this->run_partitioner<ImprovedBranchBoundGraphBipartitioning<DefaultSynchroneousScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<DefaultSynchroneousScheduler, 64>, 64 > >();
-
+*/
 		// All to slow compared to newer implementations
 /*		this->run_partitioner<ImprovedBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningBasicLogic<64>, 64 > >();
 		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, ImprovedBranchBoundGraphBipartitioningBasicLogic<64>, AutoFifoStrategy, 64 > >();
