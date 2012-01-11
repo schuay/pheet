@@ -133,6 +133,7 @@ public:
 	procs_t get_distance(Self* other, procs_t max_granularity_level);
 	procs_t get_max_distance();
 	procs_t get_max_distance(procs_t max_granularity_level);
+	size_t get_current_finish_stack_depth();
 
 private:
 	void run();
@@ -720,6 +721,11 @@ inline procs_t PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, De
 	assert(max_granularity_level < num_levels);
 
 	return this->levels[max_granularity_level].memory_level;
+}
+
+template <class Scheduler, template <class Scheduler, typename T> class TaskStorageT, template <class Scheduler> class DefaultStrategy, uint8_t CallThreshold>
+inline procs_t PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy, CallThreshold>::get_current_finish_stack_depth() {
+	return stack_size - stack_filled_right;
 }
 
 }
