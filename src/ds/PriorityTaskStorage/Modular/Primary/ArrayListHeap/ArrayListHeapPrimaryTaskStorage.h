@@ -332,8 +332,10 @@ inline void ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQ
 
 	ArrayListHeapPrimaryTaskStorageHeapElement he;
 	he.pop_prio = s.get_pop_priority(end_index);
-	he.index = end_index;
-	pq.push(he);
+	if(he.pop_prio != 0) {
+		he.index = end_index;
+		pq.push(he);
+	}
 
 	pc.heap_push_time.stop_timer();
 	pc.max_heap_length.add_value(pq.get_length());
