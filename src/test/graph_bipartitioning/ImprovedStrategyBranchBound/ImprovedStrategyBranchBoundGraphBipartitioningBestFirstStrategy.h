@@ -69,7 +69,8 @@ UserDefinedPriority<Scheduler> ImprovedStrategyBranchBoundGraphBipartitioningBes
 
 
 	prio_t prio_pop = 1 + depth * bound_diff;
-	prio_t prio_steal = 1 + (sub_problem->size - depth) * bound_diff;
+	// use absolute lower-bound for stealing. we don't want to steal something that's probably bad
+	prio_t prio_steal = std::numeric_limits< prio_t >::max() - depth * lb;
 
 	return UserDefinedPriority<Scheduler>(prio_pop, prio_steal);
 }
