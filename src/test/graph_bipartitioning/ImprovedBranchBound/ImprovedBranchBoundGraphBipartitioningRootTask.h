@@ -21,7 +21,7 @@ class ImprovedBranchBoundGraphBipartitioningRootTask : public Task {
 public:
 	typedef ImprovedBranchBoundGraphBipartitioningTask<Task, Logic, MAX_SIZE> BBTask;
 
-	ImprovedBranchBoundGraphBipartitioningRootTask(GraphVertex* graph, size_t size, GraphBipartitioningSolution<MAX_SIZE>* out);
+	ImprovedBranchBoundGraphBipartitioningRootTask(GraphVertex* graph, size_t size, GraphBipartitioningSolution<MAX_SIZE>* out, ImprovedBranchBoundGraphBipartitioningPerformanceCounters<typename Task::Scheduler>& pc);
 	virtual ~ImprovedBranchBoundGraphBipartitioningRootTask();
 
 	virtual void operator()(typename Task::TEC& tec);
@@ -30,11 +30,12 @@ private:
 	GraphVertex* graph;
 	size_t size;
 	GraphBipartitioningSolution<MAX_SIZE>* out;
+	ImprovedBranchBoundGraphBipartitioningPerformanceCounters<typename Task::Scheduler> pc;
 };
 
 template <class Task, class Logic, size_t MAX_SIZE>
-ImprovedBranchBoundGraphBipartitioningRootTask<Task, Logic, MAX_SIZE>::ImprovedBranchBoundGraphBipartitioningRootTask(GraphVertex* graph, size_t size, GraphBipartitioningSolution<MAX_SIZE>* out)
-: graph(graph), size(size), out(out) {
+ImprovedBranchBoundGraphBipartitioningRootTask<Task, Logic, MAX_SIZE>::ImprovedBranchBoundGraphBipartitioningRootTask(GraphVertex* graph, size_t size, GraphBipartitioningSolution<MAX_SIZE>* out, ImprovedBranchBoundGraphBipartitioningPerformanceCounters<typename Task::Scheduler>& pc)
+: graph(graph), size(size), out(out), pc(pc) {
 
 
 }
@@ -51,7 +52,7 @@ void ImprovedBranchBoundGraphBipartitioningRootTask<Task, Logic, MAX_SIZE>::oper
 
 	size_t k = size >> 1;
 	ImprovedBranchBoundGraphBipartitioningSubproblem<typename Task::Scheduler, Logic, MAX_SIZE>* prob = new ImprovedBranchBoundGraphBipartitioningSubproblem<typename Task::Scheduler, Logic, MAX_SIZE>(graph, size, k);
-	tec.template finish<BBTask>(prob, &ub, best);
+	tec.template finish<BBTask>(prob, &ub, best, pc);
 
 	(*out) = best.get_max();
 	assert(out->weight != std::numeric_limits< size_t >::max());

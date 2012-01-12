@@ -11,6 +11,7 @@
 
 #include "../graph_helpers.h"
 #include "ImprovedBranchBoundGraphBipartitioningRootTask.h"
+#include "ImprovedBranchBoundGraphBipartitioningPerformanceCounters.h"
 
 #include <iostream>
 
@@ -40,6 +41,7 @@ private:
 	typename Scheduler::CPUHierarchy cpu_hierarchy;
 	Scheduler scheduler;
 	GraphBipartitioningSolution<MAX_SIZE> solution;
+	ImprovedBranchBoundGraphBipartitioningPerformanceCounters<Scheduler> pc;
 };
 
 template <class Scheduler, class Logic, size_t MAX_SIZE>
@@ -64,7 +66,7 @@ ImprovedBranchBoundGraphBipartitioning<Scheduler, Logic, MAX_SIZE>::~ImprovedBra
 
 template <class Scheduler, class Logic, size_t MAX_SIZE>
 void ImprovedBranchBoundGraphBipartitioning<Scheduler, Logic, MAX_SIZE>::partition() {
-	scheduler.template finish<ImprovedBranchBoundGraphBipartitioningRootTask<typename Scheduler::Task, Logic, MAX_SIZE> >(data, size, &solution);
+	scheduler.template finish<ImprovedBranchBoundGraphBipartitioningRootTask<typename Scheduler::Task, Logic, MAX_SIZE> >(data, size, &solution, pc);
 	MEMORY_FENCE();
 }
 
@@ -79,6 +81,7 @@ void ImprovedBranchBoundGraphBipartitioning<Scheduler, Logic, MAX_SIZE>::print_r
 	std::cout << "\t";
 //	std::cout << LowerBound::name << "\t" << NextVertex::name << "\t";
 	scheduler.print_performance_counter_values();
+	pc.print_values();
 }
 
 template <class Scheduler, class Logic, size_t MAX_SIZE>
@@ -86,6 +89,7 @@ void ImprovedBranchBoundGraphBipartitioning<Scheduler, Logic, MAX_SIZE>::print_h
 	std::cout << "logic\t";
 //	std::cout << "lower_bound\tnext_vertex\t";
 	scheduler.print_performance_counter_headers();
+	pc.print_headers();
 }
 
 template <class Scheduler, class Logic, size_t MAX_SIZE>

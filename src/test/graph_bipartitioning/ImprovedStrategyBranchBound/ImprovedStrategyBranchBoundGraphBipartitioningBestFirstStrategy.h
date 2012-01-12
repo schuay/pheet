@@ -38,6 +38,14 @@ inline ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy<Scheduler
 template <class Scheduler, class SubProblem>
 UserDefinedPriority<Scheduler> ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy<Scheduler, SubProblem>::operator()(SubProblem* sub_problem, size_t* upper_bound) {
 	size_t ubc = *upper_bound;
+
+	// Make sure we don't overflow
+	size_t limit = (std::numeric_limits< prio_t >::max() - 1) / sub_problem->size;
+	if(ubc > limit) {
+		// No upper bound available yet
+		ubc = limit;
+	}
+
 	size_t lb = sub_problem->get_lower_bound();
 	if(ubc < lb) {
 		// Prioritize this task, as it will immediatly terminate anyway
@@ -46,7 +54,7 @@ UserDefinedPriority<Scheduler> ImprovedStrategyBranchBoundGraphBipartitioningBes
 	}
 
 	// Depth: assumption: good for pop, bad for steal
-	size_t depth = sub_problem->sets[0].count() + sub_problem->sets[1].count();
+	size_t depth = std::max(sub_problem->sets[0].count(), sub_problem->sets[1].count());
 
 	// Remaining elements in sets. Presumably lb is more realistic in balanced sets?
 	// (ignored for now)
@@ -59,12 +67,6 @@ UserDefinedPriority<Scheduler> ImprovedStrategyBranchBoundGraphBipartitioningBes
 	// Also problematic if upper bound is near the limits of size_t as we may have an overflow (shouldn't be a problem in our case)
 	size_t bound_diff = ubc - lb;
 
-	// Make sure we don't overflow
-	size_t limit = (std::numeric_limits< prio_t >::max() - 1) / sub_problem->size;
-	if(bound_diff > limit) {
-		// No upper bound available yet
-		bound_diff = limit;
-	}
 
 	prio_t prio_pop = 1 + depth * bound_diff;
 	prio_t prio_steal = 1 + (sub_problem->size - depth) * bound_diff;

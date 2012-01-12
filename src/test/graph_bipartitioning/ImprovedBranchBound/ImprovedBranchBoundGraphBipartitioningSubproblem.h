@@ -13,6 +13,8 @@
 #include "../graph_helpers.h"
 #include "../../../primitives/Reducer/Max/MaxReducer.h"
 
+#include "ImprovedBranchBoundGraphBipartitioningSubproblemPerformanceCounters.h"
+
 #include <bitset>
 
 namespace pheet {
@@ -21,13 +23,14 @@ template <class Scheduler, class Logic, size_t MAX_SIZE = 64>
 class ImprovedBranchBoundGraphBipartitioningSubproblem {
 public:
 	typedef std::bitset<MAX_SIZE> Set;
+	typedef ImprovedBranchBoundGraphBipartitioningSubproblemPerformanceCounters<Scheduler> PerformanceCounters;
 	ImprovedBranchBoundGraphBipartitioningSubproblem(GraphVertex const* graph, size_t size, size_t k);
 	ImprovedBranchBoundGraphBipartitioningSubproblem(ImprovedBranchBoundGraphBipartitioningSubproblem const& other);
 	~ImprovedBranchBoundGraphBipartitioningSubproblem();
 
 	ImprovedBranchBoundGraphBipartitioningSubproblem<Scheduler, Logic, MAX_SIZE>* split();
 	bool is_solution();
-	void update_solution(size_t* upper_bound, MaxReducer<Scheduler, GraphBipartitioningSolution<MAX_SIZE> >& best);
+	void update_solution(size_t* upper_bound, MaxReducer<Scheduler, GraphBipartitioningSolution<MAX_SIZE> >& best, PerformanceCounters& pc);
 	size_t get_lower_bound();
 
 	GraphVertex const* const graph;
@@ -94,7 +97,7 @@ bool ImprovedBranchBoundGraphBipartitioningSubproblem<Scheduler, Logic, MAX_SIZE
 }
 
 template <class Scheduler, class Logic, size_t MAX_SIZE>
-void ImprovedBranchBoundGraphBipartitioningSubproblem<Scheduler, Logic, MAX_SIZE>::update_solution(size_t* upper_bound, MaxReducer<Scheduler, GraphBipartitioningSolution<MAX_SIZE> >& best) {
+void ImprovedBranchBoundGraphBipartitioningSubproblem<Scheduler, Logic, MAX_SIZE>::update_solution(size_t* upper_bound, MaxReducer<Scheduler, GraphBipartitioningSolution<MAX_SIZE> >& best, PerformanceCounters& pc) {
 	if(sets[0].count() == k) {
 		sets[1] |= sets[2];
 		Set tmp = sets[2];
@@ -112,6 +115,7 @@ void ImprovedBranchBoundGraphBipartitioningSubproblem<Scheduler, Logic, MAX_SIZE
 	size_t old_ub = *upper_bound;
 	if(cut < old_ub) {
 		if(SIZET_CAS(upper_bound, old_ub, cut)) {
+			pc.num_upper_bound_changes.incr();
 			GraphBipartitioningSolution<MAX_SIZE> my_best;
 			my_best.weight = cut;
 			my_best.sets[0] = sets[0];

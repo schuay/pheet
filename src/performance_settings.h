@@ -68,6 +68,9 @@ bool const task_storage_measure_max_heap_length = true;
 bool const scheduler_measure_finish_stack_nonblocking_max = true;
 bool const scheduler_measure_finish_stack_blocking_min = true;
 
+bool const graph_bipartitioning_test_count_irrelevant_tasks = true;
+bool const graph_bipartitioning_test_count_upper_bound_changes = true;
+
 #else
 
 bool const scheduler_count_tasks_at_level = false;
@@ -124,6 +127,9 @@ bool const task_storage_measure_max_heap_length = false;
 
 bool const scheduler_measure_finish_stack_nonblocking_max = false;
 bool const scheduler_measure_finish_stack_blocking_min = false;
+
+bool const graph_bipartitioning_test_count_irrelevant_tasks = false;
+bool const graph_bipartitioning_test_count_upper_bound_changes = false;
 
 #endif
 

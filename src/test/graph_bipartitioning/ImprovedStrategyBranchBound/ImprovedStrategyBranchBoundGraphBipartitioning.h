@@ -40,6 +40,7 @@ private:
 	typename Scheduler::CPUHierarchy cpu_hierarchy;
 	Scheduler scheduler;
 	GraphBipartitioningSolution<MAX_SIZE> solution;
+	ImprovedStrategyBranchBoundGraphBipartitioningPerformanceCounters<Scheduler> pc;
 };
 
 template <class Scheduler, class Logic, template <class Scheduler, class SubProblem> class SchedulingStrategy, size_t MAX_SIZE>
@@ -64,7 +65,7 @@ ImprovedStrategyBranchBoundGraphBipartitioning<Scheduler, Logic, SchedulingStrat
 
 template <class Scheduler, class Logic, template <class Scheduler, class SubProblem> class SchedulingStrategy, size_t MAX_SIZE>
 void ImprovedStrategyBranchBoundGraphBipartitioning<Scheduler, Logic, SchedulingStrategy, MAX_SIZE>::partition() {
-	scheduler.template finish<ImprovedStrategyBranchBoundGraphBipartitioningRootTask<typename Scheduler::Task, Logic, SchedulingStrategy, MAX_SIZE> >(data, size, &solution);
+	scheduler.template finish<ImprovedStrategyBranchBoundGraphBipartitioningRootTask<typename Scheduler::Task, Logic, SchedulingStrategy, MAX_SIZE> >(data, size, &solution, pc);
 }
 
 template <class Scheduler, class Logic, template <class Scheduler, class SubProblem> class SchedulingStrategy, size_t MAX_SIZE>
@@ -79,12 +80,14 @@ void ImprovedStrategyBranchBoundGraphBipartitioning<Scheduler, Logic, Scheduling
 	SchedulingStrategy<Scheduler, void>::print_name();
 	std::cout << "\t";
 	scheduler.print_performance_counter_values();
+	pc.print_values();
 }
 
 template <class Scheduler, class Logic, template <class Scheduler, class SubProblem> class SchedulingStrategy, size_t MAX_SIZE>
 void ImprovedStrategyBranchBoundGraphBipartitioning<Scheduler, Logic, SchedulingStrategy, MAX_SIZE>::print_headers() {
 	std::cout << "logic\tstrategy\t";
 	scheduler.print_performance_counter_headers();
+	pc.print_headers();
 }
 
 template <class Scheduler, class Logic, template <class Scheduler, class SubProblem> class SchedulingStrategy, size_t MAX_SIZE>
