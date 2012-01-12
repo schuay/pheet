@@ -28,7 +28,7 @@ public:
 	ImprovedBranchBoundGraphBipartitioningSubproblem(ImprovedBranchBoundGraphBipartitioningSubproblem const& other);
 	~ImprovedBranchBoundGraphBipartitioningSubproblem();
 
-	ImprovedBranchBoundGraphBipartitioningSubproblem<Scheduler, Logic, MAX_SIZE>* split();
+	ImprovedBranchBoundGraphBipartitioningSubproblem<Scheduler, Logic, MAX_SIZE>* split(PerformanceCounters& pc);
 	bool is_solution();
 	void update_solution(size_t* upper_bound, MaxReducer<Scheduler, GraphBipartitioningSolution<MAX_SIZE> >& best, PerformanceCounters& pc);
 	size_t get_lower_bound();
@@ -50,6 +50,11 @@ ImprovedBranchBoundGraphBipartitioningSubproblem<Scheduler, Logic, MAX_SIZE>::Im
 	for(size_t i = 0; i < size; ++i) {
 		sets[2].set(i);
 	}
+	if(k == size - k) {
+		// If both groups have the same size we can already fill in the first vertex
+		size_t nv = logic.get_next_vertex();
+		update(0, nv);
+	}
 }
 
 template <class Scheduler, class Logic, size_t MAX_SIZE>
@@ -66,8 +71,11 @@ ImprovedBranchBoundGraphBipartitioningSubproblem<Scheduler, Logic, MAX_SIZE>::~I
 }
 
 template <class Scheduler, class Logic, size_t MAX_SIZE>
-ImprovedBranchBoundGraphBipartitioningSubproblem<Scheduler, Logic, MAX_SIZE>* ImprovedBranchBoundGraphBipartitioningSubproblem<Scheduler, Logic, MAX_SIZE>::split() {
+ImprovedBranchBoundGraphBipartitioningSubproblem<Scheduler, Logic, MAX_SIZE>* ImprovedBranchBoundGraphBipartitioningSubproblem<Scheduler, Logic, MAX_SIZE>::split(PerformanceCounters& pc) {
+	pc.num_allocated_subproblems.incr();
+	pc.memory_allocation_time.start_timer();
 	ImprovedBranchBoundGraphBipartitioningSubproblem<Scheduler, Logic, MAX_SIZE>* other = new ImprovedBranchBoundGraphBipartitioningSubproblem<Scheduler, Logic, MAX_SIZE>(*this);
+	pc.memory_allocation_time.stop_timer();
 
 	size_t nv = logic.get_next_vertex();
 	update(0, nv);

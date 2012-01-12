@@ -54,7 +54,7 @@ void ImprovedStrategyBranchBoundGraphBipartitioningTask<Task, Logic, SchedulingS
 	}
 
 	ImprovedBranchBoundGraphBipartitioningSubproblem<typename Task::Scheduler, Logic, MAX_SIZE>* sub_problem2 =
-			sub_problem->split();
+			sub_problem->split(pc.subproblem_pc);
 
 	if(sub_problem->is_solution()) {
 		sub_problem->update_solution(upper_bound, best, pc.subproblem_pc);

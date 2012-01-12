@@ -70,6 +70,8 @@ bool const scheduler_measure_finish_stack_blocking_min = true;
 
 bool const graph_bipartitioning_test_count_irrelevant_tasks = true;
 bool const graph_bipartitioning_test_count_upper_bound_changes = true;
+bool const graph_bipartitioning_test_count_allocated_subproblems = true;
+bool const graph_bipartitioning_test_measure_memory_allocation_time = true;
 
 #else
 
@@ -130,6 +132,8 @@ bool const scheduler_measure_finish_stack_blocking_min = false;
 
 bool const graph_bipartitioning_test_count_irrelevant_tasks = false;
 bool const graph_bipartitioning_test_count_upper_bound_changes = false;
+bool const graph_bipartitioning_test_count_allocated_subproblems = false;
+bool const graph_bipartitioning_test_measure_memory_allocation_time = false;
 
 #endif
 
