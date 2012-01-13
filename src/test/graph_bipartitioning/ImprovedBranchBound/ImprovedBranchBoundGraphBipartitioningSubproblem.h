@@ -32,6 +32,7 @@ public:
 	bool is_solution();
 	void update_solution(size_t* upper_bound, MaxReducer<Scheduler, GraphBipartitioningSolution<MAX_SIZE> >& best, PerformanceCounters& pc);
 	size_t get_lower_bound();
+	size_t get_upper_bound();
 
 	GraphVertex const* const graph;
 	size_t const size;
@@ -136,6 +137,11 @@ void ImprovedBranchBoundGraphBipartitioningSubproblem<Scheduler, Logic, MAX_SIZE
 template <class Scheduler, class Logic, size_t MAX_SIZE>
 size_t ImprovedBranchBoundGraphBipartitioningSubproblem<Scheduler, Logic, MAX_SIZE>::get_lower_bound() {
 	return logic.get_lower_bound();
+}
+
+template <class Scheduler, class Logic, size_t MAX_SIZE>
+size_t ImprovedBranchBoundGraphBipartitioningSubproblem<Scheduler, Logic, MAX_SIZE>::get_upper_bound() {
+	return logic.get_upper_bound();
 }
 
 }
