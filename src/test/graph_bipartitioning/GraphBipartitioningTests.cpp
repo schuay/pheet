@@ -25,8 +25,10 @@
 #include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy.h"
 #include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy.h"
 #include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningUpperBoundStrategy.h"
+#include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningUpperBoundFifoStrategy.h"
 #include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningUpperLowerBoundStrategy.h"
 #include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy.h"
+#include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategy.h"
 #include "../../sched/strategies/Fifo/FifoStrategy.h"
 #include "../../sched/strategies/Lifo/LifoStrategy.h"
 #include "../../sched/strategies/LifoFifo/LifoFifoStrategy.h"
@@ -60,6 +62,14 @@ public:
 	: ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<Scheduler, LifoFifoStrategy, T >(static_cast<ConsParams&&>(params) ...) {}
 };
 
+template <class Scheduler, typename T>
+class DynamicUpperBoundFifoStrategy : public ImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategy<Scheduler, ImprovedStrategyBranchBoundGraphBipartitioningUpperBoundFifoStrategy, T> {
+public:
+	template <typename ... ConsParams>
+	DynamicUpperBoundFifoStrategy(ConsParams&& ... params)
+	: ImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategy<Scheduler, ImprovedStrategyBranchBoundGraphBipartitioningUpperBoundFifoStrategy, T >(static_cast<ConsParams&&>(params) ...) {}
+};
+
 GraphBipartitioningTests::GraphBipartitioningTests() {
 
 }
@@ -72,8 +82,11 @@ void GraphBipartitioningTests::run_test() {
 	if(graph_bipartitioning_test) {
 		std::cout << "----" << std::endl;
 
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapMultiStealPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<ArrayListHeapMultiStealPriorityScheduler, 64>, DynamicUpperBoundFifoStrategy, 64 > >();
 		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapMultiStealPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<ArrayListHeapMultiStealPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningUpperBoundStrategy, 64 > >();
 		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapMultiStealPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<ArrayListHeapMultiStealPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningUpperLowerBoundStrategy, 64 > >();
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapMultiStealPrioritySchedulerSlightlyLongerQueues, ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<ArrayListHeapMultiStealPrioritySchedulerSlightlyLongerQueues, 64>, ImprovedStrategyBranchBoundGraphBipartitioningUpperLowerBoundStrategy, 64 > >();
+		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapMultiStealPrioritySchedulerLongQueues, ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<ArrayListHeapMultiStealPrioritySchedulerLongQueues, 64>, ImprovedStrategyBranchBoundGraphBipartitioningUpperLowerBoundStrategy, 64 > >();
 		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapMultiStealPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<ArrayListHeapMultiStealPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy, 64 > >();
 	//	this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapMultiStealPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<ArrayListHeapMultiStealPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy, 64 > >();
 		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapMultiStealPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<ArrayListHeapMultiStealPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy, 64 > >();
