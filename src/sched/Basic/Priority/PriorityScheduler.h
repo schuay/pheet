@@ -123,13 +123,13 @@ void PriorityScheduler<CPUHierarchyT, TaskStorage, Barrier, BackoffT, DefaultStr
 			ld.local_id = 0;
 			ld.num_partners = sub1->get_size();
 			ld.partners = threads + offset + sub0->get_size();
-			ld.memory_level = sub0->get_memory_level();
+			ld.memory_level = ch->get_memory_level();
 			levels->push_back(&ld);
 			initialize_tecs(sub0, offset, levels);
 			ld.local_id = sub0->get_size();
 			ld.num_partners = ld.local_id;
 			ld.partners = threads + offset;
-			ld.memory_level = sub1->get_memory_level();
+			ld.memory_level = ch->get_memory_level();
 			initialize_tecs(sub1, offset + ld.local_id, levels);
 
 			levels->pop_back();

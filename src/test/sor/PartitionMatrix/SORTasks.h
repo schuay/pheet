@@ -18,6 +18,8 @@
 #include <iostream>
 #include <exception>
 
+#include "SORLocalityStrategy.h"
+
 using namespace std;
 
 namespace pheet {
@@ -31,6 +33,7 @@ namespace pheet {
 		double omega;
 		int slices;
 		double total;
+		bool prio;
 	};
 
 	template <class Task>
@@ -48,15 +51,29 @@ namespace pheet {
 
 		void operator()(typename Task::TEC& tec)
 		{
-			for (int p=0; p<2*iterations; p++) 
-			{
-				{
-				typename Task::Finish f(tec);
+			typename Task::TEC** column_owners = new typename Task::TEC*[sp.slices];
 
-				for(int i = 0; i < sp.slices; i++)
-					tec.template spawn<SORSliceTask<Task> >(i,sp,p);
+			for(int i=0;i<sp.slices;i++)
+				column_owners[i]=0;//&tec;
+
+			for (int p=0; p<2*iterations; p++) 
+			  {
+			    {
+			      typename Task::Finish f(tec);
+			      
+			      for(int i = 0; i < sp.slices; i++)
+				{
+				  if(!sp.prio)
+				    tec.template spawn<SORSliceTask<Task> >(column_owners+i,i,sp,p);
+				  else
+				    tec.template spawn_prio<SORSliceTask<Task> >(SORLocalityStrategy<typename Task::Scheduler>(column_owners[i], 3, 5),column_owners+i,i,sp,p);
 				}
+			    }
 			}
+			
+				//			for(int i=0;i<sp.slices;i++)
+				//	printf("%X ",(long long)column_owners[i]);
+				//printf("\n");
 
 			int Mm1 = sp.M-1;
 			int Nm1 = sp.N-1;
@@ -74,16 +91,22 @@ namespace pheet {
 	template <class Task>
 	class SORSliceTask : public Task 
 	{
+		typename Task::TEC** owner_info;
 		int id;
 		SORParams sp;
 		int p;
 	public:
 
-		SORSliceTask(int id, SORParams& sp, int p):id(id),sp(sp),p(p) {}
+		SORSliceTask(typename Task::TEC** owner_info, int id, SORParams& sp, int p):owner_info(owner_info),id(id),sp(sp),p(p) {}
 		virtual ~SORSliceTask() {}
 
 		void operator()(typename Task::TEC& tec)
 		{
+		  //			if((*owner_info) != &tec)
+		  //		printf(".");
+
+		  	if(*owner_info == 0)
+			  (*owner_info) = &tec;
 			double omega_over_four = sp.omega * 0.25;
 			double one_minus_omega = 1.0 - sp.omega;
 

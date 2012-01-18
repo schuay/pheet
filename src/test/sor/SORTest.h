@@ -24,7 +24,7 @@ namespace pheet {
 template <class Impl>
 class SORTest : Test {
 public:
-	SORTest(procs_t cpus, int M, int N, int slices, double omega, int iterations);
+    SORTest(procs_t cpus, int M, int N, int slices, double omega, int iterations, bool prio);
 	~SORTest();
 
 	void run_test();
@@ -36,11 +36,12 @@ private:
 	int slices;
 	double omega;
 	int iterations;
+	bool prio;
 };
 
 template <class Impl>
-SORTest<Impl>::SORTest(procs_t cpus, int M, int N, int slices, double omega, int iterations)
-: cpus(cpus),M(M),N(N),slices(slices),omega(omega),iterations(iterations){
+  SORTest<Impl>::SORTest(procs_t cpus, int M, int N, int slices, double omega, int iterations, bool prio)
+  : cpus(cpus),M(M),N(N),slices(slices),omega(omega),iterations(iterations),prio(prio){
 
 }
 
@@ -52,7 +53,7 @@ SORTest<Impl>::~SORTest() {
 template <class Impl>
 void SORTest<Impl>::run_test() {
 
-	Impl iar(cpus, M, N, slices, omega, iterations);
+  Impl iar(cpus, M, N, slices, omega, iterations, prio);
 
 	Time start, end;
 	check_time(start);

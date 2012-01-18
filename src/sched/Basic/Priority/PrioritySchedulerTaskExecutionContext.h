@@ -693,7 +693,7 @@ boost::mt19937& PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, D
 
 template <class Scheduler, template <class Scheduler, typename T> class TaskStorageT, template <class Scheduler> class DefaultStrategy, uint8_t CallThreshold>
 procs_t PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrategy, CallThreshold>::get_distance(Self* other) {
-	return get_distance(other, 0);
+	return get_distance(other, num_levels - 1);
 }
 
 

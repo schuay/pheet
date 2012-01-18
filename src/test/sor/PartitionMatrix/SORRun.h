@@ -22,7 +22,7 @@ namespace pheet {
 template <class Scheduler>
 class SORRun {
 public:
-	SORRun(procs_t cpus, int M, int N, int slices, double omega, int iterations);
+  SORRun(procs_t cpus, int M, int N, int slices, double omega, int iterations, bool prio);
 	~SORRun();
 
 	void run();
@@ -59,13 +59,14 @@ double SORRun<Scheduler>::getTotal()
 }
 
 template <class Scheduler>
-SORRun<Scheduler>::SORRun(procs_t cpus, int M, int N, int slices, double omega, int iterations):
+  SORRun<Scheduler>::SORRun(procs_t cpus, int M, int N, int slices, double omega, int iterations, bool prio):
 cpu_hierarchy(cpus), scheduler(&cpu_hierarchy), iterations(iterations) {
 	
 	sp.M=M;
 	sp.N=N;
 	sp.slices=slices;
 	sp.omega=omega;
+	  sp.prio = prio;
 
 	typedef boost::mt19937 base_generator_type;
 	base_generator_type generator(42);
