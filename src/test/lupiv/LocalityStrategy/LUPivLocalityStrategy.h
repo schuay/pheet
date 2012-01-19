@@ -69,7 +69,7 @@ template <class Scheduler>
 inline prio_t LUPivLocalityStrategy<Scheduler>::get_steal_priority(size_t task_id, typename Scheduler::StealerDescriptor& desc) {
 	procs_t max_d = desc.get_max_distance();
 	procs_t d = desc.get_distance_to(last_owner);
-	return ((max_d - d) << 4) + base_steal_priority;
+	return ((((max_d - d) << 4) + base_steal_priority) << 16) - (task_id % (1 << 16));
 }
 
 template <class Scheduler>
