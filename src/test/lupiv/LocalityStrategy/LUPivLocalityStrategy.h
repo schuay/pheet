@@ -58,10 +58,11 @@ LUPivLocalityStrategy<Scheduler>::~LUPivLocalityStrategy() {
 
 template <class Scheduler>
 inline prio_t LUPivLocalityStrategy<Scheduler>::get_pop_priority(size_t task_id) {
-	typename Scheduler::TaskExecutionContext* owner = Scheduler::get_context();
+/*	typename Scheduler::TaskExecutionContext* owner = Scheduler::get_context();
 	procs_t max_d = owner->get_max_distance();
 	procs_t d = owner->get_distance(last_owner);
-	return ((max_d - d) << 4) + base_pop_priority;
+	return ((max_d - d) << 4) + base_pop_priority;*/
+	return (base_pop_priority << 6) + task_id;
 }
 
 template <class Scheduler>

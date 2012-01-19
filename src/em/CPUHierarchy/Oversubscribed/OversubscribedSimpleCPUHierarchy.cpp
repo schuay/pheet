@@ -61,7 +61,7 @@ std::vector<OversubscribedSimpleCPUHierarchy*> const* OversubscribedSimpleCPUHie
 std::vector<OversubscribedSimpleCPUHierarchy::CPUDescriptor*> const* OversubscribedSimpleCPUHierarchy::get_cpus() {
 	if(np <= system_max_cpus) {
 		if(simple_hierarchy == NULL) {
-			simple_hierarchy = new SimpleCPUHierarchy(np);
+			simple_hierarchy = new SimpleCPUHierarchy(np, 1);
 			allocated_simple_hierarchy = true;
 		}
 		return simple_hierarchy->get_cpus();
@@ -95,7 +95,7 @@ procs_t OversubscribedSimpleCPUHierarchy::get_max_depth() {
 procs_t OversubscribedSimpleCPUHierarchy::get_memory_level() {
 	if(np <= system_max_cpus) {
 		if(simple_hierarchy == NULL) {
-			simple_hierarchy = new SimpleCPUHierarchy(np);
+			simple_hierarchy = new SimpleCPUHierarchy(np, 1);
 			allocated_simple_hierarchy = true;
 		}
 		return simple_hierarchy->get_memory_level();
