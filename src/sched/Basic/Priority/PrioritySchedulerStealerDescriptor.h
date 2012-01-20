@@ -56,18 +56,18 @@ PrioritySchedulerStealerDescriptor<Scheduler>::~PrioritySchedulerStealerDescript
 
 template <class Scheduler>
 inline procs_t PrioritySchedulerStealerDescriptor<Scheduler>::get_distance() {
-	return owner->get_distance(stealer, max_granularity_level);
+	return stealer->get_distance(owner, max_granularity_level);
 }
 
 template <class Scheduler>
 inline procs_t PrioritySchedulerStealerDescriptor<Scheduler>::get_max_distance() {
-	return owner->get_max_distance(max_granularity_level);
+	return stealer->get_max_distance(max_granularity_level);
 }
 
 template <class Scheduler>
 inline procs_t PrioritySchedulerStealerDescriptor<Scheduler>::get_distance_to(procs_t tec_id) {
 
-	return owner->get_distance(stealer, max_granularity_level);
+	return stealer->get_distance(stealer, max_granularity_level);
 }
 
 template <class Scheduler>

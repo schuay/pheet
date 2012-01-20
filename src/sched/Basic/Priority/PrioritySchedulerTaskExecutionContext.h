@@ -315,7 +315,7 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrat
 
 					performance_counters.num_steal_calls.incr();
 					performance_counters.steal_time.start_timer();
-					typename Scheduler::StealerDescriptor sd(this, levels[level].partners[next_rand], num_levels - 1);
+					typename Scheduler::StealerDescriptor sd(levels[level].partners[next_rand], this, num_levels - 1);
 					di = levels[level].partners[next_rand]->task_storage.steal_push(this->task_storage, sd, performance_counters.task_storage_performance_counters);
 				//	di = levels[level].partners[next_rand % levels[level].num_partners]->task_storage.steal();
 					performance_counters.steal_time.stop_timer();
@@ -368,7 +368,7 @@ void PrioritySchedulerTaskExecutionContext<Scheduler, TaskStorageT, DefaultStrat
 					procs_t next_rand = n_r_gen(rng);
 					assert(levels[level].partners[next_rand] != this);
 					performance_counters.num_steal_calls.incr();
-					typename Scheduler::StealerDescriptor sd(this, levels[level].partners[next_rand], num_levels - 1);
+					typename Scheduler::StealerDescriptor sd(levels[level].partners[next_rand], this, num_levels - 1);
 					di = levels[level].partners[next_rand]->task_storage.steal_push(this->task_storage, sd, performance_counters.task_storage_performance_counters);
 				//	di = levels[level].partners[next_rand % levels[level].num_partners]->task_storage.steal();
 
