@@ -66,13 +66,12 @@ inline procs_t PrioritySchedulerStealerDescriptor<Scheduler>::get_max_distance()
 
 template <class Scheduler>
 inline procs_t PrioritySchedulerStealerDescriptor<Scheduler>::get_distance_to(procs_t tec_id) {
-
-	return stealer->get_distance(stealer, max_granularity_level);
+	return stealer->get_distance(Scheduler::get_context_at(tec_id), max_granularity_level);
 }
 
 template <class Scheduler>
 inline procs_t PrioritySchedulerStealerDescriptor<Scheduler>::get_distance_to(typename Scheduler::TaskExecutionContext* tec) {
-	return tec->get_distance(stealer, max_granularity_level);
+	return stealer->get_distance(tec, max_granularity_level);
 }
 
 template <class Scheduler>
