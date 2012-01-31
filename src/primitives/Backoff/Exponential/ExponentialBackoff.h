@@ -18,11 +18,8 @@
  */
 namespace pheet {
 
-// TODO: switch to a thread-local random number generator. (otherwise backoff doesn't make much sense as random() contains a lock)
-// Postponed until GCC has support for template aliases. Data-structures will probably be refactored then to always know the type of scheduler in use.
-
-template <unsigned int MIN_BACKOFF = 100, unsigned int MAX_BACKOFF = 100000>
-class ExponentialBackoff {
+template <class Pheet, unsigned int MIN_BACKOFF = 100, unsigned int MAX_BACKOFF = 100000>
+class ExponentialBackoff : protected Pheet {
 public:
 	ExponentialBackoff();
 	~ExponentialBackoff();
@@ -37,19 +34,19 @@ private:
 template <unsigned int MIN_BACKOFF, unsigned int MAX_BACKOFF>
 thread_local boost::mt19937 ExponentialBackoff<MIN_BACKOFF, MAX_BACKOFF>::rng;
 */
-template <unsigned int MIN_BACKOFF, unsigned int MAX_BACKOFF>
-ExponentialBackoff<MIN_BACKOFF, MAX_BACKOFF>::ExponentialBackoff() {
+template <class Pheet, unsigned int MIN_BACKOFF, unsigned int MAX_BACKOFF>
+ExponentialBackoff<Pheet, MIN_BACKOFF, MAX_BACKOFF>::ExponentialBackoff() {
 	limit = MIN_BACKOFF;
 }
 
-template <unsigned int MIN_BACKOFF, unsigned int MAX_BACKOFF>
-ExponentialBackoff<MIN_BACKOFF, MAX_BACKOFF>::~ExponentialBackoff() {
+template <class Pheet, unsigned int MIN_BACKOFF, unsigned int MAX_BACKOFF>
+ExponentialBackoff<Pheet, MIN_BACKOFF, MAX_BACKOFF>::~ExponentialBackoff() {
 }
 
-template <unsigned int MIN_BACKOFF, unsigned int MAX_BACKOFF>
-void ExponentialBackoff<MIN_BACKOFF, MAX_BACKOFF>::backoff() {
+template <class Pheet, unsigned int MIN_BACKOFF, unsigned int MAX_BACKOFF>
+void ExponentialBackoff<Pheet, MIN_BACKOFF, MAX_BACKOFF>::backoff() {
 //	boost::uniform_int<unsigned int> rnd_gen(0, limit);
-	unsigned int sleep = random() % limit; //rnd_gen(rng);
+	unsigned int sleep = rand_int(limit); //rnd_gen(rng);
 
 	timespec delay;
 	delay.tv_sec = (time_t)0;
@@ -60,7 +57,10 @@ void ExponentialBackoff<MIN_BACKOFF, MAX_BACKOFF>::backoff() {
 	limit = std::min(limit + sleep, MAX_BACKOFF);
 }
 
-typedef ExponentialBackoff<100, 100000> StandardExponentialBackoff;
+template <class Pheet>
+class StandardExponentialBackoff : public ExponentialBackoff<Pheet, 100, 100000> {
+
+};
 
 }
 

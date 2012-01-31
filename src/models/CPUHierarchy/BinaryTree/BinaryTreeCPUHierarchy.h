@@ -16,7 +16,7 @@
  */
 namespace pheet {
 
-template <class BaseCPUHierarchy>
+template <class Pheet, class BaseCPUHierarchy>
 class BinaryTreeCPUHierarchy {
 public:
 	typedef typename BaseCPUHierarchy::CPUDescriptor CPUDescriptor;
