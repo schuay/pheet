@@ -1,6 +1,6 @@
 
-OPTIMIZATION = -O0
-CXXFLAGS = $(OPTIMIZATION) -g -Wall -fmessage-length=0 -std=c++0x
-CXX = g++
+OPTIMIZATION = -O3
+CXXFLAGS = $(OPTIMIZATION) -Wall -fmessage-length=0 -std=c++0x
+CXX = clang++
 LD = ld
 

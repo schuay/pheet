@@ -18,7 +18,7 @@
 #include <vector>
 #include <iostream>
 
-#ifdef ENV_LINUX_GCC
+#ifdef ENV_LINUX
 #include <pthread.h>
 #endif
 
@@ -51,7 +51,7 @@ public:
 
 private:
 	TaskExecutionContext tec;
-#ifdef ENV_LINUX_GCC
+#ifdef ENV_LINUX
 	cpu_set_t old_cpu_affinity;
 #endif
 };
@@ -67,7 +67,7 @@ SynchroneousScheduler<CPUHierarchyT>::SynchroneousScheduler(CPUHierarchy* cpus)
 : tec(this){
 	assert(cpus->get_size() == 1);
 
-#ifdef ENV_LINUX_GCC
+#ifdef ENV_LINUX
 	int err;
 	pthread_getaffinity_np(pthread_self(), sizeof(old_cpu_affinity),
 				&old_cpu_affinity);
@@ -88,7 +88,7 @@ SynchroneousScheduler<CPUHierarchyT>::SynchroneousScheduler(CPUHierarchy* cpus)
 
 template <class CPUHierarchyT>
 SynchroneousScheduler<CPUHierarchyT>::~SynchroneousScheduler() {
-#ifdef ENV_LINUX_GCC
+#ifdef ENV_LINUX
 	int err;
 	if((err = pthread_setaffinity_np(pthread_self(), sizeof(old_cpu_affinity),
 			&old_cpu_affinity)) != 0)

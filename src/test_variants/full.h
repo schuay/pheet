@@ -77,7 +77,7 @@ const GraphBipartitioningProblem graph_bipartitioning_test_problems[] = {
 //const double graph_bipartitioning_test_max_w[] = {1, 10, 1000};
 const int graph_bipartitioning_test_types[] = {0};
 
-const bool inarow_test = true;
+//#define INAROW_TEST true
 const procs_t inarow_test_cpus[] = {1, 2, 4, 8, 16, 32, 64, 128};
 const unsigned int inarow_test_lookaheads[] = {6, 7, 8};
 
@@ -85,7 +85,7 @@ const bool    nqueens_test        = true;
 const procs_t nqueens_test_cpus[] = {1, 2, 4, 8, 16, 32, 64, 128};
 const size_t  nqueens_test_n[]    = {24, 32, 48};
 
-#define UTS_TEST	true
+//#define UTS_TEST	true
 const procs_t uts_test_cpus[] = {4};
 
 // 0 # (T1) Geometric [fixed] ------- Tree size = 4130071, tree depth = 10, num leaves = 3305118 (80.03%)
@@ -99,7 +99,7 @@ const procs_t uts_test_cpus[] = {4};
 // 8 # (T1XL) Geometric [fixed] ----- Tree size = 1635119272, tree depth = 15, num leaves = 1308100063 (80.00%)
 const unsigned int uts_test_standardworkloads[] = {0,1,2,3,4,5,6,7,8};
 
-#define SOR_TEST	true
+//#define SOR_TEST	true
 const procs_t sor_test_cpus[] = {4};
 const int sor_test_maxtrissize[] = {1000,1500,2000,16000};
 const int sor_test_iterations[] =  {100};
