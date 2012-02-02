@@ -77,7 +77,7 @@ const GraphBipartitioningProblem graph_bipartitioning_test_problems[] = {
 //const double graph_bipartitioning_test_max_w[] = {1, 10, 1000};
 const int graph_bipartitioning_test_types[] = {0};
 
-const bool inarow_test = true;
+#define INAROW_TEST true
 const procs_t inarow_test_cpus[] = {1, 2, 4, 8, 16, 32, 64, 128};
 const unsigned int inarow_test_lookaheads[] = {6, 7, 8};
 

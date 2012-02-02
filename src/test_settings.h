@@ -22,6 +22,12 @@ struct GraphBipartitioningProblem {
 
 namespace pheet {
 
+#ifdef INAROW_TEST
+const bool    inarow_test        = INAROW_TEST;
+#else
+const bool    inarow_test        = false;
+#endif
+
 #ifdef LUPIV_TEST
 const bool    lupiv_test        = LUPIV_TEST;
 #else

@@ -7,8 +7,10 @@
 */
 
 #include "InARowTests.h"
+#ifdef INAROW_TEST
 #include "InARowTest.h"
 #include "RecursiveSearch/InARowGame.h"
+#endif
 
 #include "../test_schedulers.h"
 #include <iostream>
@@ -20,6 +22,7 @@ namespace pheet {
 	template <class Test>
 	void InARowTests::test(unsigned int width, unsigned int height, unsigned int rowlength, unsigned int* scenario)
 	{
+#ifdef INAROW_TEST
 		for(size_t la = 0; la < sizeof(inarow_test_lookaheads)/sizeof(inarow_test_lookaheads[0]); la++) {
 			for(size_t c = 0; c < sizeof(inarow_test_cpus)/sizeof(inarow_test_cpus[0]); c++) {
 				if(inarow_test_cpus[c] <= Test::max_cpus) {
@@ -28,10 +31,12 @@ namespace pheet {
 				}
 			}
 		}
+#endif
 	}
 
 	void InARowTests::run_test()
 	{
+#ifdef INAROW_TEST
 		if(inarow_test) {
 			//test<DefaultBasicScheduler>(8,8,4,4,2,(unsigned int*)scenario2);
 			//test<DefaultBasicScheduler>(8,8,4,7,8,(unsigned int*)scenario2);
@@ -44,6 +49,7 @@ namespace pheet {
 			test<InARowGame<PrimitiveHeapPriorityScheduler> >(8,8,4,(unsigned int*)scenario2);
 		//	test<DefaultBasicScheduler>(8,8,4,7,8,(unsigned int*)scenario2);
 		}
+#endif
 	}
 
 }

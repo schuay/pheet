@@ -29,10 +29,6 @@ const GraphBipartitioningProblem graph_bipartitioning_test_problems[] = {
 };
 const int graph_bipartitioning_test_types[] = {0};
 
-const bool inarow_test = false;
-const procs_t inarow_test_cpus[] = {1, 2, 4, 8, 16, 32, 64, 128};
-const unsigned int inarow_test_lookaheads[] = {6, 7, 8};
-
 const bool    nqueens_test        = false;
 const procs_t nqueens_test_cpus[] = {1, 2, 4, 8, 16, 32, 64, 128};
 const size_t  nqueens_test_n[]    = {24, 32, 48};

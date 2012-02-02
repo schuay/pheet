@@ -67,7 +67,7 @@ void CPUThreadExecutor<CPUDescriptor, T>::join() {
 
 template <class CPUDescriptor, class T>
 void CPUThreadExecutor<CPUDescriptor, T>::execute() {
-#ifdef ENV_LINUX_GCC
+#ifdef ENV_LINUX
 	int err;
 	cpu_set_t cpu_affinity;
 	CPU_ZERO(&cpu_affinity);

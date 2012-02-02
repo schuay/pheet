@@ -33,9 +33,10 @@ public:
 
 	boost::mt19937& get_rng();
 
-private:
 	void start_finish_region();
 	void end_finish_region();
+
+private:
 
 	Scheduler* sched;
 
@@ -46,7 +47,7 @@ private:
 
 	static thread_local SynchroneousSchedulerTaskExecutionContext<Scheduler>* local_context;
 
-	friend class Scheduler::Finish;
+//	friend class Scheduler::Finish;
 };
 
 template <class Scheduler>

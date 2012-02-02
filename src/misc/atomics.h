@@ -15,6 +15,10 @@
 
 #include "atomics_gnu.h"
 
+#elif ENV_LINUX_CLANG
+
+#include "atomics_clang.h"
+
 #elif ENV_LINUX_ICC
 
 #include "atomics_gnu.h"
