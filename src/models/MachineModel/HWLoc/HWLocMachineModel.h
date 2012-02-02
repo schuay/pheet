@@ -113,7 +113,7 @@ private:
 
 template <class Pheet>
 HWLocMachineModel<Pheet>::HWLocMachineModel()
-: topo(new HWLocTopologyInfo<Pheet>()), node(topo.get_root_obj()), root(true) {
+: topo(new HWLocTopologyInfo<Pheet>()), node(topo->get_root_obj()), root(true) {
 #ifndef NDEBUG
 	bound = false;
 #endif

@@ -15,7 +15,7 @@
 
 namespace pheet {
 
-template <class Env, template <class Env> class MachineModelT>
+template <class Env, template <class E> class MachineModelT>
 class SystemModelEnv {
 public:
 	typedef MachineModelT<Env> MachineModel;

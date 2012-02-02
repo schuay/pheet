@@ -13,7 +13,7 @@
 
 namespace pheet {
 
-template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class S, typename Q> class P> class SecondaryT>
+template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class ES, typename Q> class P> class SecondaryT>
 class ModularTaskStorage {
 public:
 	typedef ModularTaskStorage<Pheet, TT, PrimaryT, SecondaryT> Self;
@@ -63,121 +63,121 @@ private:
 	PerformanceCounters perf_count;
 };
 
-template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class S, typename Q> class P> class SecondaryT>
+template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class ES, typename Q> class P> class SecondaryT>
 ModularTaskStorage<Pheet, TT, PrimaryT, SecondaryT>::ModularTaskStorage(size_t expected_capacity)
 : primary(expected_capacity), secondary(&primary, expected_capacity) {
 
 }
 /*
-template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class S, typename Q> class P> class SecondaryT>
+template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class ES, typename Q> class P> class SecondaryT>
 ModularTaskStorage<Pheet, TT, PrimaryT, SecondaryT>::ModularTaskStorage(size_t initial_capacity, PerformanceCounters& perf_count)
 : primary(initial_capacity, perf_count.primary_perf_count), secondary(&primary, perf_count.secondary_perf_count), perf_count(perf_count) {
 
 }*/
 
-template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class S, typename Q> class P> class SecondaryT>
+template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class ES, typename Q> class P> class SecondaryT>
 ModularTaskStorage<Pheet, TT, PrimaryT, SecondaryT>::~ModularTaskStorage() {
 
 }
 
-template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class S, typename Q> class P> class SecondaryT>
+template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class ES, typename Q> class P> class SecondaryT>
 template <class Strategy>
 inline void ModularTaskStorage<Pheet, TT, PrimaryT, SecondaryT>::push(Strategy& s, T item) {
 	PerformanceCounters pc;
 	primary.push(s, item, pc.primary_perf_count);
 }
 
-template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class S, typename Q> class P> class SecondaryT>
+template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class ES, typename Q> class P> class SecondaryT>
 template <class Strategy>
 inline void ModularTaskStorage<Pheet, TT, PrimaryT, SecondaryT>::push(Strategy& s, T item, PerformanceCounters& pc) {
 	primary.push(s, item, pc.primary_perf_count);
 }
 
-template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class S, typename Q> class P> class SecondaryT>
+template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class ES, typename Q> class P> class SecondaryT>
 inline TT ModularTaskStorage<Pheet, TT, PrimaryT, SecondaryT>::pop() {
 	PerformanceCounters pc;
 	return primary.pop(pc.primary_perf_count);
 }
 
-template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class S, typename Q> class P> class SecondaryT>
+template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class ES, typename Q> class P> class SecondaryT>
 inline TT ModularTaskStorage<Pheet, TT, PrimaryT, SecondaryT>::pop(PerformanceCounters& pc) {
 	return primary.pop(pc.primary_perf_count);
 }
 
-template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class S, typename Q> class P> class SecondaryT>
+template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class ES, typename Q> class P> class SecondaryT>
 inline TT ModularTaskStorage<Pheet, TT, PrimaryT, SecondaryT>::peek() {
 	PerformanceCounters pc;
 	return primary.peek(pc.primary_perf_count);
 }
 
-template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class S, typename Q> class P> class SecondaryT>
+template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class ES, typename Q> class P> class SecondaryT>
 inline TT ModularTaskStorage<Pheet, TT, PrimaryT, SecondaryT>::peek(PerformanceCounters& pc) {
 	return primary.peek(pc.primary_perf_count);
 }
 
-template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class S, typename Q> class P> class SecondaryT>
+template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class ES, typename Q> class P> class SecondaryT>
 inline TT ModularTaskStorage<Pheet, TT, PrimaryT, SecondaryT>::steal(StealerDescriptor& sd) {
 	PerformanceCounters pc;
 	return secondary.steal(sd, pc.primary_perf_count, pc.secondary_perf_count);
 }
 
-template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class S, typename Q> class P> class SecondaryT>
+template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class ES, typename Q> class P> class SecondaryT>
 inline TT ModularTaskStorage<Pheet, TT, PrimaryT, SecondaryT>::steal(StealerDescriptor& sd, PerformanceCounters& pc) {
 	return secondary.steal(sd, pc.primary_perf_count, pc.secondary_perf_count);
 }
 
-template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class S, typename Q> class P> class SecondaryT>
+template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class ES, typename Q> class P> class SecondaryT>
 inline TT ModularTaskStorage<Pheet, TT, PrimaryT, SecondaryT>::steal_push(ModularTaskStorage& other, StealerDescriptor& sd) {
 	// Currently we don't plan to support stealing more than one task, as this would require require reconfiguring the strategies
 	PerformanceCounters pc;
 	return secondary.steal_push(other.primary, sd, pc.secondary_perf_count, pc.secondary_perf_count);
 }
 
-template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class S, typename Q> class P> class SecondaryT>
+template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class ES, typename Q> class P> class SecondaryT>
 inline TT ModularTaskStorage<Pheet, TT, PrimaryT, SecondaryT>::steal_push(Self& other, StealerDescriptor& sd, PerformanceCounters& pc) {
 	// Currently we don't plan to support stealing more than one task, as this would require require reconfiguring the strategies
 	return secondary.steal_push(other.primary, sd, pc.primary_perf_count, pc.secondary_perf_count);
 }
 
-template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class S, typename Q> class P> class SecondaryT>
+template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class ES, typename Q> class P> class SecondaryT>
 inline size_t ModularTaskStorage<Pheet, TT, PrimaryT, SecondaryT>::get_length() {
 	PerformanceCounters pc;
 	return primary.get_length(pc.primary_perf_count);
 }
 
-template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class S, typename Q> class P> class SecondaryT>
+template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class ES, typename Q> class P> class SecondaryT>
 inline size_t ModularTaskStorage<Pheet, TT, PrimaryT, SecondaryT>::get_length(PerformanceCounters& pc) {
 	return primary.get_length(pc.primary_perf_count);
 }
 
-template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class S, typename Q> class P> class SecondaryT>
+template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class ES, typename Q> class P> class SecondaryT>
 inline bool ModularTaskStorage<Pheet, TT, PrimaryT, SecondaryT>::is_empty() {
 	PerformanceCounters pc;
 	return primary.is_empty(pc.primary_perf_count);
 }
 
-template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class S, typename Q> class P> class SecondaryT>
+template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class ES, typename Q> class P> class SecondaryT>
 inline bool ModularTaskStorage<Pheet, TT, PrimaryT, SecondaryT>::is_empty(PerformanceCounters& pc) {
 	return primary.is_empty(pc.primary_perf_count);
 }
 
-template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class S, typename Q> class P> class SecondaryT>
+template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class ES, typename Q> class P> class SecondaryT>
 inline bool ModularTaskStorage<Pheet, TT, PrimaryT, SecondaryT>::is_full() {
 	PerformanceCounters pc;
 	return primary.is_full(pc.primary_perf_count);
 }
 
-template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class S, typename Q> class P> class SecondaryT>
+template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class ES, typename Q> class P> class SecondaryT>
 inline bool ModularTaskStorage<Pheet, TT, PrimaryT, SecondaryT>::is_full(PerformanceCounters& pc) {
 	return primary.is_full(pc.primary_perf_count);
 }
 
-template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class S, typename Q> class P> class SecondaryT>
+template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class ES, typename Q> class P> class SecondaryT>
 inline void ModularTaskStorage<Pheet, TT, PrimaryT, SecondaryT>::perform_maintenance(PerformanceCounters& pc) {
 	primary.perform_maintenance(pc.primary_perf_count);
 }
 
-template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class S, typename Q> class P> class SecondaryT>
+template <class Pheet, typename TT, template <class Scheduler, typename S> class PrimaryT, template <class Scheduler, typename S, template <class ES, typename Q> class P> class SecondaryT>
 void ModularTaskStorage<Pheet, TT, PrimaryT, SecondaryT>::print_name() {
 	std::cout << "ModularTaskStorage<";
 	Primary::print_name();
