@@ -4,7 +4,7 @@ include settings.mk
 
 OBJS =		
 
-LIBS =		-lpthread -lblas -llapack
+LIBS =		-lpthread -lhwloc -lblas -llapack
 
 TARGET =	lib/libpheet.o
 
@@ -22,11 +22,11 @@ lib/%.o : src/%.cpp
 #$(TARGET):	$(OBJS)
 #	$(CXX) -c $(TARGET) $(OBJS) $(LIBS)
 
-$(TARGET):	$(OBJS)
-	ld -r -o $(TARGET) $(OBJS)
+#$(TARGET):	$(OBJS)
+#	ld -r -o $(TARGET) $(OBJS)
 
-$(TEST_TARGET):	$(TEST_OBJS) $(OBJS) $(TARGET)
-	$(CXX) -o $(TEST_TARGET) $(TEST_OBJS) $(TARGET) $(TEST_LIBS)
+$(TEST_TARGET):	$(TEST_OBJS) $(OBJS)# $(TARGET)
+	$(CXX) -o $(TEST_TARGET) $(TEST_OBJS) $(TEST_LIBS)
 	
 all:	headers $(TARGET) $(TEST_TARGET)
 

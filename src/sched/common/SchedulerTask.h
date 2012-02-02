@@ -19,12 +19,13 @@ class SchedulerTask {
 public:
 	typedef Sched Scheduler;
 	typedef typename Scheduler::Finish Finish;
-	typedef typename Scheduler::TaskExecutionContext TEC;
+	typedef typename Scheduler::Place Place;
+	typedef typename Scheduler::Place TEC;
 
 	SchedulerTask();
 	virtual ~SchedulerTask();
 
-	virtual void operator()(typename Scheduler::TaskExecutionContext& tec) = 0;
+	virtual void operator()(typename Scheduler::Place& tec) = 0;
 
 private:
 };

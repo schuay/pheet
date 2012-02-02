@@ -51,7 +51,7 @@ CPUThreadExecutor<T>::~CPUThreadExecutor() {
 template <class T>
 void CPUThreadExecutor<T>::run() {
 //	std::cout << "calling run" << std::endl;
-	pthread_create(&thread, NULL, execute_cpu_thread<CPUThreadExecutor<T> >, this);
+	pthread_create(&thread, NULL, execute_cpu_thread<T>, work);
 }
 
 template <class T>

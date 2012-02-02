@@ -14,60 +14,62 @@
 
 namespace pheet {
 
-template <class Scheduler>
-class LifoFifoStrategy : public BaseStrategy<Scheduler> {
+template <class Pheet>
+class LifoFifoStrategy : public BaseStrategy<Pheet> {
 public:
+	typedef typename BaseStrategy<Pheet>::StealerDescriptor StealerDescriptor;
+
 	LifoFifoStrategy();
 	LifoFifoStrategy(LifoFifoStrategy& other);
 	LifoFifoStrategy(LifoFifoStrategy&& other);
 	virtual ~LifoFifoStrategy();
 
 	virtual prio_t get_pop_priority(size_t task_id);
-	virtual prio_t get_steal_priority(size_t task_id, typename Scheduler::StealerDescriptor& desc);
-	virtual BaseStrategy<Scheduler>* clone();
+	virtual prio_t get_steal_priority(size_t task_id, StealerDescriptor& desc);
+	virtual BaseStrategy<Pheet>* clone();
 
 	static void print_name();
 
 private:
 };
 
-template <class Scheduler>
-inline LifoFifoStrategy<Scheduler>::LifoFifoStrategy() {
+template <class Pheet>
+inline LifoFifoStrategy<Pheet>::LifoFifoStrategy() {
 
 }
 
-template <class Scheduler>
-inline LifoFifoStrategy<Scheduler>::LifoFifoStrategy(LifoFifoStrategy& other) {
+template <class Pheet>
+inline LifoFifoStrategy<Pheet>::LifoFifoStrategy(LifoFifoStrategy& other) {
 
 }
 
-template <class Scheduler>
-inline LifoFifoStrategy<Scheduler>::LifoFifoStrategy(LifoFifoStrategy&& other) {
+template <class Pheet>
+inline LifoFifoStrategy<Pheet>::LifoFifoStrategy(LifoFifoStrategy&& other) {
 
 }
 
-template <class Scheduler>
-inline LifoFifoStrategy<Scheduler>::~LifoFifoStrategy() {
+template <class Pheet>
+inline LifoFifoStrategy<Pheet>::~LifoFifoStrategy() {
 
 }
 
-template <class Scheduler>
-inline prio_t LifoFifoStrategy<Scheduler>::get_pop_priority(size_t task_id) {
+template <class Pheet>
+inline prio_t LifoFifoStrategy<Pheet>::get_pop_priority(size_t task_id) {
 	return task_id + 1;
 }
 
-template <class Scheduler>
-inline prio_t LifoFifoStrategy<Scheduler>::get_steal_priority(size_t task_id, typename Scheduler::StealerDescriptor& desc) {
+template <class Pheet>
+inline prio_t LifoFifoStrategy<Pheet>::get_steal_priority(size_t task_id, StealerDescriptor& desc) {
 	return std::numeric_limits< prio_t >::max() - task_id;
 }
 
-template <class Scheduler>
-inline BaseStrategy<Scheduler>* LifoFifoStrategy<Scheduler>::clone() {
-	return new LifoFifoStrategy<Scheduler>(*this);
+template <class Pheet>
+inline BaseStrategy<Pheet>* LifoFifoStrategy<Pheet>::clone() {
+	return new LifoFifoStrategy<Pheet>(*this);
 }
 
-template <class Scheduler>
-inline void LifoFifoStrategy<Scheduler>::print_name() {
+template <class Pheet>
+inline void LifoFifoStrategy<Pheet>::print_name() {
 	std::cout << "LifoFifoStrategy";
 }
 

@@ -104,6 +104,9 @@ public:
 	procs_t get_max_distance(procs_t max_granularity_level);
 	size_t get_current_finish_stack_depth();
 
+	void start_finish_region();
+	void end_finish_region();
+
 private:
 	void initialize_levels();
 	void grow_levels_structure();
@@ -118,9 +121,6 @@ private:
 	StackElement* create_non_blocking_finish_region(StackElement* parent);
 	void signal_task_completion(StackElement* stack_element);
 	void finalize_stack_element(StackElement* element, StackElement* parent, size_t version, bool local);
-
-	void start_finish_region();
-	void end_finish_region();
 
 	InternalMachineModel machine_model;
 	procs_t num_initialized_levels;
@@ -152,7 +152,7 @@ private:
 
 	static thread_local Self* local_context;
 
-	friend class Pheet::Scheduler::Finish;
+//	friend class Pheet::Scheduler::Finish;
 
 	template <class T>
 	friend void* execute_cpu_thread(void* param);
@@ -187,6 +187,8 @@ PrioritySchedulerPlace<Pheet, CallThreshold>::PrioritySchedulerPlace(InternalMac
 
 	initialize_levels();
 	machine_model.bind();
+	stack = new StackElement[stack_size];
+
 	assert(local_context == NULL);
 	local_context = this;
 
@@ -203,7 +205,7 @@ PrioritySchedulerPlace<Pheet, CallThreshold>::PrioritySchedulerPlace(LevelDescri
 : num_initialized_levels(num_initialized_levels), num_levels(num_initialized_levels + find_last_bit_set(levels[num_initialized_levels - 1].size)), levels(new LevelDescription[num_levels]),
   stack_filled_left(0), stack_filled_right(stack_size), stack_init_left(0),
   scheduler_state(scheduler_state),
-  preferred_queue_length(find_last_bit_set((*levels)[0]->size) << CallThreshold),
+  preferred_queue_length(find_last_bit_set(levels[0].size) << CallThreshold),
   max_queue_length(preferred_queue_length << 1),
   call_mode(false), task_storage(max_queue_length), thread_executor(this),
   performance_counters(perf_count) {
@@ -247,11 +249,10 @@ void PrioritySchedulerPlace<Pheet, CallThreshold>::initialize_levels() {
 		assert(machine_model.get_num_children() == 2);
 		grow_levels_structure();
 
-		InternalMachineModel child = machine_model.get_child(1);
+		InternalMachineModel child(machine_model.get_child(1));
 		procs_t offset = child.get_node_offset();
 		assert(offset > base_offset);
 		if(offset < size) {
-			LevelDescription ld;
 			levels[num_initialized_levels].size = size - (offset - base_offset);
 			levels[num_initialized_levels].global_id_offset = offset;
 			levels[num_initialized_levels].num_partners = offset - base_offset;
@@ -311,13 +312,15 @@ PrioritySchedulerPlace<Pheet, CallThreshold>::get() {
 template <class Pheet, uint8_t CallThreshold>
 procs_t
 PrioritySchedulerPlace<Pheet, CallThreshold>::get_id() {
-	return levels[0].global_id;
+	return levels[0].local_id;
 }
 
 template <class Pheet, uint8_t CallThreshold>
 void PrioritySchedulerPlace<Pheet, CallThreshold>::run() {
 	local_context = this;
 	initialize_levels();
+	stack = new StackElement[stack_size];
+
 	scheduler_state->state_barrier.signal(0);
 
 	performance_counters.finish_stack_blocking_min.add_value(stack_size);
@@ -628,7 +631,7 @@ inline void PrioritySchedulerPlace<Pheet, CallThreshold>::finalize_stack_element
 		}
 		else {
 			assert((version & 1) == 0);
-			if(PTR_CAS(&(element->version), version, version + 1)) {
+			if(SIZET_CAS(&(element->version), version, version + 1)) {
 				signal_task_completion(parent);
 			}
 		}

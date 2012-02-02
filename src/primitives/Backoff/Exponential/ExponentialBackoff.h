@@ -46,7 +46,8 @@ ExponentialBackoff<Pheet, MIN_BACKOFF, MAX_BACKOFF>::~ExponentialBackoff() {
 template <class Pheet, unsigned int MIN_BACKOFF, unsigned int MAX_BACKOFF>
 void ExponentialBackoff<Pheet, MIN_BACKOFF, MAX_BACKOFF>::backoff() {
 //	boost::uniform_int<unsigned int> rnd_gen(0, limit);
-	unsigned int sleep = Pheet::rand_int(limit); //rnd_gen(rng);
+	Pheet p;
+	unsigned int sleep = p.rand_int(limit); //rnd_gen(rng);
 
 	timespec delay;
 	delay.tv_sec = (time_t)0;

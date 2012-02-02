@@ -27,7 +27,7 @@ namespace pheet {
 template <class Pheet, typename TT>
 struct ArrayListHeapPrimaryTaskStorageItem {
 	TT data;
-	BaseStrategy<typename Pheet::Scheduler>* s;
+	BaseStrategy<Pheet>* s;
 	size_t index;
 };
 
@@ -52,12 +52,12 @@ class ArrayListHeapPrimaryTaskStorage {
 public:
 	typedef TT T;
 	typedef ArrayListHeapPrimaryTaskStorage<Pheet, TT, BLOCK_SIZE, PriorityQueueT> ThisType;
-	typedef typename Pheet::Scheduler Scheduler;
+//	typedef typename Pheet::Scheduler Scheduler;
 	// Not completely a standard iterator, as it doesn't support a dereference operation, but this makes implementation simpler for now (and even more lightweight)
 	typedef ArrayListPrimaryTaskStorageIterator<ThisType> iterator;
-	typedef ArrayListHeapPrimaryTaskStoragePerformanceCounters<Scheduler> PerformanceCounters;
+	typedef ArrayListHeapPrimaryTaskStoragePerformanceCounters<Pheet> PerformanceCounters;
 	typedef ArrayListPrimaryTaskStorageControlBlock<ThisType> ControlBlock;
-	typedef ArrayListHeapPrimaryTaskStorageItem<Scheduler, T> Item;
+	typedef ArrayListHeapPrimaryTaskStorageItem<Pheet, T> Item;
 	typedef typename Pheet::Backoff Backoff;
 	typedef PriorityQueueT<ArrayListHeapPrimaryTaskStorageHeapElement, ArrayListHeapPrimaryTaskStorageComparator> PriorityQueue;
 
@@ -71,7 +71,7 @@ public:
 	T take(iterator item, PerformanceCounters& pc);
 	void transfer(ThisType& other, iterator* items, size_t num_items, PerformanceCounters& pc);
 	bool is_taken(iterator item, PerformanceCounters& pc);
-	prio_t get_steal_priority(iterator item, typename Scheduler::StealerDescriptor& sd, PerformanceCounters& pc);
+	prio_t get_steal_priority(iterator item, typename Pheet::Scheduler::StealerDescriptor& sd, PerformanceCounters& pc);
 	size_t get_task_id(iterator item, PerformanceCounters& pc);
 	void deactivate_iterator(iterator item, PerformanceCounters& pc);
 
@@ -97,7 +97,7 @@ protected:
 private:
 	T local_take(size_t block, size_t block_index, PerformanceCounters& pc);
 	void clean(PerformanceCounters& pc);
-	void push_internal(BaseStrategy<Scheduler>* s, T item, PerformanceCounters& pc);
+	void push_internal(BaseStrategy<Pheet>* s, T item, PerformanceCounters& pc);
 
 	ControlBlock* acquire_control_block();
 	void create_next_control_block(PerformanceCounters& pc);
@@ -273,7 +273,7 @@ bool ArrayListHeapPrimaryTaskStorage<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::is_
 }
 
 template <class Pheet, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
-prio_t ArrayListHeapPrimaryTaskStorage<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::get_steal_priority(iterator item, typename Scheduler::StealerDescriptor& sd, PerformanceCounters& pc) {
+prio_t ArrayListHeapPrimaryTaskStorage<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::get_steal_priority(iterator item, typename Pheet::Scheduler::StealerDescriptor& sd, PerformanceCounters& pc) {
 	Item* deref = item.dereference(this);
 	if(deref == NULL) {
 		return 0;
@@ -349,7 +349,7 @@ inline void ArrayListHeapPrimaryTaskStorage<Pheet, TT, BLOCK_SIZE, PriorityQueue
 }
 
 template <class Pheet, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
-inline void ArrayListHeapPrimaryTaskStorage<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::push_internal(BaseStrategy<Scheduler>* s, T item, PerformanceCounters& pc) {
+inline void ArrayListHeapPrimaryTaskStorage<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::push_internal(BaseStrategy<Pheet>* s, T item, PerformanceCounters& pc) {
 	pc.push_time.start_timer();
 
 	size_t offset = current_control_block->get_data()[current_control_block_item_index].offset;

@@ -19,10 +19,10 @@ public:
 	typedef ModularTaskStorage<Pheet, TT, PrimaryT, SecondaryT> Self;
 	typedef TT T;
 	typedef typename Pheet::Scheduler Scheduler;
-	typedef PrimaryT<Scheduler, T> Primary;
-	typedef SecondaryT<Scheduler, T, PrimaryT> Secondary;
+	typedef PrimaryT<Pheet, T> Primary;
+	typedef SecondaryT<Pheet, T, PrimaryT> Secondary;
 	typedef typename Pheet::Scheduler::StealerDescriptor StealerDescriptor;
-	typedef ModularTaskStoragePerformanceCounters<Scheduler, typename Primary::PerformanceCounters, typename Secondary::PerformanceCounters> PerformanceCounters;
+	typedef ModularTaskStoragePerformanceCounters<Pheet, typename Primary::PerformanceCounters, typename Secondary::PerformanceCounters> PerformanceCounters;
 
 	ModularTaskStorage(size_t expected_capacity);
 //	ModularTaskStorage(size_t expected_capacity, PerformanceCounters& perf_count);

@@ -48,6 +48,8 @@ void SortingTests<true>::run_sorter() {
 //	std::cout << "test\tsorter\tscheduler\ttype\tsize\tseed\tcpus\ttotal_time\truns\t";
 //	Sorter::print_headers();
 //	std::cout << std::endl;
+	std::cout << (std::numeric_limits<procs_t>::max() >> 1) << std::endl;
+	std::cout << Sorter::max_cpus << std::endl;
 
 	for(size_t t = 0; t < sizeof(sorting_test_types)/sizeof(sorting_test_types[0]); t++) {
 		for(size_t n = 0; n < sizeof(sorting_test_n)/sizeof(sorting_test_n[0]); n++) {

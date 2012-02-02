@@ -33,28 +33,28 @@ public:
 	}
 };
 
-template <class Scheduler, typename TT, template <class Sched, typename S> class Primary>
+template <class Pheet, typename TT, template <class P, typename S> class Primary>
 class MultiStealSecondaryTaskStorage {
 public:
 	typedef TT T;
 	typedef /*struct{
 		void print_headers() {}
 		void print_values() {}
-	}*/ MultiStealSecondaryTaskStoragePerformanceCounters<Scheduler> PerformanceCounters;
-	typedef MultiStealSecondaryTaskStorageHeapElement<typename Primary<Scheduler, T>::iterator> HeapElement;
+	}*/ MultiStealSecondaryTaskStoragePerformanceCounters<Pheet> PerformanceCounters;
+	typedef MultiStealSecondaryTaskStorageHeapElement<typename Primary<Pheet, T>::iterator> HeapElement;
 	typedef MultiStealSecondaryTaskStorageComparator<HeapElement> Comparator;
 
-	MultiStealSecondaryTaskStorage(Primary<Scheduler, TT>* primary, size_t expected_capacity);
+	MultiStealSecondaryTaskStorage(Primary<Pheet, TT>* primary, size_t expected_capacity);
 //	MultiStealSecondaryTaskStorage(Primary<TT>* primary, PerformanceCounters& perf_count);
 	~MultiStealSecondaryTaskStorage();
 
-	TT steal(typename Scheduler::StealerDescriptor& sd, typename Primary<Scheduler, TT>::PerformanceCounters& ppc, PerformanceCounters& pc);
-	TT steal_push(Primary<Scheduler, TT>& other_primary, typename Scheduler::StealerDescriptor& sd, typename Primary<Scheduler, TT>::PerformanceCounters& ppc, PerformanceCounters& pc);
+	TT steal(typename Pheet::Scheduler::StealerDescriptor& sd, typename Primary<Pheet, TT>::PerformanceCounters& ppc, PerformanceCounters& pc);
+	TT steal_push(Primary<Pheet, TT>& other_primary, typename Pheet::Scheduler::StealerDescriptor& sd, typename Primary<Pheet, TT>::PerformanceCounters& ppc, PerformanceCounters& pc);
 
 	static void print_name();
 
 private:
-	Primary<Scheduler, TT>* primary;
+	Primary<Pheet, TT>* primary;
 	size_t expected_capacity;
 
 //	PerformanceCounters perf_count;
@@ -62,31 +62,31 @@ private:
 	static T const null_element;
 };
 
-template <class Scheduler, typename TT, template <class Sched, typename S> class Primary>
-TT const MultiStealSecondaryTaskStorage<Scheduler, TT, Primary>::null_element = nullable_traits<TT>::null_value;
+template <class Pheet, typename TT, template <class P, typename S> class Primary>
+TT const MultiStealSecondaryTaskStorage<Pheet, TT, Primary>::null_element = nullable_traits<TT>::null_value;
 
-template <class Scheduler, typename TT, template <class Sched, typename S> class Primary>
-inline MultiStealSecondaryTaskStorage<Scheduler, TT, Primary>::MultiStealSecondaryTaskStorage(Primary<Scheduler, T>* primary, size_t expected_capacity)
+template <class Pheet, typename TT, template <class P, typename S> class Primary>
+inline MultiStealSecondaryTaskStorage<Pheet, TT, Primary>::MultiStealSecondaryTaskStorage(Primary<Pheet, T>* primary, size_t expected_capacity)
 : primary(primary), expected_capacity(expected_capacity) {
 
 }
 /*
-template <class Scheduler, typename TT, template <class Sched, typename S> class Primary>
-inline MultiStealSecondaryTaskStorage<Scheduler, TT, Primary>::MultiStealSecondaryTaskStorage(Primary<Scheduler, T>* primary, PerformanceCounters& perf_count)
+template <class Pheet, typename TT, template <class P, typename S> class Primary>
+inline MultiStealSecondaryTaskStorage<Pheet, TT, Primary>::MultiStealSecondaryTaskStorage(Primary<Pheet, T>* primary, PerformanceCounters& perf_count)
 : primary(primary), perf_count(perf_count) {
 
 }*/
 
-template <class Scheduler, typename TT, template <class Sched, typename S> class Primary>
-inline MultiStealSecondaryTaskStorage<Scheduler, TT, Primary>::~MultiStealSecondaryTaskStorage() {
+template <class Pheet, typename TT, template <class P, typename S> class Primary>
+inline MultiStealSecondaryTaskStorage<Pheet, TT, Primary>::~MultiStealSecondaryTaskStorage() {
 
 }
 
-template <class Scheduler, typename TT, template <class Sched, typename S> class Primary>
-TT MultiStealSecondaryTaskStorage<Scheduler, TT, Primary>::steal(typename Scheduler::StealerDescriptor& sd, typename Primary<Scheduler, TT>::PerformanceCounters& ppc, PerformanceCounters& pc) {
+template <class Pheet, typename TT, template <class P, typename S> class Primary>
+TT MultiStealSecondaryTaskStorage<Pheet, TT, Primary>::steal(typename Pheet::Scheduler::StealerDescriptor& sd, typename Primary<Pheet, TT>::PerformanceCounters& ppc, PerformanceCounters& pc) {
 	pc.steal_time.start_timer();
-	typename Primary<Scheduler, T>::iterator begin = primary->begin(ppc);
-	typename Primary<Scheduler, T>::iterator end = primary->end(ppc);
+	typename Primary<Pheet, T>::iterator begin = primary->begin(ppc);
+	typename Primary<Pheet, T>::iterator end = primary->end(ppc);
 
 	// If this happens we probably have invalid iterators
 	// We might change this assertion to use some number dependent on ptrdiff_t max, but for now this is better for debugging
@@ -94,10 +94,10 @@ TT MultiStealSecondaryTaskStorage<Scheduler, TT, Primary>::steal(typename Schedu
 
 	pc.total_size_steal.add(end - begin);
 	// g++ 4.4 unfortunately generates a compiler warning for this. Just ignore it, 4.6.1 seems to be more intelligent.
-	typename Primary<Scheduler, T>::iterator best;
+	typename Primary<Pheet, T>::iterator best;
 	prio_t best_prio = 0;
 
-	for(typename Primary<Scheduler, T>::iterator i = begin; i != end; ++i) {
+	for(typename Primary<Pheet, T>::iterator i = begin; i != end; ++i) {
 		if(!primary->is_taken(i, ppc)) {
 			prio_t tmp_prio = primary->get_steal_priority(i, sd, ppc);
 			if(tmp_prio > best_prio) {
@@ -125,11 +125,11 @@ TT MultiStealSecondaryTaskStorage<Scheduler, TT, Primary>::steal(typename Schedu
 	return ret;
 }
 
-template <class Scheduler, typename TT, template <class Sched, typename S> class Primary>
-TT MultiStealSecondaryTaskStorage<Scheduler, TT, Primary>::steal_push(Primary<Scheduler, TT>& other_primary, typename Scheduler::StealerDescriptor& sd, typename Primary<Scheduler, TT>::PerformanceCounters& ppc, PerformanceCounters& pc) {
+template <class Pheet, typename TT, template <class P, typename S> class Primary>
+TT MultiStealSecondaryTaskStorage<Pheet, TT, Primary>::steal_push(Primary<Pheet, TT>& other_primary, typename Pheet::Scheduler::StealerDescriptor& sd, typename Primary<Pheet, TT>::PerformanceCounters& ppc, PerformanceCounters& pc) {
 	pc.steal_time.start_timer();
-	typename Primary<Scheduler, T>::iterator begin = primary->begin(ppc);
-	typename Primary<Scheduler, T>::iterator end = primary->end(ppc);
+	typename Primary<Pheet, T>::iterator begin = primary->begin(ppc);
+	typename Primary<Pheet, T>::iterator end = primary->end(ppc);
 
 	// If this happens we probably have invalid iterators
 	// We might change this assertion to use some number dependent on ptrdiff_t max, but for now this is better for debugging
@@ -141,7 +141,7 @@ TT MultiStealSecondaryTaskStorage<Scheduler, TT, Primary>::steal_push(Primary<Sc
 	DeHeap<HeapElement, Comparator> heap;
 	size_t num_dropped = 0;
 
-	for(typename Primary<Scheduler, T>::iterator i = begin; i != end; ++i) {
+	for(typename Primary<Pheet, T>::iterator i = begin; i != end; ++i) {
 		if(!primary->is_taken(i, ppc)) {
 			HeapElement he;
 			he.steal_prio = primary->get_steal_priority(i, sd, ppc);
@@ -170,7 +170,7 @@ TT MultiStealSecondaryTaskStorage<Scheduler, TT, Primary>::steal_push(Primary<Sc
 			size_t to_steal = std::min((num_dropped + heap.get_length()) >> 1, heap.get_length());
 
 			if(to_steal > 0) {
-				typename Primary<Scheduler, T>::iterator* steal_data = new typename Primary<Scheduler, T>::iterator[to_steal];
+				typename Primary<Pheet, T>::iterator* steal_data = new typename Primary<Pheet, T>::iterator[to_steal];
 
 				for(size_t i = 0; i < to_steal; ++i) {
 					steal_data[i] = heap.pop_max().iter;
@@ -190,8 +190,8 @@ TT MultiStealSecondaryTaskStorage<Scheduler, TT, Primary>::steal_push(Primary<Sc
 	return null_element;
 }
 
-template <class Scheduler, typename TT, template <class Sched, typename S> class Primary>
-void MultiStealSecondaryTaskStorage<Scheduler, TT, Primary>::print_name() {
+template <class Pheet, typename TT, template <class P, typename S> class Primary>
+void MultiStealSecondaryTaskStorage<Pheet, TT, Primary>::print_name() {
 	std::cout << "MultiStealSecondaryTaskStorage";
 }
 

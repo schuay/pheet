@@ -18,7 +18,7 @@
 namespace pheet {
 
 template <class Pheet>
-class SimpleBarrier : protected Pheet {
+class SimpleBarrier {
 public:
 	SimpleBarrier();
 	~SimpleBarrier();

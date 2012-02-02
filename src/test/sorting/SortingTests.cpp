@@ -37,7 +37,7 @@ SortingTests<true>::~SortingTests() {
 
 void SortingTests<true>::run_test() {
 	std::cout << "----" << std::endl;
-
+std::cout << Pheet::Environment::max_cpus << std::endl;
 	this->run_sorter<DagQuicksort<typename Pheet::Environment> >();
 
 /*	this->run_sorter<MixedModeQuicksort<DefaultMixedModeScheduler> >();

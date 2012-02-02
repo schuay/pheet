@@ -35,7 +35,7 @@ public:
 private:
 	unsigned int* data;
 	size_t length;
-	typename Scheduler::CPUHierarchy cpu_hierarchy;
+//	typename Scheduler::CPUHierarchy cpu_hierarchy;
 	Scheduler scheduler;
 };
 
@@ -50,7 +50,7 @@ char const * const DagQuicksort<Scheduler>::scheduler_name = Scheduler::name;
 
 template <class Scheduler>
 DagQuicksort<Scheduler>::DagQuicksort(procs_t cpus, unsigned int *data, size_t length)
-: data(data), length(length), cpu_hierarchy(cpus), scheduler(&cpu_hierarchy) {
+: data(data), length(length), scheduler(cpus) {
 
 }
 
