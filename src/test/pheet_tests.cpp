@@ -7,19 +7,20 @@
  */
 
 #include "sorting/SortingTests.h"
+/*
 #include "graph_bipartitioning/GraphBipartitioningTests.h"
 #include "inarow/InARowTests.h"
 #include "n-queens/NQueensTests.h"
 #include "lupiv/LUPivTests.h"
 #include "uts/UTSTests.h"
-#include "sor/SORTests.h"
+#include "sor/SORTests.h"*/
 
 using namespace pheet;
 
 int main(int argc, char* argv[]) {
   	SortingTests<sorting_test> st;
   	st.run_test();
-
+/*
   	GraphBipartitioningTests gpt;
   	gpt.run_test();
 
@@ -36,7 +37,7 @@ int main(int argc, char* argv[]) {
 	utss.run_test();
 
 	SORTests sors;
-	sors.run_test();
+	sors.run_test();*/
 
 	return 0;
 }

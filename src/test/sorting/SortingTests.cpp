@@ -11,7 +11,7 @@
 #include "Reference/ReferenceSTLSort.h"
 #include "Reference/ReferenceQuicksort.h"
 #include "Dag/DagQuicksort.h"
-#include "MixedMode/MixedModeQuicksort.h"
+//#include "MixedMode/MixedModeQuicksort.h"
 #include "Reference/ReferenceHeapSort.h"
 
 #include "../../ds/PriorityQueue/Heap/Heap.h"
@@ -19,6 +19,8 @@
 #include "../../ds/PriorityQueue/SortedArrayHeap/SortedArrayHeap.h"
 
 #include "../test_schedulers.h"
+
+#include "../../pheet.h"
 
 #include <iostream>
 
@@ -36,7 +38,9 @@ SortingTests<true>::~SortingTests() {
 void SortingTests<true>::run_test() {
 	std::cout << "----" << std::endl;
 
-	this->run_sorter<MixedModeQuicksort<DefaultMixedModeScheduler> >();
+	this->run_sorter<DagQuicksort<typename Pheet::Environment> >();
+
+/*	this->run_sorter<MixedModeQuicksort<DefaultMixedModeScheduler> >();
 	this->run_sorter<DagQuicksort<DefaultMixedModeScheduler> >();
 	this->run_sorter<DagQuicksort<DefaultBasicScheduler> >();
 	this->run_sorter<DagQuicksort<PrimitiveHeapPriorityScheduler> >();
@@ -46,7 +50,7 @@ void SortingTests<true>::run_test() {
 	this->run_sorter<ReferenceQuicksort>();
 	this->run_sorter<ReferenceSTLSort>();
 	this->run_sorter<ReferenceHeapSort<STLPriorityQueueWrapper> >();
-	this->run_sorter<ReferenceHeapSort<Heap> >();
+	this->run_sorter<ReferenceHeapSort<Heap> >();*/
 //	this->run_sorter<ReferenceHeapSort<SortedArrayHeap> >();
 }
 

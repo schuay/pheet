@@ -1,3 +1,5 @@
+deprecated
+
 Execution model for CPU schedulers operate on a tree containing all CPUs at the leaves.
 This is not a master-worker model, as all CPUs are leaves.
 The nodes in the tree represent sets (or groups) of CPUs that have something in common

@@ -35,43 +35,43 @@ T MaxOperation<T>::get_identity() {
 	return std::numeric_limits<T>::min();
 }
 
-template <class Scheduler, typename T, template <typename S> class M = MaxOperation >
+template <class Pheet, typename T, template <typename S> class M = MaxOperation >
 class MaxReducer {
 public:
 	MaxReducer();
-	MaxReducer(MaxReducer<Scheduler, T, M>& other);
+	MaxReducer(MaxReducer<Pheet, T, M>& other);
 	~MaxReducer();
 
 	void add_value(T const& value);
 	T const& get_max();
 private:
-	typedef OrderedReducer<Scheduler, ScalarMonoid<T, M> > Reducer;
+	typedef OrderedReducer<Pheet, ScalarMonoid<T, M> > Reducer;
 	Reducer reducer;
 };
 
-template <class Scheduler, typename T, template <typename S> class M>
-MaxReducer<Scheduler, T, M>::MaxReducer() {
+template <class Pheet, typename T, template <typename S> class M>
+MaxReducer<Pheet, T, M>::MaxReducer() {
 
 }
 
-template <class Scheduler, typename T, template <typename S> class M>
-MaxReducer<Scheduler, T, M>::MaxReducer(MaxReducer<Scheduler, T, M>& other)
+template <class Pheet, typename T, template <typename S> class M>
+MaxReducer<Pheet, T, M>::MaxReducer(MaxReducer<Pheet, T, M>& other)
 : reducer(other.reducer) {
 
 }
 
-template <class Scheduler, typename T, template <typename S> class M>
-MaxReducer<Scheduler, T, M>::~MaxReducer() {
+template <class Pheet, typename T, template <typename S> class M>
+MaxReducer<Pheet, T, M>::~MaxReducer() {
 
 }
 
-template <class Scheduler, typename T, template <typename S> class M>
-void MaxReducer<Scheduler, T, M>::add_value(T const& value) {
+template <class Pheet, typename T, template <typename S> class M>
+void MaxReducer<Pheet, T, M>::add_value(T const& value) {
 	reducer.add_data(value);
 }
 
-template <class Scheduler, typename T, template <typename S> class M>
-T const& MaxReducer<Scheduler, T, M>::get_max() {
+template <class Pheet, typename T, template <typename S> class M>
+T const& MaxReducer<Pheet, T, M>::get_max() {
 	return reducer.get_data();
 }
 

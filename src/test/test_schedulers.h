@@ -9,6 +9,7 @@
 #ifndef TEST_SCHEDULERS_H_
 #define TEST_SCHEDULERS_H_
 
+/*
 #include "../sched/Basic/Synchroneous/SynchroneousScheduler.h"
 #include "../sched/Basic/Basic/BasicScheduler.h"
 #include "../sched/Basic/Priority/PriorityScheduler.h"
@@ -38,9 +39,9 @@
 
 #include "../primitives/Backoff/Exponential/ExponentialBackoff.h"
 #include "../primitives/Barrier/Simple/SimpleBarrier.h"
-
+*/
 namespace pheet {
-
+/*
 //using FixedSizeCircularArrayStealingDeque = CircularArrayStealingDeque<T, FixedSizeCircularArray<T> >;
 template <class Scheduler, typename T>
 class FixedSizeCircularArrayStealingDeque : public CircularArrayStealingDeque<Scheduler, T, FixedSizeCircularArray > {
@@ -268,7 +269,7 @@ typedef PriorityScheduler<OversubscribedSimpleCPUHierarchy, ArrayListHeapMultiSt
 	ArrayListHeapMultiStealPrioritySchedulerLongQueues;
 typedef SynchroneousScheduler<OversubscribedSimpleCPUHierarchy>
 	DefaultSynchroneousScheduler;
-
+*/
 }
 
 #endif /* TEST_SCHEDULERS_H_ */

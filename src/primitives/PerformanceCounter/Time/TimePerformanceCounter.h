@@ -21,13 +21,13 @@
  */
 namespace pheet {
 
-template <class Scheduler, bool> class TimePerformanceCounter;
+template <class Pheet, bool> class TimePerformanceCounter;
 
-template <class Scheduler>
-class TimePerformanceCounter<Scheduler, false> {
+template <class Pheet>
+class TimePerformanceCounter<Pheet, false> {
 public:
 	TimePerformanceCounter();
-	TimePerformanceCounter(TimePerformanceCounter<Scheduler, false> const& other);
+	TimePerformanceCounter(TimePerformanceCounter<Pheet, false> const& other);
 	~TimePerformanceCounter();
 
 	void start_timer();
@@ -36,53 +36,53 @@ public:
 	static void print_header(char const* const string);
 };
 
-template <class Scheduler>
+template <class Pheet>
 inline
-TimePerformanceCounter<Scheduler, false>::TimePerformanceCounter() {
+TimePerformanceCounter<Pheet, false>::TimePerformanceCounter() {
 
 }
 
-template <class Scheduler>
+template <class Pheet>
 inline
-TimePerformanceCounter<Scheduler, false>::TimePerformanceCounter(TimePerformanceCounter<Scheduler, false> const& other) {
+TimePerformanceCounter<Pheet, false>::TimePerformanceCounter(TimePerformanceCounter<Pheet, false> const& other) {
 
 }
 
-template <class Scheduler>
+template <class Pheet>
 inline
-TimePerformanceCounter<Scheduler, false>::~TimePerformanceCounter() {
+TimePerformanceCounter<Pheet, false>::~TimePerformanceCounter() {
 
 }
 
-template <class Scheduler>
+template <class Pheet>
 inline
-void TimePerformanceCounter<Scheduler, false>::start_timer() {
+void TimePerformanceCounter<Pheet, false>::start_timer() {
 
 }
 
-template <class Scheduler>
+template <class Pheet>
 inline
-void TimePerformanceCounter<Scheduler, false>::stop_timer() {
+void TimePerformanceCounter<Pheet, false>::stop_timer() {
 
 }
 
-template <class Scheduler>
+template <class Pheet>
 inline
-void TimePerformanceCounter<Scheduler, false>::print(char const* const formatting_string) {
+void TimePerformanceCounter<Pheet, false>::print(char const* const formatting_string) {
 
 }
 
-template <class Scheduler>
+template <class Pheet>
 inline
-void TimePerformanceCounter<Scheduler, false>::print_header(char const* const string) {
+void TimePerformanceCounter<Pheet, false>::print_header(char const* const string) {
 
 }
 
-template <class Scheduler>
-class TimePerformanceCounter<Scheduler, true> {
+template <class Pheet>
+class TimePerformanceCounter<Pheet, true> {
 public:
 	TimePerformanceCounter();
-	TimePerformanceCounter(TimePerformanceCounter<Scheduler, true>& other);
+	TimePerformanceCounter(TimePerformanceCounter<Pheet, true>& other);
 	~TimePerformanceCounter();
 
 	void start_timer();
@@ -90,16 +90,16 @@ public:
 	void print(char const* formatting_string);
 	static void print_header(char const* const string);
 private:
-	SumReducer<Scheduler, double> reducer;
+	SumReducer<Pheet, double> reducer;
 	struct timeval start_time;
 #ifndef NDEBUG
 	bool is_active;
 #endif
 };
 
-template <class Scheduler>
+template <class Pheet>
 inline
-TimePerformanceCounter<Scheduler, true>::TimePerformanceCounter()
+TimePerformanceCounter<Pheet, true>::TimePerformanceCounter()
 #ifndef NDEBUG
 : is_active(false)
 #endif
@@ -107,9 +107,9 @@ TimePerformanceCounter<Scheduler, true>::TimePerformanceCounter()
 
 }
 
-template <class Scheduler>
+template <class Pheet>
 inline
-TimePerformanceCounter<Scheduler, true>::TimePerformanceCounter(TimePerformanceCounter<Scheduler, true>& other)
+TimePerformanceCounter<Pheet, true>::TimePerformanceCounter(TimePerformanceCounter<Pheet, true>& other)
 : reducer(other.reducer)
 #ifndef NDEBUG
   , is_active(false)
@@ -118,15 +118,15 @@ TimePerformanceCounter<Scheduler, true>::TimePerformanceCounter(TimePerformanceC
 
 }
 
-template <class Scheduler>
+template <class Pheet>
 inline
-TimePerformanceCounter<Scheduler, true>::~TimePerformanceCounter() {
+TimePerformanceCounter<Pheet, true>::~TimePerformanceCounter() {
 
 }
 
-template <class Scheduler>
+template <class Pheet>
 inline
-void TimePerformanceCounter<Scheduler, true>::start_timer() {
+void TimePerformanceCounter<Pheet, true>::start_timer() {
 #ifndef NDEBUG
 	assert(!is_active);
 	is_active = true;
@@ -134,9 +134,9 @@ void TimePerformanceCounter<Scheduler, true>::start_timer() {
 	gettimeofday(&start_time, NULL);
 }
 
-template <class Scheduler>
+template <class Pheet>
 inline
-void TimePerformanceCounter<Scheduler, true>::stop_timer() {
+void TimePerformanceCounter<Pheet, true>::stop_timer() {
 	struct timeval stop_time;
 	gettimeofday(&stop_time, NULL);
 	double time = (stop_time.tv_sec - start_time.tv_sec) + 1.0e-6 * stop_time.tv_usec - 1.0e-6 * start_time.tv_usec;
@@ -147,18 +147,18 @@ void TimePerformanceCounter<Scheduler, true>::stop_timer() {
 #endif
 }
 
-template <class Scheduler>
+template <class Pheet>
 inline
-void TimePerformanceCounter<Scheduler, true>::print(char const* const formatting_string) {
+void TimePerformanceCounter<Pheet, true>::print(char const* const formatting_string) {
 #ifndef NDEBUG
 	assert(!is_active);
 #endif
 	printf(formatting_string, reducer.get_sum());
 }
 
-template <class Scheduler>
+template <class Pheet>
 inline
-void TimePerformanceCounter<Scheduler, true>::print_header(char const* const string) {
+void TimePerformanceCounter<Pheet, true>::print_header(char const* const string) {
 	std::cout << string;
 }
 

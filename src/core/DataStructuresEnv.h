@@ -17,7 +17,11 @@ public:
 
 };
 
-typedef DataStructuresEnv PheetDataStructures;
+template <class Env>
+class PheetDataStructures : public DataStructuresEnv<Env> {
+
+};
+
 }
 
 #endif /* DATASTRUCTURESENV_H_ */

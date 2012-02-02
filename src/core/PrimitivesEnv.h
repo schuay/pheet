@@ -14,7 +14,7 @@
 
 namespace pheet {
 
-template <class Env, class BackoffT, class BarrierT>
+template <class Env, template <class Env> class BackoffT, template <class Env> class BarrierT>
 class PrimitivesEnv {
 public:
 	typedef BackoffT<Env> Backoff;
@@ -23,7 +23,8 @@ public:
 
 template <class Env>
 class PheetPrimitives : public PrimitivesEnv<Env, StandardExponentialBackoff, SimpleBarrier> {
-	typedef PrimitivesEnv<Env> Base;
+public:
+	typedef PrimitivesEnv<Env, StandardExponentialBackoff, SimpleBarrier> Base;
 	typedef typename Base::Backoff Backoff;
 	typedef typename Base::Barrier Barrier;
 };

@@ -20,13 +20,13 @@
  */
 namespace pheet {
 
-template <class Scheduler, bool> class BasicPerformanceCounter;
+template <class Pheet, bool> class BasicPerformanceCounter;
 
-template <class Scheduler>
-class BasicPerformanceCounter<Scheduler, false> {
+template <class Pheet>
+class BasicPerformanceCounter<Pheet, false> {
 public:
 	BasicPerformanceCounter();
-	BasicPerformanceCounter(BasicPerformanceCounter<Scheduler, false>& other);
+	BasicPerformanceCounter(BasicPerformanceCounter<Pheet, false>& other);
 	~BasicPerformanceCounter();
 
 	void incr();
@@ -35,53 +35,53 @@ public:
 	static void print_header(char const* const string);
 };
 
-template <class Scheduler>
+template <class Pheet>
 inline
-BasicPerformanceCounter<Scheduler, false>::BasicPerformanceCounter() {
+BasicPerformanceCounter<Pheet, false>::BasicPerformanceCounter() {
 
 }
 
-template <class Scheduler>
+template <class Pheet>
 inline
-BasicPerformanceCounter<Scheduler, false>::BasicPerformanceCounter(BasicPerformanceCounter<Scheduler, false>& other) {
+BasicPerformanceCounter<Pheet, false>::BasicPerformanceCounter(BasicPerformanceCounter<Pheet, false>& other) {
 
 }
 
-template <class Scheduler>
+template <class Pheet>
 inline
-BasicPerformanceCounter<Scheduler, false>::~BasicPerformanceCounter() {
+BasicPerformanceCounter<Pheet, false>::~BasicPerformanceCounter() {
 
 }
 
-template <class Scheduler>
+template <class Pheet>
 inline
-void BasicPerformanceCounter<Scheduler, false>::incr() {
+void BasicPerformanceCounter<Pheet, false>::incr() {
 
 }
 
-template <class Scheduler>
+template <class Pheet>
 inline
-void BasicPerformanceCounter<Scheduler, false>::add(size_t value) {
+void BasicPerformanceCounter<Pheet, false>::add(size_t value) {
 
 }
 
-template <class Scheduler>
+template <class Pheet>
 inline
-void BasicPerformanceCounter<Scheduler, false>::print(char const* const formatting_string) {
+void BasicPerformanceCounter<Pheet, false>::print(char const* const formatting_string) {
 
 }
 
-template <class Scheduler>
+template <class Pheet>
 inline
-void BasicPerformanceCounter<Scheduler, false>::print_header(char const* const string) {
+void BasicPerformanceCounter<Pheet, false>::print_header(char const* const string) {
 
 }
 
-template <class Scheduler>
-class BasicPerformanceCounter<Scheduler, true> {
+template <class Pheet>
+class BasicPerformanceCounter<Pheet, true> {
 public:
 	BasicPerformanceCounter();
-	BasicPerformanceCounter(BasicPerformanceCounter<Scheduler, true>& other);
+	BasicPerformanceCounter(BasicPerformanceCounter<Pheet, true>& other);
 	~BasicPerformanceCounter();
 
 	void incr();
@@ -89,49 +89,49 @@ public:
 	void print(char const* formatting_string);
 	static void print_header(char const* const string);
 private:
-	SumReducer<Scheduler, size_t> reducer;
+	SumReducer<Pheet, size_t> reducer;
 };
 
-template <class Scheduler>
+template <class Pheet>
 inline
-BasicPerformanceCounter<Scheduler, true>::BasicPerformanceCounter() {
+BasicPerformanceCounter<Pheet, true>::BasicPerformanceCounter() {
 
 }
 
-template <class Scheduler>
+template <class Pheet>
 inline
-BasicPerformanceCounter<Scheduler, true>::BasicPerformanceCounter(BasicPerformanceCounter<Scheduler, true>& other)
+BasicPerformanceCounter<Pheet, true>::BasicPerformanceCounter(BasicPerformanceCounter<Pheet, true>& other)
 : reducer(other.reducer) {
 
 }
 
-template <class Scheduler>
+template <class Pheet>
 inline
-BasicPerformanceCounter<Scheduler, true>::~BasicPerformanceCounter() {
+BasicPerformanceCounter<Pheet, true>::~BasicPerformanceCounter() {
 
 }
 
-template <class Scheduler>
+template <class Pheet>
 inline
-void BasicPerformanceCounter<Scheduler, true>::incr() {
+void BasicPerformanceCounter<Pheet, true>::incr() {
 	reducer.incr();
 }
 
-template <class Scheduler>
+template <class Pheet>
 inline
-void BasicPerformanceCounter<Scheduler, true>::add(size_t value) {
+void BasicPerformanceCounter<Pheet, true>::add(size_t value) {
 	reducer.add(value);
 }
 
-template <class Scheduler>
+template <class Pheet>
 inline
-void BasicPerformanceCounter<Scheduler, true>::print(char const* const formatting_string) {
+void BasicPerformanceCounter<Pheet, true>::print(char const* const formatting_string) {
 	printf(formatting_string, reducer.get_sum());
 }
 
-template <class Scheduler>
+template <class Pheet>
 inline
-void BasicPerformanceCounter<Scheduler, true>::print_header(char const* const string) {
+void BasicPerformanceCounter<Pheet, true>::print_header(char const* const string) {
 	std::cout << string;
 }
 

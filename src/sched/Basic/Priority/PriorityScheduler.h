@@ -9,12 +9,13 @@
 #ifndef PRIORITYSCHEDULER_H_
 #define PRIORITYSCHEDULER_H_
 
+#include "../../../settings.h"
 #include "../../common/SchedulerTask.h"
 #include "../../common/FinishRegion.h"
 #include "PrioritySchedulerPlace.h"
 #include "PrioritySchedulerStealerDescriptor.h"
 #include "../../common/CPUThreadExecutor.h"
-#include "../../../models/CPUHierarchy/BinaryTree/BinaryTreeCPUHierarchy.h"
+#include "../../../models/MachineModel/BinaryTree/BinaryTreeMachineModel.h"
 
 #include <stdint.h>
 #include <limits>
@@ -38,32 +39,75 @@ PrioritySchedulerState<Pheet>::PrioritySchedulerState()
 
 }
 
+
+template <class Pheet>
+struct PrioritySchedulerTaskStorageItem {
+	typedef typename Pheet::Place Place;
+
+	PrioritySchedulerTaskStorageItem();
+
+	typename Pheet::Place::Task* task;
+	typename Pheet::Place::StackElement* stack_element;
+
+	bool operator==(PrioritySchedulerTaskStorageItem<Pheet> const& other) const;
+	bool operator!=(PrioritySchedulerTaskStorageItem<Pheet> const& other) const;
+};
+
+template <class Pheet>
+PrioritySchedulerTaskStorageItem<Pheet>::PrioritySchedulerTaskStorageItem()
+: task(NULL), stack_element(NULL) {
+
+}
+
+template <class Pheet>
+bool PrioritySchedulerTaskStorageItem<Pheet>::operator==(PrioritySchedulerTaskStorageItem<Pheet> const& other) const {
+	return other.task == task;
+}
+
+template <class Pheet>
+bool PrioritySchedulerTaskStorageItem<Pheet>::operator!=(PrioritySchedulerTaskStorageItem<Pheet> const& other) const {
+	return other.task != task;
+}
+
+
+template <class Pheet>
+class nullable_traits<PrioritySchedulerTaskStorageItem<Pheet> > {
+public:
+	static PrioritySchedulerTaskStorageItem<Pheet> const null_value;
+};
+
+template <class Pheet>
+PrioritySchedulerTaskStorageItem<Pheet> const nullable_traits<PrioritySchedulerTaskStorageItem<Pheet> >::null_value;
+
 /*
  * May only be used once
  */
-template <class Pheet, template <class Pheet, typename T> class TaskStorage, template <class Scheduler> class DefaultStrategy, uint8_t CallThreshold = 4>
-class PriorityScheduler : proplaceted Pheet {
+template <class Pheet, template <class Pheet, typename T> class TaskStorageT, template <class Pheet> class DefaultStrategyT, uint8_t CallThreshold = 4>
+class PriorityScheduler {
 public:
 	typedef typename Pheet::Backoff Backoff;
 	typedef typename Pheet::MachineModel MachineModel;
-	typedef typename BinaryTreeCPUHierarchy<Pheet, Pheet::MachineModel> InternalMachineModel;
-	typedef PriorityScheduler<Pheet, TaskStorage, DefaultStrategy, CallThreshold> Self;
+	typedef BinaryTreeMachineModel<Pheet, MachineModel> InternalMachineModel;
+	typedef PriorityScheduler<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold> Self;
 	typedef SchedulerTask<Pheet> Task;
-	typedef PrioritySchedulerPlace<Pheet, TaskStorage, DefaultStrategy, CallThreshold> Place;
+	typedef PrioritySchedulerTaskStorageItem<Pheet> TaskStorageItem;
+	typedef TaskStorageT<Pheet, TaskStorageItem> TaskStorage;
+	typedef PrioritySchedulerPlace<Pheet, CallThreshold> Place;
 	typedef PrioritySchedulerState<Pheet> State;
 	typedef FinishRegion<Pheet> Finish;
 	typedef PrioritySchedulerStealerDescriptor<Pheet> StealerDescriptor;
+	typedef DefaultStrategyT<Pheet> DefaultStrategy;
 
 	/*
-	 * Automatically generates a machine model
+	 * Uses complete machine
 	 */
 	PriorityScheduler();
 
 	/*
-	 * MachineModel must be accessible throughout the lifetime of the scheduler
-	 * (Although the current implementation only uses it for initialization)
+	 * Only uses the given number of places
+	 * (Currently no direct support for oversubscription)
 	 */
-	PriorityScheduler(MachineModel* cpus);
+	PriorityScheduler(procs_t num_places);
 	~PriorityScheduler();
 
 	static void print_name();
@@ -82,38 +126,47 @@ public:
 private:
 	void initialize_places(InternalMachineModel* cpus, size_t offset, std::vector<typename Place::LevelDescription*>* levels);
 
-	InternalMachineModel cpu_hierarchy;
-	Place** threads;
-	procs_t num_threads;
+	InternalMachineModel machine_model;
+	Place** places;
+	procs_t num_places;
 
 	State state;
 
 	typename Place::PerformanceCounters performance_counters;
 };
 
-template <class Pheet, template <class Pheet, typename T> class TaskStorage, template <class Scheduler> class DefaultStrategy, uint8_t CallThreshold>
-char const PriorityScheduler<Pheet, TaskStorage, DefaultStrategy, CallThreshold>::name[] = "PriorityScheduler";
+template <class Pheet, template <class Pheet, typename T> class TaskStorageT, template <class Scheduler> class DefaultStrategyT, uint8_t CallThreshold>
+char const PriorityScheduler<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::name[] = "PriorityScheduler";
 
-template <class Pheet, template <class Pheet, typename T> class TaskStorage, template <class Scheduler> class DefaultStrategy, uint8_t CallThreshold>
-procs_t const PriorityScheduler<Pheet, TaskStorage, DefaultStrategy, CallThreshold>::max_cpus = std::numeric_limits<procs_t>::max() >> 1;
+template <class Pheet, template <class Pheet, typename T> class TaskStorageT, template <class Scheduler> class DefaultStrategyT, uint8_t CallThreshold>
+procs_t const PriorityScheduler<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::max_cpus = std::numeric_limits<procs_t>::max() >> 1;
 
-template <class Pheet, template <class Pheet, typename T> class TaskStorage, template <class Scheduler> class DefaultStrategy, uint8_t CallThreshold>
-PriorityScheduler<Pheet, TaskStorage, DefaultStrategy, CallThreshold>::PriorityScheduler(MachineModel* cpus)
-: cpu_hierarchy(cpus), num_threads(cpus->get_size()) {
+template <class Pheet, template <class Pheet, typename T> class TaskStorageT, template <class Scheduler> class DefaultStrategyT, uint8_t CallThreshold>
+PriorityScheduler<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::PriorityScheduler()
+: num_places(machine_model.get_num_leaves()) {
 
-	threads = new Place*[num_threads];
+	places = new Place*[num_places];
+	places[0] = new Place(machine_model, places, num_places, state, performance_counters);
+}
+
+template <class Pheet, template <class Pheet, typename T> class TaskStorageT, template <class Scheduler> class DefaultStrategyT, uint8_t CallThreshold>
+PriorityScheduler<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::PriorityScheduler(procs_t num_places)
+: num_places(num_places) {
+
+	places = new Place*[num_places];
 
 	std::vector<typename Place::LevelDescription*> levels;
-	initialize_places(&cpu_hierarchy, 0, &levels);
+	initialize_places(&machine_model, 0, &levels);
 }
 
-template <class Pheet, template <class Pheet, typename T> class TaskStorage, template <class Scheduler> class DefaultStrategy, uint8_t CallThreshold>
-PriorityScheduler<Pheet, TaskStorage, DefaultStrategy, CallThreshold>::~PriorityScheduler() {
-
+template <class Pheet, template <class Pheet, typename T> class TaskStorageT, template <class Scheduler> class DefaultStrategyT, uint8_t CallThreshold>
+PriorityScheduler<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::~PriorityScheduler() {
+	delete places[0];
+	delete[] places;
 }
-
-template <class Pheet, template <class Pheet, typename T> class TaskStorage, template <class Scheduler> class DefaultStrategy, uint8_t CallThreshold>
-void PriorityScheduler<Pheet, TaskStorage, DefaultStrategy, CallThreshold>::initialize_places(InternalMachineModel* ch, size_t offset, std::vector<typename Place::LevelDescription*>* levels) {
+/*
+template <class Pheet, template <class Pheet, typename T> class TaskStorageT, template <class Scheduler> class DefaultStrategyT, uint8_t CallThreshold>
+void PriorityScheduler<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::initialize_places(InternalMachineModel* ch, size_t offset, std::vector<typename Place::LevelDescription*>* levels) {
 	if(ch->get_size() > 1) {
 		std::vector<InternalMachineModel*> const* sub = ch->get_subsets();
 
@@ -125,13 +178,13 @@ void PriorityScheduler<Pheet, TaskStorage, DefaultStrategy, CallThreshold>::init
 			ld.total_size = ch->get_size();
 			ld.local_id = 0;
 			ld.num_partners = sub1->get_size();
-			ld.partners = threads + offset + sub0->get_size();
+			ld.partners = places + offset + sub0->get_size();
 			ld.memory_level = ch->get_memory_level();
 			levels->push_back(&ld);
 			initialize_places(sub0, offset, levels);
 			ld.local_id = sub0->get_size();
 			ld.num_partners = ld.local_id;
-			ld.partners = threads + offset;
+			ld.partners = places + offset;
 			ld.memory_level = ch->get_memory_level();
 			initialize_places(sub1, offset + ld.local_id, levels);
 
@@ -152,62 +205,62 @@ void PriorityScheduler<Pheet, TaskStorage, DefaultStrategy, CallThreshold>::init
 		ld.memory_level = ch->get_memory_level();
 		levels->push_back(&ld);
 		Place *place = new Place(levels, ch->get_cpus(), &state, performance_counters);
-		threads[offset] = place;
+		places[offset] = place;
 		levels->pop_back();
 	}
 }
 
-template <class Pheet, template <class Pheet, typename T> class TaskStorage, template <class Scheduler> class DefaultStrategy, uint8_t CallThreshold>
+template <class Pheet, template <class Pheet, typename T> class TaskStorageT, template <class Scheduler> class DefaultStrategyT, uint8_t CallThreshold>
 template<class CallTaskType, typename ... TaskParams>
-void PriorityScheduler<Pheet, TaskStorage, DefaultStrategy, CallThreshold>::finish(TaskParams&& ... params) {
+void PriorityScheduler<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::finish(TaskParams&& ... params) {
 	CallTaskType task(static_cast<TaskParams&&>(params) ...);
 	state.startup_task = &task;
 	state.current_state = 1;
 
-	// signal scheduler threads that execution may start
+	// signal scheduler places that execution may start
 	state.state_barrier.signal(0);
 
-	for(procs_t i = 0; i < num_threads; i++) {
-		threads[i]->join();
+	for(procs_t i = 0; i < num_places; i++) {
+		places[i]->join();
 	}
 
-	for(procs_t i = 0; i < num_threads; i++) {
-		delete threads[i];
+	for(procs_t i = 0; i < num_places; i++) {
+		delete places[i];
 	}
-	delete[] threads;
+	delete[] places;
 }
-
-template <class Pheet, template <class Pheet, typename T> class TaskStorage, template <class Scheduler> class DefaultStrategy, uint8_t CallThreshold>
-void PriorityScheduler<Pheet, TaskStorage, DefaultStrategy, CallThreshold>::print_name() {
+*/
+template <class Pheet, template <class Pheet, typename T> class TaskStorageT, template <class Scheduler> class DefaultStrategyT, uint8_t CallThreshold>
+void PriorityScheduler<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::print_name() {
 	std::cout << name << "<";
 	Place::TaskStorage::print_name();
 	std::cout << ", " << (int)CallThreshold << ">";
 }
 
-template <class Pheet, template <class Pheet, typename T> class TaskStorage, template <class Scheduler> class DefaultStrategy, uint8_t CallThreshold>
-void PriorityScheduler<Pheet, TaskStorage, DefaultStrategy, CallThreshold>::print_performance_counter_values() {
+template <class Pheet, template <class Pheet, typename T> class TaskStorageT, template <class Scheduler> class DefaultStrategyT, uint8_t CallThreshold>
+void PriorityScheduler<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::print_performance_counter_values() {
 	performance_counters.print_values();
 }
 
-template <class Pheet, template <class Pheet, typename T> class TaskStorage, template <class Scheduler> class DefaultStrategy, uint8_t CallThreshold>
-void PriorityScheduler<Pheet, TaskStorage, DefaultStrategy, CallThreshold>::print_performance_counter_headers() {
+template <class Pheet, template <class Pheet, typename T> class TaskStorageT, template <class Scheduler> class DefaultStrategyT, uint8_t CallThreshold>
+void PriorityScheduler<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::print_performance_counter_headers() {
 	performance_counters.print_headers();
 }
 
-template <class Pheet, template <class Pheet, typename T> class TaskStorage, template <class Scheduler> class DefaultStrategy, uint8_t CallThreshold>
-typename PriorityScheduler<Pheet, TaskStorage, DefaultStrategy, CallThreshold>::Place* PriorityScheduler<Pheet, TaskStorage, DefaultStrategy, CallThreshold>::get_place() {
+template <class Pheet, template <class Pheet, typename T> class TaskStorageT, template <class Scheduler> class DefaultStrategyT, uint8_t CallThreshold>
+typename PriorityScheduler<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::Place* PriorityScheduler<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::get_place() {
 	return Place::get();
 }
 
-template <class Pheet, template <class Pheet, typename T> class TaskStorage, template <class Scheduler> class DefaultStrategy, uint8_t CallThreshold>
-procs_t PriorityScheduler<Pheet, TaskStorage, DefaultStrategy, CallThreshold>::get_place_id() {
+template <class Pheet, template <class Pheet, typename T> class TaskStorageT, template <class Scheduler> class DefaultStrategyT, uint8_t CallThreshold>
+procs_t PriorityScheduler<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::get_place_id() {
 	return Place::get()->get_id();
 }
 
-template <class Pheet, template <class Pheet, typename T> class TaskStorage, template <class Scheduler> class DefaultStrategy, uint8_t CallThreshold>
-typename PriorityScheduler<Pheet, TaskStorage, DefaultStrategy, CallThreshold>::Place* PriorityScheduler<Pheet, TaskStorage, DefaultStrategy, CallThreshold>::get_place_at(procs_t place_id) {
-	assert(place_id < num_threads);
-	return threads[place_id];
+template <class Pheet, template <class Pheet, typename T> class TaskStorageT, template <class Scheduler> class DefaultStrategyT, uint8_t CallThreshold>
+typename PriorityScheduler<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::Place* PriorityScheduler<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::get_place_at(procs_t place_id) {
+	assert(place_id < num_places);
+	return places[place_id];
 }
 
 }

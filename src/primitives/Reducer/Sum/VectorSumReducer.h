@@ -18,11 +18,11 @@
  */
 namespace pheet {
 
-template <class Scheduler, typename T, template <typename S> class Op = SumOperation>
+template <class Pheet, typename T, template <typename S> class Op = SumOperation>
 class VectorSumReducer {
 public:
 	VectorSumReducer(size_t length);
-	VectorSumReducer(VectorSumReducer<Scheduler, T, Op>& other);
+	VectorSumReducer(VectorSumReducer<Pheet, T, Op>& other);
 	~VectorSumReducer();
 
 	void incr(size_t i);
@@ -32,49 +32,49 @@ public:
 
 	T const* get_sum();
 private:
-	typedef OrderedReducer<Scheduler, VectorMonoid<T, Op> > Reducer;
+	typedef OrderedReducer<Pheet, VectorMonoid<T, Op> > Reducer;
 	Reducer reducer;
 };
 
-template <class Scheduler, typename T, template <typename S> class Op>
-VectorSumReducer<Scheduler, T, Op>::VectorSumReducer(size_t length)
+template <class Pheet, typename T, template <typename S> class Op>
+VectorSumReducer<Pheet, T, Op>::VectorSumReducer(size_t length)
 : reducer(length) {
 
 }
 
-template <class Scheduler, typename T, template <typename S> class Op>
-VectorSumReducer<Scheduler, T, Op>::VectorSumReducer(VectorSumReducer<Scheduler, T, Op>& other)
+template <class Pheet, typename T, template <typename S> class Op>
+VectorSumReducer<Pheet, T, Op>::VectorSumReducer(VectorSumReducer<Pheet, T, Op>& other)
 : reducer(other.reducer) {
 
 }
 
-template <class Scheduler, typename T, template <typename S> class Op>
-VectorSumReducer<Scheduler, T, Op>::~VectorSumReducer() {
+template <class Pheet, typename T, template <typename S> class Op>
+VectorSumReducer<Pheet, T, Op>::~VectorSumReducer() {
 
 }
 
-template <class Scheduler, typename T, template <typename S> class Op>
-void VectorSumReducer<Scheduler, T, Op>::add(size_t i, T value) {
+template <class Pheet, typename T, template <typename S> class Op>
+void VectorSumReducer<Pheet, T, Op>::add(size_t i, T value) {
 	reducer.add_data(i, value);
 }
 
-template <class Scheduler, typename T, template <typename S> class Op>
-void VectorSumReducer<Scheduler, T, Op>::sub(size_t i, T value) {
+template <class Pheet, typename T, template <typename S> class Op>
+void VectorSumReducer<Pheet, T, Op>::sub(size_t i, T value) {
 	reducer.add_data(i, -value);
 }
 
-template <class Scheduler, typename T, template <typename S> class Op>
-void VectorSumReducer<Scheduler, T, Op>::incr(size_t i) {
+template <class Pheet, typename T, template <typename S> class Op>
+void VectorSumReducer<Pheet, T, Op>::incr(size_t i) {
 	reducer.add_data(i, 1);
 }
 
-template <class Scheduler, typename T, template <typename S> class Op>
-void VectorSumReducer<Scheduler, T, Op>::decr(size_t i) {
+template <class Pheet, typename T, template <typename S> class Op>
+void VectorSumReducer<Pheet, T, Op>::decr(size_t i) {
 	reducer.add_data(i, -1);
 }
 
-template <class Scheduler, typename T, template <typename S> class Op>
-T const* VectorSumReducer<Scheduler, T, Op>::get_sum() {
+template <class Pheet, typename T, template <typename S> class Op>
+T const* VectorSumReducer<Pheet, T, Op>::get_sum() {
 	return reducer.get_data();
 }
 

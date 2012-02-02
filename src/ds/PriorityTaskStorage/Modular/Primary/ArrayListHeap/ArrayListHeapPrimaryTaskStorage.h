@@ -24,10 +24,10 @@
 
 namespace pheet {
 
-template <class Scheduler, typename TT>
+template <class Pheet, typename TT>
 struct ArrayListHeapPrimaryTaskStorageItem {
 	TT data;
-	BaseStrategy<Scheduler>* s;
+	BaseStrategy<typename Pheet::Scheduler>* s;
 	size_t index;
 };
 
@@ -47,17 +47,18 @@ public:
 };
 
 // BLOCK_SIZE has to be a power of 2 to work with wrap-around of index
-template <class Scheduler, typename TT, size_t BLOCK_SIZE = 256, template <typename S, typename Comp> class PriorityQueueT = Heap>
+template <class Pheet, typename TT, size_t BLOCK_SIZE = 256, template <typename S, typename Comp> class PriorityQueueT = Heap>
 class ArrayListHeapPrimaryTaskStorage {
 public:
 	typedef TT T;
-	typedef ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT> ThisType;
+	typedef ArrayListHeapPrimaryTaskStorage<Pheet, TT, BLOCK_SIZE, PriorityQueueT> ThisType;
+	typedef typename Pheet::Scheduler Scheduler;
 	// Not completely a standard iterator, as it doesn't support a dereference operation, but this makes implementation simpler for now (and even more lightweight)
 	typedef ArrayListPrimaryTaskStorageIterator<ThisType> iterator;
 	typedef ArrayListHeapPrimaryTaskStoragePerformanceCounters<Scheduler> PerformanceCounters;
 	typedef ArrayListPrimaryTaskStorageControlBlock<ThisType> ControlBlock;
 	typedef ArrayListHeapPrimaryTaskStorageItem<Scheduler, T> Item;
-	typedef ExponentialBackoff<> Backoff;
+	typedef typename Pheet::Backoff Backoff;
 	typedef PriorityQueueT<ArrayListHeapPrimaryTaskStorageHeapElement, ArrayListHeapPrimaryTaskStorageComparator> PriorityQueue;
 
 	ArrayListHeapPrimaryTaskStorage(size_t expected_capacity);
@@ -133,26 +134,26 @@ private:
 	friend class ArrayListPrimaryTaskStorageIterator<ThisType>;
 };
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
-const TT ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::null_element = nullable_traits<T>::null_value;
+template <class Pheet, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
+const TT ArrayListHeapPrimaryTaskStorage<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::null_element = nullable_traits<T>::null_value;
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
-const size_t ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::block_size = BLOCK_SIZE;
+template <class Pheet, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
+const size_t ArrayListHeapPrimaryTaskStorage<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::block_size = BLOCK_SIZE;
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
-inline ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::ArrayListHeapPrimaryTaskStorage(size_t expected_capacity)
+template <class Pheet, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
+inline ArrayListHeapPrimaryTaskStorage<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::ArrayListHeapPrimaryTaskStorage(size_t expected_capacity)
 : start_index(0), end_index(0), length(0), current_control_block_id(0), cleanup_control_block_id(0), current_control_block(control_blocks), current_control_block_item_index(0) {
 	current_control_block->init_empty(0, block_reuse);
 }
 /*
-template <class Scheduler, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
-inline ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::ArrayListHeapPrimaryTaskStorage(size_t expected_capacity, PerformanceCounters& perf_count)
+template <class Pheet, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
+inline ArrayListHeapPrimaryTaskStorage<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::ArrayListHeapPrimaryTaskStorage(size_t expected_capacity, PerformanceCounters& perf_count)
 : top(0), bottom(0), data(expected_capacity), perf_count(perf_count) {
 
 }*/
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
-inline ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::~ArrayListHeapPrimaryTaskStorage() {
+template <class Pheet, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
+inline ArrayListHeapPrimaryTaskStorage<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::~ArrayListHeapPrimaryTaskStorage() {
 	Backoff bo;
 	while(cleanup_control_block_id != current_control_block_id) {
 		if(!control_blocks[cleanup_control_block_id].try_cleanup(block_reuse, 0)) {
@@ -189,18 +190,18 @@ inline ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT
 	}
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
-typename ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::iterator ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::begin(PerformanceCounters& pc) {
+template <class Pheet, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
+typename ArrayListHeapPrimaryTaskStorage<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::iterator ArrayListHeapPrimaryTaskStorage<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::begin(PerformanceCounters& pc) {
 	return iterator(start_index);
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
-typename ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::iterator ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::end(PerformanceCounters& pc) {
+template <class Pheet, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
+typename ArrayListHeapPrimaryTaskStorage<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::iterator ArrayListHeapPrimaryTaskStorage<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::end(PerformanceCounters& pc) {
 	return iterator(end_index);
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
-TT ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::local_take(size_t block, size_t block_index, PerformanceCounters& pc) {
+template <class Pheet, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
+TT ArrayListHeapPrimaryTaskStorage<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::local_take(size_t block, size_t block_index, PerformanceCounters& pc) {
 	assert(block < current_control_block->get_length());
 	typename ControlBlock::Item* ccb_data = current_control_block->get_data();
 	assert(block_index - ccb_data[block].offset < block_size);
@@ -220,8 +221,8 @@ TT ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::l
 	return ptsi.data;
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
-TT ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::take(iterator item, PerformanceCounters& pc) {
+template <class Pheet, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
+TT ArrayListHeapPrimaryTaskStorage<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::take(iterator item, PerformanceCounters& pc) {
 	assert(item != end(pc));
 
 	Item* ptsi = item.dereference(this);
@@ -240,8 +241,8 @@ TT ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::t
 	return ptsi->data;
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
-void ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::transfer(ThisType& other, iterator* items, size_t num_items, PerformanceCounters& pc) {
+template <class Pheet, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
+void ArrayListHeapPrimaryTaskStorage<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::transfer(ThisType& other, iterator* items, size_t num_items, PerformanceCounters& pc) {
 	assert(other.is_empty(pc));
 
 	for(size_t i = 0; i < num_items; ++i) {
@@ -265,14 +266,14 @@ void ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>:
 	}
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
-bool ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::is_taken(iterator item, PerformanceCounters& pc) {
+template <class Pheet, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
+bool ArrayListHeapPrimaryTaskStorage<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::is_taken(iterator item, PerformanceCounters& pc) {
 	Item* deref = item.dereference(this);
 	return deref == NULL || deref->index != item.get_index();
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
-prio_t ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::get_steal_priority(iterator item, typename Scheduler::StealerDescriptor& sd, PerformanceCounters& pc) {
+template <class Pheet, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
+prio_t ArrayListHeapPrimaryTaskStorage<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::get_steal_priority(iterator item, typename Scheduler::StealerDescriptor& sd, PerformanceCounters& pc) {
 	Item* deref = item.dereference(this);
 	if(deref == NULL) {
 		return 0;
@@ -288,19 +289,19 @@ prio_t ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT
  * Warning! If multiple tasks are stolen and inserted into another queue, they have to be
  * inserted in the previous insertion order! (by increasing task_id)
  */
-template <class Scheduler, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
-inline size_t ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::get_task_id(iterator item, PerformanceCounters& pc) {
+template <class Pheet, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
+inline size_t ArrayListHeapPrimaryTaskStorage<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::get_task_id(iterator item, PerformanceCounters& pc) {
 	return item.get_index();
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
-inline void ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::deactivate_iterator(iterator item, PerformanceCounters& pc) {
+template <class Pheet, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
+inline void ArrayListHeapPrimaryTaskStorage<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::deactivate_iterator(iterator item, PerformanceCounters& pc) {
 	return item.deactivate();
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
+template <class Pheet, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
 template <class Strategy>
-inline void ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::push(Strategy& s, T item, PerformanceCounters& pc) {
+inline void ArrayListHeapPrimaryTaskStorage<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::push(Strategy& s, T item, PerformanceCounters& pc) {
 	pc.push_time.start_timer();
 
 	size_t offset = current_control_block->get_data()[current_control_block_item_index].offset;
@@ -347,8 +348,8 @@ inline void ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQ
 	pc.push_time.stop_timer();
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
-inline void ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::push_internal(BaseStrategy<Scheduler>* s, T item, PerformanceCounters& pc) {
+template <class Pheet, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
+inline void ArrayListHeapPrimaryTaskStorage<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::push_internal(BaseStrategy<Scheduler>* s, T item, PerformanceCounters& pc) {
 	pc.push_time.start_timer();
 
 	size_t offset = current_control_block->get_data()[current_control_block_item_index].offset;
@@ -390,8 +391,8 @@ inline void ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQ
 	pc.push_time.stop_timer();
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
-TT ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::pop(PerformanceCounters& pc) {
+template <class Pheet, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
+TT ArrayListHeapPrimaryTaskStorage<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::pop(PerformanceCounters& pc) {
 	pc.total_size_pop.add(length);
 	pc.pop_time.start_timer();
 	T ret;
@@ -419,8 +420,8 @@ TT ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::p
 	return null_element;
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
-inline size_t ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::find_block_for_index(size_t index) {
+template <class Pheet, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
+inline size_t ArrayListHeapPrimaryTaskStorage<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::find_block_for_index(size_t index) {
 	size_t l = current_control_block->get_length();
 	typename ControlBlock::Item* ccb_data = current_control_block->get_data();
 
@@ -449,8 +450,8 @@ inline size_t ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, Priorit
 	}
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
-inline TT ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::peek(PerformanceCounters& pc) {
+template <class Pheet, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
+inline TT ArrayListHeapPrimaryTaskStorage<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::peek(PerformanceCounters& pc) {
 	if(pq.empty()) {
 		return null_element;
 	}
@@ -466,24 +467,24 @@ inline TT ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQue
 	return ccb_data[block].data[he_index - ccb_data[block].offset].data;
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
-inline size_t ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::get_length(PerformanceCounters& pc) {
+template <class Pheet, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
+inline size_t ArrayListHeapPrimaryTaskStorage<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::get_length(PerformanceCounters& pc) {
 	return length;
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
-inline bool ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::is_empty(PerformanceCounters& pc) {
+template <class Pheet, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
+inline bool ArrayListHeapPrimaryTaskStorage<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::is_empty(PerformanceCounters& pc) {
 	clean(pc);
 	return length == 0;
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
-inline bool ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::is_full(PerformanceCounters& pc) {
+template <class Pheet, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
+inline bool ArrayListHeapPrimaryTaskStorage<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::is_full(PerformanceCounters& pc) {
 	return false;
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
-void ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::clean(PerformanceCounters& pc) {
+template <class Pheet, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
+void ArrayListHeapPrimaryTaskStorage<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::clean(PerformanceCounters& pc) {
 	pc.clean_time.start_timer();
 
 	while(cleanup_control_block_id != current_control_block_id) {
@@ -518,18 +519,18 @@ void ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>:
 	pc.clean_time.stop_timer();
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
-inline void ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::perform_maintenance(PerformanceCounters& pc) {
+template <class Pheet, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
+inline void ArrayListHeapPrimaryTaskStorage<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::perform_maintenance(PerformanceCounters& pc) {
 	clean(pc);
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
-void ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::print_name() {
+template <class Pheet, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
+void ArrayListHeapPrimaryTaskStorage<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::print_name() {
 	std::cout << "ArrayListHeapPrimaryTaskStorage";
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
-typename ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::ControlBlock* ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::acquire_control_block() {
+template <class Pheet, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
+typename ArrayListHeapPrimaryTaskStorage<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::ControlBlock* ArrayListHeapPrimaryTaskStorage<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::acquire_control_block() {
 	Backoff bo;
 	while(true) {
 		ControlBlock* cb = current_control_block;
@@ -541,8 +542,8 @@ typename ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueu
 	}
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
-void ArrayListHeapPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE, PriorityQueueT>::create_next_control_block(PerformanceCounters& pc) {
+template <class Pheet, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
+void ArrayListHeapPrimaryTaskStorage<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::create_next_control_block(PerformanceCounters& pc) {
 	pc.create_control_block_time.start_timer();
 
 	clean(pc);

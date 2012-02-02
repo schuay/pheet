@@ -11,19 +11,20 @@
 
 #include "../settings.h"
 
-#include "../models/CPUHierarchy/Oversubscribed/OversubscribedSimpleCPUHierarchy.h"
+#include "../models/MachineModel/HWLoc/HWLocMachineModel.h"
 
 namespace pheet {
 
-template <class Env, class MachineModelT>
+template <class Env, template <class Env> class MachineModelT>
 class SystemModelEnv {
 public:
-	typedef MachineModelT MachineModel;
+	typedef MachineModelT<Env> MachineModel;
 };
 
 template <class Env>
-class PheetSystemModel : public SystemModelEnv<Env, OversubscribedSimpleCPUHierarchy> {
-	typedef SystemModelEnv<Env> Base;
+class PheetSystemModel : public SystemModelEnv<Env, HWLocMachineModel> {
+public:
+	typedef SystemModelEnv<Env, HWLocMachineModel> Base;
 	typedef typename Base::MachineModel MachineModel;
 };
 
