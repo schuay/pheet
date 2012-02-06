@@ -22,7 +22,7 @@ public:
 	ModularTaskStoragePerformanceCounters(ModularTaskStoragePerformanceCounters& other);
 	~ModularTaskStoragePerformanceCounters();
 
-	void print_headers();
+	static void print_headers();
 	void print_values();
 
 //private:
@@ -49,8 +49,8 @@ inline ModularTaskStoragePerformanceCounters<Scheduler, PrimaryPerformanceCounte
 
 template <class Scheduler, class PrimaryPerformanceCounters, class SecondaryPerformanceCounters>
 inline void ModularTaskStoragePerformanceCounters<Scheduler, PrimaryPerformanceCounters, SecondaryPerformanceCounters>::print_headers() {
-	primary_perf_count.print_headers();
-	secondary_perf_count.print_headers();
+	PrimaryPerformanceCounters::print_headers();
+	SecondaryPerformanceCounters::print_headers();
 }
 
 template <class Scheduler, class PrimaryPerformanceCounters, class SecondaryPerformanceCounters>

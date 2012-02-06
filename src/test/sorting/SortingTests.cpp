@@ -8,6 +8,7 @@
 
 #include "SortingTests.h"
 
+#ifdef SORTING_TEST
 #include "Reference/ReferenceSTLSort.h"
 #include "Reference/ReferenceQuicksort.h"
 #include "Dag/DagQuicksort.h"
@@ -23,22 +24,25 @@
 #include "../../pheet.h"
 
 #include <iostream>
+#endif
 
 namespace pheet {
 
 
-SortingTests<true>::SortingTests() {
+SortingTests::SortingTests() {
 
 }
 
-SortingTests<true>::~SortingTests() {
+SortingTests::~SortingTests() {
 
 }
 
-void SortingTests<true>::run_test() {
+void SortingTests::run_test() {
+#ifdef SORTING_TEST
 	std::cout << "----" << std::endl;
-std::cout << Pheet::Environment::max_cpus << std::endl;
-	this->run_sorter<DagQuicksort<typename Pheet::Environment> >();
+//std::cout << Pheet::Environment::max_cpus << std::endl;
+	this->run_sorter<	Pheet,
+						DagQuicksort>();
 
 /*	this->run_sorter<MixedModeQuicksort<DefaultMixedModeScheduler> >();
 	this->run_sorter<DagQuicksort<DefaultMixedModeScheduler> >();
@@ -52,6 +56,7 @@ std::cout << Pheet::Environment::max_cpus << std::endl;
 	this->run_sorter<ReferenceHeapSort<STLPriorityQueueWrapper> >();
 	this->run_sorter<ReferenceHeapSort<Heap> >();*/
 //	this->run_sorter<ReferenceHeapSort<SortedArrayHeap> >();
+#endif
 }
 
 

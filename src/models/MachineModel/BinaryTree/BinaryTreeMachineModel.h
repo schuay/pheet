@@ -38,16 +38,15 @@ public:
 	void unbind();
 
 private:
-	BinaryTreeMachineModel(BaseModel& base, procs_t first_child, procs_t last_child, procs_t node_id);
+	BinaryTreeMachineModel(BaseModel& base, procs_t first_child, procs_t last_child);
 	BaseModel base;
 	procs_t first_child;
 	procs_t last_child;
-	procs_t node_id;
 };
 
 template <class Pheet, class BaseModelT>
 BinaryTreeMachineModel<Pheet, BaseModelT>::BinaryTreeMachineModel()
-: first_child(0), last_child(0), node_id(0) {
+: first_child(0), last_child(0) {
 	assert(base.is_leaf() || base.get_num_children() > 0);
 	while((!base.is_leaf()) && base.get_num_children() == 1) {
 		base = base.get_child(0);
@@ -60,33 +59,33 @@ BinaryTreeMachineModel<Pheet, BaseModelT>::BinaryTreeMachineModel()
 
 template <class Pheet, class BaseModelT>
 BinaryTreeMachineModel<Pheet, BaseModelT>::BinaryTreeMachineModel(Self const& other)
-: base(other.base), first_child(other.first_child), last_child(other.last_child), node_id(other.node_id) {
+: base(other.base), first_child(other.first_child), last_child(other.last_child) {
 	assert(base.is_leaf() || base.get_num_children() > 1);
 	assert(base.is_leaf() || last_child > first_child);
 }
 
 template <class Pheet, class BaseModelT>
 BinaryTreeMachineModel<Pheet, BaseModelT>::BinaryTreeMachineModel(Self const&& other)
-: base(other.base), first_child(other.first_child), last_child(other.last_child), node_id(other.node_id) {
+: base(other.base), first_child(other.first_child), last_child(other.last_child) {
 	assert(base.is_leaf() || base.get_num_children() > 1);
 	assert(base.is_leaf() || last_child > first_child);
 }
 
 template <class Pheet, class BaseModelT>
-BinaryTreeMachineModel<Pheet, BaseModelT>::BinaryTreeMachineModel(BaseModel& base, procs_t first_child, procs_t last_child, procs_t node_id)
-: base(base), first_child(first_child), last_child(last_child), node_id(node_id) {
-	assert(base.is_leaf() || last_child >= first_child);
-	if(!base.is_leaf() && (last_child == first_child)) {
+BinaryTreeMachineModel<Pheet, BaseModelT>::BinaryTreeMachineModel(BaseModel& base, procs_t first_child, procs_t last_child)
+: base(base), first_child(first_child), last_child(last_child) {
+	assert(this->base.is_leaf() || this->last_child >= this->first_child);
+	if(!this->base.is_leaf() && (this->last_child == this->first_child)) {
 		do{
-			base = base.get_child(0);
-		} while((!base.is_leaf()) && base.get_num_children() == 1);
-		first_child = 0;
-		if(base.is_leaf()) {
-			last_child = 0;
+			this->base = this->base.get_child(this->first_child);
+			this->first_child = 0;
+		} while((!this->base.is_leaf()) && this->base.get_num_children() == 1);
+		if(this->base.is_leaf()) {
+			this->last_child = 0;
 		}
 		else {
-			last_child = base.get_num_children() - 1;
-			assert(last_child > first_child);
+			this->last_child = this->base.get_num_children() - 1;
+			assert(this->last_child > this->first_child);
 		}
 	}
 }
@@ -101,7 +100,6 @@ BinaryTreeMachineModel<Pheet, BaseModelT>& BinaryTreeMachineModel<Pheet, BaseMod
 	base = other.base;
 	first_child = other.first_child;
 	last_child = other.last_child;
-	node_id = other.node_id;
 }
 
 template <class Pheet, class BaseModelT>
@@ -109,7 +107,6 @@ BinaryTreeMachineModel<Pheet, BaseModelT>& BinaryTreeMachineModel<Pheet, BaseMod
 	base = other.base;
 	first_child = other.first_child;
 	last_child = other.last_child;
-	node_id = other.node_id;
 	return *this;
 }
 
@@ -130,27 +127,27 @@ BinaryTreeMachineModel<Pheet, BaseModelT> BinaryTreeMachineModel<Pheet, BaseMode
 	assert(last_child > first_child);
 	procs_t middle = first_child + ((last_child - first_child) >> 1);
 	if(id == 0) {
-		return Self(base, first_child, middle, 0);
+		return Self(base, first_child, middle);
 	}
 	else {
 		assert(id == 1);
-		return Self(base, middle + 1, last_child, 1);
+		return Self(base, middle + 1, last_child);
 	}
 }
-
+/*
 template <class Pheet, class BaseModelT>
 procs_t BinaryTreeMachineModel<Pheet, BaseModelT>::get_node_id() {
 	return node_id;
-}
+}*/
 
 template <class Pheet, class BaseModelT>
 procs_t BinaryTreeMachineModel<Pheet, BaseModelT>::get_node_offset() {
 	if(first_child == 0) {
-		return base.get_node_id();
+		return base.get_node_offset();
 	}
 	else {
 		assert(!is_leaf());
-		return base.get_child(first_child).get_node_id();
+		return base.get_child(first_child).get_node_offset();
 	}
 }
 

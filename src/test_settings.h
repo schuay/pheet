@@ -22,6 +22,12 @@ struct GraphBipartitioningProblem {
 
 namespace pheet {
 
+#ifdef SORTING_TEST
+const bool    sorting_test        = SORTING_TEST;
+#else
+const bool    sorting_test        = false;
+#endif
+
 #ifdef INAROW_TEST
 const bool    inarow_test        = INAROW_TEST;
 #else

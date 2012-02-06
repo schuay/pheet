@@ -39,20 +39,20 @@ private:
 	typedef typename Pheet::Backoff Backoff;
 	View* my_view;
 	View* parent_view;
-	typename Pheet::Place* tec;
+	procs_t place_id;
 };
 
 template <class Pheet, class Monoid>
 template <typename ... ConsParams>
 OrderedReducer<Pheet, Monoid>::OrderedReducer(ConsParams&& ... params)
-:my_view(new View(static_cast<ConsParams&&>(params) ...)), parent_view(NULL), tec(Pheet::get_context())
+:my_view(new View(static_cast<ConsParams&&>(params) ...)), parent_view(NULL), place_id(Pheet::get_place_id())
 {
 
 }
 
 template <class Pheet, class Monoid>
 OrderedReducer<Pheet, Monoid>::OrderedReducer(OrderedReducer& other)
-: tec(Pheet::get_context()){
+: place_id(Pheet::get_place_id()){
 	// Before we create a new view, we should minimize. Maybe this provides us with a view to reuse
 	other.minimize();
 
@@ -73,7 +73,7 @@ void OrderedReducer<Pheet, Monoid>::finalize() {
 		assert(my_view->is_reduced());
 		delete my_view;
 	}
-	else if(tec == Pheet::get_context()) {
+	else if(place_id == Pheet::get_place_id()) {
 		// This reducer has only been used locally. No need for sync
 		parent_view->set_local_predecessor(my_view);
 	}

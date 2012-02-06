@@ -22,7 +22,7 @@ using namespace std;
 
 namespace pheet {
 
-template <class Sorter>
+template <class Pheet, template <class P> class Sorter>
 class SortingTest : Test {
 public:
 	SortingTest(procs_t cpus, int type, size_t size, unsigned int seed);
@@ -42,47 +42,51 @@ private:
 	static char const* const types[];
 };
 
-template <class Sorter>
-char const* const SortingTest<Sorter>::types[] = {"random", "gauss", "equal", "bucket", "staggered"};
+template <class Pheet, template <class P> class Sorter>
+char const* const SortingTest<Pheet, Sorter>::types[] = {"random", "gauss", "equal", "bucket", "staggered"};
 
-template <class Sorter>
-SortingTest<Sorter>::SortingTest(procs_t cpus, int type, size_t size, unsigned int seed)
+template <class Pheet, template <class P> class Sorter>
+SortingTest<Pheet, Sorter>::SortingTest(procs_t cpus, int type, size_t size, unsigned int seed)
 : cpus(cpus), type(type), size(size), seed(seed) {
 
 }
 
-template <class Sorter>
-SortingTest<Sorter>::~SortingTest() {
+template <class Pheet, template <class P> class Sorter>
+SortingTest<Pheet, Sorter>::~SortingTest() {
 
 }
 
-template <class Sorter>
-void SortingTest<Sorter>::run_test() {
+template <class Pheet, template <class P> class Sorter>
+void SortingTest<Pheet, Sorter>::run_test() {
 	unsigned int* data = generate_data();
 
-	Sorter s(cpus, data, size);
+	typename Pheet::Environment::PerformanceCounters pc;
 
 	Time start, end;
-	check_time(start);
-	s.sort();
-	check_time(end);
+
+	{typename Pheet::Environment env(cpus, pc);
+		check_time(start);
+		Pheet::template
+			finish<Sorter<Pheet> >(data, size);
+		check_time(end);
+	}
 
 	size_t runs = get_number_of_runs(data);
 	double seconds = calculate_seconds(start, end);
 	std::cout << "test\tsorter\tscheduler\ttype\tsize\tseed\tcpus\ttotal_time\truns\t";
-	s.print_headers();
+	Pheet::Environment::PerformanceCounters::print_headers();
 	std::cout << std::endl;
-	cout << "sorting\t" << Sorter::name << "\t";
-	Sorter::print_scheduler_name();
+	cout << "sorting\t" << Sorter<Pheet>::name << "\t";
+	Pheet::Environment::print_name();
 	std::cout << "\t" << types[type] << "\t" << size << "\t" << seed << "\t" << cpus << "\t" << seconds << "\t" << runs << "\t";
-	s.print_results();
+	pc.print_values();
 	cout << endl;
 	delete[] data;
 }
 
 
-template <class Sorter>
-unsigned int* SortingTest<Sorter>::generate_data() {
+template <class Pheet, template <class P> class Sorter>
+unsigned int* SortingTest<Pheet, Sorter>::generate_data() {
 	unsigned int* data = new unsigned int[size];
 
 	boost::mt19937 rng;
@@ -184,8 +188,8 @@ unsigned int* SortingTest<Sorter>::generate_data() {
 	return data;
 }
 
-template <class Sorter>
-size_t SortingTest<Sorter>::get_number_of_runs(unsigned int* data) {
+template <class Pheet, template <class P> class Sorter>
+size_t SortingTest<Pheet, Sorter>::get_number_of_runs(unsigned int* data) {
 	unsigned int prev = data[0];
 	size_t runs = 1;
 //	cout << data[0];

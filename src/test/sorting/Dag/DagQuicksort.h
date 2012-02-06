@@ -1,5 +1,5 @@
 /*
- * DagQuicksort.h
+ * DagQuicksortImpl.h
  *
  *  Created on: 08.04.2011
  *      Author: Martin Wimmer
@@ -9,75 +9,103 @@
 #ifndef DAGQUICKSORT_H_
 #define DAGQUICKSORT_H_
 
+#include "../../../settings.h"
 #include "../../../misc/types.h"
 #include "../../../misc/atomics.h"
-#include "DagQuicksortTask.h"
+
+#include <functional>
+#include <algorithm>
 
 namespace pheet {
 
-template <class Scheduler>
-class DagQuicksort {
+template <class Pheet, size_t CUTOFF_LENGTH>
+class DagQuicksortImpl : public Pheet::Task {
 public:
-	DagQuicksort(procs_t cpus, unsigned int* data, size_t length);
-	~DagQuicksort();
+	typedef DagQuicksortImpl<Pheet, CUTOFF_LENGTH> Self;
 
-	void sort();
-	void print_results();
+	template<size_t NEW_VAL>
+		using T_CUTOFF_LENGTH = DagQuicksortImpl<Pheet, NEW_VAL>;
+
+	DagQuicksortImpl(unsigned int* data, size_t length);
+	~DagQuicksortImpl();
+
+	virtual void operator()();
+/*	void print_results();
 
 	void print_headers();
 
 	static void print_scheduler_name();
-
-	static procs_t const max_cpus;
+*/
+//	static procs_t const max_cpus;
 	static char const name[];
-	static char const * const scheduler_name;
+//	static char const * const scheduler_name;
 
 private:
 	unsigned int* data;
 	size_t length;
-//	typename Scheduler::CPUHierarchy cpu_hierarchy;
-	Scheduler scheduler;
 };
 
-template <class Scheduler>
-procs_t const DagQuicksort<Scheduler>::max_cpus = Scheduler::max_cpus;
+//template <class Pheet>
+//procs_t const DagQuicksortImpl<Pheet>::max_cpus = Pheet::max_cpus;
 
-template <class Scheduler>
-char const DagQuicksort<Scheduler>::name[] = "Dag Quicksort";
+template <class Pheet, size_t CUTOFF_LENGTH>
+char const DagQuicksortImpl<Pheet, CUTOFF_LENGTH>::name[] = "Dag Quicksort";
 
-template <class Scheduler>
-char const * const DagQuicksort<Scheduler>::scheduler_name = Scheduler::name;
+//template <class Pheet>
+//char const * const DagQuicksortImpl<Pheet>::scheduler_name = Pheet::name;
 
-template <class Scheduler>
-DagQuicksort<Scheduler>::DagQuicksort(procs_t cpus, unsigned int *data, size_t length)
-: data(data), length(length), scheduler(cpus) {
-
-}
-
-template <class Scheduler>
-DagQuicksort<Scheduler>::~DagQuicksort() {
+template <class Pheet, size_t CUTOFF_LENGTH>
+DagQuicksortImpl<Pheet, CUTOFF_LENGTH>::DagQuicksortImpl(unsigned int *data, size_t length)
+: data(data), length(length) {
 
 }
 
-template <class Scheduler>
-void DagQuicksort<Scheduler>::sort() {
-	scheduler.template finish<DagQuicksortTask<typename Scheduler::Task> >(data, length);
+template <class Pheet, size_t CUTOFF_LENGTH>
+DagQuicksortImpl<Pheet, CUTOFF_LENGTH>::~DagQuicksortImpl() {
+
 }
 
-template <class Scheduler>
-void DagQuicksort<Scheduler>::print_results() {
+template <class Pheet, size_t CUTOFF_LENGTH>
+void DagQuicksortImpl<Pheet, CUTOFF_LENGTH>::operator()() {
+	if(length <= 1)
+		return;
+
+	unsigned int * middle = std::partition(data, data + length - 1,
+		std::bind2nd(std::less<unsigned int>(), *(data + length - 1)));
+	size_t pivot = middle - data;
+	std::swap(*(data + length - 1), *middle);    // move pivot to middle
+
+	if(pivot > CUTOFF_LENGTH) {
+		Pheet::template
+			spawn<Self>(data, pivot);
+	}
+	else {
+		Pheet::template
+			call<Self>(data, pivot);
+	}
+	Pheet::template
+		call<Self>(data + pivot + 1, length - pivot - 1);
+}
+
+/*
+template <class Pheet>
+void DagQuicksortImpl<Pheet>::print_results() {
 	scheduler.print_performance_counter_values();
 }
 
-template <class Scheduler>
-void DagQuicksort<Scheduler>::print_headers() {
+template <class Pheet>
+void DagQuicksortImpl<Pheet>::print_headers() {
 	scheduler.print_performance_counter_headers();
 }
 
-template <class Scheduler>
-void DagQuicksort<Scheduler>::print_scheduler_name() {
-	Scheduler::print_name();
+template <class Pheet>
+void DagQuicksortImpl<Pheet>::print_scheduler_name() {
+	Pheet::print_name();
 }
+*/
+
+template<class Pheet>
+using DagQuicksort = DagQuicksortImpl<Pheet, 512>;
 
 }
 

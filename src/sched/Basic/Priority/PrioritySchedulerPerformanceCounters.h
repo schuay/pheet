@@ -33,7 +33,7 @@ public:
 		  finish_stack_blocking_min(other.finish_stack_blocking_min),
 		  task_storage_performance_counters(other.task_storage_performance_counters) {}
 
-	void print_headers();
+	static void print_headers();
 	void print_values();
 
 //private:
@@ -76,7 +76,7 @@ inline void PrioritySchedulerPerformanceCounters<Pheet, TaskStoragePerformanceCo
 	MaxPerformanceCounter<Pheet, size_t, scheduler_measure_finish_stack_nonblocking_max>::print_header("finish_stack_nonblocking_max\t");
 	MinPerformanceCounter<Pheet, size_t, scheduler_measure_finish_stack_blocking_min>::print_header("finish_stack_blocking_min\t");
 
-	task_storage_performance_counters.print_headers();
+	TaskStoragePerformanceCounters::print_headers();
 }
 
 template <class Pheet, class TaskStoragePerformanceCounters>

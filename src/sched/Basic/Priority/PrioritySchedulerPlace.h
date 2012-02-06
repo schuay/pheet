@@ -78,6 +78,7 @@ public:
 	PrioritySchedulerPlace(LevelDescription* levels, procs_t num_initialized_levels, InternalMachineModel model, typename Pheet::Scheduler::State* scheduler_state, PerformanceCounters& perf_count);
 	~PrioritySchedulerPlace();
 
+	void prepare_root();
 	void join();
 
 	procs_t get_id();
@@ -163,11 +164,13 @@ size_t const PrioritySchedulerPlace<Pheet, CallThreshold>::stack_size = (8192 > 
 
 template <class Pheet, uint8_t CallThreshold>
 thread_local PrioritySchedulerPlace<Pheet, CallThreshold>*
-PrioritySchedulerPlace<Pheet, CallThreshold>::local_context = NULL;
+PrioritySchedulerPlace<Pheet, CallThreshold>::local_context = nullptr;
 
 template <class Pheet, uint8_t CallThreshold>
 PrioritySchedulerPlace<Pheet, CallThreshold>::PrioritySchedulerPlace(InternalMachineModel model, Place** places, procs_t num_places, typename Pheet::Scheduler::State* scheduler_state, PerformanceCounters& perf_count)
-: num_initialized_levels(1), num_levels(find_last_bit_set(num_places)), levels(new LevelDescription[num_levels]),
+: machine_model(model),
+  num_initialized_levels(1), num_levels(find_last_bit_set(num_places)), levels(new LevelDescription[num_levels]),
+  current_task_parent(nullptr),
   stack_filled_left(0), stack_filled_right(stack_size), stack_init_left(0),
   scheduler_state(scheduler_state),
   preferred_queue_length(find_last_bit_set(num_places) << CallThreshold),
@@ -184,25 +187,18 @@ PrioritySchedulerPlace<Pheet, CallThreshold>::PrioritySchedulerPlace(InternalMac
 	levels[0].size = num_places;
 	levels[0].partners = places;
 	levels[0].num_partners = 0;
+	// We have to initialize this now, as the value is already used by performance counters during initialization
+	levels[0].local_id = 0;
 
 	initialize_levels();
-	machine_model.bind();
-	stack = new StackElement[stack_size];
-
-	assert(local_context == NULL);
-	local_context = this;
-
-	start_finish_region();
-
-	performance_counters.finish_stack_blocking_min.add_value(stack_size);
-	performance_counters.finish_stack_nonblocking_max.add_value(0);
-
-	scheduler_state->state_barrier.wait(0, levels[0].size - 1);
 }
 
 template <class Pheet, uint8_t CallThreshold>
 PrioritySchedulerPlace<Pheet, CallThreshold>::PrioritySchedulerPlace(LevelDescription* levels, procs_t num_initialized_levels, InternalMachineModel model, typename Pheet::Scheduler::State* scheduler_state, PerformanceCounters& perf_count)
-: num_initialized_levels(num_initialized_levels), num_levels(num_initialized_levels + find_last_bit_set(levels[num_initialized_levels - 1].size)), levels(new LevelDescription[num_levels]),
+: machine_model(model),
+  num_initialized_levels(num_initialized_levels), num_levels(num_initialized_levels + find_last_bit_set(levels[num_initialized_levels - 1].size >> 1)),
+  levels(new LevelDescription[num_levels]),
+  current_task_parent(nullptr),
   stack_filled_left(0), stack_filled_right(stack_size), stack_init_left(0),
   scheduler_state(scheduler_state),
   preferred_queue_length(find_last_bit_set(levels[0].size) << CallThreshold),
@@ -211,6 +207,8 @@ PrioritySchedulerPlace<Pheet, CallThreshold>::PrioritySchedulerPlace(LevelDescri
   performance_counters(perf_count) {
 
 	memcpy(this->levels, levels, sizeof(LevelDescription) * num_initialized_levels);
+	// We have to initialize this now, as the value is already used by performance counters during initialization
+	this->levels[0].local_id = this->levels[num_initialized_levels - 1].global_id_offset;
 
 	thread_executor.run();
 }
@@ -219,12 +217,17 @@ template <class Pheet, uint8_t CallThreshold>
 PrioritySchedulerPlace<Pheet, CallThreshold>::~PrioritySchedulerPlace() {
 	if(get_id() == 0) {
 		end_finish_region();
+		// we can shut down the scheduler
+		scheduler_state->current_state = 2;
+
+		performance_counters.task_time.stop_timer();
+		performance_counters.total_time.stop_timer();
 
 		scheduler_state->state_barrier.barrier(1, levels[0].size);
 
 		for(procs_t i = num_levels - 1; i >= 1; --i) {
-			levels[i].partners[i]->join();
-			delete levels[i].partners[i];
+			levels[i].partners[0]->join();
+			delete levels[i].partners[0];
 		}
 
 		machine_model.unbind();
@@ -235,24 +238,44 @@ PrioritySchedulerPlace<Pheet, CallThreshold>::~PrioritySchedulerPlace() {
 }
 
 template <class Pheet, uint8_t CallThreshold>
+void PrioritySchedulerPlace<Pheet, CallThreshold>::prepare_root() {
+	machine_model.bind();
+	stack = new StackElement[stack_size];
+
+	scheduler_state->state_barrier.signal(0);
+
+	assert(local_context == NULL);
+	local_context = this;
+
+
+	performance_counters.finish_stack_blocking_min.add_value(stack_size);
+	performance_counters.finish_stack_nonblocking_max.add_value(0);
+
+	scheduler_state->state_barrier.wait(0, levels[0].size);
+
+	performance_counters.task_time.start_timer();
+	start_finish_region();
+}
+
+template <class Pheet, uint8_t CallThreshold>
 void PrioritySchedulerPlace<Pheet, CallThreshold>::initialize_levels() {
 	procs_t base_offset;
 	procs_t size;
 
 	assert(num_initialized_levels > 0);
-	base_offset = levels[num_initialized_levels - 1].local_id;
+	base_offset = levels[num_initialized_levels - 1].global_id_offset;
 	size = levels[num_initialized_levels - 1].size;
 
 	Place** places = levels[0].partners;
 
-	while(!machine_model.is_leaf()) {
+	while((size > 1) && (!machine_model.is_leaf())) {
 		assert(machine_model.get_num_children() == 2);
 		grow_levels_structure();
 
 		InternalMachineModel child(machine_model.get_child(1));
 		procs_t offset = child.get_node_offset();
 		assert(offset > base_offset);
-		if(offset < size) {
+		if((offset - base_offset) < size) {
 			levels[num_initialized_levels].size = size - (offset - base_offset);
 			levels[num_initialized_levels].global_id_offset = offset;
 			levels[num_initialized_levels].num_partners = offset - base_offset;
@@ -278,7 +301,8 @@ void PrioritySchedulerPlace<Pheet, CallThreshold>::initialize_levels() {
 
 	assert(levels[num_initialized_levels - 1].size == 1);
 	procs_t global_id = levels[num_initialized_levels - 1].global_id_offset;
-	for(procs_t i = 0; i < num_initialized_levels; ++i) {
+	// Level 0 is already initialized in the constructor
+	for(procs_t i = 1; i < num_initialized_levels; ++i) {
 		levels[i].local_id = global_id - levels[i].global_id_offset;
 	}
 	num_levels = num_initialized_levels;
@@ -288,7 +312,7 @@ template <class Pheet, uint8_t CallThreshold>
 void PrioritySchedulerPlace<Pheet, CallThreshold>::grow_levels_structure() {
 	if(num_initialized_levels == num_levels) {
 		// We have allocated to little levels
-		procs_t new_size = num_levels + find_last_bit_set(levels[num_levels - 1].size - levels[num_levels - 1].num_partners);
+		procs_t new_size = num_levels + find_last_bit_set(levels[num_levels - 1].size >> 1);
 		assert(new_size > num_levels);
 		LevelDescription* tmp = new LevelDescription[new_size];
 		memcpy(tmp, levels, num_levels * sizeof(LevelDescription));
@@ -323,10 +347,11 @@ void PrioritySchedulerPlace<Pheet, CallThreshold>::run() {
 
 	scheduler_state->state_barrier.signal(0);
 
+	performance_counters.total_time.start_timer();
 	performance_counters.finish_stack_blocking_min.add_value(stack_size);
 	performance_counters.finish_stack_nonblocking_max.add_value(0);
 
-	scheduler_state->state_barrier.wait(0, levels[0].size - 1);
+	scheduler_state->state_barrier.wait(0, levels[0].size);
 
 	// Make sure the original initialization by all places is visible
 	MEMORY_FENCE();
@@ -341,8 +366,8 @@ void PrioritySchedulerPlace<Pheet, CallThreshold>::run() {
 		if(levels[i].global_id_offset != levels[i-1].global_id_offset) {
 			break;
 		}
-		levels[i].partners[i]->join();
-		delete levels[i].partners[i];
+		levels[i].partners[0]->join();
+		delete levels[i].partners[0];
 	}
 
 	performance_counters.total_time.stop_timer();
@@ -364,7 +389,7 @@ void PrioritySchedulerPlace<Pheet, CallThreshold>::execute_task(Task* task, Stac
 
 	// Execute task
 	performance_counters.task_time.start_timer();
-	(*task)(*this);
+	(*task)();
 	performance_counters.task_time.stop_timer();
 
 	// Check whether current_task_parent still is parent (if not, there is some error)
@@ -413,6 +438,7 @@ void PrioritySchedulerPlace<Pheet, CallThreshold>::main_loop() {
 						assert(task_storage.is_empty());
 						performance_counters.num_unsuccessful_steal_calls.incr();
 					}
+					--level;
 				}
 				if(di.task == NULL) {
 					assert(task_storage.is_empty());
@@ -463,6 +489,7 @@ void PrioritySchedulerPlace<Pheet, CallThreshold>::wait_for_finish(StackElement*
 						assert(task_storage.is_empty());
 						performance_counters.num_unsuccessful_steal_calls.incr();
 					}
+					--level;
 				}
 				if(di.task == NULL) {
 					assert(task_storage.is_empty());
@@ -636,10 +663,10 @@ inline void PrioritySchedulerPlace<Pheet, CallThreshold>::finalize_stack_element
 			}
 		}
 	}
-	else {
+/*	else {
 		// Root element - we can shut down the scheduler
 		scheduler_state->current_state = 2;
-	}
+	}*/
 }
 
 template <class Pheet, uint8_t CallThreshold>
@@ -765,7 +792,7 @@ void PrioritySchedulerPlace<Pheet, CallThreshold>::call(TaskParams&& ... params)
 	// Create task
 	CallTaskType task(static_cast<TaskParams&&>(params) ...);
 	// Execute task
-	task(*this);
+	task();
 }
 
 template <class Pheet, uint8_t CallThreshold>

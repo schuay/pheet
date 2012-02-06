@@ -20,7 +20,7 @@ public:
 	MultiStealSecondaryTaskStoragePerformanceCounters(MultiStealSecondaryTaskStoragePerformanceCounters& other);
 	~MultiStealSecondaryTaskStoragePerformanceCounters();
 
-	void print_headers();
+	static void print_headers();
 	void print_values();
 
 	BasicPerformanceCounter<Scheduler, task_storage_count_steals> num_stolen;

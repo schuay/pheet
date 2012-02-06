@@ -14,18 +14,13 @@
  */
 namespace pheet {
 
-template <class Sched>
+template <class Pheet>
 class SchedulerTask {
 public:
-	typedef Sched Scheduler;
-	typedef typename Scheduler::Finish Finish;
-	typedef typename Scheduler::Place Place;
-	typedef typename Scheduler::Place TEC;
-
 	SchedulerTask();
 	virtual ~SchedulerTask();
 
-	virtual void operator()(typename Scheduler::Place& tec) = 0;
+	virtual void operator()() = 0;
 
 private:
 };

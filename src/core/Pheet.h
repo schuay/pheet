@@ -42,21 +42,22 @@ public:
 	~PheetEnv() {}
 
 	template<class CallTaskType, typename ... TaskParams>
-		void finish(TaskParams&& ... params);
+		static void finish(TaskParams&& ... params);
 
 	template<class CallTaskType, typename ... TaskParams>
-		void call(TaskParams&& ... params);
+		static void call(TaskParams&& ... params);
 
 	template<class CallTaskType, typename ... TaskParams>
-		void spawn(TaskParams&& ... params);
+		static void spawn(TaskParams&& ... params);
 
 	template<class CallTaskType, class Strategy, typename ... TaskParams>
-		void spawn_prio(Strategy s, TaskParams&& ... params);
+		static void spawn_prio(Strategy s, TaskParams&& ... params);
 
-	std::mt19937& get_rng();
-	template <typename IntT> IntT rand_int(IntT max);
-	template <typename IntT> IntT rand_int(IntT min, IntT max);
-	Place* get_place();
+	static std::mt19937& get_rng();
+	template <typename IntT> static IntT rand_int(IntT max);
+	template <typename IntT> static IntT rand_int(IntT min, IntT max);
+	static Place* get_place();
+	static procs_t get_place_id();
 
 private:
 
@@ -107,6 +108,17 @@ inline
 typename PheetEnv<SchedulerT, SystemModelT, PrimitivesT, DataStructuresT>::Place*
 PheetEnv<SchedulerT, SystemModelT, PrimitivesT, DataStructuresT>::get_place() {
 	return Scheduler::get_place();
+}
+
+template <template <class Env> class SchedulerT, template <class Env> class SystemModelT, template <class Env> class PrimitivesT, template <class Env> class DataStructuresT>
+inline
+procs_t
+PheetEnv<SchedulerT, SystemModelT, PrimitivesT, DataStructuresT>::get_place_id() {
+	Place* place = get_place();
+	if(place == nullptr) {
+		return 0;
+	}
+	return place->get_id();
 }
 
 template <template <class Env> class SchedulerT, template <class Env> class SystemModelT, template <class Env> class PrimitivesT, template <class Env> class DataStructuresT>

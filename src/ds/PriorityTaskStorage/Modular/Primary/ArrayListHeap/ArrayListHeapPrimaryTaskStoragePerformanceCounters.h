@@ -18,7 +18,7 @@ public:
 	ArrayListHeapPrimaryTaskStoragePerformanceCounters(ArrayListHeapPrimaryTaskStoragePerformanceCounters& other);
 	~ArrayListHeapPrimaryTaskStoragePerformanceCounters();
 
-	void print_headers();
+	static void print_headers();
 	void print_values();
 
 	BasicPerformanceCounter<Scheduler, task_storage_count_unsuccessful_pops> num_unsuccessful_pops;

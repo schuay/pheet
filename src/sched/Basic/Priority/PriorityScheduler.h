@@ -97,24 +97,27 @@ public:
 	typedef FinishRegion<Pheet> Finish;
 	typedef PrioritySchedulerStealerDescriptor<Pheet> StealerDescriptor;
 	typedef DefaultStrategyT<Pheet> DefaultStrategy;
+	typedef typename Place::PerformanceCounters PerformanceCounters;
 
 	/*
 	 * Uses complete machine
 	 */
 	PriorityScheduler();
+	PriorityScheduler(typename Place::PerformanceCounters& performance_counters);
 
 	/*
 	 * Only uses the given number of places
 	 * (Currently no direct support for oversubscription)
 	 */
 	PriorityScheduler(procs_t num_places);
+	PriorityScheduler(procs_t num_places, typename Place::PerformanceCounters& performance_counters);
 	~PriorityScheduler();
 
 	static void print_name();
 
-	void print_performance_counter_values();
+//	static void print_performance_counter_values(Place::PerformanceCounters performance_counters);
 
-	void print_performance_counter_headers();
+//	static void print_performance_counter_headers();
 
 	static Place* get_place();
 	static procs_t get_place_id();
@@ -159,6 +162,16 @@ PriorityScheduler<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::Priorit
 
 	places = new Place*[num_places];
 	places[0] = new Place(machine_model, places, num_places, &state, performance_counters);
+	places[0]->prepare_root();
+}
+
+template <class Pheet, template <class P, typename T> class TaskStorageT, template <class Scheduler> class DefaultStrategyT, uint8_t CallThreshold>
+PriorityScheduler<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::PriorityScheduler(typename Place::PerformanceCounters& performance_counters)
+: num_places(machine_model.get_num_leaves()) {
+
+	places = new Place*[num_places];
+	places[0] = new Place(machine_model, places, num_places, &state, performance_counters);
+	places[0]->prepare_root();
 }
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class Scheduler> class DefaultStrategyT, uint8_t CallThreshold>
@@ -167,6 +180,16 @@ PriorityScheduler<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::Priorit
 
 	places = new Place*[num_places];
 	places[0] = new Place(machine_model, places, num_places, &state, performance_counters);
+	places[0]->prepare_root();
+}
+
+template <class Pheet, template <class P, typename T> class TaskStorageT, template <class Scheduler> class DefaultStrategyT, uint8_t CallThreshold>
+PriorityScheduler<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::PriorityScheduler(procs_t num_places, typename Place::PerformanceCounters& performance_counters)
+: num_places(num_places) {
+
+	places = new Place*[num_places];
+	places[0] = new Place(machine_model, places, num_places, &state, performance_counters);
+	places[0]->prepare_root();
 }
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class Scheduler> class DefaultStrategyT, uint8_t CallThreshold>
@@ -246,16 +269,16 @@ void PriorityScheduler<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::pr
 	Place::TaskStorage::print_name();
 	std::cout << ", " << (int)CallThreshold << ">";
 }
-
+/*
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class Scheduler> class DefaultStrategyT, uint8_t CallThreshold>
-void PriorityScheduler<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::print_performance_counter_values() {
+void PriorityScheduler<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::print_performance_counter_values(Place::PerformanceCounters performance_counters) {
 	performance_counters.print_values();
 }
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class Scheduler> class DefaultStrategyT, uint8_t CallThreshold>
 void PriorityScheduler<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::print_performance_counter_headers() {
-	performance_counters.print_headers();
-}
+	Place::PerformanceCounters::print_headers();
+}*/
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class Scheduler> class DefaultStrategyT, uint8_t CallThreshold>
 typename PriorityScheduler<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::Place* PriorityScheduler<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::get_place() {

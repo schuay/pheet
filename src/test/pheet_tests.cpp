@@ -18,7 +18,7 @@
 using namespace pheet;
 
 int main(int argc, char* argv[]) {
-  	SortingTests<sorting_test> st;
+  	SortingTests st;
   	st.run_test();
 /*
   	GraphBipartitioningTests gpt;
