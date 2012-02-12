@@ -151,7 +151,7 @@ private:
 
 	PerformanceCounters performance_counters;
 
-	static thread_local Self* local_context;
+	static thread_local Self* local_place;
 
 //	friend class Pheet::Scheduler::Finish;
 
@@ -164,7 +164,7 @@ size_t const PrioritySchedulerPlace<Pheet, CallThreshold>::stack_size = (8192 > 
 
 template <class Pheet, uint8_t CallThreshold>
 thread_local PrioritySchedulerPlace<Pheet, CallThreshold>*
-PrioritySchedulerPlace<Pheet, CallThreshold>::local_context = nullptr;
+PrioritySchedulerPlace<Pheet, CallThreshold>::local_place = nullptr;
 
 template <class Pheet, uint8_t CallThreshold>
 PrioritySchedulerPlace<Pheet, CallThreshold>::PrioritySchedulerPlace(InternalMachineModel model, Place** places, procs_t num_places, typename Pheet::Scheduler::State* scheduler_state, PerformanceCounters& perf_count)
@@ -231,7 +231,7 @@ PrioritySchedulerPlace<Pheet, CallThreshold>::~PrioritySchedulerPlace() {
 		}
 
 		machine_model.unbind();
-		local_context = NULL;
+		local_place = NULL;
 	}
 	delete[] stack;
 	delete[] levels;
@@ -244,8 +244,8 @@ void PrioritySchedulerPlace<Pheet, CallThreshold>::prepare_root() {
 
 	scheduler_state->state_barrier.signal(0);
 
-	assert(local_context == NULL);
-	local_context = this;
+	assert(local_place == NULL);
+	local_place = this;
 
 
 	performance_counters.finish_stack_blocking_min.add_value(stack_size);
@@ -330,7 +330,7 @@ void PrioritySchedulerPlace<Pheet, CallThreshold>::join() {
 template <class Pheet, uint8_t CallThreshold>
 PrioritySchedulerPlace<Pheet, CallThreshold>*
 PrioritySchedulerPlace<Pheet, CallThreshold>::get() {
-	return local_context;
+	return local_place;
 }
 
 template <class Pheet, uint8_t CallThreshold>
@@ -341,7 +341,7 @@ PrioritySchedulerPlace<Pheet, CallThreshold>::get_id() {
 
 template <class Pheet, uint8_t CallThreshold>
 void PrioritySchedulerPlace<Pheet, CallThreshold>::run() {
-	local_context = this;
+	local_place = this;
 	initialize_levels();
 	stack = new StackElement[stack_size];
 
@@ -359,7 +359,7 @@ void PrioritySchedulerPlace<Pheet, CallThreshold>::run() {
 	main_loop();
 
 	scheduler_state->state_barrier.barrier(1, levels[0].size);
-	local_context = NULL;
+	local_place = NULL;
 
 	// Join all partners that this thread created
 	for(procs_t i = num_levels - 1; i >= 1; --i) {

@@ -9,33 +9,62 @@
 #ifndef REFERENCEQUICKSORT_H_
 #define REFERENCEQUICKSORT_H_
 
+#include <functional>
+#include <algorithm>
+
 /*
  *
  */
 namespace pheet {
 
+template <class Pheet>
 class ReferenceQuicksort {
 public:
-	ReferenceQuicksort(procs_t cpus, unsigned int* data, size_t length);
+	ReferenceQuicksort(unsigned int* data, size_t length);
 	~ReferenceQuicksort();
 
-	void sort();
-	void print_results();
+	void operator()();
 
-	static void print_headers();
-
-	static void print_scheduler_name();
-
-	static const procs_t max_cpus;
 	static const char name[];
-	static const char scheduler_name[];
-
 private:
 	void sort(unsigned int* data, size_t length);
 
 	unsigned int* data;
 	size_t length;
 };
+
+template <class Pheet>
+const char ReferenceQuicksort<Pheet>::name[] = "ReferenceQuicksort";
+
+template <class Pheet>
+ReferenceQuicksort<Pheet>::ReferenceQuicksort(unsigned int* data, size_t length)
+: data(data), length(length) {
+	assert(cpus == 1);
+}
+
+template <class Pheet>
+ReferenceQuicksort<Pheet>::~ReferenceQuicksort() {
+
+}
+
+template <class Pheet>
+void ReferenceQuicksort<Pheet>::operator()() {
+	sort(data, length);
+}
+
+template <class Pheet>
+void ReferenceQuicksort<Pheet>::sort(unsigned int* data, size_t length) {
+	if(length <= 1)
+		return;
+
+	unsigned int * middle = std::partition(data, data + length - 1,
+		std::bind2nd(std::less<unsigned int>(), *(data + length - 1)));
+	size_t pivot = middle - data;
+	std::swap(*(data + length - 1), *middle);    // move pivot to middle
+
+	sort(data, pivot);
+	sort(data + pivot + 1, length - pivot - 1);
+}
 
 }
 

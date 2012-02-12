@@ -21,12 +21,8 @@ public:
 	typedef MachineModelT<Env> MachineModel;
 };
 
-template <class Env>
-class PheetSystemModel : public SystemModelEnv<Env, HWLocMachineModel> {
-public:
-	typedef SystemModelEnv<Env, HWLocMachineModel> Base;
-	typedef typename Base::MachineModel MachineModel;
-};
+template<class Pheet>
+using SystemModel = SystemModelEnv<Pheet, HWLocMachineModel>;
 
 }
 

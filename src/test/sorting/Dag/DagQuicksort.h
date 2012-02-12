@@ -24,7 +24,7 @@ public:
 	typedef DagQuicksortImpl<Pheet, CUTOFF_LENGTH> Self;
 
 	template<size_t NEW_VAL>
-		using T_CUTOFF_LENGTH = DagQuicksortImpl<Pheet, NEW_VAL>;
+		using WITH_CUTOFF_LENGTH = DagQuicksortImpl<Pheet, NEW_VAL>;
 
 	DagQuicksortImpl(unsigned int* data, size_t length);
 	~DagQuicksortImpl();

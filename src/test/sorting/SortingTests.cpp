@@ -22,6 +22,7 @@
 #include "../test_schedulers.h"
 
 #include "../../pheet.h"
+#include "../../sched/Basic/Synchroneous/SynchroneousScheduler.h"
 
 #include <iostream>
 #endif
@@ -43,6 +44,14 @@ void SortingTests::run_test() {
 //std::cout << Pheet::Environment::max_cpus << std::endl;
 	this->run_sorter<	Pheet,
 						DagQuicksort>();
+	this->run_sorter<	Pheet::WithScheduler<SynchroneousScheduler>,
+						DagQuicksort>();
+	this->run_sorter<	Pheet::WithScheduler<SynchroneousScheduler>,
+						ReferenceSTLSort>();
+	this->run_sorter<	Pheet::WithScheduler<SynchroneousScheduler>,
+						ReferenceQuicksort>();
+	this->run_sorter<	Pheet::WithScheduler<SynchroneousScheduler>,
+						ReferenceHeapSort>();
 
 /*	this->run_sorter<MixedModeQuicksort<DefaultMixedModeScheduler> >();
 	this->run_sorter<DagQuicksort<DefaultMixedModeScheduler> >();

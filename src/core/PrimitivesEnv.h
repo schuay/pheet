@@ -21,14 +21,8 @@ public:
 	typedef BarrierT<Env> Barrier;
 };
 
-template <class Env>
-class PheetPrimitives : public PrimitivesEnv<Env, StandardExponentialBackoff, SimpleBarrier> {
-public:
-	typedef PrimitivesEnv<Env, StandardExponentialBackoff, SimpleBarrier> Base;
-	typedef typename Base::Backoff Backoff;
-	typedef typename Base::Barrier Barrier;
-};
-//typedef PrimitivesEnv<ExponentialBackoff, SimpleBarrier> PheetPrimitives;
+template<class Pheet>
+using Primitives = PrimitivesEnv<Pheet, ExponentialBackoff, SimpleBarrier>;
 
 }
 

@@ -1,5 +1,5 @@
 /*
- * ReferenceHeapSort.h
+ * ReferenceHeapSortImpl.h
  *
  *  Created on: Nov 30, 2011
  *      Author: mwimmer
@@ -13,24 +13,18 @@
 
 namespace pheet {
 
-template <template <typename T, typename Comp> class PriorityQueue>
-class ReferenceHeapSort {
+template <class Pheet, template <typename T, typename Comp> class PriorityQueue>
+class ReferenceHeapSortImpl {
 public:
-	ReferenceHeapSort(procs_t cpus, unsigned int* data, size_t length);
-	~ReferenceHeapSort();
+	template<template <typename T, typename Comp> class NewPQ>
+	using WithPriorityQueue = ReferenceHeapSortImpl<Pheet, NewPQ>;
 
-	void sort();
-	void print_results();
+	ReferenceHeapSortImpl(unsigned int* data, size_t length);
+	~ReferenceHeapSortImpl();
 
-	static void print_name();
+	void operator()();
 
-	static void print_headers();
-
-	static void print_scheduler_name();
-
-	static const procs_t max_cpus;
 	static const char name[];
-	static const char scheduler_name[];
 
 private:
 	void sort(unsigned int* data, size_t length);
@@ -39,33 +33,27 @@ private:
 	size_t length;
 };
 
-template <template <typename T, typename Comp> class PriorityQueue>
-const procs_t ReferenceHeapSort<PriorityQueue>::max_cpus = 1;
+template <class Pheet, template <typename T, typename Comp> class PriorityQueue>
+const char ReferenceHeapSortImpl<Pheet, PriorityQueue>::name[] = "ReferenceHeapSortImpl";
 
-template <template <typename T, typename Comp> class PriorityQueue>
-const char ReferenceHeapSort<PriorityQueue>::name[] = "ReferenceHeapSort";
-
-template <template <typename T, typename Comp> class PriorityQueue>
-const char ReferenceHeapSort<PriorityQueue>::scheduler_name[] = "none";
-
-template <template <typename T, typename Comp> class PriorityQueue>
-ReferenceHeapSort<PriorityQueue>::ReferenceHeapSort(procs_t cpus, unsigned int* data, size_t length)
+template <class Pheet, template <typename T, typename Comp> class PriorityQueue>
+ReferenceHeapSortImpl<Pheet, PriorityQueue>::ReferenceHeapSortImpl(unsigned int* data, size_t length)
 : data(data), length(length) {
-	assert(cpus == 1);
-}
-
-template <template <typename T, typename Comp> class PriorityQueue>
-ReferenceHeapSort<PriorityQueue>::~ReferenceHeapSort() {
 
 }
 
-template <template <typename T, typename Comp> class PriorityQueue>
-void ReferenceHeapSort<PriorityQueue>::sort() {
+template <class Pheet, template <typename T, typename Comp> class PriorityQueue>
+ReferenceHeapSortImpl<Pheet, PriorityQueue>::~ReferenceHeapSortImpl() {
+
+}
+
+template <class Pheet, template <typename T, typename Comp> class PriorityQueue>
+void ReferenceHeapSortImpl<Pheet, PriorityQueue>::operator()() {
 	sort(data, length);
 }
 
-template <template <typename T, typename Comp> class PriorityQueue>
-void ReferenceHeapSort<PriorityQueue>::sort(unsigned int* data, size_t length) {
+template <class Pheet, template <typename T, typename Comp> class PriorityQueue>
+void ReferenceHeapSortImpl<Pheet, PriorityQueue>::sort(unsigned int* data, size_t length) {
 	if(length <= 1)
 		return;
 
@@ -81,20 +69,8 @@ void ReferenceHeapSort<PriorityQueue>::sort(unsigned int* data, size_t length) {
 	}
 }
 
-template <template <typename T, typename Comp> class PriorityQueue>
-void ReferenceHeapSort<PriorityQueue>::print_results() {
-
-}
-
-template <template <typename T, typename Comp> class PriorityQueue>
-void ReferenceHeapSort<PriorityQueue>::print_headers() {
-
-}
-
-template <template <typename T, typename Comp> class PriorityQueue>
-void ReferenceHeapSort<PriorityQueue>::print_scheduler_name() {
-	std::cout << scheduler_name;
-}
+template<class Pheet>
+using ReferenceHeapSort = ReferenceHeapSortImpl<Pheet, Pheet::DataStructures::template PriorityQueue>;
 
 }
 

@@ -19,10 +19,10 @@
 namespace pheet {
 
 template <class Pheet, unsigned int MIN_BACKOFF = 100, unsigned int MAX_BACKOFF = 100000>
-class ExponentialBackoff {
+class ExponentialBackoffImpl {
 public:
-	ExponentialBackoff();
-	~ExponentialBackoff();
+	ExponentialBackoffImpl();
+	~ExponentialBackoffImpl();
 
 	void backoff();
 private:
@@ -32,19 +32,19 @@ private:
 };
 /*
 template <unsigned int MIN_BACKOFF, unsigned int MAX_BACKOFF>
-thread_local boost::mt19937 ExponentialBackoff<MIN_BACKOFF, MAX_BACKOFF>::rng;
+thread_local boost::mt19937 ExponentialBackoffImpl<MIN_BACKOFF, MAX_BACKOFF>::rng;
 */
 template <class Pheet, unsigned int MIN_BACKOFF, unsigned int MAX_BACKOFF>
-ExponentialBackoff<Pheet, MIN_BACKOFF, MAX_BACKOFF>::ExponentialBackoff() {
+ExponentialBackoffImpl<Pheet, MIN_BACKOFF, MAX_BACKOFF>::ExponentialBackoffImpl() {
 	limit = MIN_BACKOFF;
 }
 
 template <class Pheet, unsigned int MIN_BACKOFF, unsigned int MAX_BACKOFF>
-ExponentialBackoff<Pheet, MIN_BACKOFF, MAX_BACKOFF>::~ExponentialBackoff() {
+ExponentialBackoffImpl<Pheet, MIN_BACKOFF, MAX_BACKOFF>::~ExponentialBackoffImpl() {
 }
 
 template <class Pheet, unsigned int MIN_BACKOFF, unsigned int MAX_BACKOFF>
-void ExponentialBackoff<Pheet, MIN_BACKOFF, MAX_BACKOFF>::backoff() {
+void ExponentialBackoffImpl<Pheet, MIN_BACKOFF, MAX_BACKOFF>::backoff() {
 //	boost::uniform_int<unsigned int> rnd_gen(0, limit);
 	Pheet p;
 	unsigned int sleep = p.rand_int(limit); //rnd_gen(rng);
@@ -59,7 +59,7 @@ void ExponentialBackoff<Pheet, MIN_BACKOFF, MAX_BACKOFF>::backoff() {
 }
 
 template <class Pheet>
-class StandardExponentialBackoff : public ExponentialBackoff<Pheet, 100, 100000> {
+class ExponentialBackoff : public ExponentialBackoffImpl<Pheet, 100, 100000> {
 
 };
 

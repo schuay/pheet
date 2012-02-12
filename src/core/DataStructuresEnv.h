@@ -9,18 +9,25 @@
 #ifndef DATASTRUCTURESENV_H_
 #define DATASTRUCTURESENV_H_
 
+#include "../ds/PriorityQueue/Heap/Heap.h"
+
 namespace pheet {
 
-template <class Env>
+template <class Pheet, template <class P, typename T, typename Comp> class PriorityQueueT>
 class DataStructuresEnv {
 public:
+	template<typename T, typename Comp/* = std::less<T>*/>
+	using PriorityQueue = PriorityQueueT<Pheet, T, Comp>;
+	template<typename T, typename Comp = std::less<T>>
+	using PQ = PriorityQueueT<Pheet, T, Comp>;
+
+	template<typename T, typename Comp = std::less<T>>
+	using Heap = Heap<Pheet, T, Comp>;
 
 };
 
-template <class Env>
-class PheetDataStructures : public DataStructuresEnv<Env> {
-
-};
+template<class Pheet>
+using DataStructures = DataStructuresEnv<Pheet, Heap>;
 
 }
 

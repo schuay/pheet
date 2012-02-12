@@ -12,118 +12,175 @@
 #include "../../../settings.h"
 #include "../../common/SchedulerTask.h"
 #include "../../common/FinishRegion.h"
-#include "SynchroneousSchedulerTaskExecutionContext.h"
+#include "SynchroneousSchedulerPerformanceCounters.h"
 
 #include <assert.h>
 #include <vector>
 #include <iostream>
 
-#ifdef ENV_LINUX
-#include <pthread.h>
-#endif
-
 namespace pheet {
 
-template <class CPUHierarchyT>
+template <class Pheet>
 class SynchroneousScheduler {
 public:
-	typedef SchedulerTask<SynchroneousScheduler> Task;
-	typedef SynchroneousSchedulerTaskExecutionContext<SynchroneousScheduler> TaskExecutionContext;
-	typedef CPUHierarchyT CPUHierarchy;
+	typedef SynchroneousScheduler<Pheet> Self;
+	typedef SchedulerTask<Pheet> Task;
+	typedef Self Place;
 	typedef FinishRegion<SynchroneousScheduler> Finish;
+	typedef SynchroneousSchedulerPerformanceCounters<Pheet> PerformanceCounters;
 
-	SynchroneousScheduler(CPUHierarchy* cpus);
+	/*
+	 * Uses complete machine
+	 */
+	SynchroneousScheduler();
+	SynchroneousScheduler(PerformanceCounters& performance_counters);
+
+	/*
+	 * Only uses the given number of places
+	 * (Currently no direct support for oversubscription)
+	 */
+	SynchroneousScheduler(procs_t num_places);
+	SynchroneousScheduler(procs_t num_places, PerformanceCounters& performance_counters);
 	~SynchroneousScheduler();
-
-	template<class CallTaskType, typename ... TaskParams>
-	void finish(TaskParams ... params);
 
 	static void print_name();
 
-	void print_performance_counter_values();
+	static Self* get();
+	static Place* get_place();
+	static procs_t get_id();
+	static procs_t get_place_id();
+	Place* get_place_at(procs_t place_id);
 
-	static void print_performance_counter_headers();
+	template<class CallTaskType, typename ... TaskParams>
+		void finish(TaskParams&& ... params);
 
-	static TaskExecutionContext* get_context();
+	template<class CallTaskType, typename ... TaskParams>
+		void call(TaskParams&& ... params);
+
+	template<class CallTaskType, typename ... TaskParams>
+		void spawn(TaskParams&& ... params);
+
+	template<class CallTaskType, class Strategy, typename ... TaskParams>
+		void spawn_prio(Strategy s, TaskParams&& ... params);
+
+	std::mt19937& get_rng() { return rng; }
+
+	void start_finish_region() {}
+	void end_finish_region() {}
 
 	static char const name[];
 	static procs_t const max_cpus;
 
 private:
-	TaskExecutionContext tec;
-#ifdef ENV_LINUX
-	cpu_set_t old_cpu_affinity;
-#endif
+	PerformanceCounters pc;
+
+	Self* parent_place;
+
+	std::mt19937 rng;
+
+	static thread_local Self* local_place;
 };
 
-template <class CPUHierarchyT>
-char const SynchroneousScheduler<CPUHierarchyT>::name[] = "SynchroneousScheduler";
+template <class Pheet>
+char const SynchroneousScheduler<Pheet>::name[] = "SynchroneousScheduler";
 
-template <class CPUHierarchyT>
-procs_t const SynchroneousScheduler<CPUHierarchyT>::max_cpus = 1;
+template <class Pheet>
+procs_t const SynchroneousScheduler<Pheet>::max_cpus = 1;
 
-template <class CPUHierarchyT>
-SynchroneousScheduler<CPUHierarchyT>::SynchroneousScheduler(CPUHierarchy* cpus)
-: tec(this){
-	assert(cpus->get_size() == 1);
+template <class Pheet>
+thread_local SynchroneousScheduler<Pheet>*
+SynchroneousScheduler<Pheet>::local_place = nullptr;
 
-#ifdef ENV_LINUX
-	int err;
-	pthread_getaffinity_np(pthread_self(), sizeof(old_cpu_affinity),
-				&old_cpu_affinity);
-	cpu_set_t cpu_affinity;
-	CPU_ZERO(&cpu_affinity);
-	std::vector<typename CPUHierarchy::CPUDescriptor*> const* cpu_descs;
-	cpu_descs = cpus->get_cpus();
-	for(size_t i = 0; i < cpu_descs->size(); i++) {
-		CPU_SET((*cpu_descs)[i]->get_physical_id(), &cpu_affinity);
-	}
-	if((err = pthread_setaffinity_np(pthread_self(), sizeof(cpu_affinity),
-			&cpu_affinity)) != 0)
-	{
-		std::cerr << "Failed to bind scheduler thread to cpu(s)" << std::endl;
-	}
-#endif
+template <class Pheet>
+SynchroneousScheduler<Pheet>::SynchroneousScheduler()
+: parent_place(nullptr) {
+	local_place = this;
 }
 
-template <class CPUHierarchyT>
-SynchroneousScheduler<CPUHierarchyT>::~SynchroneousScheduler() {
-#ifdef ENV_LINUX
-	int err;
-	if((err = pthread_setaffinity_np(pthread_self(), sizeof(old_cpu_affinity),
-			&old_cpu_affinity)) != 0)
-	{
-		std::cerr << "Failed to reset cpu affinity" << std::endl;
-	}
-#endif
+template <class Pheet>
+SynchroneousScheduler<Pheet>::SynchroneousScheduler(PerformanceCounters& performance_counters)
+: pc(performance_counters), parent_place(nullptr){
+	local_place = this;
 }
 
-template <class CPUHierarchyT>
-template<class CallTaskType, typename ... TaskParams>
-void SynchroneousScheduler<CPUHierarchyT>::finish(TaskParams ... params) {
-	CallTaskType task(params ...);
-	task(tec);
+template <class Pheet>
+SynchroneousScheduler<Pheet>::SynchroneousScheduler(procs_t num_places)
+: parent_place(nullptr) {
+	assert(num_places == 1);
+	local_place = this;
 }
 
-template <class CPUHierarchyT>
-SynchroneousSchedulerTaskExecutionContext<SynchroneousScheduler<CPUHierarchyT> >* SynchroneousScheduler<CPUHierarchyT>::get_context() {
-	return SynchroneousSchedulerTaskExecutionContext<SynchroneousScheduler<CPUHierarchyT> >::get();
+template <class Pheet>
+SynchroneousScheduler<Pheet>::SynchroneousScheduler(procs_t num_places, PerformanceCounters& performance_counters)
+: pc(performance_counters), parent_place(nullptr) {
+	assert(num_places == 1);
+	local_place = this;
 }
 
-template <class CPUHierarchyT>
-void SynchroneousScheduler<CPUHierarchyT>::print_name() {
+template <class Pheet>
+SynchroneousScheduler<Pheet>::~SynchroneousScheduler() {
+	local_place = parent_place;
+}
+
+template <class Pheet>
+void SynchroneousScheduler<Pheet>::print_name() {
 	std::cout << name;
 }
 
-template <class CPUHierarchyT>
-void SynchroneousScheduler<CPUHierarchyT>::print_performance_counter_values() {
-
+template <class Pheet>
+template<class CallTaskType, typename ... TaskParams>
+void SynchroneousScheduler<Pheet>::finish(TaskParams&& ... params) {
+	CallTaskType task(params ...);
+	task();
 }
 
-template <class CPUHierarchyT>
-void SynchroneousScheduler<CPUHierarchyT>::print_performance_counter_headers() {
-
+template <class Pheet>
+template<class CallTaskType, typename ... TaskParams>
+void SynchroneousScheduler<Pheet>::spawn(TaskParams&& ... params) {
+	CallTaskType task(params ...);
+	task();
 }
+
+template <class Pheet>
+template<class CallTaskType, typename ... TaskParams>
+void SynchroneousScheduler<Pheet>::call(TaskParams&& ... params) {
+	CallTaskType task(params ...);
+	task();
+}
+
+template <class Pheet>
+template<class CallTaskType, class Strategy, typename ... TaskParams>
+void SynchroneousScheduler<Pheet>::spawn_prio(Strategy s, TaskParams&& ... params) {
+	CallTaskType task(params ...);
+	task();
+}
+
+template <class Pheet>
+SynchroneousScheduler<Pheet>* SynchroneousScheduler<Pheet>::get() {
+	return local_place;
+}
+
+template <class Pheet>
+SynchroneousScheduler<Pheet>* SynchroneousScheduler<Pheet>::get_place() {
+	return local_place;
+}
+
+template <class Pheet>
+procs_t SynchroneousScheduler<Pheet>::get_id() {
+	return 0;
+}
+
+template <class Pheet>
+procs_t SynchroneousScheduler<Pheet>::get_place_id() {
+	return 0;
+}
+
+template <class Pheet>
+SynchroneousScheduler<Pheet>* SynchroneousScheduler<Pheet>::get_place_at(procs_t place_id) {
+	assert(place_id == 0);
+	return local_place;
+}
+
 
 }
 

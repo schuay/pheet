@@ -19,7 +19,7 @@ namespace pheet {
 /*
  * MaxHeap
  */
-template <typename TT, class Comparator = std::less<TT> >
+template <class Pheet, typename TT, class Comparator = std::less<TT> >
 class Heap {
 public:
 	typedef TT T;
@@ -47,25 +47,25 @@ private:
 	Comparator is_less;
 };
 
-template <typename TT, class Comparator>
-Heap<TT, Comparator>::Heap()
+template <class Pheet, typename TT, class Comparator>
+Heap<Pheet, TT, Comparator>::Heap()
 : capacity(4), length(0), data(new TT[capacity]) {
 
 }
 
-template <typename TT, class Comparator>
-Heap<TT, Comparator>::Heap(Comparator const& comp)
+template <class Pheet, typename TT, class Comparator>
+Heap<Pheet, TT, Comparator>::Heap(Comparator const& comp)
 : capacity(4), length(0), data(new TT[capacity]), is_less(comp) {
 
 }
 
-template <typename TT, class Comparator>
-Heap<TT, Comparator>::~Heap() {
+template <class Pheet, typename TT, class Comparator>
+Heap<Pheet, TT, Comparator>::~Heap() {
 	delete[] data;
 }
 
-template <typename TT, class Comparator>
-void Heap<TT, Comparator>::push(T item) {
+template <class Pheet, typename TT, class Comparator>
+void Heap<Pheet, TT, Comparator>::push(T item) {
 	if(length == capacity) {
 		size_t new_capacity = capacity << 1;
 		T* new_data = new T[new_capacity];
@@ -80,15 +80,15 @@ void Heap<TT, Comparator>::push(T item) {
 	++length;
 }
 
-template <typename TT, class Comparator>
-TT Heap<TT, Comparator>::peek() {
+template <class Pheet, typename TT, class Comparator>
+TT Heap<Pheet, TT, Comparator>::peek() {
 	assert(length > 0);
 	return data[0];
 }
 
 
-template <typename TT, class Comparator>
-TT Heap<TT, Comparator>::pop() {
+template <class Pheet, typename TT, class Comparator>
+TT Heap<Pheet, TT, Comparator>::pop() {
 	assert(length > 0);
 	T ret = data[0];
 	--length;
@@ -97,18 +97,18 @@ TT Heap<TT, Comparator>::pop() {
 	return ret;
 }
 
-template <typename TT, class Comparator>
-size_t Heap<TT, Comparator>::get_length() {
+template <class Pheet, typename TT, class Comparator>
+size_t Heap<Pheet, TT, Comparator>::get_length() {
 	return length;
 }
 
-template <typename TT, class Comparator>
-bool Heap<TT, Comparator>::is_empty() {
+template <class Pheet, typename TT, class Comparator>
+bool Heap<Pheet, TT, Comparator>::is_empty() {
 	return length == 0;
 }
 
-template <typename TT, class Comparator>
-void Heap<TT, Comparator>::bubble_up(size_t index) {
+template <class Pheet, typename TT, class Comparator>
+void Heap<Pheet, TT, Comparator>::bubble_up(size_t index) {
 	size_t next = (index - 1) >> 1;
 	while(index > 0 && is_less(data[next], data[index])) {
 		std::swap(data[next], data[index]);
@@ -117,8 +117,8 @@ void Heap<TT, Comparator>::bubble_up(size_t index) {
 	}
 }
 
-template <typename TT, class Comparator>
-void Heap<TT, Comparator>::bubble_down(size_t index) {
+template <class Pheet, typename TT, class Comparator>
+void Heap<Pheet, TT, Comparator>::bubble_down(size_t index) {
 	size_t next = (index << 1) + 1;
 	while(next < length) {
 		size_t nnext = next + 1;
@@ -134,8 +134,8 @@ void Heap<TT, Comparator>::bubble_down(size_t index) {
 	}
 }
 
-template <typename TT, class Comparator>
-void Heap<TT, Comparator>::print_name() {
+template <class Pheet, typename TT, class Comparator>
+void Heap<Pheet, TT, Comparator>::print_name() {
 	std::cout << "Heap";
 }
 

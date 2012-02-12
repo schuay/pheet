@@ -14,26 +14,39 @@
 
 namespace pheet {
 
+template <class Pheet>
 class ReferenceSTLSort {
 public:
-	ReferenceSTLSort(procs_t cpus, unsigned int* data, size_t length);
+	ReferenceSTLSort(unsigned int* data, size_t length);
 	~ReferenceSTLSort();
 
-	void sort();
-	void print_results();
+	void operator()();
 
-	static void print_headers();
-
-	static void print_scheduler_name();
-
-	static const procs_t max_cpus;
 	static const char name[];
-	static const char scheduler_name[];
 
 private:
 	unsigned int* start;
 	unsigned int* end;
 };
+
+template <class Pheet>
+const char ReferenceSTLSort<Pheet>::name[] = "ReferenceSTLSort";
+
+template <class Pheet>
+ReferenceSTLSort<Pheet>::ReferenceSTLSort(unsigned int* data, size_t length)
+: start(data), end(data + length) {
+
+}
+
+template <class Pheet>
+ReferenceSTLSort<Pheet>::~ReferenceSTLSort() {
+
+}
+
+template <class Pheet>
+void ReferenceSTLSort<Pheet>::operator()() {
+	std::sort(start, end);
+}
 
 }
 
