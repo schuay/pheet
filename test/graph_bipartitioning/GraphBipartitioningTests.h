@@ -25,11 +25,11 @@ public:
 	void run_test();
 
 private:
-	template<class Partitioner>
+	template<class Pheet, template <class P> class Partitioner>
 	void run_partitioner();
 };
 
-template <class Partitioner>
+template <class Pheet, template <class P> class Partitioner>
 void GraphBipartitioningTests::run_partitioner() {
 	for(size_t t = 0; t < sizeof(graph_bipartitioning_test_types)/sizeof(graph_bipartitioning_test_types[0]); t++) {
 		for(size_t pr = 0; pr < sizeof(graph_bipartitioning_test_problems)/sizeof(graph_bipartitioning_test_problems[0]); pr++) {
@@ -38,8 +38,8 @@ void GraphBipartitioningTests::run_partitioner() {
 					for(size_t max_w = 0; max_w < sizeof(graph_bipartitioning_test_max_w)/sizeof(graph_bipartitioning_test_max_w[0]); max_w++) {*/
 			for(size_t c = 0; c < sizeof(graph_bipartitioning_test_cpus)/sizeof(graph_bipartitioning_test_cpus[0]); c++) {
 				for(size_t s = 0; s < sizeof(graph_bipartitioning_test_seeds)/sizeof(graph_bipartitioning_test_seeds[0]); s++) {
-					if(graph_bipartitioning_test_cpus[c] <= Partitioner::max_cpus) {
-						GraphBipartitioningTest<Partitioner> gbt(graph_bipartitioning_test_cpus[c], graph_bipartitioning_test_types[t],
+					if(graph_bipartitioning_test_cpus[c] <= Pheet::Environment::max_cpus) {
+						GraphBipartitioningTest<Pheet, Partitioner> gbt(graph_bipartitioning_test_cpus[c], graph_bipartitioning_test_types[t],
 								graph_bipartitioning_test_problems[pr].n,
 								graph_bipartitioning_test_problems[pr].p,
 								graph_bipartitioning_test_problems[pr].max_w,

@@ -36,7 +36,7 @@
 #include "../test_schedulers.h"
 
 namespace pheet {
-
+/*
 
 template <class Scheduler, typename T>
 class AutoLifoStrategy : public ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<Scheduler, LifoStrategy, T> {
@@ -70,6 +70,8 @@ public:
 	: ImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategy<Scheduler, ImprovedStrategyBranchBoundGraphBipartitioningUpperBoundFifoStrategy, T >(static_cast<ConsParams&&>(params) ...) {}
 };
 
+*/
+
 GraphBipartitioningTests::GraphBipartitioningTests() {
 
 }
@@ -82,6 +84,8 @@ void GraphBipartitioningTests::run_test() {
 	if(graph_bipartitioning_test) {
 		std::cout << "----" << std::endl;
 
+
+		/*
 		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapMultiStealPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<ArrayListHeapMultiStealPriorityScheduler, 64>, DynamicUpperBoundFifoStrategy, 64 > >();
 		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapMultiStealPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<ArrayListHeapMultiStealPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningUpperBoundStrategy, 64 > >();
 		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapMultiStealPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<ArrayListHeapMultiStealPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningUpperLowerBoundStrategy, 64 > >();
@@ -94,7 +98,7 @@ void GraphBipartitioningTests::run_test() {
 		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapMultiStealPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<ArrayListHeapMultiStealPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy, 64 > >();
 		this->run_partitioner<ImprovedBranchBoundGraphBipartitioning<ArrayListHeapMultiStealPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<ArrayListHeapMultiStealPriorityScheduler, 64>, 64 > >();
 		this->run_partitioner<ImprovedBranchBoundGraphBipartitioning<DefaultBasicScheduler, ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<DefaultBasicScheduler, 64>, 64 > >();
-
+*/
 		/*
 		// 1. All data-structures, with prio, DeltaNV logic, all strategies, all queue lengths except very long (very long only for single case)
 

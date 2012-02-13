@@ -26,7 +26,7 @@
  */
 namespace pheet {
 
-template <class Partitioner>
+template <class Pheet, template <class P> class Partitioner>
 class GraphBipartitioningTest : Test {
 public:
 	GraphBipartitioningTest(procs_t cpus, int type, size_t size, float p, size_t max_w, unsigned int seed);
@@ -49,47 +49,56 @@ private:
 	static char const* const types[];
 };
 
-template <class Partitioner>
-char const* const GraphBipartitioningTest<Partitioner>::types[] = {"random"};
+template <class Pheet, template <class P> class Partitioner>
+char const* const GraphBipartitioningTest<Pheet, Partitioner>::types[] = {"random"};
 
-template <class Partitioner>
-GraphBipartitioningTest<Partitioner>::GraphBipartitioningTest(procs_t cpus, int type, size_t size, float p, size_t max_w, unsigned int seed)
+template <class Pheet, template <class P> class Partitioner>
+GraphBipartitioningTest<Pheet, Partitioner>::GraphBipartitioningTest(procs_t cpus, int type, size_t size, float p, size_t max_w, unsigned int seed)
 : cpus(cpus), type(type), size(size), p(p), max_w(max_w), seed(seed) {
 
 }
 
-template <class Partitioner>
-GraphBipartitioningTest<Partitioner>::~GraphBipartitioningTest() {
+template <class Pheet, template <class P> class Partitioner>
+GraphBipartitioningTest<Pheet, Partitioner>::~GraphBipartitioningTest() {
 
 }
 
-template <class Partitioner>
-void GraphBipartitioningTest<Partitioner>::run_test() {
+template <class Pheet, template <class P> class Partitioner>
+void GraphBipartitioningTest<Pheet, Partitioner>::run_test() {
 	GraphVertex* data = generate_data();
 
-	Partitioner part(cpus, data, size);
+	typename Pheet::Environment::PerformanceCounters pc;
+	typename Partitioner<Pheet>::PerformanceCounters ppc;
+	GraphBipartitioningSolution solution;
 
 	Time start, end;
-	check_time(start);
-	part.partition();
-	check_time(end);
+	{typename Pheet::Environment env(cpus, pc);
+		check_time(start);
+		Pheet::template
+			finish<Partitioner<Pheet> >(data, size, &solution, ppc);
+		check_time(end);
+	}
 
-	size_t weight = check_solution(data, part.get_solution());
+	size_t weight = check_solution(data, solution);
 	double seconds = calculate_seconds(start, end);
 	std::cout << "test\tpartitioner\tscheduler\ttype\tsize\tp\tmax_w\tseed\tcpus\ttotal_time\tweight\t";
-	part.print_headers();
+	Partitioner<Pheet>::print_headers();
+	Partitioner<Pheet>::PerformanceCounters::print_headers();
+	Pheet::Environment::PerformanceCounters::print_headers();
 	std::cout << std::endl;
 	std::cout << "graph_bipartitioning\t" << Partitioner::name << "\t";
 	Partitioner::print_scheduler_name();
 	std::cout << "\t" << types[type] << "\t" << size << "\t" << p << "\t" << max_w << "\t" << seed << "\t" << cpus << "\t" << seconds << "\t" << weight << "\t";
-	part.print_results();
+	Partitioner<Pheet>::print_configuration();
+	ppc.print_values();
+	pc.print_values();
 	std::cout << std::endl;
 
 	delete_data(data);
 }
 
-template <class Partitioner>
-GraphVertex* GraphBipartitioningTest<Partitioner>::generate_data() {
+template <class Pheet, template <class P> class Partitioner>
+GraphVertex* GraphBipartitioningTest<Pheet, Partitioner>::generate_data() {
 	GraphVertex* data = new GraphVertex[size];
 
 	boost::mt19937 rng;
@@ -125,8 +134,8 @@ GraphVertex* GraphBipartitioningTest<Partitioner>::generate_data() {
 	return data;
 }
 
-template <class Partitioner>
-void GraphBipartitioningTest<Partitioner>::delete_data(GraphVertex* data) {
+template <class Pheet, template <class P> class Partitioner>
+void GraphBipartitioningTest<Pheet, Partitioner>::delete_data(GraphVertex* data) {
 	for(size_t i = 0; i < size; ++i) {
 		if(data[i].edges != NULL) {
 			delete[] data[i].edges;
@@ -135,8 +144,8 @@ void GraphBipartitioningTest<Partitioner>::delete_data(GraphVertex* data) {
 	delete[] data;
 }
 
-template <class Partitioner>
-size_t GraphBipartitioningTest<Partitioner>::check_solution(GraphVertex* data, GraphBipartitioningSolution<64> const& solution) {
+template <class Pheet, template <class P> class Partitioner>
+size_t GraphBipartitioningTest<Pheet, Partitioner>::check_solution(GraphVertex* data, GraphBipartitioningSolution<64> const& solution) {
 	size_t k = size >> 1;
 
 	if(solution.sets[0].count() != k) {
