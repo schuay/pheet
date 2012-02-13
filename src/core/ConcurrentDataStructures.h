@@ -9,16 +9,26 @@
 #ifndef CONCURRENTDATASTRUCTURES_H_
 #define CONCURRENTDATASTRUCTURES_H_
 
+#include "../ds/CircularArray/FixedSize/FixedSizeCircularArray.h"
+#include "../ds/CircularArray/TwoLevelGrowing/TwoLevelGrowingCircularArray.h"
+#include "../ds/StealingDeque/CircularArray/CircularArrayStealingDeque.h"
+
 namespace pheet {
 
-template <class Pheet>
+template <class Pheet, template <class P, typename T> class CircularArrayT, template <class P, typename T> class FixedSizeCircularArrayT, template <class P, typename T> class StealingDequeT>
 class ConcurrentDataStructuresEnv {
 public:
+	template<typename T>
+		using CircularArray = CircularArrayT<Pheet, T>;
+	template<typename T>
+		using FixedSizeCircularArray = FixedSizeCircularArrayT<Pheet, T>;
+	template<typename T>
+		using StealingDeque = StealingDequeT<Pheet, T>;
 
 };
 
 template<class Pheet>
-using ConcurrentDataStructures = ConcurrentDataStructuresEnv<Pheet>;
+using ConcurrentDataStructures = ConcurrentDataStructuresEnv<Pheet, TwoLevelGrowingCircularArray, FixedSizeCircularArray, CircularArrayStealingDeque>;
 
 }
 

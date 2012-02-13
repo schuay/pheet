@@ -12,7 +12,6 @@
 #include <algorithm>
 
 #include "MultiStealSecondaryTaskStoragePerformanceCounters.h"
-#include "../../../../DePriorityQueue/DeHeap/DeHeap.h"
 
 namespace pheet {
 
@@ -138,7 +137,7 @@ TT MultiStealSecondaryTaskStorage<Pheet, TT, Primary>::steal_push(Primary<Pheet,
 	pc.total_size_steal.add(end - begin);
 
 	size_t const threshold = expected_capacity;
-	DeHeap<HeapElement, Comparator> heap;
+	typename Pheet::DS::template PriorityDeque<HeapElement, Comparator> heap;
 	size_t num_dropped = 0;
 
 	for(typename Primary<Pheet, T>::iterator i = begin; i != end; ++i) {

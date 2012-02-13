@@ -59,9 +59,7 @@ void ExponentialBackoffImpl<Pheet, MIN_BACKOFF, MAX_BACKOFF>::backoff() {
 }
 
 template <class Pheet>
-class ExponentialBackoff : public ExponentialBackoffImpl<Pheet, 100, 100000> {
-
-};
+using ExponentialBackoff = ExponentialBackoffImpl<Pheet, 100, 100000>;
 
 }
 

@@ -14,7 +14,7 @@
 
 namespace pheet {
 
-template <typename T>
+template <class Pheet, typename T>
 class FixedSizeCircularArray {
 public:
 	FixedSizeCircularArray(size_t initial_capacity);
@@ -32,39 +32,39 @@ private:
 	T* data;
 };
 
-template <typename T>
-FixedSizeCircularArray<T>::FixedSizeCircularArray(size_t initial_capacity)
+template <class Pheet, typename T>
+FixedSizeCircularArray<Pheet, T>::FixedSizeCircularArray(size_t initial_capacity)
 : capacity(initial_capacity) {
 	data = new T[capacity];
 }
 
-template <typename T>
-FixedSizeCircularArray<T>::~FixedSizeCircularArray() {
+template <class Pheet, typename T>
+FixedSizeCircularArray<Pheet, T>::~FixedSizeCircularArray() {
 	delete[] data;
 }
 
-template <typename T>
-size_t FixedSizeCircularArray<T>::get_capacity() {
+template <class Pheet, typename T>
+size_t FixedSizeCircularArray<Pheet, T>::get_capacity() {
 	return capacity;
 }
 
-template <typename T>
-bool FixedSizeCircularArray<T>::is_growable() {
+template <class Pheet, typename T>
+bool FixedSizeCircularArray<Pheet, T>::is_growable() {
 	return false;
 }
 
-template <typename T>
-T& FixedSizeCircularArray<T>::get(size_t i) {
+template <class Pheet, typename T>
+T& FixedSizeCircularArray<Pheet, T>::get(size_t i) {
 	return data[i % capacity];
 }
 
-template <typename T>
-void FixedSizeCircularArray<T>::put(size_t i, T item) {
+template <class Pheet, typename T>
+void FixedSizeCircularArray<Pheet, T>::put(size_t i, T item) {
 	data[i % capacity] = item;
 }
 
-template <typename T>
-void FixedSizeCircularArray<T>::grow(size_t bottom, size_t top) {
+template <class Pheet, typename T>
+void FixedSizeCircularArray<Pheet, T>::grow(size_t bottom, size_t top) {
 	assert(false);
 }
 

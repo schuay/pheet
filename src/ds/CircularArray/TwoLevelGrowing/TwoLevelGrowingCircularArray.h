@@ -16,13 +16,17 @@
 
 namespace pheet {
 
-template <typename TT, size_t MAX_BUCKETS = 32>
-class TwoLevelGrowingCircularArray {
+template <class Pheet, typename TT, size_t MaxBuckets = 32>
+class TwoLevelGrowingCircularArrayImpl {
 public:
 	typedef TT T;
 
-	TwoLevelGrowingCircularArray(size_t initial_capacity);
-	~TwoLevelGrowingCircularArray();
+	template<size_t NewVal>
+	using WithMaxBuckets = TwoLevelGrowingCircularArrayImpl<Pheet, TT, NewVal>;
+
+	TwoLevelGrowingCircularArrayImpl();
+	TwoLevelGrowingCircularArrayImpl(size_t initial_capacity);
+	~TwoLevelGrowingCircularArrayImpl();
 
 	size_t get_capacity();
 	bool is_growable();
@@ -37,14 +41,13 @@ private:
 	const size_t initial_buckets;
 	size_t buckets;
 	size_t capacity;
-	T* data[MAX_BUCKETS];
+	T* data[MaxBuckets];
 };
 
-template <typename T, size_t MAX_BUCKETS>
-TwoLevelGrowingCircularArray<T, MAX_BUCKETS>::TwoLevelGrowingCircularArray(size_t initial_capacity)
-: initial_buckets(find_last_bit_set(initial_capacity - 1) + 1), buckets(initial_buckets), capacity(1 << (buckets - 1)) {
-	assert(initial_capacity > 0);
-	assert(buckets <= MAX_BUCKETS);
+template <class Pheet, typename T, size_t MaxBuckets>
+TwoLevelGrowingCircularArrayImpl<Pheet, T, MaxBuckets>::TwoLevelGrowingCircularArrayImpl()
+: initial_buckets(5), buckets(initial_buckets), capacity(1 << (buckets - 1)) {
+	assert(buckets <= MaxBuckets);
 
 	T* ptr = new T[capacity];
 	data[0] = ptr;
@@ -56,40 +59,56 @@ TwoLevelGrowingCircularArray<T, MAX_BUCKETS>::TwoLevelGrowingCircularArray(size_
 	}
 }
 
-template <typename T, size_t MAX_BUCKETS>
-TwoLevelGrowingCircularArray<T, MAX_BUCKETS>::~TwoLevelGrowingCircularArray() {
+template <class Pheet, typename T, size_t MaxBuckets>
+TwoLevelGrowingCircularArrayImpl<Pheet, T, MaxBuckets>::TwoLevelGrowingCircularArrayImpl(size_t initial_capacity)
+: initial_buckets(find_last_bit_set(initial_capacity - 1) + 1), buckets(initial_buckets), capacity(1 << (buckets - 1)) {
+	assert(initial_capacity > 0);
+	assert(buckets <= MaxBuckets);
+
+	T* ptr = new T[capacity];
+	data[0] = ptr;
+	ptr++;
+	for(size_t i = 1; i < buckets; i++)
+	{
+		data[i] = ptr;
+		ptr += 1 << (i - 1);
+	}
+}
+
+template <class Pheet, typename T, size_t MaxBuckets>
+TwoLevelGrowingCircularArrayImpl<Pheet, T, MaxBuckets>::~TwoLevelGrowingCircularArrayImpl() {
 	delete[] (data[0]);
 	for(size_t i = initial_buckets; i < buckets; i++)
 		delete [](data[i]);
 }
 
-template <typename T, size_t MAX_BUCKETS>
-size_t TwoLevelGrowingCircularArray<T, MAX_BUCKETS>::get_capacity() {
+template <class Pheet, typename T, size_t MaxBuckets>
+size_t TwoLevelGrowingCircularArrayImpl<Pheet, T, MaxBuckets>::get_capacity() {
 	return capacity;
 }
 
-template <typename T, size_t MAX_BUCKETS>
-bool TwoLevelGrowingCircularArray<T, MAX_BUCKETS>::is_growable() {
-	return buckets < MAX_BUCKETS;
+template <class Pheet, typename T, size_t MaxBuckets>
+bool TwoLevelGrowingCircularArrayImpl<Pheet, T, MaxBuckets>::is_growable() {
+	return buckets < MaxBuckets;
 }
 
 // return value NEEDS to be const. When growing we cannot guarantee that the reference won't change
-template <typename T, size_t MAX_BUCKETS>
-inline T const& TwoLevelGrowingCircularArray<T, MAX_BUCKETS>::get(size_t i) {
+template <class Pheet, typename T, size_t MaxBuckets>
+inline T const& TwoLevelGrowingCircularArrayImpl<Pheet, T, MaxBuckets>::get(size_t i) {
 	i = i % capacity;
 	size_t hb = find_last_bit_set(i);
 	return data[hb][i ^ ((1 << (hb)) >> 1)];
 }
 
-template <typename T, size_t MAX_BUCKETS>
-void TwoLevelGrowingCircularArray<T, MAX_BUCKETS>::put(size_t i, T value) {
+template <class Pheet, typename T, size_t MaxBuckets>
+void TwoLevelGrowingCircularArrayImpl<Pheet, T, MaxBuckets>::put(size_t i, T value) {
 	i = i % capacity;
 	size_t hb = find_last_bit_set(i);
 	data[hb][i ^ ((1 << (hb)) >> 1)] = value;
 }
 
-template <typename T, size_t MAX_BUCKETS>
-void TwoLevelGrowingCircularArray<T, MAX_BUCKETS>::grow(size_t bottom, size_t top) {
+template <class Pheet, typename T, size_t MaxBuckets>
+void TwoLevelGrowingCircularArrayImpl<Pheet, T, MaxBuckets>::grow(size_t bottom, size_t top) {
 	assert(is_growable());
 
 	data[buckets] = new T[capacity];
@@ -123,6 +142,10 @@ void TwoLevelGrowingCircularArray<T, MAX_BUCKETS>::grow(size_t bottom, size_t to
 	MEMORY_FENCE ();
 	capacity = newCapacity;
 }
+
+template<class Pheet, typename TT>
+using TwoLevelGrowingCircularArray = TwoLevelGrowingCircularArrayImpl<Pheet, TT>;
+
 
 }
 

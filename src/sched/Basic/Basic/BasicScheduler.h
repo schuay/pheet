@@ -9,31 +9,28 @@
 #ifndef BASICSCHEDULER_H_
 #define BASICSCHEDULER_H_
 
-#include "BasicSchedulerPerformanceCounters.h"
 #include "../../common/SchedulerTask.h"
 #include "../../common/FinishRegion.h"
-#include "BasicSchedulerTaskExecutionContext.h"
+#include "BasicSchedulerPlace.h"
 #include "../../common/CPUThreadExecutor.h"
-#include "../../../em/CPUHierarchy/BinaryTree/BinaryTreeCPUHierarchy.h"
+#include "../../../models/MachineModel/BinaryTree/BinaryTreeMachineModel.h"
 
 #include <stdint.h>
 #include <limits>
-#include <vector>
-#include <iostream>
 
 namespace pheet {
 
-template <class Task, class Barrier>
+template <class Pheet>
 struct BasicSchedulerState {
 	BasicSchedulerState();
 
 	uint8_t current_state;
-	Barrier state_barrier;
-	Task *startup_task;
+	typename Pheet::Barrier state_barrier;
+	typename Pheet::Scheduler::Task *startup_task;
 };
 
-template <class Task, class Barrier>
-BasicSchedulerState<Task, Barrier>::BasicSchedulerState()
+template <class Pheet>
+BasicSchedulerState<Pheet>::BasicSchedulerState()
 : current_state(0), startup_task(NULL) {
 
 }
@@ -41,153 +38,173 @@ BasicSchedulerState<Task, Barrier>::BasicSchedulerState()
 /*
  * May only be used once
  */
-template <class CPUHierarchyT, template <class Scheduler, typename T> class StealingDeque, class Barrier, class BackoffT>
-class BasicScheduler {
+template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
+class BasicSchedulerImpl {
 public:
-	typedef BackoffT Backoff;
-	typedef CPUHierarchyT CPUHierarchy;
-	typedef BasicScheduler<CPUHierarchy, StealingDeque, Barrier, Backoff> Self;
-	typedef SchedulerTask<Self> Task;
-	typedef BasicSchedulerTaskExecutionContext<Self, StealingDeque> TaskExecutionContext;
-	typedef BasicSchedulerState<Task, Barrier> State;
-	typedef FinishRegion<BasicScheduler<CPUHierarchy, StealingDeque, Barrier, Backoff> > Finish;
-	typedef BasicSchedulerPerformanceCounters<Self> PerformanceCounters;
+	typedef typename Pheet::Backoff Backoff;
+	typedef typename Pheet::MachineModel MachineModel;
+	typedef BinaryTreeMachineModel<Pheet, MachineModel> InternalMachineModel;
+	typedef BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold> Self;
+	typedef SchedulerTask<Pheet> Task;
+	typedef BasicSchedulerPlace<Pheet, StealingDeque, CallThreshold> Place;
+	typedef BasicSchedulerState<Pheet> State;
+	typedef FinishRegion<Pheet> Finish;
+	typedef typename Place::PerformanceCounters PerformanceCounters;
+
+	template<uint8_t NewVal>
+		using WithCallThreshold = BasicSchedulerImpl<Pheet, StealingDeque, NewVal>;
 
 	/*
-	 * CPUHierarchyT must be accessible throughout the lifetime of the scheduler
-	 * (Although the current implementation only uses it for initialization)
+	 * Uses complete machine
 	 */
-	BasicScheduler(CPUHierarchyT* cpus);
-	~BasicScheduler();
+	BasicSchedulerImpl();
+	BasicSchedulerImpl(PerformanceCounters& performance_counters);
 
-	template<class CallTaskType, typename ... TaskParams>
-	void finish(TaskParams&& ... params);
+	/*
+	 * Only uses the given number of places
+	 * (Currently no direct support for oversubscription)
+	 */
+	BasicSchedulerImpl(procs_t num_places);
+	BasicSchedulerImpl(procs_t num_places, PerformanceCounters& performance_counters);
+	~BasicSchedulerImpl();
 
 	static void print_name();
 
-	void print_performance_counter_values();
+	static Place* get_place();
+	static procs_t get_place_id();
+	Place* get_place_at(procs_t place_id);
 
-	void print_performance_counter_headers();
+	template<class CallTaskType, typename ... TaskParams>
+		void finish(TaskParams&& ... params);
 
-	static TaskExecutionContext* get_context();
+	template<class CallTaskType, typename ... TaskParams>
+		void call(TaskParams&& ... params);
+
+	template<class CallTaskType, typename ... TaskParams>
+		void spawn(TaskParams&& ... params);
+
+	template<class CallTaskType, class Strategy, typename ... TaskParams>
+		void spawn_prio(Strategy s, TaskParams&& ... params);
 
 	static char const name[];
 	static procs_t const max_cpus;
 
 private:
-	void initialize_tecs(BinaryTreeCPUHierarchy<CPUHierarchy>* cpus, size_t offset, std::vector<typename TaskExecutionContext::LevelDescription*>* levels);
-
-	BinaryTreeCPUHierarchy<CPUHierarchy> cpu_hierarchy;
-	TaskExecutionContext** threads;
-	procs_t num_threads;
+	InternalMachineModel machine_model;
+	Place** places;
+	procs_t num_places;
 
 	State state;
 
 	PerformanceCounters performance_counters;
 };
 
-template <class CPUHierarchyT, template <class Scheduler, typename T> class StealingDeque, class Barrier, class BackoffT>
-char const BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::name[] = "BasicScheduler";
+template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
+char const BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::name[] = "BasicScheduler";
 
-template <class CPUHierarchyT, template <class Scheduler, typename T> class StealingDeque, class Barrier, class BackoffT>
-procs_t const BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::max_cpus = std::numeric_limits<procs_t>::max() >> 1;
+template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
+procs_t const BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::max_cpus = std::numeric_limits<procs_t>::max() >> 1;
 
-template <class CPUHierarchyT, template <class Scheduler, typename T> class StealingDeque, class Barrier, class BackoffT>
-BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::BasicScheduler(CPUHierarchy* cpus)
-: cpu_hierarchy(cpus), num_threads(cpus->get_size()) {
+template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
+BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::BasicSchedulerImpl()
+: num_places(machine_model.get_num_leaves()) {
 
-	threads = new TaskExecutionContext*[num_threads];
-
-	std::vector<typename TaskExecutionContext::LevelDescription*> levels;
-	initialize_tecs(&cpu_hierarchy, 0, &levels);
+	places = new Place*[num_places];
+	places[0] = new Place(machine_model, places, num_places, &state, performance_counters);
+	places[0]->prepare_root();
 }
 
-template <class CPUHierarchyT, template <class Scheduler, typename T> class StealingDeque, class Barrier, class BackoffT>
-BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::~BasicScheduler() {
+template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
+BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::BasicSchedulerImpl(typename Place::PerformanceCounters& performance_counters)
+: num_places(machine_model.get_num_leaves()) {
 
+	places = new Place*[num_places];
+	places[0] = new Place(machine_model, places, num_places, &state, performance_counters);
+	places[0]->prepare_root();
 }
 
-template <class CPUHierarchyT, template <class Scheduler, typename T> class StealingDeque, class Barrier, class BackoffT>
-void BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::initialize_tecs(BinaryTreeCPUHierarchy<CPUHierarchy>* ch, size_t offset, std::vector<typename TaskExecutionContext::LevelDescription*>* levels) {
-	if(ch->get_size() > 1) {
-		std::vector<BinaryTreeCPUHierarchy<CPUHierarchy>*> const* sub = ch->get_subsets();
+template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
+BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::BasicSchedulerImpl(procs_t num_places)
+: num_places(num_places) {
 
-		if(sub->size() == 2) {
-			BinaryTreeCPUHierarchy<CPUHierarchy>* sub0 = (*sub)[0];
-			BinaryTreeCPUHierarchy<CPUHierarchy>* sub1 = (*sub)[1];
-
-			typename TaskExecutionContext::LevelDescription ld;
-			ld.total_size = ch->get_size();
-			ld.local_id = 0;
-			ld.num_partners = sub1->get_size();
-			ld.partners = threads + offset + sub0->get_size();
-			levels->push_back(&ld);
-			initialize_tecs(sub0, offset, levels);
-			ld.local_id = sub0->get_size();
-			ld.num_partners = ld.local_id;
-			ld.partners = threads + offset;
-			initialize_tecs(sub1, offset + ld.local_id, levels);
-
-			levels->pop_back();
-		}
-		else {
-			BinaryTreeCPUHierarchy<CPUHierarchy>* sub0 = (*sub)[0];
-
-			initialize_tecs(sub0, offset, levels);
-		}
-	}
-	else {
-		typename TaskExecutionContext::LevelDescription ld;
-		ld.total_size = 1;
-		ld.local_id = 0;
-		ld.num_partners = 0;
-		ld.partners = NULL;
-		levels->push_back(&ld);
-		TaskExecutionContext *tec = new TaskExecutionContext(levels, ch->get_cpus(), &state, performance_counters);
-		threads[offset] = tec;
-		levels->pop_back();
-	}
+	places = new Place*[num_places];
+	places[0] = new Place(machine_model, places, num_places, &state, performance_counters);
+	places[0]->prepare_root();
 }
 
-template <class CPUHierarchyT, template <class Scheduler, typename T> class StealingDeque, class Barrier, class BackoffT>
-template<class CallTaskType, typename ... TaskParams>
-void BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::finish(TaskParams&& ... params) {
-	CallTaskType task(static_cast<TaskParams&&>(params) ...);
-	state.startup_task = &task;
-	state.current_state = 1;
+template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
+BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::BasicSchedulerImpl(procs_t num_places, typename Place::PerformanceCounters& performance_counters)
+: num_places(num_places) {
 
-	// signal scheduler threads that execution may start
-	state.state_barrier.signal(0);
-
-	for(procs_t i = 0; i < num_threads; i++) {
-		threads[i]->join();
-	}
-
-	for(procs_t i = 0; i < num_threads; i++) {
-		delete threads[i];
-	}
-	delete[] threads;
+	places = new Place*[num_places];
+	places[0] = new Place(machine_model, places, num_places, &state, performance_counters);
+	places[0]->prepare_root();
 }
 
-template <class CPUHierarchyT, template <class Scheduler, typename T> class StealingDeque, class Barrier, class BackoffT>
-void BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::print_name() {
+template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
+BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::~BasicSchedulerImpl() {
+	delete places[0];
+	delete[] places;
+}
+
+template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
+void BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::print_name() {
 	std::cout << name;
 }
 
-template <class CPUHierarchyT, template <class Scheduler, typename T> class StealingDeque, class Barrier, class BackoffT>
-void BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::print_performance_counter_values() {
-	performance_counters.print_values();
+template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
+typename BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::Place*
+BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::get_place() {
+	return Place::get();
 }
 
-template <class CPUHierarchyT, template <class Scheduler, typename T> class StealingDeque, class Barrier, class BackoffT>
-void BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::print_performance_counter_headers() {
-	performance_counters.print_headers();
+template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
+procs_t BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::get_place_id() {
+	return Place::get()->get_id();
 }
 
-template <class CPUHierarchyT, template <class Scheduler, typename T> class StealingDeque, class Barrier, class BackoffT>
-typename BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::TaskExecutionContext* BasicScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::get_context() {
-	return TaskExecutionContext::get();
+template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
+typename BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::Place*
+BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::get_place_at(procs_t place_id) {
+	assert(place_id < num_places);
+	return places[place_id];
 }
+
+template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
+template<class CallTaskType, typename ... TaskParams>
+void BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::finish(TaskParams&& ... params) {
+	Place* p = get_place();
+	assert(p != NULL);
+	p->finish<CallTaskType>(static_cast<TaskParams&&>(params) ...);
+}
+
+template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
+template<class CallTaskType, typename ... TaskParams>
+void BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::spawn(TaskParams&& ... params) {
+	Place* p = get_place();
+	assert(p != NULL);
+	p->spawn<CallTaskType>(static_cast<TaskParams&&>(params) ...);
+}
+
+template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
+template<class CallTaskType, class Strategy, typename ... TaskParams>
+void BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::spawn_prio(Strategy s, TaskParams&& ... params) {
+	this->spawn<CallTaskType>(static_cast<TaskParams&&>(params) ...);
+}
+
+template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
+template<class CallTaskType, typename ... TaskParams>
+void BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::call(TaskParams&& ... params) {
+	Place* p = get_place();
+	assert(p != NULL);
+	p->call<CallTaskType>(static_cast<TaskParams&&>(params) ...);
+}
+
+template<class Pheet, typename T>
+using BasicSchedulerDefaultStealingDeque = typename Pheet::CDS::template StealingDeque<T>;
+
+template<class Pheet>
+using BasicScheduler = BasicSchedulerImpl<Pheet, BasicSchedulerDefaultStealingDeque, 3>;
 
 }
 
