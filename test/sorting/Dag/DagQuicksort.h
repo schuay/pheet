@@ -9,9 +9,9 @@
 #ifndef DAGQUICKSORT_H_
 #define DAGQUICKSORT_H_
 
-#include "../../../settings.h"
-#include "../../../misc/types.h"
-#include "../../../misc/atomics.h"
+#include "pheet/pheet.h"
+#include "pheet/misc/types.h"
+#include "pheet/misc/atomics.h"
 
 #include <functional>
 #include <algorithm>

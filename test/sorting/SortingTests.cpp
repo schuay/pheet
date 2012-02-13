@@ -15,15 +15,13 @@
 //#include "MixedMode/MixedModeQuicksort.h"
 #include "Reference/ReferenceHeapSort.h"
 
-#include "../../ds/PriorityQueue/Heap/Heap.h"
-#include "../../ds/PriorityQueue/STLPriorityQueueWrapper/STLPriorityQueueWrapper.h"
-#include "../../ds/PriorityQueue/SortedArrayHeap/SortedArrayHeap.h"
+#include "pheet/ds/PriorityQueue/Heap/Heap.h"
+#include "pheet/ds/PriorityQueue/STLPriorityQueueWrapper/STLPriorityQueueWrapper.h"
+#include "pheet/ds/PriorityQueue/SortedArrayHeap/SortedArrayHeap.h"
 
-#include "../test_schedulers.h"
-
-#include "../../pheet.h"
-#include "../../sched/Basic/Basic/BasicScheduler.h"
-#include "../../sched/Basic/Synchroneous/SynchroneousScheduler.h"
+#include "pheet/pheet.h"
+#include "pheet/sched/Basic/Basic/BasicScheduler.h"
+#include "pheet/sched/Basic/Synchroneous/SynchroneousScheduler.h"
 
 #include <iostream>
 #endif

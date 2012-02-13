@@ -9,7 +9,7 @@
 #ifndef FULL_H_
 #define FULL_H_
 
-#include "../misc/types.h"
+#include "pheet/misc/types.h"
 
 namespace pheet {
 

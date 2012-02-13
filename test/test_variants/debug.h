@@ -9,7 +9,7 @@
 #ifndef DEBUG_H_
 #define DEBUG_H_
 
-#include "../misc/types.h"
+#include "pheet/misc/types.h"
 
 namespace pheet {
 

@@ -11,26 +11,21 @@
 
 #include "../settings.h"
 
-#ifdef ENV_LINUX_GCC
+#ifdef ENV_GCC
+// Working with g++
 
 #include "atomics_gnu.h"
 
-#elif ENV_LINUX_CLANG
+#elif ENV_CLANG
 
 #include "atomics_clang.h"
-
-#elif ENV_LINUX_ICC
-
-#include "atomics_gnu.h"
-
-#elif ENV_CYGWIN_GCC
-
-#include "atomics_gnu.h"
 
 #elif ENV_SOLARIS_SUNCC
 
 #include "atomics_sun.h"
 
+#else
+#error "Unsupported environment or environment not recognized"
 #endif
 
 #endif /* ATOMICS_H_ */

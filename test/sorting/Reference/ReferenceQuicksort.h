@@ -39,7 +39,7 @@ const char ReferenceQuicksort<Pheet>::name[] = "ReferenceQuicksort";
 template <class Pheet>
 ReferenceQuicksort<Pheet>::ReferenceQuicksort(unsigned int* data, size_t length)
 : data(data), length(length) {
-	assert(cpus == 1);
+
 }
 
 template <class Pheet>

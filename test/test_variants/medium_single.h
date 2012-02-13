@@ -8,7 +8,7 @@
 #ifndef MEDIUM_SINGLE_H_
 #define MEDIUM_SINGLE_H_
 
-#include "../misc/types.h"
+#include "pheet/misc/types.h"
 
 namespace pheet {
 

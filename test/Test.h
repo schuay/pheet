@@ -9,7 +9,7 @@
 #ifndef TEST_H_
 #define TEST_H_
 
-#include "../settings.h"
+#include "pheet/pheet.h"
 
 #include <sys/time.h>
 #include <stdlib.h>

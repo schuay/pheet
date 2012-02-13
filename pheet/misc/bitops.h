@@ -32,6 +32,4 @@ find_last_bit_set(unsigned int x)
 
 #endif
 
-#define HIGHEST_BIT_POS(V)	(find_last_bit_set(V))
-
 #endif /* BITOPS_H_ */
