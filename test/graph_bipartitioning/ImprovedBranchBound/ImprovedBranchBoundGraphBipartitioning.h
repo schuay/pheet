@@ -10,7 +10,6 @@
 #define IMPROVEDBRANCHBOUNDGRAPHBIPARTITIONING_H_
 
 #include "../graph_helpers.h"
-#include "ImprovedBranchBoundGraphBipartitioningRootTask.h"
 #include "ImprovedBranchBoundGraphBipartitioningPerformanceCounters.h"
 
 #include <iostream>

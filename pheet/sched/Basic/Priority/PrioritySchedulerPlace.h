@@ -9,6 +9,7 @@
 #ifndef PRIORITYSCHEDULERPLACE_H_
 #define PRIORITYSCHEDULERPLACE_H_
 
+#include <tuple>
 #include <random>
 #include <functional>
 

@@ -7,6 +7,8 @@
  */
 
 #include "GraphBipartitioningTests.h"
+
+/*
 #include "BranchBound/BranchBoundGraphBipartitioning.h"
 #include "BranchBound/BasicLowerBound.h"
 #include "BranchBound/BasicNextVertex.h"
@@ -19,7 +21,9 @@
 #include "ImprovedBranchBound/ImprovedBranchBoundGraphBipartitioningDeltaLogic.h"
 #include "ImprovedBranchBound/ImprovedBranchBoundGraphBipartitioningDeltaNVLogic.h"
 #include "ImprovedBranchBound/ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic.h"
+*/
 #include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioning.h"
+/*
 #include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy.h"
 #include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstStrategy.h"
 #include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy.h"
@@ -33,44 +37,9 @@
 #include "../../sched/strategies/Lifo/LifoStrategy.h"
 #include "../../sched/strategies/LifoFifo/LifoFifoStrategy.h"
 
-#include "../test_schedulers.h"
+#include "../test_schedulers.h"*/
 
 namespace pheet {
-/*
-
-template <class Scheduler, typename T>
-class AutoLifoStrategy : public ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<Scheduler, LifoStrategy, T> {
-public:
-	template <typename ... ConsParams>
-	AutoLifoStrategy(ConsParams&& ... params)
-	: ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<Scheduler, LifoStrategy, T >(static_cast<ConsParams&&>(params) ...) {}
-};
-
-template <class Scheduler, typename T>
-class AutoFifoStrategy : public ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<Scheduler, FifoStrategy, T> {
-public:
-	template <typename ... ConsParams>
-	AutoFifoStrategy(ConsParams&& ... params)
-	: ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<Scheduler, FifoStrategy, T >(static_cast<ConsParams&&>(params) ...) {}
-};
-
-template <class Scheduler, typename T>
-class AutoLifoFifoStrategy : public ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<Scheduler, LifoFifoStrategy, T> {
-public:
-	template <typename ... ConsParams>
-	AutoLifoFifoStrategy(ConsParams&& ... params)
-	: ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy<Scheduler, LifoFifoStrategy, T >(static_cast<ConsParams&&>(params) ...) {}
-};
-
-template <class Scheduler, typename T>
-class DynamicUpperBoundFifoStrategy : public ImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategy<Scheduler, ImprovedStrategyBranchBoundGraphBipartitioningUpperBoundFifoStrategy, T> {
-public:
-	template <typename ... ConsParams>
-	DynamicUpperBoundFifoStrategy(ConsParams&& ... params)
-	: ImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategy<Scheduler, ImprovedStrategyBranchBoundGraphBipartitioningUpperBoundFifoStrategy, T >(static_cast<ConsParams&&>(params) ...) {}
-};
-
-*/
 
 GraphBipartitioningTests::GraphBipartitioningTests() {
 
@@ -84,6 +53,8 @@ void GraphBipartitioningTests::run_test() {
 	if(graph_bipartitioning_test) {
 		std::cout << "----" << std::endl;
 
+		this->run_partitioner<	Pheet,
+								ImprovedStrategyBranchBoundGraphBipartitioning>();
 
 		/*
 		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapMultiStealPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<ArrayListHeapMultiStealPriorityScheduler, 64>, DynamicUpperBoundFifoStrategy, 64 > >();

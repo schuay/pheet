@@ -9,8 +9,8 @@
 #ifndef GRAPH_HELPERS_H_
 #define GRAPH_HELPERS_H_
 
-#include "../../misc/types.h"
-#include "../../primitives/Reducer/Max/MaxReducer.h"
+#include "pheet/misc/types.h"
+#include "pheet/primitives/Reducer/Max/MaxReducer.h"
 
 #include <bitset>
 

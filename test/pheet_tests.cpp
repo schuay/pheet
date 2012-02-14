@@ -7,8 +7,8 @@
  */
 
 #include "sorting/SortingTests.h"
-/*
 #include "graph_bipartitioning/GraphBipartitioningTests.h"
+/*
 #include "inarow/InARowTests.h"
 #include "n-queens/NQueensTests.h"
 #include "lupiv/LUPivTests.h"
@@ -20,10 +20,10 @@ using namespace pheet;
 int main(int argc, char* argv[]) {
   	SortingTests st;
   	st.run_test();
-/*
+
   	GraphBipartitioningTests gpt;
   	gpt.run_test();
-
+/*
 	InARowTests iarts;
 	iarts.run_test();
 

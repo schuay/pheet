@@ -11,7 +11,7 @@
 
 #include "graph_helpers.h"
 
-#include "../../misc/types.h"
+#include "pheet/pheet.h"
 #include "../Test.h"
 
 #include <stdlib.h>
@@ -37,7 +37,7 @@ public:
 private:
 	GraphVertex* generate_data();
 	void delete_data(GraphVertex* data);
-	size_t check_solution(GraphVertex* data, GraphBipartitioningSolution<64> const& solution);
+	size_t check_solution(GraphVertex* data, typename Partitioner<Pheet>::Solution const& solution);
 
 	procs_t cpus;
 	int type;
@@ -69,13 +69,13 @@ void GraphBipartitioningTest<Pheet, Partitioner>::run_test() {
 
 	typename Pheet::Environment::PerformanceCounters pc;
 	typename Partitioner<Pheet>::PerformanceCounters ppc;
-	GraphBipartitioningSolution solution;
+	typename Partitioner<Pheet>::Solution solution;
 
 	Time start, end;
 	{typename Pheet::Environment env(cpus, pc);
 		check_time(start);
 		Pheet::template
-			finish<Partitioner<Pheet> >(data, size, &solution, ppc);
+			finish<Partitioner<Pheet> >(data, size, solution, ppc);
 		check_time(end);
 	}
 
@@ -86,8 +86,8 @@ void GraphBipartitioningTest<Pheet, Partitioner>::run_test() {
 	Partitioner<Pheet>::PerformanceCounters::print_headers();
 	Pheet::Environment::PerformanceCounters::print_headers();
 	std::cout << std::endl;
-	std::cout << "graph_bipartitioning\t" << Partitioner::name << "\t";
-	Partitioner::print_scheduler_name();
+	std::cout << "graph_bipartitioning\t" << Partitioner<Pheet>::name << "\t";
+	Pheet::Environment::print_name();
 	std::cout << "\t" << types[type] << "\t" << size << "\t" << p << "\t" << max_w << "\t" << seed << "\t" << cpus << "\t" << seconds << "\t" << weight << "\t";
 	Partitioner<Pheet>::print_configuration();
 	ppc.print_values();
@@ -145,7 +145,7 @@ void GraphBipartitioningTest<Pheet, Partitioner>::delete_data(GraphVertex* data)
 }
 
 template <class Pheet, template <class P> class Partitioner>
-size_t GraphBipartitioningTest<Pheet, Partitioner>::check_solution(GraphVertex* data, GraphBipartitioningSolution<64> const& solution) {
+size_t GraphBipartitioningTest<Pheet, Partitioner>::check_solution(GraphVertex* data, typename Partitioner<Pheet>::Solution const& solution) {
 	size_t k = size >> 1;
 
 	if(solution.sets[0].count() != k) {

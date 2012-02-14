@@ -10,91 +10,140 @@
 #define IMPROVEDSTRATEGYBRANCHBOUNDGRAPHBIPARTITIONING_H_
 
 #include "../graph_helpers.h"
-#include "ImprovedStrategyBranchBoundGraphBipartitioningRootTask.h"
+#include "../ImprovedBranchBound/ImprovedBranchBoundGraphBipartitioningSubproblem.h"
+#include "../ImprovedBranchBound/ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic.h"
+#include "ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy.h"
+#include "ImprovedStrategyBranchBoundGraphBipartitioningPerformanceCounters.h"
+#include "ImprovedStrategyBranchBoundGraphBipartitioningTask.h"
 
 #include <iostream>
 
 namespace pheet {
 
-template <class Scheduler, class Logic, template <class EScheduler, class SubProblem> class SchedulingStrategy, size_t MAX_SIZE = 64>
-class ImprovedStrategyBranchBoundGraphBipartitioning {
+template <class Pheet, template <class P, class SP> class Logic, template <class P, class SubProblem> class SchedulingStrategy, size_t MaxSize = 64>
+class ImprovedStrategyBranchBoundGraphBipartitioningImpl {
 public:
-	ImprovedStrategyBranchBoundGraphBipartitioning(procs_t cpus, GraphVertex* data, size_t size);
-	~ImprovedStrategyBranchBoundGraphBipartitioning();
+	typedef ImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, Logic, SchedulingStrategy, MaxSize> Self;
+	typedef GraphBipartitioningSolution<MaxSize> Solution;
+	typedef MaxReducer<Pheet, Solution> SolutionReducer;
+	typedef ImprovedStrategyBranchBoundGraphBipartitioningPerformanceCounters<Pheet> PerformanceCounters;
+	typedef ImprovedBranchBoundGraphBipartitioningSubproblem<Pheet, Logic, MaxSize> SubProblem;
+	typedef ImprovedStrategyBranchBoundGraphBipartitioningTask<Pheet, Logic, SchedulingStrategy, MaxSize> BBTask;
 
-	void partition();
-	GraphBipartitioningSolution<MAX_SIZE> const& get_solution();
+	template <template <class P, class SP> class NewLogic>
+		using WithLogic = ImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, NewLogic, SchedulingStrategy, MaxSize>;
 
-	void print_results();
-	void print_headers();
+	template <template <class P, class SP> class NewStrat>
+		using WithSchedulingStrategy = ImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, Logic, NewStrat, MaxSize>;
 
-	static void print_scheduler_name();
+	template <size_t ms>
+		using WithMaxSize = ImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, Logic, SchedulingStrategy, ms>;
 
-	static procs_t const max_cpus;
+
+	ImprovedStrategyBranchBoundGraphBipartitioningImpl(GraphVertex* data, size_t size, Solution& solution, PerformanceCounters& pc);
+	~ImprovedStrategyBranchBoundGraphBipartitioningImpl();
+
+	void operator()();
+
+	static void print_headers();
+	static void print_configuration();
+
 	static char const name[];
-	static char const * const scheduler_name;
 
 private:
 	GraphVertex* data;
 	size_t size;
-	typename Scheduler::CPUHierarchy cpu_hierarchy;
-	Scheduler scheduler;
-	GraphBipartitioningSolution<MAX_SIZE> solution;
-	ImprovedStrategyBranchBoundGraphBipartitioningPerformanceCounters<Scheduler> pc;
+	Solution& solution;
+	PerformanceCounters pc;
 };
 
-template <class Scheduler, class Logic, template <class EScheduler, class SubProblem> class SchedulingStrategy, size_t MAX_SIZE>
-procs_t const ImprovedStrategyBranchBoundGraphBipartitioning<Scheduler, Logic, SchedulingStrategy, MAX_SIZE>::max_cpus = Scheduler::max_cpus;
+template <class Pheet, template <class P, class SubProblem> class Logic, template <class P, class SubProblem> class SchedulingStrategy, size_t MaxSize>
+char const ImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, Logic, SchedulingStrategy, MaxSize>::name[] = "ImprovedStrategyBranchBoundGraphBipartitioning";
 
-template <class Scheduler, class Logic, template <class EScheduler, class SubProblem> class SchedulingStrategy, size_t MAX_SIZE>
-char const ImprovedStrategyBranchBoundGraphBipartitioning<Scheduler, Logic, SchedulingStrategy, MAX_SIZE>::name[] = "ImprovedStrategyBranchBoundGraphBipartitioning";
-
-template <class Scheduler, class Logic, template <class EScheduler, class SubProblem> class SchedulingStrategy, size_t MAX_SIZE>
-char const * const ImprovedStrategyBranchBoundGraphBipartitioning<Scheduler, Logic, SchedulingStrategy, MAX_SIZE>::scheduler_name = Scheduler::name;
-
-template <class Scheduler, class Logic, template <class EScheduler, class SubProblem> class SchedulingStrategy, size_t MAX_SIZE>
-ImprovedStrategyBranchBoundGraphBipartitioning<Scheduler, Logic, SchedulingStrategy, MAX_SIZE>::ImprovedStrategyBranchBoundGraphBipartitioning(procs_t cpus, GraphVertex* data, size_t size)
-: data(data), size(size), cpu_hierarchy(cpus), scheduler(&cpu_hierarchy) {
+template <class Pheet, template <class P, class SubProblem> class Logic, template <class P, class SubProblem> class SchedulingStrategy, size_t MaxSize>
+ImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, Logic, SchedulingStrategy, MaxSize>::ImprovedStrategyBranchBoundGraphBipartitioningImpl(GraphVertex* data, size_t size, Solution& solution, PerformanceCounters& pc)
+: data(data), size(size), solution(solution), pc(pc) {
 
 }
 
-template <class Scheduler, class Logic, template <class EScheduler, class SubProblem> class SchedulingStrategy, size_t MAX_SIZE>
-ImprovedStrategyBranchBoundGraphBipartitioning<Scheduler, Logic, SchedulingStrategy, MAX_SIZE>::~ImprovedStrategyBranchBoundGraphBipartitioning() {
+template <class Pheet, template <class P, class SubProblem> class Logic, template <class P, class SubProblem> class SchedulingStrategy, size_t MaxSize>
+ImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, Logic, SchedulingStrategy, MaxSize>::~ImprovedStrategyBranchBoundGraphBipartitioningImpl() {
 
 }
 
-template <class Scheduler, class Logic, template <class EScheduler, class SubProblem> class SchedulingStrategy, size_t MAX_SIZE>
-void ImprovedStrategyBranchBoundGraphBipartitioning<Scheduler, Logic, SchedulingStrategy, MAX_SIZE>::partition() {
-	scheduler.template finish<ImprovedStrategyBranchBoundGraphBipartitioningRootTask<typename Scheduler::Task, Logic, SchedulingStrategy, MAX_SIZE> >(data, size, &solution, pc);
-}
+template <class Pheet, template <class P, class SubProblem> class Logic, template <class P, class SubProblem> class SchedulingStrategy, size_t MaxSize>
+void ImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, Logic, SchedulingStrategy, MaxSize>::operator()() {
+	SolutionReducer best;
 
-template <class Scheduler, class Logic, template <class EScheduler, class SubProblem> class SchedulingStrategy, size_t MAX_SIZE>
-GraphBipartitioningSolution<MAX_SIZE> const& ImprovedStrategyBranchBoundGraphBipartitioning<Scheduler, Logic, SchedulingStrategy, MAX_SIZE>::get_solution() {
-	return solution;
-}
+	size_t ub = std::numeric_limits< size_t >::max();
 
-template <class Scheduler, class Logic, template <class EScheduler, class SubProblem> class SchedulingStrategy, size_t MAX_SIZE>
-void ImprovedStrategyBranchBoundGraphBipartitioning<Scheduler, Logic, SchedulingStrategy, MAX_SIZE>::print_results() {
-	Logic::print_name();
+	size_t k = size >> 1;
+	SubProblem* prob = new SubProblem(data, size, k);
+	Pheet::template
+		finish<BBTask>(prob, &ub, best, pc);
+
+	solution = best.get_max();
+	assert(solution.weight == ub);
+	assert(ub != std::numeric_limits< size_t >::max());
+	assert(solution.weight != std::numeric_limits< size_t >::max());
+	assert(solution.sets[0].count() == k);
+	assert(solution.sets[1].count() == size - k);
+}
+/*
+template <class Pheet, template <class P, class SubProblem> class Logic, template <class P, class SubProblem> class SchedulingStrategy, size_t MaxSize>
+void ImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, Logic, SchedulingStrategy, MaxSize>::partition(SubProblem* sub_problem, size_t* upper_bound, SolutionReducer& best, PerformanceCounters& pc) {
+	if(sub_problem->get_lower_bound() >= *upper_bound) {
+		delete sub_problem;
+		pc.num_irrelevant_tasks.incr();
+		return;
+	}
+	SchedulingStrategy<Pheet, SubProblem> strategy;
+
+	SubProblem* sub_problem2 =
+			sub_problem->split(pc.subproblem_pc);
+
+	if(sub_problem->is_solution()) {
+		sub_problem->update_solution(upper_bound, best, pc.subproblem_pc);
+		delete sub_problem;
+	}
+	else if(sub_problem->get_lower_bound() < *upper_bound) {
+		Pheet::spawn_prio(strategy(sub_problem, upper_bound),
+				Self::partition,
+				sub_problem, upper_bound, std::move(SolutionReducer(best)), std::move(PerformanceCounters(pc)));
+	}
+	else {
+		delete sub_problem;
+	}
+
+	if(sub_problem2->is_solution()) {
+		sub_problem2->update_solution(upper_bound, best, pc.subproblem_pc);
+		delete sub_problem2;
+	}
+	else if(sub_problem2->get_lower_bound() < *upper_bound) {
+		Pheet::spawn_prio(strategy(sub_problem2, upper_bound),
+				partition,
+				sub_problem2, upper_bound, best, pc);
+	}
+	else {
+		delete sub_problem2;
+	}
+}*/
+
+template <class Pheet, template <class P, class SubProblem> class Logic, template <class P, class SubProblem> class SchedulingStrategy, size_t MaxSize>
+void ImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, Logic, SchedulingStrategy, MaxSize>::print_configuration() {
+	Logic<Pheet, SubProblem>::print_name();
 	std::cout << "\t";
-	SchedulingStrategy<Scheduler, void>::print_name();
+	SchedulingStrategy<Pheet, SubProblem>::print_name();
 	std::cout << "\t";
-	scheduler.print_performance_counter_values();
-	pc.print_values();
 }
 
-template <class Scheduler, class Logic, template <class EScheduler, class SubProblem> class SchedulingStrategy, size_t MAX_SIZE>
-void ImprovedStrategyBranchBoundGraphBipartitioning<Scheduler, Logic, SchedulingStrategy, MAX_SIZE>::print_headers() {
+template <class Pheet, template <class P, class SubProblem> class Logic, template <class P, class SubProblem> class SchedulingStrategy, size_t MaxSize>
+void ImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, Logic, SchedulingStrategy, MaxSize>::print_headers() {
 	std::cout << "logic\tstrategy\t";
-	scheduler.print_performance_counter_headers();
-	pc.print_headers();
 }
 
-template <class Scheduler, class Logic, template <class EScheduler, class SubProblem> class SchedulingStrategy, size_t MAX_SIZE>
-void ImprovedStrategyBranchBoundGraphBipartitioning<Scheduler, Logic, SchedulingStrategy, MAX_SIZE>::print_scheduler_name() {
-	Scheduler::print_name();
-}
-
+template <class Pheet>
+using ImprovedStrategyBranchBoundGraphBipartitioning = ImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic, ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy, 64>;
 
 }
 

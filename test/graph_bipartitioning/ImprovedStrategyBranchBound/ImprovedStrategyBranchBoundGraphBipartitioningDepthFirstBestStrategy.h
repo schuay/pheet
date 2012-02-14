@@ -9,40 +9,40 @@
 #ifndef IMPROVEDSTRATEGYBRANCHBOUNDGRAPHBIPARTITIONINGDEPTHFIRSTBESTSTRATEGY_H_
 #define IMPROVEDSTRATEGYBRANCHBOUNDGRAPHBIPARTITIONINGDEPTHFIRSTBESTSTRATEGY_H_
 
-#include "../../../settings.h"
-#include "../../../sched/strategies/UserDefinedPriority/UserDefinedPriority.h"
+#include "pheet/pheet.h"
+#include "pheet/sched/strategies/UserDefinedPriority/UserDefinedPriority.h"
 
 namespace pheet {
 
-template <class Scheduler, class SubProblem>
+template <class Pheet, class SubProblem>
 class ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy {
 public:
 	ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy();
 	~ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy();
 
-	UserDefinedPriority<Scheduler> operator()(SubProblem* sub_problem, size_t* upper_bound);
+	UserDefinedPriority<Pheet> operator()(SubProblem* sub_problem, size_t* upper_bound);
 
 	static void print_name();
 };
 
-template <class Scheduler, class SubProblem>
-inline ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy<Scheduler, SubProblem>::ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy() {
+template <class Pheet, class SubProblem>
+inline ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy<Pheet, SubProblem>::ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy() {
 
 }
 
-template <class Scheduler, class SubProblem>
-inline ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy<Scheduler, SubProblem>::~ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy() {
+template <class Pheet, class SubProblem>
+inline ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy<Pheet, SubProblem>::~ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy() {
 
 }
 
-template <class Scheduler, class SubProblem>
-UserDefinedPriority<Scheduler> ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy<Scheduler, SubProblem>::operator()(SubProblem* sub_problem, size_t* upper_bound) {
+template <class Pheet, class SubProblem>
+UserDefinedPriority<Pheet> ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy<Pheet, SubProblem>::operator()(SubProblem* sub_problem, size_t* upper_bound) {
 	size_t ubc = *upper_bound;
 	size_t lb = sub_problem->get_lower_bound();
 	if(ubc < lb) {
 		// Prioritize this task, as it will immediatly terminate anyway
 		// Do not allow it to be stolen (not worth it)
-		return UserDefinedPriority<Scheduler>(std::numeric_limits< prio_t >::max(), 0);
+		return UserDefinedPriority<Pheet>(std::numeric_limits< prio_t >::max(), 0);
 	}
 
 	// Depth: assumption: good for pop, bad for steal
@@ -52,11 +52,11 @@ UserDefinedPriority<Scheduler> ImprovedStrategyBranchBoundGraphBipartitioningDep
 	prio_t prio_pop = (std::numeric_limits< prio_t >::max() / (max_depth + 1)) * depth - lb;
 	prio_t prio_steal = (std::numeric_limits< prio_t >::max() / (max_depth + 1)) * (max_depth - depth) - lb;
 
-	return UserDefinedPriority<Scheduler>(prio_pop, prio_steal);
+	return UserDefinedPriority<Pheet>(prio_pop, prio_steal);
 }
 
-template <class Scheduler, class SubProblem>
-inline void ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy<Scheduler, SubProblem>::print_name() {
+template <class Pheet, class SubProblem>
+inline void ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy<Pheet, SubProblem>::print_name() {
 	std::cout << "DepthFirstBestStrategy";
 }
 

@@ -40,6 +40,7 @@ class MaxReducer {
 public:
 	MaxReducer();
 	MaxReducer(MaxReducer<Pheet, T, M>& other);
+	MaxReducer(MaxReducer<Pheet, T, M>&& other);
 	~MaxReducer();
 
 	void add_value(T const& value);
@@ -56,6 +57,12 @@ MaxReducer<Pheet, T, M>::MaxReducer() {
 
 template <class Pheet, typename T, template <typename S> class M>
 MaxReducer<Pheet, T, M>::MaxReducer(MaxReducer<Pheet, T, M>& other)
+: reducer(other.reducer) {
+
+}
+
+template <class Pheet, typename T, template <typename S> class M>
+MaxReducer<Pheet, T, M>::MaxReducer(MaxReducer<Pheet, T, M>&& other)
 : reducer(other.reducer) {
 
 }
