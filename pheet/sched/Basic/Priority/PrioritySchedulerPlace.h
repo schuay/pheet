@@ -67,6 +67,8 @@ public:
 	typedef PrioritySchedulerPlaceLevelDescription<Self> LevelDescription;
 	typedef typename Pheet::Backoff Backoff;
 	typedef typename Pheet::Scheduler::Task Task;
+	template <typename F>
+		using FunctorTask = typename Pheet::Scheduler::template FunctorTask<F>;
 	typedef PrioritySchedulerPlaceStackElement StackElement;
 	typedef typename Pheet::Scheduler::TaskStorageItem TaskStorageItem;
 	typedef typename Pheet::Scheduler::TaskStorage TaskStorage;
@@ -89,14 +91,26 @@ public:
 	template<class CallTaskType, typename ... TaskParams>
 		void finish(TaskParams&& ... params);
 
+	template<typename F, typename ... TaskParams>
+		void finish(F&& f, TaskParams&& ... params);
+
 	template<class CallTaskType, typename ... TaskParams>
 		void call(TaskParams&& ... params);
+
+	template<typename F, typename ... TaskParams>
+		void call(F&& f, TaskParams&& ... params);
 
 	template<class CallTaskType, typename ... TaskParams>
 		void spawn(TaskParams&& ... params);
 
+	template<typename F, typename ... TaskParams>
+		void spawn(F&& f, TaskParams&& ... params);
+
 	template<class CallTaskType, class Strategy, typename ... TaskParams>
 		void spawn_prio(Strategy s, TaskParams&& ... params);
+
+	template<class Strategy, typename F, typename ... TaskParams>
+		void spawn_prio(Strategy s, F&& f, TaskParams&& ... params);
 
 	std::mt19937& get_rng();
 
@@ -745,9 +759,25 @@ void PrioritySchedulerPlace<Pheet, CallThreshold>::finish(TaskParams&& ... param
 }
 
 template <class Pheet, uint8_t CallThreshold>
+template<typename F, typename ... TaskParams>
+void PrioritySchedulerPlace<Pheet, CallThreshold>::finish(F&& f, TaskParams&& ... params) {
+	start_finish_region();
+
+	call(f, static_cast<TaskParams&&>(params) ...);
+
+	end_finish_region();
+}
+
+template <class Pheet, uint8_t CallThreshold>
 template<class CallTaskType, typename ... TaskParams>
 void PrioritySchedulerPlace<Pheet, CallThreshold>::spawn(TaskParams&& ... params) {
 	spawn_prio<CallTaskType>(DefaultStrategy(), static_cast<TaskParams&&>(params) ...);
+}
+
+template <class Pheet, uint8_t CallThreshold>
+template<typename F, typename ... TaskParams>
+void PrioritySchedulerPlace<Pheet, CallThreshold>::spawn(F&& f, TaskParams&& ... params) {
+	spawn_prio(DefaultStrategy(), f, static_cast<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, uint8_t CallThreshold>
@@ -787,6 +817,44 @@ void PrioritySchedulerPlace<Pheet, CallThreshold>::spawn_prio(Strategy s, TaskPa
 }
 
 template <class Pheet, uint8_t CallThreshold>
+template<class Strategy, typename F, typename ... TaskParams>
+void PrioritySchedulerPlace<Pheet, CallThreshold>::spawn_prio(Strategy s, F&& f, TaskParams&& ... params) {
+	performance_counters.num_spawns.incr();
+
+	if(task_storage.is_full(performance_counters.task_storage_performance_counters)) {
+		// Rigid limit in case the data-structure can not grow
+		performance_counters.num_spawns_to_call.incr();
+		call(f, static_cast<TaskParams&&>(params) ...);
+	}
+	else {
+		// Limit dependent on currently not executed tasks of the current finish_stack element
+		// to ensure repeated finish calls don't let the queues explode, each blocking finish call reduces the limit by 1
+		size_t current_tasks = (current_task_parent->num_spawned - current_task_parent->num_finished_remote);
+		size_t blocking_finish_depth = (stack_size - stack_filled_right);
+		size_t limit = call_mode?preferred_queue_length:max_queue_length;
+		if(blocking_finish_depth >= limit || current_tasks >= (limit - blocking_finish_depth)) {
+			call_mode = true;
+			performance_counters.num_spawns_to_call.incr();
+			call(f, static_cast<TaskParams&&>(params) ...);
+		}
+		else {
+			call_mode = false;
+			performance_counters.num_actual_spawns.incr();
+			auto bound = std::bind(f, params ...);
+
+			FunctorTask<decltype(bound)>* task = new FunctorTask<decltype(bound)>(bound);
+			assert(current_task_parent != NULL);
+			assert(current_task_parent >= stack && (current_task_parent < (stack + stack_size)));
+			++(current_task_parent->num_spawned);
+			TaskStorageItem di;
+			di.task = task;
+			di.stack_element = current_task_parent;
+			task_storage.push(s, di, performance_counters.task_storage_performance_counters);
+		}
+	}
+}
+
+template <class Pheet, uint8_t CallThreshold>
 template<class CallTaskType, typename ... TaskParams>
 void PrioritySchedulerPlace<Pheet, CallThreshold>::call(TaskParams&& ... params) {
 	performance_counters.num_calls.incr();
@@ -794,6 +862,14 @@ void PrioritySchedulerPlace<Pheet, CallThreshold>::call(TaskParams&& ... params)
 	CallTaskType task(static_cast<TaskParams&&>(params) ...);
 	// Execute task
 	task();
+}
+
+template <class Pheet, uint8_t CallThreshold>
+template<typename F, typename ... TaskParams>
+void PrioritySchedulerPlace<Pheet, CallThreshold>::call(F&& f, TaskParams&& ... params) {
+	performance_counters.num_calls.incr();
+	// Execute task
+	f(static_cast<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, uint8_t CallThreshold>

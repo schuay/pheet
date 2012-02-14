@@ -93,6 +93,8 @@ public:
 	typedef BasicSchedulerPlaceLevelDescription<Self> LevelDescription;
 	typedef typename Pheet::Backoff Backoff;
 	typedef typename Pheet::Scheduler::Task Task;
+	template <typename F>
+		using FunctorTask = typename Pheet::Scheduler::template FunctorTask<F>;
 	typedef BasicSchedulerPlaceStackElement StackElement;
 	typedef BasicSchedulerPlaceDequeItem<Pheet> DequeItem;
 	typedef StealingDequeT<Pheet, DequeItem> StealingDeque;
@@ -113,11 +115,20 @@ public:
 	template<class CallTaskType, typename ... TaskParams>
 		void finish(TaskParams&& ... params);
 
+	template<typename F, typename ... TaskParams>
+		void finish(F&& f, TaskParams&& ... params);
+
 	template<class CallTaskType, typename ... TaskParams>
 		void call(TaskParams&& ... params);
 
+	template<typename F, typename ... TaskParams>
+		void call(F&& f, TaskParams&& ... params);
+
 	template<class CallTaskType, typename ... TaskParams>
 		void spawn(TaskParams&& ... params);
+
+	template<typename F, typename ... TaskParams>
+		void spawn(F&& f, TaskParams&& ... params);
 
 	std::mt19937& get_rng();
 
@@ -734,6 +745,16 @@ void BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::finish(TaskParam
 }
 
 template <class Pheet, template <class P, typename T> class StealingDequeT, uint8_t CallThreshold>
+template<typename F, typename ... TaskParams>
+void BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::finish(F&& f, TaskParams&& ... params) {
+	start_finish_region();
+
+	call(f, static_cast<TaskParams&&>(params) ...);
+
+	end_finish_region();
+}
+
+template <class Pheet, template <class P, typename T> class StealingDequeT, uint8_t CallThreshold>
 template<class CallTaskType, typename ... TaskParams>
 void BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::spawn(TaskParams&& ... params) {
 	performance_counters.num_spawns.incr();
@@ -759,6 +780,33 @@ void BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::spawn(TaskParams
 }
 
 template <class Pheet, template <class P, typename T> class StealingDequeT, uint8_t CallThreshold>
+template<typename F, typename ... TaskParams>
+void BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::spawn(F&& f, TaskParams&& ... params) {
+	performance_counters.num_spawns.incr();
+
+	size_t limit = call_mode?preferred_queue_length:max_queue_length;
+	if(stealing_deque.get_length() >= limit) {
+		call_mode = true;
+		performance_counters.num_spawns_to_call.incr();
+		call(f, static_cast<TaskParams&&>(params) ...);
+	}
+	else {
+		call_mode = false;
+		performance_counters.num_actual_spawns.incr();
+
+		auto bound = std::bind(f, params ...);
+
+		FunctorTask<decltype(bound)>* task = new FunctorTask<decltype(bound)>(bound);
+		assert(current_task_parent != NULL);
+		++(current_task_parent->num_spawned);
+		DequeItem di;
+		di.task = task;
+		di.stack_element = current_task_parent;
+		stealing_deque.push(di);
+	}
+}
+
+template <class Pheet, template <class P, typename T> class StealingDequeT, uint8_t CallThreshold>
 template<class CallTaskType, typename ... TaskParams>
 void BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::call(TaskParams&& ... params) {
 	performance_counters.num_calls.incr();
@@ -766,6 +814,14 @@ void BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::call(TaskParams&
 	CallTaskType task(static_cast<TaskParams&&>(params) ...);
 	// Execute task
 	task();
+}
+
+template <class Pheet, template <class P, typename T> class StealingDequeT, uint8_t CallThreshold>
+template<typename F, typename ... TaskParams>
+void BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::call(F&& f, TaskParams&& ... params) {
+	performance_counters.num_calls.incr();
+	// Execute task
+	f(static_cast<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, template <class P, typename T> class StealingDequeT, uint8_t CallThreshold>

@@ -11,6 +11,7 @@
 
 #include "../../../settings.h"
 #include "../../common/SchedulerTask.h"
+#include "../../common/SchedulerFunctorTask.h"
 #include "../../common/FinishRegion.h"
 #include "SynchroneousSchedulerPerformanceCounters.h"
 
@@ -25,6 +26,8 @@ class SynchroneousScheduler {
 public:
 	typedef SynchroneousScheduler<Pheet> Self;
 	typedef SchedulerTask<Pheet> Task;
+	template <typename F>
+		using FunctorTask = SchedulerFunctorTask<Pheet, F>;
 	typedef Self Place;
 	typedef FinishRegion<SynchroneousScheduler> Finish;
 	typedef SynchroneousSchedulerPerformanceCounters<Pheet> PerformanceCounters;

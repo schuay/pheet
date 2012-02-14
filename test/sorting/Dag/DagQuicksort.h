@@ -27,7 +27,7 @@ public:
 		using WITH_CUTOFF_LENGTH = DagQuicksortImpl<Pheet, NEW_VAL>;
 
 	DagQuicksortImpl(unsigned int* data, size_t length);
-	~DagQuicksortImpl();
+	virtual ~DagQuicksortImpl();
 
 	virtual void operator()();
 /*	void print_results();

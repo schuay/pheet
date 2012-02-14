@@ -11,6 +11,7 @@
 
 #include "../../../settings.h"
 #include "../../common/SchedulerTask.h"
+#include "../../common/SchedulerFunctorTask.h"
 #include "../../common/FinishRegion.h"
 #include "PrioritySchedulerPlace.h"
 #include "PrioritySchedulerStealerDescriptor.h"
@@ -89,6 +90,8 @@ public:
 	typedef BinaryTreeMachineModel<Pheet, MachineModel> InternalMachineModel;
 	typedef PrioritySchedulerImpl<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold> Self;
 	typedef SchedulerTask<Pheet> Task;
+	template <typename F>
+	using FunctorTask = SchedulerFunctorTask<Pheet, F>;
 	typedef PrioritySchedulerTaskStorageItem<Pheet> TaskStorageItem;
 	typedef TaskStorageT<Pheet, TaskStorageItem> TaskStorage;
 	typedef PrioritySchedulerPlace<Pheet, CallThreshold> Place;
@@ -128,14 +131,26 @@ public:
 	template<class CallTaskType, typename ... TaskParams>
 		void finish(TaskParams&& ... params);
 
+	template<typename F, typename ... TaskParams>
+		void finish(F&& f, TaskParams&& ... params);
+
 	template<class CallTaskType, typename ... TaskParams>
 		void call(TaskParams&& ... params);
+
+	template<typename F, typename ... TaskParams>
+		void call(F&& f, TaskParams&& ... params);
 
 	template<class CallTaskType, typename ... TaskParams>
 		void spawn(TaskParams&& ... params);
 
+	template<typename F, typename ... TaskParams>
+		void spawn(F&& f, TaskParams&& ... params);
+
 	template<class CallTaskType, class Strategy, typename ... TaskParams>
 		void spawn_prio(Strategy s, TaskParams&& ... params);
+
+	template<class Strategy, typename F, typename ... TaskParams>
+		void spawn_prio(Strategy s, F&& f, TaskParams&& ... params);
 
 	static char const name[];
 	static procs_t const max_cpus;
@@ -230,11 +245,27 @@ void PrioritySchedulerImpl<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>
 }
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P> class DefaultStrategyT, uint8_t CallThreshold>
+template<typename F, typename ... TaskParams>
+void PrioritySchedulerImpl<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::finish(F&& f, TaskParams&& ... params) {
+	Place* p = get_place();
+	assert(p != NULL);
+	p->finish(f, static_cast<TaskParams&&>(params) ...);
+}
+
+template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P> class DefaultStrategyT, uint8_t CallThreshold>
 template<class CallTaskType, typename ... TaskParams>
 void PrioritySchedulerImpl<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::spawn(TaskParams&& ... params) {
 	Place* p = get_place();
 	assert(p != NULL);
 	p->spawn<CallTaskType>(static_cast<TaskParams&&>(params) ...);
+}
+
+template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P> class DefaultStrategyT, uint8_t CallThreshold>
+template<typename F, typename ... TaskParams>
+void PrioritySchedulerImpl<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::spawn(F&& f, TaskParams&& ... params) {
+	Place* p = get_place();
+	assert(p != NULL);
+	p->spawn(f, static_cast<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P> class DefaultStrategyT, uint8_t CallThreshold>
@@ -246,11 +277,27 @@ void PrioritySchedulerImpl<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>
 }
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P> class DefaultStrategyT, uint8_t CallThreshold>
+template<class Strategy, typename F, typename ... TaskParams>
+void PrioritySchedulerImpl<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::spawn_prio(Strategy s, F&& f, TaskParams&& ... params) {
+	Place* p = get_place();
+	assert(p != NULL);
+	p->spawn_prio(s, f, static_cast<TaskParams&&>(params) ...);
+}
+
+template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P> class DefaultStrategyT, uint8_t CallThreshold>
 template<class CallTaskType, typename ... TaskParams>
 void PrioritySchedulerImpl<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::call(TaskParams&& ... params) {
 	Place* p = get_place();
 	assert(p != NULL);
 	p->call<CallTaskType>(static_cast<TaskParams&&>(params) ...);
+}
+
+template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P> class DefaultStrategyT, uint8_t CallThreshold>
+template<typename F, typename ... TaskParams>
+void PrioritySchedulerImpl<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::call(F&& f, TaskParams&& ... params) {
+	Place* p = get_place();
+	assert(p != NULL);
+	p->call(f, static_cast<TaskParams&&>(params) ...);
 }
 
 template<class Pheet>
