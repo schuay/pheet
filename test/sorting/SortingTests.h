@@ -9,8 +9,8 @@
 #ifndef SORTINGTESTS_H_
 #define SORTINGTESTS_H_
 
+#include "../init.h"
 #include "../Test.h"
-#include "../test_settings.h"
 #ifdef SORTING_TEST
 #include "SortingTest.h"
 #endif

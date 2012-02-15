@@ -21,7 +21,6 @@
 
 #include <vector>
 #include <queue>
-#include <assert.h>
 #include <iostream>
 
 #include <boost/random/uniform_int.hpp>
@@ -570,7 +569,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::run(
 template <class Scheduler, template <class EScheduler, typename T> class StealingDeque>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::wait_for_shutdown() {
 	// pre-condition: queue must be empty
-	assert(!has_local_work());
+	pheet_assert(!has_local_work());
 
 	while(scheduler_state->current_state != 2) {
 		// Try to join teams or steal tasks
@@ -674,7 +673,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::wait
 			}
 		}
 
-		assert(!has_local_work(min_level));
+		pheet_assert(!has_local_work(min_level));
 
 		// steal tasks from partners or join partner teams
 		visit_partners_until_synced(my_team);
@@ -848,10 +847,10 @@ bool BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::coor
 
 template <class Scheduler, template <class EScheduler, typename T> class StealingDeque>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::disband_team() {
-	assert(current_team != NULL);
-	assert(current_team->level != num_levels - 1);
-	assert(current_team->coordinator == this);
-	assert(current_team->reg.parts.r == current_team->reg.parts.a);
+	pheet_assert(current_team != NULL);
+	pheet_assert(current_team->level != num_levels - 1);
+	pheet_assert(current_team->coordinator == this);
+	pheet_assert(current_team->reg.parts.r == current_team->reg.parts.a);
 
 	// Put the old team into memory reclamation (as soon as it will be retrieved from reclamation,
 	// it is guaranteed that no other (relevant) threads still have a reference to this
@@ -919,7 +918,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::exec
 		execute_solo_task(di);
 	}
 	else {*/
-	assert(di.team_size > 1);
+	pheet_assert(di.team_size > 1);
 
 	// This method is responsible for creating the team task data and finish stack elements, etc...
 	TeamTaskData* tt = create_team_task(di);
@@ -940,7 +939,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::exec
  */
 template <class Scheduler, template <class EScheduler, typename T> class StealingDeque>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::execute_solo_queue_task(DequeItem const& di) {
-	assert(di.team_size == 1);
+	pheet_assert(di.team_size == 1);
 	performance_counters.num_tasks_at_level.incr(num_levels - 1);
 
 	current_team_task = create_solo_team_task(di);
@@ -997,8 +996,8 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::crea
 		TeamAnnouncement* team;
 
 		if(!team_announcement_reclamation_queue.empty()) {
-			assert(team_announcement_reclamation_queue.front()->reg.parts.r == team_announcement_reclamation_queue.front()->reg.parts.a);
-			assert(team_announcement_reclamation_queue.front()->level < num_levels - 1);
+			pheet_assert(team_announcement_reclamation_queue.front()->reg.parts.r == team_announcement_reclamation_queue.front()->reg.parts.a);
+			pheet_assert(team_announcement_reclamation_queue.front()->level < num_levels - 1);
 
 			TeamAnnouncement* tmp = team_announcement_reclamation_queue.front();
 			team_announcement_reclamation_queue.pop();
@@ -1039,7 +1038,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::crea
 				announced_teams[team_announcement_index] = team;
 			}
 			else {
-				assert(current_team->level != team->level);
+				pheet_assert(current_team->level != team->level);
 				// This team is smaller so no need for reannouncement
 				announced_teams[team_announcement_index] = NULL;
 			}*/
@@ -1072,7 +1071,7 @@ typename BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::
 BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::create_team_task(DequeItem di) {
 	TeamTaskData* team_task;
 
-	assert(di.team_size != 1);
+	pheet_assert(di.team_size != 1);
 
 	if(!team_task_reclamation_queue.empty() && team_task_reclamation_queue.front()->executed_countdown == 0) {
 		TeamTaskData* tmp = team_task_reclamation_queue.front();
@@ -1118,7 +1117,7 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::create_te
 template <class Scheduler, template <class EScheduler, typename T> class StealingDeque>
 typename BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::TeamTaskData*
 BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::create_solo_team_task(DequeItem di) {
-	assert(di.team_size == 1);
+	pheet_assert(di.team_size == 1);
 
 	TeamTaskData* team_task = team_task_reuse[num_levels - 1];
 
@@ -1160,7 +1159,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::anno
 template <class Scheduler, template <class EScheduler, typename T> class StealingDeque>
 typename BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::FinishStackElement*
 BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::create_non_blocking_finish_region(FinishStackElement* parent) {
-	assert(finish_stack_filled_left < finish_stack_size);
+	pheet_assert(finish_stack_filled_left < finish_stack_size);
 
 	finish_stack[finish_stack_filled_left].num_finished_remote = 0;
 	// As we create it out of a parent region that is waiting for completion of a single task, we can already add this one task here
@@ -1174,7 +1173,7 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::create_no
 	else {
 		++(finish_stack[finish_stack_filled_left].version);
 	}
-	assert((finish_stack[finish_stack_filled_left].version & 1) == 0);
+	pheet_assert((finish_stack[finish_stack_filled_left].version & 1) == 0);
 
 	++finish_stack_filled_left;
 
@@ -1196,7 +1195,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::empt
 
 			// When parent is set to NULL, some thread is finalizing/has finalized this stack element (otherwise we would have an error)
 			// Actually we have to check before whether parent has already been set to NULL, or we might have a race
-		//	assert(finish_stack[finish_stack_filled_left].parent == NULL);
+		//	pheet_assert(finish_stack[finish_stack_filled_left].parent == NULL);
 
 		}
 		else {
@@ -1212,7 +1211,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::sign
 
 	bool local = finish_stack_element >= finish_stack && (finish_stack_element < (finish_stack + finish_stack_size));
 	if(local) {
-		assert(finish_stack_element->num_spawned > 0);
+		pheet_assert(finish_stack_element->num_spawned > 0);
 		--(finish_stack_element->num_spawned);
 
 		// Memory fence is unfortunately required to guarantee that some thread finalizes the finish_stack_element
@@ -1254,7 +1253,7 @@ inline void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque
 template <class Scheduler, template <class EScheduler, typename T> class StealingDeque>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visit_partners() {
 	// If we still have local work, this might never terminate
-	assert(!has_local_work());
+	pheet_assert(!has_local_work());
 
 	performance_counters.idle_time.start_timer();
 	performance_counters.visit_partners_time.start_timer();
@@ -1267,12 +1266,12 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visi
 		while(level > 0) {
 			--level;
 			// For all except the last level we assume num_partners > 0
-			assert(levels[level].num_partners > 0);
+			pheet_assert(levels[level].num_partners > 0);
 			boost::uniform_int<procs_t> n_r_gen(0, levels[level].num_partners - 1);
 			procs_t next_rand = n_r_gen(rng);
-			assert(next_rand < levels[level].num_partners);
+			pheet_assert(next_rand < levels[level].num_partners);
 			TaskExecutionContext* partner = levels[level].partners[next_rand];
-			assert(partner != this);
+			pheet_assert(partner != this);
 
 			TeamAnnouncement* team = find_partner_team(partner, level);
 			if(team != NULL) {
@@ -1281,7 +1280,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visi
 				performance_counters.idle_time.stop_timer();
 
 				join_team(team);
-				assert(current_team == NULL);
+				pheet_assert(current_team == NULL);
 				return;
 			}
 
@@ -1320,7 +1319,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visi
 template <class Scheduler, template <class EScheduler, typename T> class StealingDeque>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visit_partners_until_finished(FinishStackElement* parent) {
 	// If we still have local work, this might never terminate
-	assert(!has_local_work());
+	pheet_assert(!has_local_work());
 
 	performance_counters.idle_time.start_timer();
 	performance_counters.wait_for_finish_time.start_timer();
@@ -1333,12 +1332,12 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visi
 		while(level > 0) {
 			--level;
 			// For all except the last level we assume num_partners > 0
-			assert(levels[level].num_partners > 0);
+			pheet_assert(levels[level].num_partners > 0);
 			boost::uniform_int<procs_t> n_r_gen(0, levels[level].num_partners - 1);
 			procs_t next_rand = n_r_gen(rng);
-			assert(next_rand < levels[level].num_partners);
+			pheet_assert(next_rand < levels[level].num_partners);
 			TaskExecutionContext* partner = levels[level].partners[next_rand];
-			assert(partner != this);
+			pheet_assert(partner != this);
 
 			TeamAnnouncement* team = find_partner_team(partner, level);
 			if(team != NULL) {
@@ -1347,7 +1346,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visi
 
 				// Joins the team and executes all tasks. Only returns after the team has been disbanded
 				join_team(team);
-				assert(current_team == NULL);
+				pheet_assert(current_team == NULL);
 				return;
 			}
 
@@ -1388,7 +1387,7 @@ template <class Scheduler, template <class EScheduler, typename T> class Stealin
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visit_partners_until_synced(TeamAnnouncement* my_team_announcement) {
 	procs_t min_level = my_team_announcement->level + 1;
 	// If we still have local work, this might never terminate
-	assert(!has_local_work(min_level));
+	pheet_assert(!has_local_work(min_level));
 
 	performance_counters.idle_time.start_timer();
 
@@ -1400,12 +1399,12 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::visi
 		while(level >= min_level) {
 			--level;
 			// For all except the last level we assume num_partners > 0
-			assert(levels[level].num_partners > 0);
+			pheet_assert(levels[level].num_partners > 0);
 			boost::uniform_int<procs_t> n_r_gen(0, levels[level].num_partners - 1);
 			procs_t next_rand = n_r_gen(rng);
-			assert(next_rand < levels[level].num_partners);
+			pheet_assert(next_rand < levels[level].num_partners);
 			TaskExecutionContext* partner = levels[level].partners[next_rand];
-			assert(partner != this);
+			pheet_assert(partner != this);
 
 			TeamAnnouncement* team = find_partner_team(partner, level);
 			if(team != NULL) {
@@ -1477,11 +1476,11 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::join
 	current_team = team;
 
 	register_for_team(team);
-	assert(team->level == 0 || team->coordinator->levels[team->level - 1].partners == levels[team->level - 1].partners);
+	pheet_assert(team->level == 0 || team->coordinator->levels[team->level - 1].partners == levels[team->level - 1].partners);
 
 	// Calculate the team_level at which we have to drop out
 /*	{
-		assert(levels[team->level].local_id != team->coordinator->levels[team->level].local_id);
+		pheet_assert(levels[team->level].local_id != team->coordinator->levels[team->level].local_id);
 
 		TaskExecutionContext* smaller;
 		TaskExecutionContext* larger;
@@ -1493,24 +1492,24 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::join
 			smaller = team->coordinator;
 			larger = this;
 		}
-		assert(smaller != larger);
+		pheet_assert(smaller != larger);
 		procs_t diff = larger->levels[team->level].local_id - smaller->levels[team->level].local_id;
-		assert(diff > 0);
+		pheet_assert(diff > 0);
 		procs_t lvl = team->level + 1;
 		while(smaller->levels[lvl].local_id + diff == larger->levels[lvl].local_id) {
 			++lvl;
-			assert(lvl < smaller->num_levels && lvl < larger->num_levels);
+			pheet_assert(lvl < smaller->num_levels && lvl < larger->num_levels);
 		}
 		max_team_level = lvl - 1;
 	}*/
 
-//	assert(current_team->level <= max_team_level);
+//	pheet_assert(current_team->level <= max_team_level);
 
 	prepare_team_info(team);
 
 	follow_team();
 
-	assert(current_team == NULL);
+	pheet_assert(current_team == NULL);
 }
 
 /*
@@ -1534,13 +1533,13 @@ bool BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::tie_
 #ifndef NDEBUG
 	// deregistration should never fail in this case, as my_team can't be completed if other_team wins (at least 1 thread would never join my_team)
 	// TODO: This might change if we allow tasks with higher thread requirements to win over smaller ones in certain cases. Recheck it then
-	assert(dereg);
+	pheet_assert(dereg);
 #endif
 
 	performance_counters.sync_time.stop_timer();
 	join_team(other_team);
 	performance_counters.sync_time.start_timer();
-	assert(current_team == NULL);
+	pheet_assert(current_team == NULL);
 
 	register_for_team(my_team);
 	return true;
@@ -1632,8 +1631,8 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::foll
  */
 template <class Scheduler, template <class EScheduler, typename T> class StealingDeque>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::prepare_team_info(TeamAnnouncement* team) {
-	assert(team != NULL);
-	assert(team->level != num_levels - 1);
+	pheet_assert(team != NULL);
+	pheet_assert(team->level != num_levels - 1);
 	team_info = default_team_info;
 	team_info->team_level = team->level;
 	team_info->team_size = levels[team->level].total_size;
@@ -1676,7 +1675,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::sync
  */
 template <class Scheduler, template <class EScheduler, typename T> class StealingDeque>
 procs_t BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::get_level_for_num_threads(procs_t num_threads) {
-	assert(num_threads > 0);
+	pheet_assert(num_threads > 0);
 
 	if(num_threads > levels[0].total_size) {
 		return 0;
@@ -1728,7 +1727,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::star
 		// Perform cleanup on left side of finish stack
 		empty_finish_stack();
 
-		assert(finish_stack_filled_left < finish_stack_filled_right);
+		pheet_assert(finish_stack_filled_left < finish_stack_filled_right);
 		--finish_stack_filled_right;
 
 		finish_stack[finish_stack_filled_right].num_finished_remote = 0;
@@ -1752,7 +1751,7 @@ template <class Scheduler, template <class EScheduler, typename T> class Stealin
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::end_finish_region() {
 	performance_counters.task_time.stop_timer();
 	if(is_coordinator()) {
-		assert(current_team_task->parent == &(finish_stack[finish_stack_filled_right]));
+		pheet_assert(current_team_task->parent == &(finish_stack[finish_stack_filled_right]));
 		// Store current team task
 		TeamTaskData* my_team_task = current_team_task;
 
@@ -1806,7 +1805,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::spaw
 			}
 			else {
 				CallTaskType* task = new CallTaskType(static_cast<TaskParams&&>(params) ...);
-				assert(current_team_task->parent != NULL);
+				pheet_assert(current_team_task->parent != NULL);
 				current_team_task->parent->num_spawned++;
 				DequeItem di;
 				di.task = task;
@@ -1818,7 +1817,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::spaw
 		else {
 			// TODO: optimization to use call in some cases to prevent the deque from growing too large
 			CallTaskType* task = new CallTaskType(static_cast<TaskParams&&>(params) ...);
-			assert(current_team_task->parent != NULL);
+			pheet_assert(current_team_task->parent != NULL);
 			current_team_task->parent->num_spawned++;
 			DequeItem di;
 			di.task = task;
@@ -1841,7 +1840,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::loca
 
 		// We are out of sync, so calls instead of spawns are not possible
 		CallTaskType* task = new CallTaskType(static_cast<TaskParams&&>(params) ...);
-		assert(finish_stack_filled_left > 0);
+		pheet_assert(finish_stack_filled_left > 0);
 		current_team_task->parent->num_spawned++;
 		DequeItem di;
 		di.task = task;
@@ -1860,7 +1859,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::call
 
 		if(team_info->team_size > 1) {
 			// TODO
-			assert(true);
+			pheet_assert(true);
 		}
 		else {
 			CallTaskType task(static_cast<TaskParams&&>(params) ...);
@@ -1869,12 +1868,12 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::call
 	}
 	else {
 		// TODO
-		assert(true);
+		pheet_assert(true);
 	}
 
 	/*
 	if(is_coordinator) {
-		assert(finish_stack_filled_left > 0);
+		pheet_assert(finish_stack_filled_left > 0);
 
 		if(team_size == 1) {
 			CallTaskType task(params ...);
@@ -1900,7 +1899,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::fini
 	end_finish_region();
 
 /*	if(is_coordinator()) {
-		assert(finish_stack_filled_left > 0);
+		pheet_assert(finish_stack_filled_left > 0);
 
 		if(team_size == 1) {
 			// Create task
@@ -1940,7 +1939,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::spaw
 			performance_counters.num_spawns.incr();
 
 			CallTaskType* task = new CallTaskType(static_cast<TaskParams&&>(params) ...);
-			assert(current_team_task->parent != NULL);
+			pheet_assert(current_team_task->parent != NULL);
 			current_team_task->parent->num_spawned++;
 			DequeItem di;
 			di.task = task;
@@ -1961,7 +1960,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::loca
 	}
 	else {
 		CallTaskType* task = new CallTaskType(static_cast<TaskParams&&>(params) ...);
-		assert(finish_stack_filled_left > 0);
+		pheet_assert(finish_stack_filled_left > 0);
 		current_team_task->parent.num_spawned++;
 		DequeItem di;
 		di.task = task;
@@ -1975,10 +1974,10 @@ template <class Scheduler, template <class EScheduler, typename T> class Stealin
 template<class CallTaskType, typename ... TaskParams>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::call_nt(procs_t nt_size, TaskParams&& ... params) {
 	// TODO
-	assert(true);
+	pheet_assert(true);
 	/*
 	if(is_coordinator()) {
-		assert(finish_stack_filled_left > 0);
+		pheet_assert(finish_stack_filled_left > 0);
 
 		if(team_size == 1) {
 			CallTaskType task(params ...);
@@ -2005,7 +2004,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::fini
 
 		/*
 	if(is_coordinator()) {
-		assert(finish_stack_filled_left > 0);
+		pheet_assert(finish_stack_filled_left > 0);
 
 		if(nt_size == 1) {
 			// Create task
@@ -2124,7 +2123,7 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::get_next_
 			return nullable_traits<DequeItem>::null_value;
 		}
 	}
-	assert(ret.team_size <= this->levels[min_level].total_size);
+	pheet_assert(ret.team_size <= this->levels[min_level].total_size);
 //	current_deque = highest_level_deque;
 	return ret;
 }
@@ -2177,7 +2176,7 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::steal_tas
 				// try steal
 				DequeItem ret = partner_queue->steal_push(*my_queue);
 				if(ret.task != NULL) {
-					assert(highest_level_deque == NULL || highest_level_deque < stealing_deques + my_level);
+					pheet_assert(highest_level_deque == NULL || highest_level_deque < stealing_deques + my_level);
 				//	current_deque = my_queue;
 					highest_level_deque = stealing_deques + my_level;
 					if(lowest_level_deque == NULL) {
@@ -2205,7 +2204,7 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::steal_tas
 	if(partner->num_levels > num_levels) {
 		min_level += partner->num_levels - num_levels;
 
-		assert(min_level < partner->num_levels);
+		pheet_assert(min_level < partner->num_levels);
 	}
 	partner_min = partner->stealing_deques + min_level;
 
@@ -2215,13 +2214,13 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::steal_tas
 		performance_counters.num_unsuccessful_steal_calls_per_thread.incr(get_global_id());
 		return nullable_traits<DequeItem>::null_value;
 	}
-	assert(partner_queue >= partner->stealing_deques && partner_queue < partner->stealing_deques + partner->num_levels);
+	pheet_assert(partner_queue >= partner->stealing_deques && partner_queue < partner->stealing_deques + partner->num_levels);
 	my_queue = stealing_deques + num_levels - (partner->stealing_deques + partner->num_levels - partner_queue);
 	while(partner_queue >= partner_min) {
 		if(!(*partner_queue)->is_empty()) {
 			DequeItem ret = (*partner_queue)->steal_push(**my_queue);
 			if(ret.task != NULL) {
-				assert(highest_level_deque == NULL || highest_level_deque < my_queue);
+				pheet_assert(highest_level_deque == NULL || highest_level_deque < my_queue);
 			//	current_deque = my_queue;
 				highest_level_deque = my_queue;
 				if(lowest_level_deque == NULL) {
@@ -2298,7 +2297,7 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::steal_for
 				// try steal
 				DequeItem ret = partner_queue->steal_push(*my_queue);
 				if(ret.task != NULL) {
-					assert(highest_level_deque == NULL || highest_level_deque < stealing_deques + my_level);
+					pheet_assert(highest_level_deque == NULL || highest_level_deque < stealing_deques + my_level);
 				//	current_deque = my_queue;
 					highest_level_deque = stealing_deques + my_level;
 					if(lowest_level_deque == NULL) {
@@ -2325,7 +2324,7 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::steal_for
 	if(partner->num_levels > num_levels) {
 		min_level += partner->num_levels - num_levels;
 
-		assert(min_level < partner->num_levels);
+		pheet_assert(min_level < partner->num_levels);
 	}
 	partner_min = partner->stealing_deques + min_level;
 
@@ -2335,7 +2334,7 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::steal_for
 		performance_counters.num_unsuccessful_steal_calls_per_thread.incr(get_global_id());
 		return nullable_traits<DequeItem>::null_value;
 	}
-	assert(partner_queue >= partner->stealing_deques && partner_queue < partner->stealing_deques + partner->num_levels);
+	pheet_assert(partner_queue >= partner->stealing_deques && partner_queue < partner->stealing_deques + partner->num_levels);
 	my_queue = stealing_deques + num_levels - (partner->stealing_deques + partner->num_levels - partner_queue);
 	while(partner_queue >= partner_min) {
 		if(!(*partner_queue)->is_empty()) {
@@ -2349,7 +2348,7 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::steal_for
 			// try steal
 			DequeItem ret = (*partner_queue)->steal_push(**my_queue);
 			if(ret.task != NULL) {
-				assert(highest_level_deque == NULL || highest_level_deque < my_queue);
+				pheet_assert(highest_level_deque == NULL || highest_level_deque < my_queue);
 			//	current_deque = my_queue;
 				highest_level_deque = my_queue;
 				if(lowest_level_deque == NULL) {
@@ -2371,7 +2370,7 @@ BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::steal_for
 
 template <class Scheduler, template <class EScheduler, typename T> class StealingDeque>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::store_item_in_deque(DequeItem di, procs_t level) {
-	assert(di.team_size <= this->levels[level].total_size);
+	pheet_assert(di.team_size <= this->levels[level].total_size);
 	stealing_deques[level]->push(di);
 	if(lowest_level_deque == NULL) {
 		lowest_level_deque = stealing_deques + level;
@@ -2394,7 +2393,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::regi
 	Backoff bo;
 	reg.complete = team->reg.complete;
 	old_reg.complete = reg.complete;
-	assert(reg.parts.a != reg.parts.r);
+	pheet_assert(reg.parts.a != reg.parts.r);
 	++reg.parts.a;
 	while(!UINT64_CAS(&(team->reg.complete), old_reg.complete, reg.complete)) {
 		bo.backoff();
@@ -2414,7 +2413,7 @@ bool BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::dere
 	if(reg.parts.a == reg.parts.r) {
 		return false;
 	}
-	assert(reg.parts.a != 0);
+	pheet_assert(reg.parts.a != 0);
 	--reg.parts.a;
 	while(!UINT64_CAS(&(team->reg.complete), old_reg.complete, reg.complete)) {
 		bo.backoff();
@@ -2423,7 +2422,7 @@ bool BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::dere
 			return false;
 		}
 		old_reg.complete = reg.complete;
-		assert(reg.parts.a != 0);
+		pheet_assert(reg.parts.a != 0);
 		--reg.parts.a;
 	}
 

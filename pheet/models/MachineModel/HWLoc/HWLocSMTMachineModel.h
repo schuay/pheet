@@ -22,16 +22,19 @@ public:
 	HWLocSMTTopologyInfo();
 	~HWLocSMTTopologyInfo();
 
-	hwloc_obj_t get_root_object();
+	hwloc_obj_t get_root_obj();
+	int get_root_depth();
 	int get_total_depth();
 	unsigned int get_total_width();
 
 	hwloc_cpuset_t get_binding();
 	void bind(hwloc_cpuset_t cpus);
+	void free_binding(hwloc_cpuset_t cpus);
 private:
 	HWLocSMTTopologyInfo(HWLocSMTTopologyInfo* topo, int depth);
 
 	hwloc_topology_t topology;
+	int root_depth;
 	int total_depth;
 };
 
@@ -43,6 +46,7 @@ HWLocSMTTopologyInfo<Pheet>::HWLocSMTTopologyInfo() {
 	/* Perform the topology detection. */
 	hwloc_topology_load(topology);
 
+	root_depth = hwloc_get_root_obj(topology)->depth;
 	total_depth = hwloc_get_type_or_below_depth(topology, HWLOC_OBJ_PU);
 }
 
@@ -57,18 +61,23 @@ hwloc_obj_t HWLocSMTTopologyInfo<Pheet>::get_root_obj() {
 }
 
 template <class Pheet>
+int HWLocSMTTopologyInfo<Pheet>::get_root_depth() {
+	return root_depth;
+}
+
+template <class Pheet>
 int HWLocSMTTopologyInfo<Pheet>::get_total_depth() {
 	return total_depth;
 }
 
 template <class Pheet>
-int HWLocSMTTopologyInfo<Pheet>::get_total_width() {
-	return hwloc_get_nobjs_by_depth(topology, total_depth);
+unsigned int HWLocSMTTopologyInfo<Pheet>::get_total_width() {
+	return hwloc_get_nbobjs_by_depth(topology, total_depth);
 }
 
 template <class Pheet>
 hwloc_cpuset_t HWLocSMTTopologyInfo<Pheet>::get_binding() {
-	hwloc_cpuset_t set;
+	hwloc_cpuset_t set = hwloc_bitmap_alloc();
 	hwloc_get_cpubind(topology, set, HWLOC_CPUBIND_THREAD);
 	return set;
 }
@@ -79,31 +88,39 @@ void HWLocSMTTopologyInfo<Pheet>::bind(hwloc_cpuset_t cpus) {
 }
 
 template <class Pheet>
+void HWLocSMTTopologyInfo<Pheet>::free_binding(hwloc_cpuset_t cpus) {
+	hwloc_bitmap_free(cpus);
+}
+
+template <class Pheet>
 class HWLocSMTMachineModel {
 public:
-	typedef HWLocMachineModel<Pheet> ThisType;
+	typedef HWLocSMTMachineModel<Pheet> ThisType;
 
 	HWLocSMTMachineModel();
-	HWLocSMTMachineModel(ThisType const& other);
+	HWLocSMTMachineModel(HWLocSMTMachineModel<Pheet> const& other);
+	HWLocSMTMachineModel(HWLocSMTMachineModel<Pheet> const&& other);
 	~HWLocSMTMachineModel();
 
 	ThisType& operator=(ThisType const& other);
+	ThisType& operator=(ThisType const&& other);
 
 	bool is_leaf();
 	procs_t get_num_children();
 	HWLocSMTMachineModel<Pheet> get_child(procs_t id);
-	procs_t get_node_id();
 	procs_t get_node_offset();
+	procs_t get_last_leaf_offset();
+//	procs_t get_node_id();
 	procs_t get_num_leaves();
+	procs_t get_memory_level();
 
 	void bind();
 	void unbind();
 
 private:
-	HWLocSMTMachineModel(HWLocSMTTopologyInfo* topo, hwloc_obj_t node, int depth);
-	HWLocSMTTopologyInfo* topo;
+	HWLocSMTMachineModel(HWLocSMTTopologyInfo<Pheet>* topo, hwloc_obj_t node);
+	HWLocSMTTopologyInfo<Pheet>* topo;
 	hwloc_obj_t node;
-	int depth;
 	bool root;
 
 	hwloc_cpuset_t prev_binding;
@@ -114,7 +131,7 @@ private:
 
 template <class Pheet>
 HWLocSMTMachineModel<Pheet>::HWLocSMTMachineModel()
-: topo(new HWLocSMTTopologyInfo()), depth(0), root(true) {
+: topo(new HWLocSMTTopologyInfo<Pheet>()), node(topo->get_root_obj()), root(true), prev_binding(nullptr) {
 #ifndef NDEBUG
 	bound = false;
 #endif
@@ -122,16 +139,26 @@ HWLocSMTMachineModel<Pheet>::HWLocSMTMachineModel()
 
 template <class Pheet>
 HWLocSMTMachineModel<Pheet>::HWLocSMTMachineModel(HWLocSMTMachineModel<Pheet> const& other)
-: topo(other.topo), depth(other.depth), root(false) {
+: topo(other.topo), node(other.node), root(false), prev_binding(nullptr) {
 #ifndef NDEBUG
 	bound = false;
 #endif
 }
 
 template <class Pheet>
-HWLocSMTMachineModel<Pheet>::HWLocSMTMachineModel(HWLocSMTTopologyInfo* topo, hwloc_obj_t node)
-: topo(topo), node(node), root(false) {
+HWLocSMTMachineModel<Pheet>::HWLocSMTMachineModel(HWLocSMTMachineModel<Pheet> const&& other)
+: topo(other.topo), node(other.node), root(false), prev_binding(nullptr) {
+#ifndef NDEBUG
+	bound = false;
+#endif
+}
 
+template <class Pheet>
+HWLocSMTMachineModel<Pheet>::HWLocSMTMachineModel(HWLocSMTTopologyInfo<Pheet>* topo, hwloc_obj_t node)
+: topo(topo), node(node), root(false), prev_binding(nullptr) {
+#ifndef NDEBUG
+	bound = false;
+#endif
 }
 
 template <class Pheet>
@@ -139,6 +166,25 @@ HWLocSMTMachineModel<Pheet>::~HWLocSMTMachineModel() {
 	if(root) {
 		delete topo;
 	}
+	if(prev_binding != nullptr) {
+		topo->free_binding(prev_binding);
+	}
+}
+
+template <class Pheet>
+HWLocSMTMachineModel<Pheet>& HWLocSMTMachineModel<Pheet>::operator=(HWLocSMTMachineModel<Pheet> const& other) {
+	pheet_assert(topo == other.topo || !root);
+	topo = other.topo;
+	node = other.node;
+	return *this;
+}
+
+template <class Pheet>
+HWLocSMTMachineModel<Pheet>& HWLocSMTMachineModel<Pheet>::operator=(HWLocSMTMachineModel<Pheet> const&& other) {
+	pheet_assert(topo == other.topo || !root);
+	topo = other.topo;
+	node = other.node;
+	return *this;
 }
 
 template <class Pheet>
@@ -148,66 +194,73 @@ procs_t HWLocSMTMachineModel<Pheet>::get_num_children() {
 
 template <class Pheet>
 HWLocSMTMachineModel<Pheet> HWLocSMTMachineModel<Pheet>::get_child(procs_t id) {
-	assert(id < node.arity);
-	assert(depth < (topo->get_total_depth() - 1));
-	return HWLocSMTMachineModel(topo, node.children[id], depth + 1);
+	pheet_assert(id < node->arity);
+	pheet_assert((node->depth) < (topo->get_total_depth()));
+	return HWLocSMTMachineModel(topo, node->children[id]);
 }
 
 template <class Pheet>
-HWLocSMTMachineModel<Pheet> HWLocSMTMachineModel<Pheet>::is_leaf() {
-	return depth >= (topo->get_total_depth() - 1);
+bool HWLocSMTMachineModel<Pheet>::is_leaf() {
+	return (node->depth) >= (topo->get_total_depth());
 }
 
 template <class Pheet>
 void HWLocSMTMachineModel<Pheet>::bind() {
 #ifndef NDEBUG
-	assert(!bound);
+	pheet_assert(!bound);
 	bound = true;
 #endif
-	prev_binding = topology->get_binding();
-	topology->bind(node->cpuset);
+	prev_binding = topo->get_binding();
+	topo->bind(node->cpuset);
 }
 
 template <class Pheet>
 void HWLocSMTMachineModel<Pheet>::unbind() {
 #ifndef NDEBUG
-	assert(bound);
+	pheet_assert(bound);
 	bound = false;
 #endif
-	topology->bind(prev_binding);
-}
-
-template <class Pheet>
-procs_t HWLocSMTMachineModel<Pheet>::get_node_id() {
-	return node->logical_index;
+	topo->bind(prev_binding);
 }
 
 template <class Pheet>
 procs_t HWLocSMTMachineModel<Pheet>::get_node_offset() {
-	hwloc_obj_t tmp = node;
-	while(tmp->depth < (topo->get_total_depth() - 1)) {
-		assert(tmp->arity != 0);
-		tmp = tmp->children[0];
+	if(!is_leaf()) {
+		return get_child(0).get_node_offset();
 	}
-	return tmp->logical_index;
+	return node->logical_index;
 }
 
 template <class Pheet>
-procs_t HWLocSMTMachineModel<Pheet>::get_num_leaves() {
-	if(depth == (topo->get_total_depth() - 1)) {
-		return 1;
-	}
-	else if(depth == 0) {
-		return topology->get_total_width();
-	}
-	else {
-		// Expensive, so try not using it
-		procs_t ret = 0;
-		for(procs_t i = 0; i < get_num_children(); ++i) {
-			ret += get_child(i).get_num_leaves();
-		}
+procs_t HWLocSMTMachineModel<Pheet>::get_last_leaf_offset() {
+	if(!is_leaf()) {
+		return get_child(get_num_children() - 1).get_last_leaf_offset();
 	}
 	return node->logical_index;
+}
+/*
+template <class Pheet>
+procs_t HWLocSMTMachineModel<Pheet>::get_node_id() {
+	return node->logical_index;
+}*/
+
+template <class Pheet>
+procs_t HWLocSMTMachineModel<Pheet>::get_num_leaves() {
+	if(node->depth == (topo->get_total_depth())) {
+		return 1;
+	}
+	else if(node->depth == topo->get_root_depth()) {
+		return topo->get_total_width();
+	}
+	else {
+		return (get_child(get_num_children() - 1).get_last_leaf_offset() + 1) - get_node_offset();
+	}
+}
+
+
+template <class Pheet>
+procs_t HWLocSMTMachineModel<Pheet>::get_memory_level() {
+	return node->depth;
 }
 
 }

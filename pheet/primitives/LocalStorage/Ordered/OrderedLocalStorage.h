@@ -78,7 +78,7 @@ void OrderedLocalStorage<T, Operation>::finalize() {
 		my_view->reduce();
 	//	my_view->notify_parent();
 		if(parent_view == NULL) {
-			assert(my_view->is_reduced());
+			pheet_assert(my_view->is_reduced());
 			delete my_view;
 		}
 		else {

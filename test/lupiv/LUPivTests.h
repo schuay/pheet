@@ -9,8 +9,9 @@
 #ifndef LUPIVTESTS_H_
 #define LUPIVTESTS_H_
 
+#include "../init.h"
 #include "../Test.h"
-#include "../test_settings.h"
+#include "../init.h"
 #ifdef LUPIV_TEST
 #include "LUPivTest.h"
 #endif

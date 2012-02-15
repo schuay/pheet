@@ -17,7 +17,6 @@
 #include "../../misc/type_traits.h"
 #include "BasicSchedulerPerformanceCounters.h"
 
-#include <assert.h>
 #include <random>
 #include <functional>
 
@@ -205,7 +204,7 @@ BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::BasicSchedulerPlace(I
 
 	performance_counters.total_time.start_timer();
 
-	assert(num_places <= model.get_num_leaves());
+	pheet_assert(num_places <= model.get_num_leaves());
 	levels[0].global_id_offset = 0;
 	levels[0].memory_level = model.get_memory_level();
 	levels[0].size = num_places;
@@ -291,7 +290,7 @@ void BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::prepare_root() {
 
 	scheduler_state->state_barrier.signal(0);
 
-	assert(local_place == NULL);
+	pheet_assert(local_place == NULL);
 	local_place = this;
 
 
@@ -309,19 +308,19 @@ void BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::initialize_level
 	procs_t base_offset;
 	procs_t size;
 
-	assert(num_initialized_levels > 0);
+	pheet_assert(num_initialized_levels > 0);
 	base_offset = levels[num_initialized_levels - 1].global_id_offset;
 	size = levels[num_initialized_levels - 1].size;
 
 	Place** places = levels[0].partners;
 
 	while((size > 1) && (!machine_model.is_leaf())) {
-		assert(machine_model.get_num_children() == 2);
+		pheet_assert(machine_model.get_num_children() == 2);
 		grow_levels_structure();
 
 		InternalMachineModel child(machine_model.get_child(1));
 		procs_t offset = child.get_node_offset();
-		assert(offset > base_offset);
+		pheet_assert(offset > base_offset);
 		if((offset - base_offset) < size) {
 			levels[num_initialized_levels].size = size - (offset - base_offset);
 			levels[num_initialized_levels].global_id_offset = offset;
@@ -346,7 +345,7 @@ void BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::initialize_level
 		}
 	}
 
-	assert(levels[num_initialized_levels - 1].size == 1);
+	pheet_assert(levels[num_initialized_levels - 1].size == 1);
 	procs_t global_id = levels[num_initialized_levels - 1].global_id_offset;
 	// Level 0 is already initialized in the constructor
 	for(procs_t i = 1; i < num_initialized_levels; ++i) {
@@ -360,7 +359,7 @@ void BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::grow_levels_stru
 	if(num_initialized_levels == num_levels) {
 		// We have allocated to little levels
 		procs_t new_size = num_levels + find_last_bit_set(levels[num_levels - 1].size >> 1);
-		assert(new_size > num_levels);
+		pheet_assert(new_size > num_levels);
 		LevelDescription* tmp = new LevelDescription[new_size];
 		memcpy(tmp, levels, num_levels * sizeof(LevelDescription));
 		delete[] levels;
@@ -458,11 +457,11 @@ void BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::main_loop() {
 				procs_t level = num_levels - 1;
 				while(level > 0) {
 					// For all except the last level we assume num_partners > 0
-					assert(levels[level].num_partners > 0);
+					pheet_assert(levels[level].num_partners > 0);
 					std::uniform_int_distribution<procs_t> n_r_gen(0, levels[level].num_partners - 1);
 					procs_t next_rand = n_r_gen(rng);
-					assert(next_rand < levels[level].num_partners);
-					assert(levels[level].partners[next_rand] != this);
+					pheet_assert(next_rand < levels[level].num_partners);
+					pheet_assert(levels[level].partners[next_rand] != this);
 
 					performance_counters.num_steal_calls.incr();
 					di = levels[level].partners[next_rand]->stealing_deque.steal_push(this->stealing_deque);
@@ -477,13 +476,13 @@ void BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::main_loop() {
 						break;
 					}
 					else{
-						assert(stealing_deque.is_empty());
+						pheet_assert(stealing_deque.is_empty());
 						performance_counters.num_unsuccessful_steal_calls.incr();
 					}
 					--level;
 				}
 				if(di.task == NULL) {
-					assert(stealing_deque.is_empty());
+					pheet_assert(stealing_deque.is_empty());
 					if(scheduler_state->current_state >= 2) {
 						performance_counters.idle_time.stop_timer();
 						return;
@@ -516,10 +515,10 @@ void BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::wait_for_finish(
 				procs_t level = num_levels - 1;
 				while(level > 0) {
 					// For all except the last level we assume num_partners > 0
-					assert(levels[level].num_partners > 0);
+					pheet_assert(levels[level].num_partners > 0);
 					std::uniform_int_distribution<procs_t> n_r_gen(0, levels[level].num_partners - 1);
 					procs_t next_rand = n_r_gen(rng);
-					assert(levels[level].partners[next_rand] != this);
+					pheet_assert(levels[level].partners[next_rand] != this);
 					performance_counters.num_steal_calls.incr();
 					di = levels[level].partners[next_rand]->stealing_deque.steal_push(this->stealing_deque);
 				//	di = levels[level].partners[next_rand % levels[level].num_partners]->stealing_deque.steal();
@@ -532,13 +531,13 @@ void BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::wait_for_finish(
 						break;
 					}
 					else {
-						assert(stealing_deque.is_empty());
+						pheet_assert(stealing_deque.is_empty());
 						performance_counters.num_unsuccessful_steal_calls.incr();
 					}
 					--level;
 				}
 				if(di.task == NULL) {
-					assert(stealing_deque.is_empty());
+					pheet_assert(stealing_deque.is_empty());
 
 					if(parent->num_finished_remote + 1 == parent->num_spawned) {
 						return;
@@ -597,7 +596,7 @@ BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::create_non_blocking_f
 	// Perform cleanup on finish stack
 	empty_stack();
 
-	assert(stack_filled_left < stack_filled_right);
+	pheet_assert(stack_filled_left < stack_filled_right);
 
 	stack[stack_filled_left].num_finished_remote = 0;
 	// As we create it out of a parent region that is waiting for completion of a single task, we can already add this one task here
@@ -611,7 +610,7 @@ BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::create_non_blocking_f
 	else {
 		++(stack[stack_filled_left].version);
 	}
-	assert((stack[stack_filled_left].version & 1) == 0);
+	pheet_assert((stack[stack_filled_left].version & 1) == 0);
 
 	++stack_filled_left;
 	performance_counters.finish_stack_nonblocking_max.add_value(stack_filled_left);
@@ -634,7 +633,7 @@ void BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::empty_stack() {
 
 			// When parent is set to NULL, some thread is finalizing/has finalized this stack element (otherwise we would have an error)
 			// Actually we have to check before whether parent has already been set to NULL, or we might have a race
-		//	assert(stack[stack_filled_left].parent == NULL);
+		//	pheet_assert(stack[stack_filled_left].parent == NULL);
 		}
 		else {
 			break;
@@ -672,7 +671,7 @@ inline void BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::finalize_
 		// (otherwise the owner might already have modified element, and then num_spawned might be 0)
 		// Rarely happens, but it happens!
 		if(local && element->num_spawned == 0) {
-			assert(element >= stack && element < (stack + stack_size));
+			pheet_assert(element >= stack && element < (stack + stack_size));
 			// No tasks processed remotely - no need for atomic ops
 		//	element->parent = NULL;
 			++(element->version);
@@ -701,7 +700,7 @@ void BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::start_finish_reg
 	// Perform cleanup on left side of finish stack
 	empty_stack();
 
-	assert(stack_filled_left < stack_filled_right);
+	pheet_assert(stack_filled_left < stack_filled_right);
 	--stack_filled_right;
 	performance_counters.finish_stack_blocking_min.add_value(stack_filled_right);
 
@@ -717,7 +716,7 @@ void BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::start_finish_reg
 template <class Pheet, template <class P, typename T> class StealingDequeT, uint8_t CallThreshold>
 void BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::end_finish_region() {
 	performance_counters.task_time.stop_timer();
-	assert(current_task_parent == &(stack[stack_filled_right]));
+	pheet_assert(current_task_parent == &(stack[stack_filled_right]));
 
 //	if(current_task_parent->num_spawned > current_task_parent->num_finished_remote + 1) {
 		// There exist some non-executed or stolen tasks
@@ -770,7 +769,7 @@ void BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::spawn(TaskParams
 		performance_counters.num_actual_spawns.incr();
 
 		CallTaskType* task = new CallTaskType(params ...);
-		assert(current_task_parent != NULL);
+		pheet_assert(current_task_parent != NULL);
 		++(current_task_parent->num_spawned);
 		DequeItem di;
 		di.task = task;
@@ -797,7 +796,7 @@ void BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::spawn(F&& f, Tas
 		auto bound = std::bind(f, params ...);
 
 		FunctorTask<decltype(bound)>* task = new FunctorTask<decltype(bound)>(bound);
-		assert(current_task_parent != NULL);
+		pheet_assert(current_task_parent != NULL);
 		++(current_task_parent->num_spawned);
 		DequeItem di;
 		di.task = task;

@@ -59,7 +59,7 @@ template <typename T>
 OrderedLocalStorageView<T>* OrderedLocalStorageView<T>::fold() {
 	OrderedLocalStorageView<T>* ret = this;
 	while(ret->data == NULL && ret->pred != NULL) {
-		assert(ret->pred->reuse == NULL);
+		pheet_assert(ret->pred->reuse == NULL);
 		ret->pred->reuse = ret;
 		ret = ret->pred;
 	}
@@ -74,7 +74,7 @@ OrderedLocalStorageView<T>* OrderedLocalStorageView<T>::create_parent_view() {
 	OrderedLocalStorageView<T>* ret = reuse;
 	if(ret != NULL) {
 		reuse = ret->reuse;
-		assert(ret->data == NULL);
+		pheet_assert(ret->data == NULL);
 	//	ret->data = reduce_op.get_identity();
 		ret->pred = NULL;
 	//	ret->parent = NULL;
@@ -113,7 +113,7 @@ bool OrderedLocalStorageView<T>::is_reduced() {
 
 template <typename T>
 void OrderedLocalStorageView<T>::set_predecessor(OrderedLocalStorageView<T>* pred) {
-	assert(this->pred == NULL);
+	pheet_assert(this->pred == NULL);
 	this->pred = pred;
 }
 

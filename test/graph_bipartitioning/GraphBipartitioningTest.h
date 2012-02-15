@@ -160,11 +160,11 @@ size_t GraphBipartitioningTest<Pheet, Partitioner>::check_solution(GraphVertex* 
 	while(current_bit != solution.sets[0].size()) {
 		for(size_t i = 0; i < data[current_bit].num_edges; ++i) {
 			if(solution.sets[1].test(data[current_bit].edges[i].target)) {
-				assert(!solution.sets[0].test(data[current_bit].edges[i].target));
+				pheet_assert(!solution.sets[0].test(data[current_bit].edges[i].target));
 				weight += data[current_bit].edges[i].weight;
 			}
 			else {
-				assert(solution.sets[0].test(data[current_bit].edges[i].target));
+				pheet_assert(solution.sets[0].test(data[current_bit].edges[i].target));
 			}
 		}
 		current_bit = solution.sets[0]._Find_next(current_bit);

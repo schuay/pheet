@@ -11,7 +11,7 @@
 #define SORTESTS_H_
 
 #include "../Test.h"
-#include "../../test_settings.h"
+#include "../../init.h"
 
 namespace pheet {
 

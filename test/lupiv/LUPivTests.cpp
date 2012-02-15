@@ -6,12 +6,13 @@
  *	   License: Ask Author
  */
 
-#include <pheet/pheet.h>
-#include <pheet/sched/Basic/BasicScheduler.h>
-
 #include "LUPivTests.h"
 #include "Simple/SimpleLUPiv.h"
 #include "LocalityStrategy/LocalityStrategyLUPiv.h"
+
+#include <pheet/pheet.h>
+#include <pheet/sched/Basic/BasicScheduler.h>
+#include <pheet/models/MachineModel/HWLoc/HWLocSMTMachineModel.h>
 
 #include <iostream>
 
@@ -30,6 +31,8 @@ void LUPivTests::run_test() {
 	std::cout << "----" << std::endl;
 
 	this->run_kernel<	Pheet,
+						LocalityStrategyLUPiv>();
+	this->run_kernel<	Pheet::WithMachineModel<HWLocSMTMachineModel>,
 						LocalityStrategyLUPiv>();
 	this->run_kernel<	Pheet,
 						SimpleLUPiv>();

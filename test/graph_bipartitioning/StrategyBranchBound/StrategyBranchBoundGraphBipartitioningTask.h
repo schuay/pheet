@@ -73,8 +73,8 @@ void StrategyBranchBoundGraphBipartitioningTask<Pheet, LowerBound, NextVertex, S
 	if(lb >= *ub) {
 		return;
 	}
-	assert(set1_size < k);
-	assert(set2_size < size - k);
+	pheet_assert(set1_size < k);
+	pheet_assert(set2_size < size - k);
 	size_t next = nv_calc(graph, size, k, set1, set1_size, set2, set2_size);
 
 //	set1[set1_size] = next;
@@ -150,11 +150,11 @@ void StrategyBranchBoundGraphBipartitioningTask<Pheet, LowerBound, NextVertex, S
 	}
 	std::sort(unfinished, unfinished + unfinished_size);
 	if(set1_size == k) {
-		assert(unfinished_size == size - k);
+		pheet_assert(unfinished_size == size - k);
 		set2_size = unfinished_size;
 	}
 	else {
-		assert(unfinished_size == k);
+		pheet_assert(unfinished_size == k);
 		set1_size = unfinished_size;
 	}
 
@@ -219,11 +219,11 @@ size_t* StrategyBranchBoundGraphBipartitioningTask<Pheet, LowerBound, NextVertex
 			ret[j] = new_el;
 			++j;
 		}
-		assert(j < max_size);
+		pheet_assert(j < max_size);
 		ret[j] = set[i];
 	}
 	if(i == j) {
-		assert(j < max_size);
+		pheet_assert(j < max_size);
 		ret[j] = new_el;
 	}
 	return ret;

@@ -108,7 +108,7 @@ CircularArrayStealingDequeImpl<Pheet, TT, CircularArray>::~CircularArrayStealing
 
 template <class Pheet, typename TT, template <class P, typename S> class CircularArray>
 void CircularArrayStealingDequeImpl<Pheet, TT, CircularArray>::push(T item) {
-	assert(bottom >= (top & top_mask));
+	pheet_assert(bottom >= (top & top_mask));
 	if((bottom - (top & top_mask)) >= (data.get_capacity()))
 	{
 		data.grow(bottom, top & top_mask);
@@ -166,7 +166,7 @@ TT CircularArrayStealingDequeImpl<Pheet, TT, CircularArray>::pop() {
 		}
 	}
 	else {
-		assert(bottom == masked_top - 1);
+		pheet_assert(bottom == masked_top - 1);
 		bottom = masked_top;
 	}
 	return null_element;

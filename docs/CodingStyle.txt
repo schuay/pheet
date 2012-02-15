@@ -50,8 +50,7 @@ e.g.:
 #ifndef NDEBUG
 std::cout << "Debug message" << std::endl;
 #endif
-Use assertions: (#include <assert.h>)
-e.g.: assert(n > max);
+e.g.: pheet_assert(n > max);
 
 Standard Directories:
 short lowercase names

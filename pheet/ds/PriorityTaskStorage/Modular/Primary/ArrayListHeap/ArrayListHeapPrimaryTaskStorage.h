@@ -202,9 +202,9 @@ typename ArrayListHeapPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE, PriorityQueu
 
 template <class Pheet, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
 TT ArrayListHeapPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::local_take(size_t block, size_t block_index, PerformanceCounters& pc) {
-	assert(block < current_control_block->get_length());
+	pheet_assert(block < current_control_block->get_length());
 	typename ControlBlock::Item* ccb_data = current_control_block->get_data();
-	assert(block_index - ccb_data[block].offset < block_size);
+	pheet_assert(block_index - ccb_data[block].offset < block_size);
 
 	Item& ptsi = ccb_data[block].data[block_index - ccb_data[block].offset];
 
@@ -223,7 +223,7 @@ TT ArrayListHeapPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::l
 
 template <class Pheet, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
 TT ArrayListHeapPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::take(iterator item, PerformanceCounters& pc) {
-	assert(item != end(pc));
+	pheet_assert(item != end(pc));
 
 	Item* ptsi = item.dereference(this);
 
@@ -243,13 +243,13 @@ TT ArrayListHeapPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::t
 
 template <class Pheet, typename TT, size_t BLOCK_SIZE, template <typename S, typename Comp> class PriorityQueueT>
 void ArrayListHeapPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::transfer(ThisType& other, iterator* items, size_t num_items, PerformanceCounters& pc) {
-	assert(other.is_empty(pc));
+	pheet_assert(other.is_empty(pc));
 
 	for(size_t i = 0; i < num_items; ++i) {
 		// Items have to be sorted by iterator index
-		assert(i == 0 || items[i].get_index() > items[i-1].get_index());
+		pheet_assert(i == 0 || items[i].get_index() > items[i-1].get_index());
 
-		assert(items[i] != end(pc));
+		pheet_assert(items[i] != end(pc));
 		Item* ptsi = items[i].dereference(this);
 		if(ptsi == NULL || ptsi->index != items[i].get_index()) {
 			pc.num_unsuccessful_takes.incr();
@@ -313,7 +313,7 @@ inline void ArrayListHeapPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE, PriorityQ
 		offset = current_control_block->get_data()[current_control_block_item_index].offset;
 	}
 	size_t item_index = end_index - offset;
-	assert(item_index < block_size);
+	pheet_assert(item_index < block_size);
 
 	pc.put_time.start_timer();
 	Item to_put;
@@ -361,7 +361,7 @@ inline void ArrayListHeapPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE, PriorityQ
 		offset = current_control_block->get_data()[current_control_block_item_index].offset;
 	}
 	size_t item_index = end_index - offset;
-	assert(item_index < block_size);
+	pheet_assert(item_index < block_size);
 
 	pc.put_time.start_timer();
 	Item to_put;
@@ -405,7 +405,7 @@ TT ArrayListHeapPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE, PriorityQueueT>::p
 			ret = local_take(block, he_index, pc);
 
 			if(ret != null_element) {
-				assert(length > 0);
+				pheet_assert(length > 0);
 				length = std::min(length - 1, pq.get_length());
 				pc.num_successful_pops.incr();
 				pc.pop_time.stop_timer();
@@ -425,7 +425,7 @@ inline size_t ArrayListHeapPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE, Priorit
 	size_t l = current_control_block->get_length();
 	typename ControlBlock::Item* ccb_data = current_control_block->get_data();
 
-	assert(l > 0);
+	pheet_assert(l > 0);
 	size_t min = 0;
 	size_t max = l - 1;
 
@@ -557,7 +557,7 @@ void ArrayListHeapPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE, PriorityQueueT>:
 		clean(pc);
 		new_id = (new_id + 1) % num_control_blocks;
 	}
-	assert(new_id != cleanup_control_block_id);
+	pheet_assert(new_id != cleanup_control_block_id);
 	pc.configure_successor_time.start_timer();
 	size_t upper_bound_length = control_blocks[new_id].configure_as_successor(current_control_block, block_reuse);
 	pc.configure_successor_time.stop_timer();

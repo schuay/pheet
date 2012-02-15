@@ -9,18 +9,7 @@
 #ifndef PHEET_SETTINGS_H_
 #define PHEET_SETTINGS_H_
 
-#ifndef NDEBUG
-#ifndef PHEET_DEBUG_MODE
-#define NDEBUG
-#define PHEET_UNDEF_NDEBUG
-#endif
-#else
-#ifndef PHEET_DEBUG_MODE
-#undef NDEBUG
-#define PHEET_DEF_NDEBUG
-#endif
-#endif
-
+#include "misc/assert.h"
 #include "environment.h"
 #include "misc/types.h"
 

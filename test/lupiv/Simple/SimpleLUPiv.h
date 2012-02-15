@@ -51,19 +51,19 @@ char const SimpleLUPivImpl<Pheet, BLOCK_SIZE>::name[] = "SimpleLUPiv";
 template <class Pheet, int BLOCK_SIZE>
 SimpleLUPivImpl<Pheet, BLOCK_SIZE>::SimpleLUPivImpl(double* a, int* pivot, int m, int lda, int n)
 : a(a), pivot(pivot), m(m), lda(lda), n(n) {
-	assert(m > 0);
-	assert(n > 0);
-	assert(lda >= m);
+	pheet_assert(m > 0);
+	pheet_assert(n > 0);
+	pheet_assert(lda >= m);
 	// TODO: debug cases n != m  - until then:
-	assert(m == n);
+	pheet_assert(m == n);
 }
 
 template <class Pheet, int BLOCK_SIZE>
 SimpleLUPivImpl<Pheet, BLOCK_SIZE>::SimpleLUPivImpl(double* a, int* pivot, int size)
 : a(a), pivot(pivot), m(size), lda(size), n(size) {
-	assert(m > 0);
-	assert(n > 0);
-	assert(lda >= m);
+	pheet_assert(m > 0);
+	pheet_assert(n > 0);
+	pheet_assert(lda >= m);
 }
 
 template <class Pheet, int BLOCK_SIZE>
@@ -124,10 +124,10 @@ void SimpleLUPivImpl<Pheet, BLOCK_SIZE>::operator()() {
 		// Update pivots as the offsets are calculated from the beginning of the block
 		for(int i = BLOCK_SIZE; i < m; i += BLOCK_SIZE) {
 			for(int j = i; j < i+BLOCK_SIZE; j++) {
-				assert(pivot[j] != 0);
-				assert(pivot[j] <= m-i);
+				pheet_assert(pivot[j] != 0);
+				pheet_assert(pivot[j] <= m-i);
 				pivot[j] = pivot[j] + i;
-				assert(pivot[j] >= j+1);
+				pheet_assert(pivot[j] >= j+1);
 			}
 		}
 	}

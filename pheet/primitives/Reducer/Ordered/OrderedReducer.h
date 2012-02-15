@@ -13,8 +13,6 @@
 #include "OrderedReducerView.h"
 #include "../../Backoff/Exponential/ExponentialBackoff.h"
 
-#include <assert.h>
-
 /*
  *
  */
@@ -70,7 +68,7 @@ template <class Pheet, class Monoid>
 void OrderedReducer<Pheet, Monoid>::finalize() {
 	minimize();
 	if(parent_view == NULL) {
-		assert(my_view->is_reduced());
+		pheet_assert(my_view->is_reduced());
 		delete my_view;
 	}
 	else if(place_id == Pheet::get_place_id()) {

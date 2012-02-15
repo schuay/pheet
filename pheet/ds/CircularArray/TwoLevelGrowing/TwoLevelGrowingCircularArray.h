@@ -10,7 +10,6 @@
 #define TWOLEVELGROWINGCIRCULARARRAY_H_
 
 #include "../../../settings.h"
-#include <assert.h>
 
 #include "../../../misc/bitops.h"
 
@@ -47,7 +46,7 @@ private:
 template <class Pheet, typename T, size_t MaxBuckets>
 TwoLevelGrowingCircularArrayImpl<Pheet, T, MaxBuckets>::TwoLevelGrowingCircularArrayImpl()
 : initial_buckets(5), buckets(initial_buckets), capacity(1 << (buckets - 1)) {
-	assert(buckets <= MaxBuckets);
+	pheet_assert(buckets <= MaxBuckets);
 
 	T* ptr = new T[capacity];
 	data[0] = ptr;
@@ -62,8 +61,8 @@ TwoLevelGrowingCircularArrayImpl<Pheet, T, MaxBuckets>::TwoLevelGrowingCircularA
 template <class Pheet, typename T, size_t MaxBuckets>
 TwoLevelGrowingCircularArrayImpl<Pheet, T, MaxBuckets>::TwoLevelGrowingCircularArrayImpl(size_t initial_capacity)
 : initial_buckets(find_last_bit_set(initial_capacity - 1) + 1), buckets(initial_buckets), capacity(1 << (buckets - 1)) {
-	assert(initial_capacity > 0);
-	assert(buckets <= MaxBuckets);
+	pheet_assert(initial_capacity > 0);
+	pheet_assert(buckets <= MaxBuckets);
 
 	T* ptr = new T[capacity];
 	data[0] = ptr;
@@ -109,7 +108,7 @@ void TwoLevelGrowingCircularArrayImpl<Pheet, T, MaxBuckets>::put(size_t i, T val
 
 template <class Pheet, typename T, size_t MaxBuckets>
 void TwoLevelGrowingCircularArrayImpl<Pheet, T, MaxBuckets>::grow(size_t bottom, size_t top) {
-	assert(is_growable());
+	pheet_assert(is_growable());
 
 	data[buckets] = new T[capacity];
 	buckets++;

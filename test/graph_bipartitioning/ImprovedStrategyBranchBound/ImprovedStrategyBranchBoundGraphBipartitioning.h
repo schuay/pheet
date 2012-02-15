@@ -86,11 +86,11 @@ void ImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, Logic, Scheduling
 		finish<BBTask>(prob, &ub, best, pc);
 
 	solution = best.get_max();
-	assert(solution.weight == ub);
-	assert(ub != std::numeric_limits< size_t >::max());
-	assert(solution.weight != std::numeric_limits< size_t >::max());
-	assert(solution.sets[0].count() == k);
-	assert(solution.sets[1].count() == size - k);
+	pheet_assert(solution.weight == ub);
+	pheet_assert(ub != std::numeric_limits< size_t >::max());
+	pheet_assert(solution.weight != std::numeric_limits< size_t >::max());
+	pheet_assert(solution.sets[0].count() == k);
+	pheet_assert(solution.sets[1].count() == size - k);
 }
 /*
 template <class Pheet, template <class P, class SubProblem> class Logic, template <class P, class SubProblem> class SchedulingStrategy, size_t MaxSize>

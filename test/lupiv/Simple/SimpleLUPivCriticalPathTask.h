@@ -51,7 +51,7 @@ SimpleLUPivCriticalPathTask<Pheet, BLOCK_SIZE>::~SimpleLUPivCriticalPathTask() {
 
 template <class Pheet, int BLOCK_SIZE>
 void SimpleLUPivCriticalPathTask<Pheet, BLOCK_SIZE>::operator()() {
-	assert(n <= BLOCK_SIZE);
+	pheet_assert(n <= BLOCK_SIZE);
 
 	// Apply pivot to column
 	Pheet::template

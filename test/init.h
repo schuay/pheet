@@ -1,13 +1,16 @@
 /*
- * test_settings.h
+ * init.h
  *
  *  Created on: 07.04.2011
  *      Author: Martin Wimmer
  *     License: Pheet license
  */
 
-#ifndef TEST_SETTINGS_H_
-#define TEST_SETTINGS_H_
+#ifndef PHEET_TEST_INIT_H_
+#define PHEET_TEST_INIT_H_
+
+#include "settings.h"
+#include <pheet/pheet.h>
 
 namespace pheet {
 struct GraphBipartitioningProblem {
@@ -18,7 +21,7 @@ struct GraphBipartitioningProblem {
 
 }
 
-#include "test_variants/full.h"
+#include ACTIVE_TEST
 
 namespace pheet {
 
@@ -29,7 +32,7 @@ const bool    sorting_test        = false;
 #endif
 
 #ifdef GRAPH_BIPARTITIONING_TEST
-const bool    graph_bipartitioning_test        = SORTING_TEST;
+const bool    graph_bipartitioning_test        = GRAPH_BIPARTITIONING_TEST;
 #else
 const bool    graph_bipartitioning_test        = false;
 #endif
@@ -60,4 +63,4 @@ const bool    uts_test        = false;
 
 }
 
-#endif /* TEST_SETTINGS_H_ */
+#endif /* PHEET_TEST_INIT_H_ */

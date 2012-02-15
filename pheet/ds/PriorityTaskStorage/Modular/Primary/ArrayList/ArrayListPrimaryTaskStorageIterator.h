@@ -134,8 +134,8 @@ typename Storage::Item* ArrayListPrimaryTaskStorageIterator<Storage>::dereferenc
 		return control_block_item->data + block_index;
 	}
 	else {
-		assert(storage != NULL);
-		assert(storage->current_control_block != NULL);
+		pheet_assert(storage != NULL);
+		pheet_assert(storage->current_control_block != NULL);
 		if(control_block != NULL && storage->current_control_block != control_block) {
 			control_block->deregister_iterator();
 			control_block = NULL;
@@ -144,10 +144,10 @@ typename Storage::Item* ArrayListPrimaryTaskStorageIterator<Storage>::dereferenc
 			control_block = storage->acquire_control_block(); // TODO: don't forget to check inside that the pointer we acquire can satisfy the end index
 			control_block_item_index = 0;
 		}
-		assert(index != storage->end_index);
+		pheet_assert(index != storage->end_index);
 
 		while(true) {
-			assert(control_block_item_index < control_block->get_length());
+			pheet_assert(control_block_item_index < control_block->get_length());
 			if(index < control_block->get_data()[control_block_item_index].first &&
 					// this second condition should make it work even with wraparound (except with really extreme cases where size_t is much too small anyway)
 					(control_block->get_data()[control_block_item_index].first - index < (std::numeric_limits<size_t>::max() >> 2))) {

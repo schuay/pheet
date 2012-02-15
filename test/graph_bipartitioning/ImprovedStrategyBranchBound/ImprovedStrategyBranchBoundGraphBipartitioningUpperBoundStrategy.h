@@ -40,7 +40,7 @@ UserDefinedPriority<Pheet> ImprovedStrategyBranchBoundGraphBipartitioningUpperBo
 	size_t lb = sub_problem->get_lower_bound();
 	size_t ub = sub_problem->get_upper_bound();
 
-	assert(ub >= lb);
+	pheet_assert(ub >= lb);
 
 	// pop task with lowest upper bound (often depth first, but not in extreme cases
 	// (upper bound is "best guaranteed upper bound for this subtree" doesn't mean

@@ -89,7 +89,7 @@ TT MultiStealSecondaryTaskStorage<Pheet, TT, Primary>::steal(typename Pheet::Sch
 
 	// If this happens we probably have invalid iterators
 	// We might change this assertion to use some number dependent on ptrdiff_t max, but for now this is better for debugging
-	assert(end - begin < 0xFFFFFFF);
+	pheet_assert(end - begin < 0xFFFFFFF);
 
 	pc.total_size_steal.add(end - begin);
 	// g++ 4.4 unfortunately generates a compiler warning for this. Just ignore it, 4.6.1 seems to be more intelligent.
@@ -132,7 +132,7 @@ TT MultiStealSecondaryTaskStorage<Pheet, TT, Primary>::steal_push(Primary<Pheet,
 
 	// If this happens we probably have invalid iterators
 	// We might change this assertion to use some number dependent on ptrdiff_t max, but for now this is better for debugging
-	assert(end - begin < 0xFFFFFFF);
+	pheet_assert(end - begin < 0xFFFFFFF);
 
 	pc.total_size_steal.add(end - begin);
 

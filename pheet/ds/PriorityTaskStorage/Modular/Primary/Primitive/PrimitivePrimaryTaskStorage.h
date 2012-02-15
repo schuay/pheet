@@ -104,7 +104,7 @@ typename PrimitivePrimaryTaskStorage<Scheduler, TT, CircularArray>::iterator Pri
 
 template <class Scheduler, typename TT, template <typename S> class CircularArray>
 TT PrimitivePrimaryTaskStorage<Scheduler, TT, CircularArray>::local_take(iterator item, PerformanceCounters& pc) {
-	assert(item < bottom);
+	pheet_assert(item < bottom);
 
 	PrimitivePrimaryTaskStorageItem<Scheduler, T>& ptsi = data.get(item);
 
@@ -124,7 +124,7 @@ TT PrimitivePrimaryTaskStorage<Scheduler, TT, CircularArray>::local_take(iterato
 
 template <class Scheduler, typename TT, template <typename S> class CircularArray>
 TT PrimitivePrimaryTaskStorage<Scheduler, TT, CircularArray>::take(iterator item, PerformanceCounters& pc) {
-	assert(item < bottom);
+	pheet_assert(item < bottom);
 
 	PrimitivePrimaryTaskStorageItem<Scheduler, T>& ptsi = data.get(item);
 
@@ -177,7 +177,7 @@ inline void PrimitivePrimaryTaskStorage<Scheduler, TT, CircularArray>::push(Stra
 	if(bottom - top == data.get_capacity()) {
 		clean(pc);
 		if(bottom - top == data.get_capacity()) {
-			assert(data.is_growable());
+			pheet_assert(data.is_growable());
 			data.grow(bottom, top);
 		}
 	}

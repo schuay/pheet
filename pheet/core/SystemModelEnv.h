@@ -19,6 +19,12 @@ template <class Env, template <class E> class MachineModelT>
 class SystemModelEnv {
 public:
 	typedef MachineModelT<Env> MachineModel;
+
+	template <template <class P> class NewMM>
+	using WithMachineModel = SystemModelEnv<Env, NewMM>;
+
+	template <class P>
+	using T = SystemModelEnv<P, MachineModelT>;
 };
 
 template<class Pheet>

@@ -10,7 +10,6 @@
 #define FIXEDSIZECIRCULARARRAY_H_
 
 #include "../../../settings.h"
-#include <assert.h>
 
 namespace pheet {
 
@@ -65,7 +64,7 @@ void FixedSizeCircularArray<Pheet, T>::put(size_t i, T item) {
 
 template <class Pheet, typename T>
 void FixedSizeCircularArray<Pheet, T>::grow(size_t bottom, size_t top) {
-	assert(false);
+	pheet_assert(false);
 }
 
 }

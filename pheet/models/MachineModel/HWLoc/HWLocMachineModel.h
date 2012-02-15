@@ -109,6 +109,7 @@ public:
 	procs_t get_num_children();
 	HWLocMachineModel<Pheet> get_child(procs_t id);
 	procs_t get_node_offset();
+	procs_t get_last_leaf_offset();
 //	procs_t get_node_id();
 	procs_t get_num_leaves();
 	procs_t get_memory_level();
@@ -172,7 +173,7 @@ HWLocMachineModel<Pheet>::~HWLocMachineModel() {
 
 template <class Pheet>
 HWLocMachineModel<Pheet>& HWLocMachineModel<Pheet>::operator=(HWLocMachineModel<Pheet> const& other) {
-	assert(topo == other.topo || !root);
+	pheet_assert(topo == other.topo || !root);
 	topo = other.topo;
 	node = other.node;
 	return *this;
@@ -180,7 +181,7 @@ HWLocMachineModel<Pheet>& HWLocMachineModel<Pheet>::operator=(HWLocMachineModel<
 
 template <class Pheet>
 HWLocMachineModel<Pheet>& HWLocMachineModel<Pheet>::operator=(HWLocMachineModel<Pheet> const&& other) {
-	assert(topo == other.topo || !root);
+	pheet_assert(topo == other.topo || !root);
 	topo = other.topo;
 	node = other.node;
 	return *this;
@@ -193,8 +194,8 @@ procs_t HWLocMachineModel<Pheet>::get_num_children() {
 
 template <class Pheet>
 HWLocMachineModel<Pheet> HWLocMachineModel<Pheet>::get_child(procs_t id) {
-	assert(id < node->arity);
-	assert((node->depth) < (topo->get_total_depth()));
+	pheet_assert(id < node->arity);
+	pheet_assert((node->depth) < (topo->get_total_depth()));
 	return HWLocMachineModel(topo, node->children[id]);
 }
 
@@ -206,7 +207,7 @@ bool HWLocMachineModel<Pheet>::is_leaf() {
 template <class Pheet>
 void HWLocMachineModel<Pheet>::bind() {
 #ifndef NDEBUG
-	assert(!bound);
+	pheet_assert(!bound);
 	bound = true;
 #endif
 	prev_binding = topo->get_binding();
@@ -216,7 +217,7 @@ void HWLocMachineModel<Pheet>::bind() {
 template <class Pheet>
 void HWLocMachineModel<Pheet>::unbind() {
 #ifndef NDEBUG
-	assert(bound);
+	pheet_assert(bound);
 	bound = false;
 #endif
 	topo->bind(prev_binding);
@@ -225,7 +226,15 @@ void HWLocMachineModel<Pheet>::unbind() {
 template <class Pheet>
 procs_t HWLocMachineModel<Pheet>::get_node_offset() {
 	if(!is_leaf()) {
-		get_child(0).get_node_offset();
+		return get_child(0).get_node_offset();
+	}
+	return node->logical_index;
+}
+
+template <class Pheet>
+procs_t HWLocMachineModel<Pheet>::get_last_leaf_offset() {
+	if(!is_leaf()) {
+		return get_child(get_num_children() - 1).get_last_leaf_offset();
 	}
 	return node->logical_index;
 }
@@ -244,13 +253,7 @@ procs_t HWLocMachineModel<Pheet>::get_num_leaves() {
 		return topo->get_total_width();
 	}
 	else {
-		// TODO: can be improved by just checking the node offset of the rightmost child
-		// Expensive, so try not using it
-		procs_t ret = 0;
-		for(procs_t i = 0; i < get_num_children(); ++i) {
-			ret += get_child(i).get_num_leaves();
-		}
-		return ret;
+		return (get_child(get_num_children() - 1).get_last_leaf_offset() + 1) - get_node_offset();
 	}
 }
 

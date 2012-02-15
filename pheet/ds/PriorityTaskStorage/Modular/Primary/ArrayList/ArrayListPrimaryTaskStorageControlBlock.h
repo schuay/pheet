@@ -110,29 +110,29 @@ template <class Storage>
 void ArrayListPrimaryTaskStorageControlBlock<Storage>::clean_item_until(size_t item, size_t limit) {
 	size_t offset = data[item].offset;
 	while(data[item].first != limit && data[item].data[data[item].first - offset].index != data[item].first) {
-		assert(data[item].data[data[item].first - offset].index == data[item].first + 1 || data[item].data[data[item].first - offset].index == data[item].first + 2);
+		pheet_assert(data[item].data[data[item].first - offset].index == data[item].first + 1 || data[item].data[data[item].first - offset].index == data[item].first + 2);
 		++(data[item].first);
 	}
 }
 template <class Storage>
 void ArrayListPrimaryTaskStorageControlBlock<Storage>::finalize() {
-	assert(num_iterators == num_passed_iterators);
+	pheet_assert(num_iterators == num_passed_iterators);
 	delete[] data;
 }
 
 template <class Storage>
 void ArrayListPrimaryTaskStorageControlBlock<Storage>::finalize_item(size_t item, std::vector<typename Storage::Item*>& block_reuse, size_t max_reuse) {
-	assert(num_iterators == num_passed_iterators);
+	pheet_assert(num_iterators == num_passed_iterators);
 	size_t limit = data[item].offset + Storage::block_size;
 	finalize_item_until(item, limit, block_reuse, max_reuse);
 }
 
 template <class Storage>
 void ArrayListPrimaryTaskStorageControlBlock<Storage>::finalize_item_until(size_t item, size_t limit, std::vector<typename Storage::Item*>& block_reuse, size_t max_reuse) {
-	assert(num_iterators == num_passed_iterators);
+	pheet_assert(num_iterators == num_passed_iterators);
 	size_t offset = data[item].offset;
 	for(size_t i = offset; i != limit; ++i) {
-		assert(data[item].data[i - offset].index == i + 1);
+		pheet_assert(data[item].data[i - offset].index == i + 1);
 		delete data[item].data[i - offset].s;
 	}
 	if(block_reuse.size() < max_reuse) {
@@ -145,7 +145,7 @@ void ArrayListPrimaryTaskStorageControlBlock<Storage>::finalize_item_until(size_
 
 template <class Storage>
 void ArrayListPrimaryTaskStorageControlBlock<Storage>::finalize_unused_item(size_t item, std::vector<typename Storage::Item*>& block_reuse, size_t max_reuse) {
-	assert(num_iterators == num_passed_iterators);
+	pheet_assert(num_iterators == num_passed_iterators);
 	if(block_reuse.size() < max_reuse) {
 		block_reuse.push_back(data[item].data);
 	}
@@ -156,15 +156,15 @@ void ArrayListPrimaryTaskStorageControlBlock<Storage>::finalize_unused_item(size
 
 template <class Storage>
 size_t ArrayListPrimaryTaskStorageControlBlock<Storage>::configure_as_successor(ThisType* prev, std::vector<typename Storage::Item*>& block_reuse) {
-	assert(num_iterators == std::numeric_limits<size_t>::max());
-	assert(num_passed_iterators == 0);
+	pheet_assert(num_iterators == std::numeric_limits<size_t>::max());
+	pheet_assert(num_passed_iterators == 0);
 
 	size_t num_active = 0;
 	size_t remaining_elements = 0;
 	for(size_t i = 0; i < prev->length; ++i) {
 		prev->clean_item(i);
 		if(prev->data[i].first != prev->data[i].offset + Storage::block_size) {
-			assert(prev->data[i].first < prev->data[i].offset + Storage::block_size);
+			pheet_assert(prev->data[i].first < prev->data[i].offset + Storage::block_size);
 			remaining_elements += (prev->data[i].offset + Storage::block_size) - prev->data[i].first;
 			++num_active;
 		}
@@ -181,8 +181,8 @@ size_t ArrayListPrimaryTaskStorageControlBlock<Storage>::configure_as_successor(
 				data[j] = prev->data[i];
 				++j;
 			}
-			assert(j <= num_active);
-			assert(i < (prev->length - 1) || j == num_active);
+			pheet_assert(j <= num_active);
+			pheet_assert(i < (prev->length - 1) || j == num_active);
 		}
 
 		new_item_index = num_active;
@@ -210,8 +210,8 @@ size_t ArrayListPrimaryTaskStorageControlBlock<Storage>::configure_as_successor(
 
 template <class Storage>
 void ArrayListPrimaryTaskStorageControlBlock<Storage>::init_empty(size_t offset, std::vector<typename Storage::Item*>& block_reuse) {
-	assert(num_iterators == std::numeric_limits<size_t>::max());
-	assert(num_passed_iterators == 0);
+	pheet_assert(num_iterators == std::numeric_limits<size_t>::max());
+	pheet_assert(num_passed_iterators == 0);
 
 	// We don't need a fence before this, as the pointer to this block is only made available after a fence
 	num_iterators = 0;
@@ -234,14 +234,14 @@ void ArrayListPrimaryTaskStorageControlBlock<Storage>::init_empty(size_t offset,
 template <class Storage>
 bool ArrayListPrimaryTaskStorageControlBlock<Storage>::try_cleanup(std::vector<typename Storage::Item*>& block_reuse, size_t max_reuse) {
 	size_t ni = num_iterators;
-	assert(ni != std::numeric_limits<size_t>::max());
+	pheet_assert(ni != std::numeric_limits<size_t>::max());
 	if(ni == num_passed_iterators) {
 		if(SIZET_CAS(&(num_iterators), ni, std::numeric_limits<size_t>::max())) {
 			// success! We can now delete everything as there is no iterator in the way and therefore no other threads accessing this ControlBlock
 			for(size_t i = 0; i < length; ++i) {
 				if(data[i].first == data[i].offset + Storage::block_size) {
 					for(size_t j = 0; j < Storage::block_size; ++j) {
-						assert(data[i].data[j].index == data[i].offset + j + 1);
+						pheet_assert(data[i].data[j].index == data[i].offset + j + 1);
 						delete data[i].data[j].s;
 					}
 					if(block_reuse.size() < max_reuse) {

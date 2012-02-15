@@ -15,7 +15,6 @@
 #include "../common/FinishRegion.h"
 #include "SynchroneousSchedulerPerformanceCounters.h"
 
-#include <assert.h>
 #include <vector>
 #include <iostream>
 
@@ -121,14 +120,14 @@ SynchroneousScheduler<Pheet>::SynchroneousScheduler(PerformanceCounters& perform
 template <class Pheet>
 SynchroneousScheduler<Pheet>::SynchroneousScheduler(procs_t num_places)
 : parent_place(nullptr) {
-	assert(num_places == 1);
+	pheet_assert(num_places == 1);
 	local_place = this;
 }
 
 template <class Pheet>
 SynchroneousScheduler<Pheet>::SynchroneousScheduler(procs_t num_places, PerformanceCounters& performance_counters)
 : pc(performance_counters), parent_place(nullptr) {
-	assert(num_places == 1);
+	pheet_assert(num_places == 1);
 	local_place = this;
 }
 
@@ -216,7 +215,7 @@ procs_t SynchroneousScheduler<Pheet>::get_place_id() {
 
 template <class Pheet>
 SynchroneousScheduler<Pheet>* SynchroneousScheduler<Pheet>::get_place_at(procs_t place_id) {
-	assert(place_id == 0);
+	pheet_assert(place_id == 0);
 	return local_place;
 }
 

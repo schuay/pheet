@@ -36,8 +36,8 @@ private:
 template <class Pheet>
 LUPivLocalityStrategy<Pheet>::LUPivLocalityStrategy(typename Pheet::Place* last_owner, prio_t base_pop_priority, prio_t base_steal_priority)
 : last_owner(last_owner), base_pop_priority(base_pop_priority), base_steal_priority(base_steal_priority) {
-	assert(base_pop_priority < 16);
-	assert(base_steal_priority < 16);
+	pheet_assert(base_pop_priority < 16);
+	pheet_assert(base_steal_priority < 16);
 }
 
 template <class Pheet>

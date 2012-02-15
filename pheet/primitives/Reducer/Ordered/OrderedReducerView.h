@@ -14,7 +14,6 @@
 #include "../../../misc/types.h"
 
 #include <stdint.h>
-#include <assert.h>
 
 /*
  *
@@ -168,7 +167,7 @@ OrderedReducerView<Monoid>* OrderedReducerView<Monoid>::create_parent_view() {
 	}
 	else {
 		ret = new View(static_cast<Monoid const&>(data));
-		assert(ret->state == 0x2);
+		pheet_assert(ret->state == 0x2);
 	}
 	return ret;
 }
@@ -200,7 +199,7 @@ void OrderedReducerView<Monoid>::reduce() {
 	// TODO: manual unrolling to reduce number of fences used (a single fence should be enough,
 	// as long as we know all pointers have been read before the fence.)
 	if(pred != NULL) {
-		assert(local_pred == NULL);
+		pheet_assert(local_pred == NULL);
 		state |= 0x4;
 		bool active;
 		do {
@@ -275,18 +274,18 @@ void OrderedReducerView<Monoid>::set_local_predecessor(OrderedReducerView<Monoid
 		set_predecessor(local_pred);
 	}
 	else {
-		assert(this->pred == NULL);
-		assert(this->local_pred == NULL);
-		assert(local_pred != this);
+		pheet_assert(this->pred == NULL);
+		pheet_assert(this->local_pred == NULL);
+		pheet_assert(local_pred != this);
 		this->local_pred = local_pred;
 	}
 }
 
 template <class Monoid>
 void OrderedReducerView<Monoid>::set_predecessor(OrderedReducerView<Monoid>* pred) {
-	assert(this->local_pred == NULL);
-	assert(this->pred == NULL);
-	assert(pred != this);
+	pheet_assert(this->local_pred == NULL);
+	pheet_assert(this->pred == NULL);
+	pheet_assert(pred != this);
 	// Warn other local elements that this element is connected to something non-local
 	// OrderedReducer takes care that local elements are folded before the call to set_predecessor
 	// As local elements live in a sequential world we are guaranteed to have them either folded now, or

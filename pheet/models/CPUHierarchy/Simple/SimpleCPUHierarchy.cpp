@@ -24,14 +24,14 @@ SimpleCPUHierarchy::SimpleCPUHierarchy(procs_t np, procs_t memory_level)
 
 SimpleCPUHierarchy::SimpleCPUHierarchy(procs_t* levels, procs_t num_levels)
 : level(0), num_levels(num_levels), offset(0), memory_level(0) {
-	assert(num_levels >= 1);
+	pheet_assert(num_levels >= 1);
 	this->levels = new procs_t[num_levels];
 	memcpy(this->levels, levels, sizeof(procs_t) * num_levels);
 }
 
 SimpleCPUHierarchy::SimpleCPUHierarchy(procs_t* levels, procs_t num_levels, procs_t memory_level)
 : level(0), num_levels(num_levels), offset(0), memory_level(memory_level) {
-	assert(num_levels >= 1);
+	pheet_assert(num_levels >= 1);
 	this->levels = new procs_t[num_levels];
 	memcpy(this->levels, levels, sizeof(procs_t) * num_levels);
 }
@@ -76,7 +76,7 @@ procs_t SimpleCPUHierarchy::get_size() {
 
 std::vector<SimpleCPUHierarchy*> const* SimpleCPUHierarchy::get_subsets() {
 	if(num_levels > 1 && subsets.size() == 0) {
-		assert((levels[0] % levels[1]) == 0);
+		pheet_assert((levels[0] % levels[1]) == 0);
 		procs_t groups = levels[0] / levels[1];
 		subsets.reserve(groups);
 

@@ -53,7 +53,7 @@ LocalityStrategyLUPivStandardPathTask<Pheet, BLOCK_SIZE>::~LocalityStrategyLUPiv
 
 template <class Pheet, int BLOCK_SIZE>
 void LocalityStrategyLUPivStandardPathTask<Pheet, BLOCK_SIZE>::operator()() {
-	assert(n <= BLOCK_SIZE);
+	pheet_assert(n <= BLOCK_SIZE);
 
 	// Apply pivot to column
 	Pheet::template

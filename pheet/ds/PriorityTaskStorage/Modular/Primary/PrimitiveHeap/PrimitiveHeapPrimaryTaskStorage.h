@@ -132,7 +132,7 @@ typename PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQ
  */
 template <class Scheduler, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
 TT PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQueueT>::local_take(iterator item, PerformanceCounters& pc) {
-	assert(item < bottom);
+	pheet_assert(item < bottom);
 
 	PrimitiveHeapPrimaryTaskStorageItem<Scheduler, T>& ptsi = data.get(item);
 
@@ -152,7 +152,7 @@ TT PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQueueT>
 
 template <class Scheduler, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
 TT PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQueueT>::take(iterator item, PerformanceCounters& pc) {
-	assert(item < bottom);
+	pheet_assert(item < bottom);
 
 	PrimitiveHeapPrimaryTaskStorageItem<Scheduler, T>& ptsi = data.get(item);
 
@@ -205,7 +205,7 @@ inline void PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, Priori
 	if(bottom - top == data.get_capacity()) {
 		clean(pc);
 		if(bottom - top == data.get_capacity()) {
-			assert(data.is_growable());
+			pheet_assert(data.is_growable());
 			data.grow(bottom, top);
 		}
 	}

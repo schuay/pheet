@@ -110,13 +110,13 @@ void DeHeap<Pheet, TT, Comparator>::push(T item) {
 
 template <class Pheet, typename TT, class Comparator>
 TT DeHeap<Pheet, TT, Comparator>::min() {
-	assert(length > 0);
+	pheet_assert(length > 0);
 	return data[0];
 }
 
 template <class Pheet, typename TT, class Comparator>
 TT DeHeap<Pheet, TT, Comparator>::max() {
-	assert(length > 0);
+	pheet_assert(length > 0);
 	if(length == 1)
 		return data[0];
 	return data[1];
@@ -124,7 +124,7 @@ TT DeHeap<Pheet, TT, Comparator>::max() {
 
 template <class Pheet, typename TT, class Comparator>
 TT DeHeap<Pheet, TT, Comparator>::pop_min() {
-	assert(length > 0);
+	pheet_assert(length > 0);
 	T ret = data[0];
 	--length;
 	data[0] = data[length];
@@ -136,7 +136,7 @@ TT DeHeap<Pheet, TT, Comparator>::pop_min() {
 
 template <class Pheet, typename TT, class Comparator>
 TT DeHeap<Pheet, TT, Comparator>::pop_max() {
-	assert(length > 0);
+	pheet_assert(length > 0);
 	if(length == 1) {
 		length = 0;
 		return data[0];
@@ -152,7 +152,7 @@ TT DeHeap<Pheet, TT, Comparator>::pop_max() {
 
 template <class Pheet, typename TT, class Comparator>
 TT DeHeap<Pheet, TT, Comparator>::replace_min(T item) {
-	assert(length > 0);
+	pheet_assert(length > 0);
 	T ret = data[0];
 	data[0] = item;
 	if(length > 1) {
@@ -163,7 +163,7 @@ TT DeHeap<Pheet, TT, Comparator>::replace_min(T item) {
 
 template <class Pheet, typename TT, class Comparator>
 TT DeHeap<Pheet, TT, Comparator>::replace_max(T item) {
-	assert(length > 0);
+	pheet_assert(length > 0);
 	if(length == 1) {
 		T ret = data[0];
 		data[0] = item;
@@ -210,7 +210,7 @@ void DeHeap<Pheet, TT, Comparator>::bubble_up_max(size_t index) {
 
 template <class Pheet, typename TT, class Comparator>
 void DeHeap<Pheet, TT, Comparator>::bubble_down_min(size_t index) {
-	assert((index & 1) == 0);
+	pheet_assert((index & 1) == 0);
 	size_t next = (index << 1) + 2;
 	while(next < length) {
 		size_t nnext = next + 2;
@@ -229,7 +229,7 @@ void DeHeap<Pheet, TT, Comparator>::bubble_down_min(size_t index) {
 		if(max_heap_item >= length) {
 			max_heap_item = ((index - 2) >> 1) | 1;
 		}
-		assert(max_heap_item < length);
+		pheet_assert(max_heap_item < length);
 		if(is_less(data[max_heap_item], data[index])) {
 			std::swap(data[max_heap_item], data[index]);
 			bubble_up_max(max_heap_item);
@@ -239,7 +239,7 @@ void DeHeap<Pheet, TT, Comparator>::bubble_down_min(size_t index) {
 
 template <class Pheet, typename TT, class Comparator>
 void DeHeap<Pheet, TT, Comparator>::bubble_down_max(size_t index) {
-	assert((index & 1) == 1);
+	pheet_assert((index & 1) == 1);
 	size_t next = (index << 1) + 1;
 	while(next < length) {
 		size_t nnext = next + 2;
@@ -255,7 +255,7 @@ void DeHeap<Pheet, TT, Comparator>::bubble_down_max(size_t index) {
 	}
 	if(next >= length) {
 		size_t min_heap_item = index - 1;
-		assert(min_heap_item < length);
+		pheet_assert(min_heap_item < length);
 		if(is_less(data[index], data[min_heap_item])) {
 			std::swap(data[min_heap_item], data[index]);
 			bubble_up_min(min_heap_item);

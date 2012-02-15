@@ -56,7 +56,7 @@ template <class Pheet, int BLOCK_SIZE>
 void LocalityStrategyLUPivCriticalPathTask<Pheet, BLOCK_SIZE>::operator()() {
 	(*owner_info) = Pheet::get_place();
 
-	assert(n <= BLOCK_SIZE);
+	pheet_assert(n <= BLOCK_SIZE);
 
 	// Apply pivot to column
 	Pheet::template

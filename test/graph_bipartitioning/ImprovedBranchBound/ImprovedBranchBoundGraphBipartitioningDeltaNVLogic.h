@@ -76,7 +76,7 @@ void ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<Pheet, SubProblem>::init
 
 template <class Pheet, class SubProblem>
 size_t ImprovedBranchBoundGraphBipartitioningDeltaNVLogic<Pheet, SubProblem>::get_next_vertex() {
-	assert(sub_problem->sets[2].test(nv));
+	pheet_assert(sub_problem->sets[2].test(nv));
 	return nv;
 }
 

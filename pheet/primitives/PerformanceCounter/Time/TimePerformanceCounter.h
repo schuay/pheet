@@ -128,7 +128,7 @@ template <class Pheet>
 inline
 void TimePerformanceCounter<Pheet, true>::start_timer() {
 #ifndef NDEBUG
-	assert(!is_active);
+	pheet_assert(!is_active);
 	is_active = true;
 #endif
 	gettimeofday(&start_time, NULL);
@@ -142,7 +142,7 @@ void TimePerformanceCounter<Pheet, true>::stop_timer() {
 	double time = (stop_time.tv_sec - start_time.tv_sec) + 1.0e-6 * stop_time.tv_usec - 1.0e-6 * start_time.tv_usec;
 	reducer.add(time);
 #ifndef NDEBUG
-	assert(is_active);
+	pheet_assert(is_active);
 	is_active = false;
 #endif
 }
@@ -151,7 +151,7 @@ template <class Pheet>
 inline
 void TimePerformanceCounter<Pheet, true>::print(char const* const formatting_string) {
 #ifndef NDEBUG
-	assert(!is_active);
+	pheet_assert(!is_active);
 #endif
 	printf(formatting_string, reducer.get_sum());
 }

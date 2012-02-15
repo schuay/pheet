@@ -62,7 +62,7 @@ namespace pheet {
 			unsigned int pos = 0;
 			for(unsigned int i=0;i<iar->getBoardHeight();i++)
 			{
-				assert(move < iar->getBoardWidth());
+				pheet_assert(move < iar->getBoardWidth());
 				if(newboard[i*iar->getBoardWidth()+move]==0)
 				{
 					pos = i;

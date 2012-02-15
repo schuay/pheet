@@ -6,6 +6,9 @@
  *     License: Pheet license
  */
 
+#define NDEBUG 1
+
+#include "init.h"
 #include "sorting/SortingTests.h"
 #include "graph_bipartitioning/GraphBipartitioningTests.h"
 #include "lupiv/LUPivTests.h"

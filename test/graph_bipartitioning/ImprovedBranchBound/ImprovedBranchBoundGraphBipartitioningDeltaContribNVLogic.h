@@ -99,7 +99,7 @@ void ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem
 
 template <class Pheet, class SubProblem>
 size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::get_next_vertex() {
-	assert(sub_problem->sets[2].test(nv));
+	pheet_assert(sub_problem->sets[2].test(nv));
 	return nv;
 }
 
@@ -125,7 +125,7 @@ void ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem
 	for(size_t i = 0; i < sub_problem->graph[pos].num_edges; ++i) {
 		weights[set][sub_problem->graph[pos].edges[i].target] += sub_problem->graph[pos].edges[i].weight;
 		if(sub_problem->sets[2].test(sub_problem->graph[pos].edges[i].target)) {
-			assert(contributions[sub_problem->graph[pos].edges[i].target] >= sub_problem->graph[pos].edges[i].weight);
+			pheet_assert(contributions[sub_problem->graph[pos].edges[i].target] >= sub_problem->graph[pos].edges[i].weight);
 			contributions[sub_problem->graph[pos].edges[i].target] -= sub_problem->graph[pos].edges[i].weight;
 			contrib_sum -= sub_problem->graph[pos].edges[i].weight;
 		}

@@ -14,8 +14,6 @@
 #include "../../../primitives/Backoff/Exponential/ExponentialBackoff.h"
 #include "../../../primitives/Barrier/Simple/SimpleBarrier.h"
 
-#include <assert.h>
-
 namespace pheet {
 
 template <class Task, size_t BLOCK_SIZE = 4096>
@@ -118,14 +116,14 @@ void MixedModeQuicksortTask<Task, BLOCK_SIZE>::operator()(typename Task::Schedul
 	if(procs == 0) {
 		procs = 1;
 	}
-	assert(procs == 1 || (len / procs) > BLOCK_SIZE * 2);
+	pheet_assert(procs == 1 || (len / procs) > BLOCK_SIZE * 2);
 	tec.template spawn_nt<MixedModeQuicksortTask<Task, BLOCK_SIZE> >(procs, data, len);
 	len = length - pivotPosition - 1;
 	procs = min(team_size - procs, ((len / BLOCK_SIZE) / 8) + 1);
 	if(procs == 0) {
 		procs = 1;
 	}
-	assert(procs == 1 || (len / procs) > BLOCK_SIZE * 2);
+	pheet_assert(procs == 1 || (len / procs) > BLOCK_SIZE * 2);
 	tec.template spawn_nt<MixedModeQuicksortTask<Task, BLOCK_SIZE>>(procs, data + pivotPosition + 1, len);
 }
 
@@ -266,7 +264,7 @@ void MixedModeQuicksortTask<Task, BLOCK_SIZE>::partition(typename Task::Schedule
 		if(leftPos == leftEnd) {
 			procs_t rf = team_size;
 			pp = leftStart + leftBlock * BLOCK_SIZE;
-			assert(pp >= 0);
+			pheet_assert(pp >= 0);
 
 			while(true) {
 				if(pp >= rightPos || rightPos == rightEnd) {
@@ -317,11 +315,11 @@ void MixedModeQuicksortTask<Task, BLOCK_SIZE>::partition(typename Task::Schedule
 			}
 		}
 		else { /* rightPos == rightEnd */
-			assert(rightPos == rightEnd);
+			pheet_assert(rightPos == rightEnd);
 
 			procs_t lf = team_size;
 			pp = rightStart - rightBlock * BLOCK_SIZE;
-			assert(pp <= (ptrdiff_t)length - 2);
+			pheet_assert(pp <= (ptrdiff_t)length - 2);
 
 			while(true) {
 				if(leftPos >= pp || leftPos == leftEnd) {
@@ -372,9 +370,9 @@ void MixedModeQuicksortTask<Task, BLOCK_SIZE>::partition(typename Task::Schedule
 			}
 		}
 
-		assert(pp >= 0 && pp < (ptrdiff_t)length);
-		assert(data[pp] >= pivot);
-		assert(pp == 0 || data[pp-1] <= pivot);
+		pheet_assert(pp >= 0 && pp < (ptrdiff_t)length);
+		pheet_assert(data[pp] >= pivot);
+		pheet_assert(pp == 0 || data[pp-1] <= pivot);
 
 		if(pp < (((ptrdiff_t)length) - 1)) {
 			swap(data[length - 1], data[pp]);
@@ -402,7 +400,7 @@ void MixedModeQuicksortTask<Task, BLOCK_SIZE>::neutralize(ptrdiff_t &leftPos, pt
 		}
 		if(leftPos == leftEnd || rightPos == rightEnd)
 			break;
-		assert(leftPos < rightPos && leftPos >= 0 && rightPos < (((ptrdiff_t)length) - 1));
+		pheet_assert(leftPos < rightPos && leftPos >= 0 && rightPos < (((ptrdiff_t)length) - 1));
 		swap(data[leftPos], data[rightPos]);
 	}
 }
@@ -437,9 +435,9 @@ bool MixedModeQuicksortTask<Task, BLOCK_SIZE>::is_partitioned() {
 template <class Task, size_t BLOCK_SIZE>
 void MixedModeQuicksortTask<Task, BLOCK_SIZE>::assert_is_partitioned() {
 	for(size_t i = 0; i < length; i++) {
-		assert(i >= pivotPosition || data[i] <= pivot);
-		assert(i <= pivotPosition || data[i] >= pivot);
-		assert(i != pivotPosition || data[i] == pivot);
+		pheet_assert(i >= pivotPosition || data[i] <= pivot);
+		pheet_assert(i <= pivotPosition || data[i] >= pivot);
+		pheet_assert(i != pivotPosition || data[i] == pivot);
 	}
 }
 

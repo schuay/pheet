@@ -179,9 +179,9 @@ typename ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::iterator ArrayL
 
 template <class Scheduler, typename TT, size_t BLOCK_SIZE>
 TT ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::local_take(size_t block, size_t block_index, PerformanceCounters& pc) {
-	assert(block < current_control_block->get_length());
+	pheet_assert(block < current_control_block->get_length());
 	typename ControlBlock::Item* ccb_data = current_control_block->get_data();
-	assert(block_index - ccb_data[block].offset < block_size);
+	pheet_assert(block_index - ccb_data[block].offset < block_size);
 
 	// Even if take fails this means it has been taken by some other thread
 	// so we can always decrease the length
@@ -204,7 +204,7 @@ TT ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::local_take(size_t blo
 
 template <class Scheduler, typename TT, size_t BLOCK_SIZE>
 TT ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::take(iterator item, PerformanceCounters& pc) {
-	assert(item != end(pc));
+	pheet_assert(item != end(pc));
 
 	ArrayListPrimaryTaskStorageItem<Scheduler, T>* ptsi = item.dereference(this);
 
@@ -224,13 +224,13 @@ TT ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::take(iterator item, P
 
 template <class Scheduler, typename TT, size_t BLOCK_SIZE>
 void ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::transfer(ThisType& other, iterator* items, size_t num_items, PerformanceCounters& pc) {
-	assert(other.is_empty());
+	pheet_assert(other.is_empty());
 
 	for(size_t i = 0; i < num_items; ++i) {
 		// Items have to be sorted by iterator index
-		assert(i == 0 || items[i].get_index() > items[i-1].get_index());
+		pheet_assert(i == 0 || items[i].get_index() > items[i-1].get_index());
 
-		assert(items[i] != end(pc));
+		pheet_assert(items[i] != end(pc));
 		ArrayListPrimaryTaskStorageItem<Scheduler, T>* ptsi = items[i].dereference(this);
 		if(ptsi == NULL || ptsi->index != items[i].get_index()) {
 			pc.num_unsuccessful_takes.incr();
@@ -294,7 +294,7 @@ inline void ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::push(Strateg
 		offset = current_control_block->get_data()[current_control_block_item_index].offset;
 	}
 	size_t item_index = end_index - offset;
-	assert(item_index < block_size);
+	pheet_assert(item_index < block_size);
 
 	Item to_put;
 	to_put.data = item;
@@ -326,7 +326,7 @@ inline void ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::push_interna
 		offset = current_control_block->get_data()[current_control_block_item_index].offset;
 	}
 	size_t item_index = end_index - offset;
-	assert(item_index < block_size);
+	pheet_assert(item_index < block_size);
 
 	Item to_put;
 	to_put.data = item;
@@ -571,7 +571,7 @@ void ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::create_next_control
 		clean(pc);
 		new_id = (new_id + 1) % num_control_blocks;
 	}
-	assert(new_id != cleanup_control_block_id);
+	pheet_assert(new_id != cleanup_control_block_id);
 	size_t upper_bound_length = control_blocks[new_id].configure_as_successor(current_control_block, block_reuse);
 	if(upper_bound_length < length) {
 		length = upper_bound_length;

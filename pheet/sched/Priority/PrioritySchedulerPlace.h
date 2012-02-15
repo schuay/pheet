@@ -21,7 +21,6 @@
 #include "../../misc/type_traits.h"
 #include "PrioritySchedulerPerformanceCounters.h"
 
-#include <assert.h>
 #include <random>
 #include <functional>
 #include <vector>
@@ -197,7 +196,7 @@ PrioritySchedulerPlace<Pheet, CallThreshold>::PrioritySchedulerPlace(InternalMac
 
 	performance_counters.total_time.start_timer();
 
-	assert(num_places <= model.get_num_leaves());
+	pheet_assert(num_places <= model.get_num_leaves());
 	levels[0].global_id_offset = 0;
 	levels[0].memory_level = model.get_memory_level();
 	levels[0].size = num_places;
@@ -260,7 +259,7 @@ void PrioritySchedulerPlace<Pheet, CallThreshold>::prepare_root() {
 
 	scheduler_state->state_barrier.signal(0);
 
-	assert(local_place == NULL);
+	pheet_assert(local_place == NULL);
 	local_place = this;
 
 
@@ -278,19 +277,19 @@ void PrioritySchedulerPlace<Pheet, CallThreshold>::initialize_levels() {
 	procs_t base_offset;
 	procs_t size;
 
-	assert(num_initialized_levels > 0);
+	pheet_assert(num_initialized_levels > 0);
 	base_offset = levels[num_initialized_levels - 1].global_id_offset;
 	size = levels[num_initialized_levels - 1].size;
 
 	Place** places = levels[0].partners;
 
 	while((size > 1) && (!machine_model.is_leaf())) {
-		assert(machine_model.get_num_children() == 2);
+		pheet_assert(machine_model.get_num_children() == 2);
 		grow_levels_structure();
 
 		InternalMachineModel child(machine_model.get_child(1));
 		procs_t offset = child.get_node_offset();
-		assert(offset > base_offset);
+		pheet_assert(offset > base_offset);
 		if((offset - base_offset) < size) {
 			levels[num_initialized_levels].size = size - (offset - base_offset);
 			levels[num_initialized_levels].global_id_offset = offset;
@@ -315,7 +314,7 @@ void PrioritySchedulerPlace<Pheet, CallThreshold>::initialize_levels() {
 		}
 	}
 
-	assert(levels[num_initialized_levels - 1].size == 1);
+	pheet_assert(levels[num_initialized_levels - 1].size == 1);
 	procs_t global_id = levels[num_initialized_levels - 1].global_id_offset;
 	// Level 0 is already initialized in the constructor
 	for(procs_t i = 1; i < num_initialized_levels; ++i) {
@@ -329,7 +328,7 @@ void PrioritySchedulerPlace<Pheet, CallThreshold>::grow_levels_structure() {
 	if(num_initialized_levels == num_levels) {
 		// We have allocated to little levels
 		procs_t new_size = num_levels + find_last_bit_set(levels[num_levels - 1].size >> 1);
-		assert(new_size > num_levels);
+		pheet_assert(new_size > num_levels);
 		LevelDescription* tmp = new LevelDescription[new_size];
 		memcpy(tmp, levels, num_levels * sizeof(LevelDescription));
 		delete[] levels;
@@ -409,7 +408,7 @@ void PrioritySchedulerPlace<Pheet, CallThreshold>::execute_task(Task* task, Stac
 	performance_counters.task_time.stop_timer();
 
 	// Check whether current_task_parent still is parent (if not, there is some error)
-	assert(current_task_parent == parent);
+	pheet_assert(current_task_parent == parent);
 
 	// Signal that we finished executing this task
 	signal_task_completion(parent);
@@ -431,11 +430,11 @@ void PrioritySchedulerPlace<Pheet, CallThreshold>::main_loop() {
 				procs_t level = num_levels - 1;
 				while(level > 0) {
 					// For all except the top level we assume num_partners > 0
-					assert(levels[level].num_partners > 0);
+					pheet_assert(levels[level].num_partners > 0);
 					std::uniform_int_distribution<procs_t> n_r_gen(0, levels[level].num_partners - 1);
 					procs_t next_rand = n_r_gen(rng);
-					assert(next_rand < levels[level].num_partners);
-					assert(levels[level].partners[next_rand] != this);
+					pheet_assert(next_rand < levels[level].num_partners);
+					pheet_assert(levels[level].partners[next_rand] != this);
 
 					performance_counters.num_steal_calls.incr();
 					performance_counters.steal_time.start_timer();
@@ -451,13 +450,13 @@ void PrioritySchedulerPlace<Pheet, CallThreshold>::main_loop() {
 						break;
 					}
 					else {
-						assert(task_storage.is_empty());
+						pheet_assert(task_storage.is_empty());
 						performance_counters.num_unsuccessful_steal_calls.incr();
 					}
 					--level;
 				}
 				if(di.task == NULL) {
-					assert(task_storage.is_empty());
+					pheet_assert(task_storage.is_empty());
 					if(scheduler_state->current_state >= 2) {
 						performance_counters.idle_time.stop_timer();
 						return;
@@ -487,10 +486,10 @@ void PrioritySchedulerPlace<Pheet, CallThreshold>::wait_for_finish(StackElement*
 				procs_t level = num_levels - 1;
 				while(level > 0) {
 					// For all except the top level we assume num_partners > 0
-					assert(levels[level].num_partners > 0);
+					pheet_assert(levels[level].num_partners > 0);
 					std::uniform_int_distribution<procs_t> n_r_gen(0, levels[level].num_partners - 1);
 					procs_t next_rand = n_r_gen(rng);
-					assert(levels[level].partners[next_rand] != this);
+					pheet_assert(levels[level].partners[next_rand] != this);
 					performance_counters.num_steal_calls.incr();
 					StealerDescriptor sd(levels[level].partners[next_rand], this, num_levels - 1);
 					di = levels[level].partners[next_rand]->task_storage.steal_push(this->task_storage, sd, performance_counters.task_storage_performance_counters);
@@ -502,13 +501,13 @@ void PrioritySchedulerPlace<Pheet, CallThreshold>::wait_for_finish(StackElement*
 						break;
 					}
 					else {
-						assert(task_storage.is_empty());
+						pheet_assert(task_storage.is_empty());
 						performance_counters.num_unsuccessful_steal_calls.incr();
 					}
 					--level;
 				}
 				if(di.task == NULL) {
-					assert(task_storage.is_empty());
+					pheet_assert(task_storage.is_empty());
 					if(parent->num_finished_remote + 1 == parent->num_spawned) {
 						return;
 					}
@@ -562,17 +561,17 @@ PrioritySchedulerPlace<Pheet, CallThreshold>::create_non_blocking_finish_region(
 		// Perform cleanup on finish stack
 		empty_stack();
 
-		assert(stack_filled_left < stack_filled_right);
+		pheet_assert(stack_filled_left < stack_filled_right);
 
 		if(stack_filled_left >= stack_init_left/* && stack_filled_left < stack_init_right*/) {
 			stack[stack_filled_left].version = 0;
 			++stack_init_left;
 		}
 		else {
-			assert((stack[stack_filled_left].version & 1) == 1);
+			pheet_assert((stack[stack_filled_left].version & 1) == 1);
 			++(stack[stack_filled_left].version);
 		}
-		assert((stack[stack_filled_left].version & 1) == 0);
+		pheet_assert((stack[stack_filled_left].version & 1) == 0);
 
 		stack[stack_filled_left].num_finished_remote = 0;
 		// As we create it out of a parent region that is waiting for completion of a single task, we can already add this one task here
@@ -588,10 +587,10 @@ PrioritySchedulerPlace<Pheet, CallThreshold>::create_non_blocking_finish_region(
 		StackElement* ret = freed_stack_elements.back();
 		freed_stack_elements.pop_back();
 
-		assert(ret->num_finished_remote == 0);
-		assert((ret->version & 1) == 1);
+		pheet_assert(ret->num_finished_remote == 0);
+		pheet_assert((ret->version & 1) == 1);
 		++(ret->version);
-		assert((ret->version & 1) == 0);
+		pheet_assert((ret->version & 1) == 0);
 
 		ret->num_spawned = 1;
 		ret->parent = parent;
@@ -605,7 +604,7 @@ PrioritySchedulerPlace<Pheet, CallThreshold>::create_non_blocking_finish_region(
  */
 template <class Pheet, uint8_t CallThreshold>
 void PrioritySchedulerPlace<Pheet, CallThreshold>::empty_stack() {
-	assert(freed_stack_elements.empty());
+	pheet_assert(freed_stack_elements.empty());
 
 	while(stack_filled_left > 0) {
 		size_t se = stack_filled_left - 1;
@@ -617,7 +616,7 @@ void PrioritySchedulerPlace<Pheet, CallThreshold>::empty_stack() {
 
 			// When parent is set to NULL, some thread is finalizing/has finalized this stack element (otherwise we would have an error)
 			// Actually we have to check before whether parent has already been set to NULL, or we might have a race
-		//	assert(stack[stack_filled_left].parent == NULL);
+		//	pheet_assert(stack[stack_filled_left].parent == NULL);
 		}
 		else {
 			break;
@@ -630,7 +629,7 @@ void PrioritySchedulerPlace<Pheet, CallThreshold>::signal_task_completion(StackE
 	StackElement* parent = stack_element->parent;
 	size_t version = stack_element->version;
 
-	assert(stack_element->num_spawned > stack_element->num_finished_remote);
+	pheet_assert(stack_element->num_spawned > stack_element->num_finished_remote);
 
 	bool local = stack_element >= stack && (stack_element < (stack + stack_size));
 	if(local) {
@@ -656,14 +655,14 @@ inline void PrioritySchedulerPlace<Pheet, CallThreshold>::finalize_stack_element
 		// (otherwise the owner might already have modified element, and then num_spawned might be 0)
 		// Rarely happens, but it happens!
 		if(local && element->num_spawned == 0) {
-			assert(element->num_finished_remote == 0);
+			pheet_assert(element->num_finished_remote == 0);
 			// No tasks processed remotely - no need for atomic ops
 		//	element->parent = NULL;
-			assert((element->version & 1) == 0);
+			pheet_assert((element->version & 1) == 0);
 			++(element->version);
-			assert((element->version & 1) == 1);
-			assert(element->version == version + 1);
-			assert(element >= stack && (element < (stack + stack_size)));
+			pheet_assert((element->version & 1) == 1);
+			pheet_assert(element->version == version + 1);
+			pheet_assert(element >= stack && (element < (stack + stack_size)));
 			if((unsigned)(element - stack) + 1 == stack_filled_left) {
 				--stack_filled_left;
 			}
@@ -673,7 +672,7 @@ inline void PrioritySchedulerPlace<Pheet, CallThreshold>::finalize_stack_element
 			signal_task_completion(parent);
 		}
 		else {
-			assert((version & 1) == 0);
+			pheet_assert((version & 1) == 0);
 			if(SIZET_CAS(&(element->version), version, version + 1)) {
 				signal_task_completion(parent);
 			}
@@ -698,7 +697,7 @@ void PrioritySchedulerPlace<Pheet, CallThreshold>::start_finish_region() {
 		++(stack[stack_filled_right].reused_finish_depth);
 	}
 	else {
-		assert(stack_filled_left < stack_filled_right);
+		pheet_assert(stack_filled_left < stack_filled_right);
 		--stack_filled_right;
 		performance_counters.finish_stack_blocking_min.add_value(stack_filled_right);
 
@@ -725,7 +724,7 @@ void PrioritySchedulerPlace<Pheet, CallThreshold>::end_finish_region() {
 	performance_counters.task_time.stop_timer();
 
 	// Make sure current_task_parent has the correct value
-	assert(current_task_parent == &(stack[stack_filled_right]));
+	pheet_assert(current_task_parent == &(stack[stack_filled_right]));
 
 	if(current_task_parent->num_spawned > 1) {
 		// There exist some non-executed or stolen tasks
@@ -806,8 +805,8 @@ void PrioritySchedulerPlace<Pheet, CallThreshold>::spawn_prio(Strategy s, TaskPa
 			call_mode = false;
 			performance_counters.num_actual_spawns.incr();
 			CallTaskType* task = new CallTaskType(params ...);
-			assert(current_task_parent != NULL);
-			assert(current_task_parent >= stack && (current_task_parent < (stack + stack_size)));
+			pheet_assert(current_task_parent != NULL);
+			pheet_assert(current_task_parent >= stack && (current_task_parent < (stack + stack_size)));
 			++(current_task_parent->num_spawned);
 			TaskStorageItem di;
 			di.task = task;
@@ -844,8 +843,8 @@ void PrioritySchedulerPlace<Pheet, CallThreshold>::spawn_prio(Strategy s, F&& f,
 			auto bound = std::bind(f, params ...);
 
 			FunctorTask<decltype(bound)>* task = new FunctorTask<decltype(bound)>(bound);
-			assert(current_task_parent != NULL);
-			assert(current_task_parent >= stack && (current_task_parent < (stack + stack_size)));
+			pheet_assert(current_task_parent != NULL);
+			pheet_assert(current_task_parent >= stack && (current_task_parent < (stack + stack_size)));
 			++(current_task_parent->num_spawned);
 			TaskStorageItem di;
 			di.task = task;
@@ -886,15 +885,15 @@ procs_t PrioritySchedulerPlace<Pheet, CallThreshold>::get_distance(Self* other) 
 
 template <class Pheet, uint8_t CallThreshold>
 procs_t PrioritySchedulerPlace<Pheet, CallThreshold>::get_distance(Self* other, procs_t max_granularity_level) {
-	assert(max_granularity_level < num_levels);
+	pheet_assert(max_granularity_level < num_levels);
 
 	procs_t offset = std::max(levels[max_granularity_level].memory_level, other->levels[max_granularity_level].memory_level);
 	procs_t i = max_granularity_level;
 	while(levels[i].global_id_offset != other->levels[i].global_id_offset) {
-		assert(i > 0);
+		pheet_assert(i > 0);
 		--i;
 	}
-	assert(levels[i].memory_level <= offset);
+	pheet_assert(levels[i].memory_level <= offset);
 	return offset - levels[i].memory_level;
 }
 
@@ -905,7 +904,7 @@ inline procs_t PrioritySchedulerPlace<Pheet, CallThreshold>::get_max_distance() 
 
 template <class Pheet, uint8_t CallThreshold>
 inline procs_t PrioritySchedulerPlace<Pheet, CallThreshold>::get_max_distance(procs_t max_granularity_level) {
-	assert(max_granularity_level < num_levels);
+	pheet_assert(max_granularity_level < num_levels);
 
 	return this->levels[max_granularity_level].memory_level;
 }

@@ -71,8 +71,8 @@ void BranchBoundGraphBipartitioningTask<Pheet, LowerBound, NextVertex, MaxSize>:
 	if(lb >= *ub) {
 		return;
 	}
-	assert(set1_size < k);
-	assert(set2_size < size - k);
+	pheet_assert(set1_size < k);
+	pheet_assert(set2_size < size - k);
 	size_t next = nv_calc(graph, size, k, set1, set1_size, set2, set2_size);
 
 //	set1[set1_size] = next;
@@ -143,16 +143,16 @@ void BranchBoundGraphBipartitioningTask<Pheet, LowerBound, NextVertex, MaxSize>:
 	}
 	std::sort(unfinished, unfinished + unfinished_size);
 	if(set1_size == k) {
-		assert(unfinished_size == size - k);
+		pheet_assert(unfinished_size == size - k);
 		set2_size = unfinished_size;
 	}
 	else {
-		assert(unfinished_size == k);
+		pheet_assert(unfinished_size == k);
 		set1_size = unfinished_size;
 	}
 
-	assert(set1_size == k);
-	assert(set2_size == size - k);
+	pheet_assert(set1_size == k);
+	pheet_assert(set2_size == size - k);
 
 	for(size_t i = 0; i < set1_size; ++i) {
 		size_t node = set1[i];
@@ -215,11 +215,11 @@ size_t* BranchBoundGraphBipartitioningTask<Pheet, LowerBound, NextVertex, MaxSiz
 			ret[j] = new_el;
 			++j;
 		}
-		assert(j < max_size);
+		pheet_assert(j < max_size);
 		ret[j] = set[i];
 	}
 	if(i == j) {
-		assert(j < max_size);
+		pheet_assert(j < max_size);
 		ret[j] = new_el;
 	}
 	return ret;
@@ -228,7 +228,7 @@ size_t* BranchBoundGraphBipartitioningTask<Pheet, LowerBound, NextVertex, MaxSiz
 template <class Pheet, class LowerBound, class NextVertex, size_t MaxSize>
 size_t* BranchBoundGraphBipartitioningTask<Pheet, LowerBound, NextVertex, MaxSize>::clone_set(size_t* set, size_t set_size, size_t max_size) {
 	size_t* ret = new size_t[max_size];
-	assert(set_size <= max_size);
+	pheet_assert(set_size <= max_size);
 	for(size_t i = 0; i < set_size; ++i) {
 		ret[i] = set[i];
 	}

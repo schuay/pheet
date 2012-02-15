@@ -135,7 +135,7 @@ procs_t BinaryTreeCPUHierarchy<BaseCPUHierarchy>::get_memory_level() {
 	}
 	else {
 		std::vector<BinaryTreeCPUHierarchy<BaseCPUHierarchy>*> const* subsets = get_subsets();
-		assert(subsets->size() > 0);
+		pheet_assert(subsets->size() > 0);
 		return (*subsets)[0]->get_memory_level();
 	}
 }

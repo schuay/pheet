@@ -15,7 +15,6 @@
 #include "SimpleCPUHierarchyCPUDescriptor.h"
 
 #include <vector>
-#include <assert.h>
 
 namespace pheet {
 

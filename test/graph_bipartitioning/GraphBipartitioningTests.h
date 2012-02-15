@@ -10,8 +10,9 @@
 #define GRAPHBIPARTITIONINGTESTS_H_
 
 #ifdef GRAPH_BIPARTITIONING_TEST
+#include "../init.h"
 #include "GraphBipartitioningTest.h"
-#include "../test_settings.h"
+#include "../init.h"
 #endif
 
 /*

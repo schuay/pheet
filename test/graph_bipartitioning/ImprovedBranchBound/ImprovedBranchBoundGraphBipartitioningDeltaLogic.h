@@ -107,7 +107,7 @@ void ImprovedBranchBoundGraphBipartitioningDeltaLogic<Pheet, SubProblem>::update
 	}
 	std::sort(delta, delta + di);
 
-	assert(di == sub_problem->sets[2].count());
+	pheet_assert(di == sub_problem->sets[2].count());
 	size_t pivot = (/*sub_problem->size - */sub_problem->k) - sub_problem->sets[0].count();
 	if(pivot < di && delta[pivot] < 0) {
 		do {
