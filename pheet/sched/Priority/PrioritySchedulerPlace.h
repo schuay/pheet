@@ -13,12 +13,12 @@
 #include <random>
 #include <functional>
 
-#include "../../../settings.h"
-#include "../../common/CPUThreadExecutor.h"
-#include "../../common/FinishRegion.h"
-#include "../../../misc/atomics.h"
-#include "../../../misc/bitops.h"
-#include "../../../misc/type_traits.h"
+#include "../../settings.h"
+#include "../common/CPUThreadExecutor.h"
+#include "../common/FinishRegion.h"
+#include "../../misc/atomics.h"
+#include "../../misc/bitops.h"
+#include "../../misc/type_traits.h"
 #include "PrioritySchedulerPerformanceCounters.h"
 
 #include <assert.h>

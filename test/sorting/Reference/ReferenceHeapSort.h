@@ -9,7 +9,7 @@
 #ifndef REFERENCEHEAPSORT_H_
 #define REFERENCEHEAPSORT_H_
 
-#include "pheet/pheet.h"
+#include <pheet/pheet.h>
 
 namespace pheet {
 

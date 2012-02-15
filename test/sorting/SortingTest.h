@@ -11,7 +11,7 @@
 
 #include <stdlib.h>
 #include <iostream>
-#include "pheet/pheet.h"
+#include <pheet/pheet.h>
 #include "../Test.h"
 #include <exception>
 

@@ -9,7 +9,7 @@
 #ifndef SYNCHRONEOUSSCHEDULERPERFORMANCECOUNTERS_H_
 #define SYNCHRONEOUSSCHEDULERPERFORMANCECOUNTERS_H_
 
-#include "../../../settings.h"
+#include "../../settings.h"
 /*
 #include "../../../primitives/PerformanceCounter/Basic/BasicPerformanceCounter.h"
 #include "../../../primitives/PerformanceCounter/Max/MaxPerformanceCounter.h"

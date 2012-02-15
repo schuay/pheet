@@ -9,12 +9,12 @@
 #ifndef BASICSCHEDULERTASKEXECUTIONCONTEXT_H_
 #define BASICSCHEDULERTASKEXECUTIONCONTEXT_H_
 
-#include "../../../settings.h"
-#include "../../common/CPUThreadExecutor.h"
-#include "../../common/FinishRegion.h"
-#include "../../../misc/atomics.h"
-#include "../../../misc/bitops.h"
-#include "../../../misc/type_traits.h"
+#include "../../settings.h"
+#include "../common/CPUThreadExecutor.h"
+#include "../common/FinishRegion.h"
+#include "../../misc/atomics.h"
+#include "../../misc/bitops.h"
+#include "../../misc/type_traits.h"
 #include "BasicSchedulerPerformanceCounters.h"
 
 #include <assert.h>

@@ -9,12 +9,12 @@
 #ifndef BASICSCHEDULER_H_
 #define BASICSCHEDULER_H_
 
-#include "../../common/SchedulerTask.h"
-#include "../../common/SchedulerFunctorTask.h"
-#include "../../common/FinishRegion.h"
+#include "../common/SchedulerTask.h"
+#include "../common/SchedulerFunctorTask.h"
+#include "../common/FinishRegion.h"
 #include "BasicSchedulerPlace.h"
-#include "../../common/CPUThreadExecutor.h"
-#include "../../../models/MachineModel/BinaryTree/BinaryTreeMachineModel.h"
+#include "../common/CPUThreadExecutor.h"
+#include "../../models/MachineModel/BinaryTree/BinaryTreeMachineModel.h"
 
 #include <stdint.h>
 #include <limits>

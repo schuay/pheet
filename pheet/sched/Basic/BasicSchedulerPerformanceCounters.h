@@ -8,12 +8,12 @@
 #ifndef BASICSCHEDULERPERFORMANCECOUNTERS_H_
 #define BASICSCHEDULERPERFORMANCECOUNTERS_H_
 
-#include "../../../settings.h"
+#include "../../settings.h"
 
-#include "../../../primitives/PerformanceCounter/Basic/BasicPerformanceCounter.h"
-#include "../../../primitives/PerformanceCounter/Max/MaxPerformanceCounter.h"
-#include "../../../primitives/PerformanceCounter/Min/MinPerformanceCounter.h"
-#include "../../../primitives/PerformanceCounter/Time/TimePerformanceCounter.h"
+#include "../../primitives/PerformanceCounter/Basic/BasicPerformanceCounter.h"
+#include "../../primitives/PerformanceCounter/Max/MaxPerformanceCounter.h"
+#include "../../primitives/PerformanceCounter/Min/MinPerformanceCounter.h"
+#include "../../primitives/PerformanceCounter/Time/TimePerformanceCounter.h"
 
 namespace pheet {
 

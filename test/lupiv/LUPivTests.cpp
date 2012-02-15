@@ -6,8 +6,8 @@
  *	   License: Ask Author
  */
 
-#include "pheet/pheet.h"
-#include "pheet/sched/Basic/Basic/BasicScheduler.h"
+#include <pheet/pheet.h>
+#include <pheet/sched/Basic/BasicScheduler.h>
 
 #include "LUPivTests.h"
 #include "Simple/SimpleLUPiv.h"

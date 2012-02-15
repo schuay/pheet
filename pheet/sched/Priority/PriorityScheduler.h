@@ -9,15 +9,15 @@
 #ifndef PRIORITYSCHEDULER_H_
 #define PRIORITYSCHEDULER_H_
 
-#include "../../../settings.h"
-#include "../../common/SchedulerTask.h"
-#include "../../common/SchedulerFunctorTask.h"
-#include "../../common/FinishRegion.h"
+#include "../../settings.h"
+#include "../common/SchedulerTask.h"
+#include "../common/SchedulerFunctorTask.h"
+#include "../common/FinishRegion.h"
 #include "PrioritySchedulerPlace.h"
 #include "PrioritySchedulerStealerDescriptor.h"
-#include "../../../models/MachineModel/BinaryTree/BinaryTreeMachineModel.h"
-#include "../../../ds/PriorityTaskStorage/Modular/ModularTaskStorage.h"
-#include "../../strategies/LifoFifo/LifoFifoStrategy.h"
+#include "../../models/MachineModel/BinaryTree/BinaryTreeMachineModel.h"
+#include "../../ds/PriorityTaskStorage/Modular/ModularTaskStorage.h"
+#include "../strategies/LifoFifo/LifoFifoStrategy.h"
 
 #include <stdint.h>
 #include <limits>
