@@ -10,28 +10,14 @@
 #define LUPIVTESTS_H_
 
 #include "../Test.h"
-#include "../../test_settings.h"
+#include "../test_settings.h"
+#ifdef LUPIV_TEST
 #include "LUPivTest.h"
+#endif
 
 namespace pheet {
 
-template <bool ACTIVE> class LUPivTests;
-
-template <>
-class LUPivTests<false> : Test {
-public:
-	LUPivTests() {}
-	virtual ~LUPivTests() {}
-
-	void run_test() {}
-
-private:
-	template<class Kernel>
-	void run_sorter() {}
-};
-
-template <>
-class LUPivTests<true> : Test {
+class LUPivTests : Test {
 public:
 	LUPivTests();
 	virtual ~LUPivTests();
@@ -39,19 +25,19 @@ public:
 	void run_test();
 
 private:
-	template<class Kernel>
+	template<class Pheet, template <class P> class Kernel>
 	void run_kernel();
 };
 
-template <class Kernel>
-void LUPivTests<true>::run_kernel() {
+template <class Pheet, template <class P> class Kernel>
+void LUPivTests::run_kernel() {
 #ifdef LUPIV_TEST
 	for(size_t t = 0; t < sizeof(lupiv_test_types)/sizeof(lupiv_test_types[0]); t++) {
 		for(size_t n = 0; n < sizeof(lupiv_test_n)/sizeof(lupiv_test_n[0]); n++) {
 			for(size_t c = 0; c < sizeof(lupiv_test_cpus)/sizeof(lupiv_test_cpus[0]); c++) {
-				if(lupiv_test_cpus[c] <= Kernel::max_cpus) {
+				if(lupiv_test_cpus[c] <= Pheet::Environment::max_cpus) {
 					for(size_t s = 0; s < sizeof(lupiv_test_seeds)/sizeof(lupiv_test_seeds[0]); s++) {
-						LUPivTest<Kernel> st(lupiv_test_cpus[c], lupiv_test_types[t], lupiv_test_n[n], lupiv_test_seeds[s]);
+						LUPivTest<Pheet, Kernel> st(lupiv_test_cpus[c], lupiv_test_types[t], lupiv_test_n[n], lupiv_test_seeds[s]);
 						st.run_test();
 					}
 				}

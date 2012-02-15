@@ -9,18 +9,16 @@
 #ifndef IMPROVEDBRANCHBOUNDGRAPHBIPARTITIONINGBASICLOGIC_H_
 #define IMPROVEDBRANCHBOUNDGRAPHBIPARTITIONINGBASICLOGIC_H_
 
-#include "../../../settings.h"
+#include "pheet/pheet.h"
 #include "../graph_helpers.h"
-
-#include <bitset>
 
 namespace pheet {
 
-template <class Scheduler, size_t MAX_SIZE = 64>
+template <class Pheet, class SubProblem>
 class ImprovedBranchBoundGraphBipartitioningBasicLogic {
 public:
-	typedef ImprovedBranchBoundGraphBipartitioningBasicLogic<Scheduler, MAX_SIZE> Self;
-	typedef ImprovedBranchBoundGraphBipartitioningSubproblem<Scheduler, Self, MAX_SIZE> Subproblem;
+	typedef ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem> Self;
+	typedef typename SubProblem::Set Set;
 
 	ImprovedBranchBoundGraphBipartitioningBasicLogic(Subproblem* sub_problem);
 	ImprovedBranchBoundGraphBipartitioningBasicLogic(Subproblem* sub_problem, Self const& other);
@@ -31,42 +29,42 @@ public:
 	size_t get_cut();
 	size_t get_lower_bound();
 	void update(uint8_t set, size_t pos);
-	void bulk_update(uint8_t set, std::bitset<MAX_SIZE> positions);
+	void bulk_update(uint8_t set, Set positions);
 
 	static void print_name();
 private:
 	Subproblem* sub_problem;
 };
 
-template <class Scheduler, size_t MAX_SIZE>
-ImprovedBranchBoundGraphBipartitioningBasicLogic<Scheduler, MAX_SIZE>::ImprovedBranchBoundGraphBipartitioningBasicLogic(Subproblem* sub_problem)
+template <class Pheet, class SubProblem>
+ImprovedBranchBoundGraphBipartitioningBasicLogic<Pheet, SubProblem>::ImprovedBranchBoundGraphBipartitioningBasicLogic(Subproblem* sub_problem)
 : sub_problem(sub_problem) {
 
 }
 
-template <class Scheduler, size_t MAX_SIZE>
-ImprovedBranchBoundGraphBipartitioningBasicLogic<Scheduler, MAX_SIZE>::ImprovedBranchBoundGraphBipartitioningBasicLogic(Subproblem* sub_problem, Self const& other)
+template <class Pheet, class SubProblem>
+ImprovedBranchBoundGraphBipartitioningBasicLogic<Pheet, SubProblem>::ImprovedBranchBoundGraphBipartitioningBasicLogic(Subproblem* sub_problem, Self const& other)
 : sub_problem(sub_problem) {
 
 }
 
-template <class Scheduler, size_t MAX_SIZE>
-ImprovedBranchBoundGraphBipartitioningBasicLogic<Scheduler, MAX_SIZE>::~ImprovedBranchBoundGraphBipartitioningBasicLogic() {
+template <class Pheet, class SubProblem>
+ImprovedBranchBoundGraphBipartitioningBasicLogic<Pheet, SubProblem>::~ImprovedBranchBoundGraphBipartitioningBasicLogic() {
 
 }
 
-template <class Scheduler, size_t MAX_SIZE>
-void ImprovedBranchBoundGraphBipartitioningBasicLogic<Scheduler, MAX_SIZE>::init_root() {
+template <class Pheet, class SubProblem>
+void ImprovedBranchBoundGraphBipartitioningBasicLogic<Pheet, SubProblem>::init_root() {
 
 }
 
-template <class Scheduler, size_t MAX_SIZE>
-size_t ImprovedBranchBoundGraphBipartitioningBasicLogic<Scheduler, MAX_SIZE>::get_next_vertex() {
+template <class Pheet, class SubProblem>
+size_t ImprovedBranchBoundGraphBipartitioningBasicLogic<Pheet, SubProblem>::get_next_vertex() {
 	return sub_problem->sets[2]._Find_first();
 }
 
-template <class Scheduler, size_t MAX_SIZE>
-size_t ImprovedBranchBoundGraphBipartitioningBasicLogic<Scheduler, MAX_SIZE>::get_cut() {
+template <class Pheet, class SubProblem>
+size_t ImprovedBranchBoundGraphBipartitioningBasicLogic<Pheet, SubProblem>::get_cut() {
 	size_t cut = 0;
 	size_t current_bit = sub_problem->sets[0]._Find_first();
 	while(current_bit != sub_problem->sets[0].size()) {
@@ -80,18 +78,18 @@ size_t ImprovedBranchBoundGraphBipartitioningBasicLogic<Scheduler, MAX_SIZE>::ge
 	return cut;
 }
 
-template <class Scheduler, size_t MAX_SIZE>
-size_t ImprovedBranchBoundGraphBipartitioningBasicLogic<Scheduler, MAX_SIZE>::get_lower_bound() {
+template <class Pheet, class SubProblem>
+size_t ImprovedBranchBoundGraphBipartitioningBasicLogic<Pheet, SubProblem>::get_lower_bound() {
 	return get_cut();
 }
 
-template <class Scheduler, size_t MAX_SIZE>
-void ImprovedBranchBoundGraphBipartitioningBasicLogic<Scheduler, MAX_SIZE>::update(uint8_t set, size_t pos) {
+template <class Pheet, class SubProblem>
+void ImprovedBranchBoundGraphBipartitioningBasicLogic<Pheet, SubProblem>::update(uint8_t set, size_t pos) {
 
 }
 
-template <class Scheduler, size_t MAX_SIZE>
-void ImprovedBranchBoundGraphBipartitioningBasicLogic<Scheduler, MAX_SIZE>::bulk_update(uint8_t set, std::bitset<MAX_SIZE> positions) {
+template <class Pheet, class SubProblem>
+void ImprovedBranchBoundGraphBipartitioningBasicLogic<Pheet, SubProblem>::bulk_update(uint8_t set, Set positions) {
 	size_t current_bit = positions._Find_first();
 	while(current_bit != positions.size()) {
 		update(set, current_bit);
@@ -99,8 +97,8 @@ void ImprovedBranchBoundGraphBipartitioningBasicLogic<Scheduler, MAX_SIZE>::bulk
 	}
 }
 
-template <class Scheduler, size_t MAX_SIZE>
-void ImprovedBranchBoundGraphBipartitioningBasicLogic<Scheduler, MAX_SIZE>::print_name() {
+template <class Pheet, class SubProblem>
+void ImprovedBranchBoundGraphBipartitioningBasicLogic<Pheet, SubProblem>::print_name() {
 	std::cout << "BasicLogic";
 }
 

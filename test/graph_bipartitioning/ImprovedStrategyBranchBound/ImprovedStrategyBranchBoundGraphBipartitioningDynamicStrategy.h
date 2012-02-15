@@ -9,42 +9,52 @@
 #ifndef IMPROVEDSTRATEGYBRANCHBOUNDGRAPHBIPARTITIONINGDYNAMICSTRATEGY_H_
 #define IMPROVEDSTRATEGYBRANCHBOUNDGRAPHBIPARTITIONINGDYNAMICSTRATEGY_H_
 
-#include "../../../settings.h"
+#include <pheet/pheet.h>
+#include "ImprovedStrategyBranchBoundGraphBipartitioningUpperBoundFifoStrategy.h"
 
 namespace pheet {
 
-template <class Scheduler, template <class EScheduler, class ESubProblem> class Strategy, class SubProblem>
-class ImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategy {
+template <class Pheet, template <class P, class SP> class Strategy, class SubProblem>
+class ImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategyImpl {
 public:
-	ImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategy();
-	~ImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategy();
+	template <template <class P, class SP> class NewStrat>
+	using WithStrategy = ImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategyImpl<Pheet, NewStrat, SubProblem>;
 
-	Strategy<Scheduler, SubProblem> operator()(SubProblem* sub_problem, size_t* upper_bound);
+//	template <class Pheet, class SubProblem>
+//	using T = ImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategyImpl<Pheet, SubProblem>;
+
+	ImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategyImpl();
+	~ImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategyImpl();
+
+	Strategy<Pheet, SubProblem> operator()(SubProblem* sub_problem, size_t* upper_bound);
 
 	static void print_name();
 };
 
-template <class Scheduler, template <class EScheduler, class ESubProblem> class Strategy, class SubProblem>
-inline ImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategy<Scheduler, Strategy, SubProblem>::ImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategy() {
+template <class Pheet, template <class P, class SP> class Strategy, class SubProblem>
+inline ImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategyImpl<Pheet, Strategy, SubProblem>::ImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategyImpl() {
 
 }
 
-template <class Scheduler, template <class EScheduler, class ESubProblem> class Strategy, class SubProblem>
-inline ImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategy<Scheduler, Strategy, SubProblem>::~ImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategy() {
+template <class Pheet, template <class P, class SP> class Strategy, class SubProblem>
+inline ImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategyImpl<Pheet, Strategy, SubProblem>::~ImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategyImpl() {
 
 }
 
-template <class Scheduler, template <class EScheduler, class ESubProblem> class Strategy, class SubProblem>
-inline Strategy<Scheduler, SubProblem> ImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategy<Scheduler, Strategy, SubProblem>::operator()(SubProblem* sub_problem, size_t* upper_bound) {
-	return Strategy<Scheduler, SubProblem>(sub_problem, upper_bound);
+template <class Pheet, template <class P, class SP> class Strategy, class SubProblem>
+inline Strategy<Pheet, SubProblem> ImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategyImpl<Pheet, Strategy, SubProblem>::operator()(SubProblem* sub_problem, size_t* upper_bound) {
+	return Strategy<Pheet, SubProblem>(sub_problem, upper_bound);
 }
 
-template <class Scheduler, template <class EScheduler, class ESubProblem> class Strategy, class SubProblem>
-void ImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategy<Scheduler, Strategy, SubProblem>::print_name() {
+template <class Pheet, template <class P, class SP> class Strategy, class SubProblem>
+void ImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategyImpl<Pheet, Strategy, SubProblem>::print_name() {
 	std::cout << "DynamicStrategy<";
-	Strategy<Scheduler, SubProblem>::print_name();
+	Strategy<Pheet, SubProblem>::print_name();
 	std::cout << ">";
 }
+
+template <class Pheet, class SubProblem>
+using ImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategy = ImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategyImpl<Pheet, ImprovedStrategyBranchBoundGraphBipartitioningUpperBoundFifoStrategy, SubProblem>;
 
 }
 

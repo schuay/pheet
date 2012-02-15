@@ -39,6 +39,9 @@ public:
 	template <size_t ms>
 		using WithMaxSize = ImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, Logic, SchedulingStrategy, ms>;
 
+	template <class P>
+		using T = ImprovedStrategyBranchBoundGraphBipartitioningImpl<P, Logic, SchedulingStrategy, MaxSize>;
+
 
 	ImprovedStrategyBranchBoundGraphBipartitioningImpl(GraphVertex* data, size_t size, Solution& solution, PerformanceCounters& pc);
 	~ImprovedStrategyBranchBoundGraphBipartitioningImpl();
@@ -142,7 +145,7 @@ void ImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, Logic, Scheduling
 	std::cout << "logic\tstrategy\t";
 }
 
-template <class Pheet>
+template <class Pheet = Pheet>
 using ImprovedStrategyBranchBoundGraphBipartitioning = ImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic, ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy, 64>;
 
 }

@@ -8,6 +8,7 @@
 
 #include "GraphBipartitioningTests.h"
 
+#ifdef GRAPH_BIPARTITIONING_TEST
 /*
 #include "BranchBound/BranchBoundGraphBipartitioning.h"
 #include "BranchBound/BasicLowerBound.h"
@@ -15,15 +16,18 @@
 #include "StrategyBranchBound/StrategyBranchBoundGraphBipartitioning.h"
 #include "StrategyBranchBound/BranchBoundGraphBipartitioningAutoStrategy.h"
 #include "StrategyBranchBound/BranchBoundGraphBipartitioningBestFirstStrategy.h"
-#include "ImprovedBranchBound/ImprovedBranchBoundGraphBipartitioning.h"
+
 #include "ImprovedBranchBound/ImprovedBranchBoundGraphBipartitioningBasicLogic.h"
 #include "ImprovedBranchBound/ImprovedBranchBoundGraphBipartitioningImprovedLogic.h"
 #include "ImprovedBranchBound/ImprovedBranchBoundGraphBipartitioningDeltaLogic.h"
 #include "ImprovedBranchBound/ImprovedBranchBoundGraphBipartitioningDeltaNVLogic.h"
 #include "ImprovedBranchBound/ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic.h"
 */
+
+#include <pheet/sched/Basic/Basic/BasicScheduler.h>
+
+#include "ImprovedBranchBound/ImprovedBranchBoundGraphBipartitioning.h"
 #include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioning.h"
-/*
 #include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy.h"
 #include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstStrategy.h"
 #include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy.h"
@@ -33,11 +37,13 @@
 #include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningUpperLowerBoundStrategy.h"
 #include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy.h"
 #include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategy.h"
+/*
 #include "../../sched/strategies/Fifo/FifoStrategy.h"
 #include "../../sched/strategies/Lifo/LifoStrategy.h"
 #include "../../sched/strategies/LifoFifo/LifoFifoStrategy.h"
 
 #include "../test_schedulers.h"*/
+#endif
 
 namespace pheet {
 
@@ -50,12 +56,33 @@ GraphBipartitioningTests::~GraphBipartitioningTests() {
 }
 
 void GraphBipartitioningTests::run_test() {
-	if(graph_bipartitioning_test) {
-		std::cout << "----" << std::endl;
+#ifdef GRAPH_BIPARTITIONING_TEST
+	std::cout << "----" << std::endl;
 
-		this->run_partitioner<	Pheet,
-								ImprovedStrategyBranchBoundGraphBipartitioning>();
+	this->run_partitioner<	Pheet,
+							ImprovedStrategyBranchBoundGraphBipartitioning<>::WithSchedulingStrategy<ImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategy>::T >();
+	this->run_partitioner<	Pheet,
+							ImprovedStrategyBranchBoundGraphBipartitioning<>::WithSchedulingStrategy<ImprovedStrategyBranchBoundGraphBipartitioningUpperBoundStrategy>::T >();
+	this->run_partitioner<	Pheet,
+							ImprovedStrategyBranchBoundGraphBipartitioning<>::WithSchedulingStrategy<ImprovedStrategyBranchBoundGraphBipartitioningUpperLowerBoundStrategy>::T >();
+	this->run_partitioner<	Pheet,
+							ImprovedStrategyBranchBoundGraphBipartitioning<>::WithSchedulingStrategy<ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy>::T >();
+	this->run_partitioner<	Pheet,
+							ImprovedStrategyBranchBoundGraphBipartitioning>(); // strategy: ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy
+	this->run_partitioner<	Pheet,
+							ImprovedStrategyBranchBoundGraphBipartitioning<>::WithSchedulingStrategy<ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstStrategy>::T >();
+	this->run_partitioner<	Pheet,
+							ImprovedStrategyBranchBoundGraphBipartitioning<>::WithSchedulingStrategy<ImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy>::T >();
+	this->run_partitioner<	Pheet,
+							ImprovedStrategyBranchBoundGraphBipartitioning>();
+	this->run_partitioner<	Pheet,
+							ImprovedStrategyBranchBoundGraphBipartitioning>();
+	this->run_partitioner<	Pheet,
+							ImprovedBranchBoundGraphBipartitioning>();
+	this->run_partitioner<	Pheet::WithScheduler<BasicScheduler>,
+							ImprovedBranchBoundGraphBipartitioning>();
 
+#endif
 		/*
 		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapMultiStealPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<ArrayListHeapMultiStealPriorityScheduler, 64>, DynamicUpperBoundFifoStrategy, 64 > >();
 		this->run_partitioner<ImprovedStrategyBranchBoundGraphBipartitioning<ArrayListHeapMultiStealPriorityScheduler, ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<ArrayListHeapMultiStealPriorityScheduler, 64>, ImprovedStrategyBranchBoundGraphBipartitioningUpperBoundStrategy, 64 > >();
@@ -305,7 +332,7 @@ void GraphBipartitioningTests::run_test() {
 		this->run_partitioner<StrategyBranchBoundGraphBipartitioning<PrimitiveHeapPriorityScheduler, BasicLowerBound, BasicNextVertex, BranchBoundGraphBipartitioningAutoStrategy<LifoFifoStrategy> > >();
 		this->run_partitioner<StrategyBranchBoundGraphBipartitioning<ArrayListPriorityScheduler, BasicLowerBound, BasicNextVertex, BranchBoundGraphBipartitioningAutoStrategy<LifoFifoStrategy> > >();
 		*/
-	}
 }
 
 }
+

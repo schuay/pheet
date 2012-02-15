@@ -8,6 +8,7 @@
 
 #include "sorting/SortingTests.h"
 #include "graph_bipartitioning/GraphBipartitioningTests.h"
+#include "lupiv/LUPivTests.h"
 /*
 #include "inarow/InARowTests.h"
 #include "n-queens/NQueensTests.h"
@@ -29,10 +30,10 @@ int main(int argc, char* argv[]) {
 
 	NQueensTests nqt;
 	nqt.run_test();
-
-	LUPivTests<lupiv_test> lpt;
+*/
+	LUPivTests lpt;
 	lpt.run_test();
-
+/*
 	UTSTests utss;
 	utss.run_test();
 

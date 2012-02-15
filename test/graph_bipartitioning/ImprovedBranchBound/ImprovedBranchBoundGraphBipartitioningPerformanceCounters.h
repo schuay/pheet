@@ -9,55 +9,57 @@
 #ifndef IMPROVEDBRANCHBOUNDGRAPHBIPARTITIONINGPERFORMANCECOUNTERS_H_
 #define IMPROVEDBRANCHBOUNDGRAPHBIPARTITIONINGPERFORMANCECOUNTERS_H_
 
-#include "../../../settings.h"
+#include <pheet/pheet.h>
 
-#include "../../../primitives/PerformanceCounter/Basic/BasicPerformanceCounter.h"
+#include <pheet/primitives/PerformanceCounter/Basic/BasicPerformanceCounter.h>
 #include "ImprovedBranchBoundGraphBipartitioningSubproblemPerformanceCounters.h"
 
 namespace pheet {
 
-template <class Scheduler>
+template <class Pheet>
 class ImprovedBranchBoundGraphBipartitioningPerformanceCounters {
 public:
+	typedef ImprovedBranchBoundGraphBipartitioningPerformanceCounters<Pheet> Self;
+
 	ImprovedBranchBoundGraphBipartitioningPerformanceCounters();
-	ImprovedBranchBoundGraphBipartitioningPerformanceCounters(ImprovedBranchBoundGraphBipartitioningPerformanceCounters<Scheduler>& other);
+	ImprovedBranchBoundGraphBipartitioningPerformanceCounters(Self& other);
 	~ImprovedBranchBoundGraphBipartitioningPerformanceCounters();
 
-	void print_headers();
+	static void print_headers();
 	void print_values();
 
-	BasicPerformanceCounter<Scheduler, graph_bipartitioning_test_count_irrelevant_tasks> num_irrelevant_tasks;
-	ImprovedBranchBoundGraphBipartitioningSubproblemPerformanceCounters<Scheduler> subproblem_pc;
+	BasicPerformanceCounter<Pheet, graph_bipartitioning_test_count_irrelevant_tasks> num_irrelevant_tasks;
+	ImprovedBranchBoundGraphBipartitioningSubproblemPerformanceCounters<Pheet> subproblem_pc;
 };
 
-template <class Scheduler>
-inline ImprovedBranchBoundGraphBipartitioningPerformanceCounters<Scheduler>::ImprovedBranchBoundGraphBipartitioningPerformanceCounters()
+template <class Pheet>
+inline ImprovedBranchBoundGraphBipartitioningPerformanceCounters<Pheet>::ImprovedBranchBoundGraphBipartitioningPerformanceCounters()
 {
 
 }
 
-template <class Scheduler>
-inline ImprovedBranchBoundGraphBipartitioningPerformanceCounters<Scheduler>::ImprovedBranchBoundGraphBipartitioningPerformanceCounters(ImprovedBranchBoundGraphBipartitioningPerformanceCounters<Scheduler>& other)
+template <class Pheet>
+inline ImprovedBranchBoundGraphBipartitioningPerformanceCounters<Pheet>::ImprovedBranchBoundGraphBipartitioningPerformanceCounters(Self& other)
 :num_irrelevant_tasks(other.num_irrelevant_tasks),
  subproblem_pc(other.subproblem_pc)
 {
 
 }
 
-template <class Scheduler>
-inline ImprovedBranchBoundGraphBipartitioningPerformanceCounters<Scheduler>::~ImprovedBranchBoundGraphBipartitioningPerformanceCounters() {
+template <class Pheet>
+inline ImprovedBranchBoundGraphBipartitioningPerformanceCounters<Pheet>::~ImprovedBranchBoundGraphBipartitioningPerformanceCounters() {
 
 }
 
-template <class Scheduler>
-inline void ImprovedBranchBoundGraphBipartitioningPerformanceCounters<Scheduler>::print_headers() {
-	BasicPerformanceCounter<Scheduler, graph_bipartitioning_test_count_irrelevant_tasks>::print_header("num_irrelevant_tasks\t");
+template <class Pheet>
+inline void ImprovedBranchBoundGraphBipartitioningPerformanceCounters<Pheet>::print_headers() {
+	BasicPerformanceCounter<Pheet, graph_bipartitioning_test_count_irrelevant_tasks>::print_header("num_irrelevant_tasks\t");
 
-	subproblem_pc.print_headers();
+	ImprovedBranchBoundGraphBipartitioningSubproblemPerformanceCounters<Pheet>::print_headers();
 }
 
-template <class Scheduler>
-inline void ImprovedBranchBoundGraphBipartitioningPerformanceCounters<Scheduler>::print_values() {
+template <class Pheet>
+inline void ImprovedBranchBoundGraphBipartitioningPerformanceCounters<Pheet>::print_values() {
 	num_irrelevant_tasks.print("%d\t");
 
 	subproblem_pc.print_values();

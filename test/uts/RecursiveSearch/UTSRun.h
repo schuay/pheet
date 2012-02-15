@@ -9,7 +9,7 @@
 #ifndef UTSRUN_H_
 #define UTSRUN_H_
 
-#include "../../../settings.h"
+#include <pheet/pheet.h>
 #include "UTSTasks.h"
 
 #include <iostream>

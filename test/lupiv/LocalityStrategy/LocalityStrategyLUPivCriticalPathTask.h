@@ -22,17 +22,17 @@ void dgetf2_(int *m, int *n, double *a, int *lda, int *piv, int *info);
 
 namespace pheet {
 
-template <class Task, int BLOCK_SIZE>
-class LocalityStrategyLUPivCriticalPathTask : public Task {
+template <class Pheet, int BLOCK_SIZE>
+class LocalityStrategyLUPivCriticalPathTask : public Pheet::Task {
 public:
-	LocalityStrategyLUPivCriticalPathTask(typename Task::TEC** owner_info, typename Task::TEC** block_owners, double* a, double* lu_col, int* pivot, int m, int lda, int n);
+	LocalityStrategyLUPivCriticalPathTask(typename Pheet::Place** owner_info, typename Pheet::Place** block_owners, double* a, double* lu_col, int* pivot, int m, int lda, int n);
 	virtual ~LocalityStrategyLUPivCriticalPathTask();
 
-	virtual void operator()(typename Task::TEC& tec);
+	virtual void operator()();
 
 private:
-	typename Task::TEC** owner_info;
-	typename Task::TEC** block_owners;
+	typename Pheet::Place** owner_info;
+	typename Pheet::Place** block_owners;
 	double* a;
 	double* lu_col;
 	int* pivot;
@@ -41,26 +41,26 @@ private:
 	int n;
 };
 
-template <class Task, int BLOCK_SIZE>
-LocalityStrategyLUPivCriticalPathTask<Task, BLOCK_SIZE>::LocalityStrategyLUPivCriticalPathTask(typename Task::TEC** owner_info, typename Task::TEC** block_owners, double* a, double* lu_col, int* pivot, int m, int lda, int n)
+template <class Pheet, int BLOCK_SIZE>
+LocalityStrategyLUPivCriticalPathTask<Pheet, BLOCK_SIZE>::LocalityStrategyLUPivCriticalPathTask(typename Pheet::Place** owner_info, typename Pheet::Place** block_owners, double* a, double* lu_col, int* pivot, int m, int lda, int n)
 : owner_info(owner_info), block_owners(block_owners), a(a), lu_col(lu_col), pivot(pivot), m(m), lda(lda), n(n) {
 
 }
 
-template <class Task, int BLOCK_SIZE>
-LocalityStrategyLUPivCriticalPathTask<Task, BLOCK_SIZE>::~LocalityStrategyLUPivCriticalPathTask() {
+template <class Pheet, int BLOCK_SIZE>
+LocalityStrategyLUPivCriticalPathTask<Pheet, BLOCK_SIZE>::~LocalityStrategyLUPivCriticalPathTask() {
 
 }
 
-template <class Task, int BLOCK_SIZE>
-void LocalityStrategyLUPivCriticalPathTask<Task, BLOCK_SIZE>::operator()(typename Task::TEC& tec) {
-	(*owner_info) = &tec;
+template <class Pheet, int BLOCK_SIZE>
+void LocalityStrategyLUPivCriticalPathTask<Pheet, BLOCK_SIZE>::operator()() {
+	(*owner_info) = Pheet::get_place();
 
 	assert(n <= BLOCK_SIZE);
 
 	// Apply pivot to column
-	tec.template
-		call<LUPivPivotTask<Task> >(a, pivot, std::min(m, BLOCK_SIZE), lda, n);
+	Pheet::template
+		call<LUPivPivotTask<Pheet> >(a, pivot, std::min(m, BLOCK_SIZE), lda, n);
 
 	int k = std::min(std::min(m, n), BLOCK_SIZE);
 
@@ -75,13 +75,13 @@ void LocalityStrategyLUPivCriticalPathTask<Task, BLOCK_SIZE>::operator()(typenam
 
 	int num_blocks = m / BLOCK_SIZE;
 
-	{typename Task::Finish f(tec);
+	{typename Pheet::Finish f;
 		// Apply matrix multiplication to all other blocks
 		for(int i = 1; i < num_blocks; ++i) {
 			int pos = i * BLOCK_SIZE;
-			tec.template
-				spawn_prio<LocalityStrategyLUPivMMTask<Task> >(
-						LUPivLocalityStrategy<typename Task::Scheduler>(block_owners[i], 5, 3),
+			Pheet::template
+				spawn_prio<LocalityStrategyLUPivMMTask<Pheet> >(
+						LUPivLocalityStrategy<Pheet>(block_owners[i], 5, 3),
 						block_owners + i,
 						lu_col + pos, a, a + pos, k, lda);
 		}

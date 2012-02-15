@@ -9,75 +9,132 @@
 #ifndef SIMPLELUPIV_H_
 #define SIMPLELUPIV_H_
 
-#include "SimpleLUPivRootTask.h"
+#include "../helpers/LUPivPivotTask.h"
+#include "SimpleLUPivStandardPathTask.h"
+#include "SimpleLUPivCriticalPathTask.h"
+
+#include <algorithm>
+
+extern "C" {
+void dgetrf_(int *m, int *n, double *a, int *lda, int *piv, int *info);
+void dgetf2_(int *m, int *n, double *a, int *lda, int *piv, int *info);
+}
 
 namespace pheet {
 
-template <class Scheduler>
-class SimpleLUPiv {
+template <class Pheet, int BLOCK_SIZE = 128>
+class SimpleLUPivImpl : public Pheet::Task {
 public:
-	SimpleLUPiv(procs_t cpus, double* data, int* pivot, size_t size);
-	~SimpleLUPiv();
+	SimpleLUPivImpl(double* a, int* pivot, int m, int lda, int n);
+	SimpleLUPivImpl(double* a, int* pivot, int size);
+	~SimpleLUPivImpl();
 
-	void run();
-	void print_results();
+	virtual void operator()();
 
-	void print_headers();
-
-	static void print_scheduler_name();
-
-	static procs_t const max_cpus;
 	static char const name[];
-	static char const * const scheduler_name;
-
 private:
-	double* data;
+	// The matrix (column-major)
+	double* a;
+	// vector containing the pivot indices for the rows (length: m)
 	int* pivot;
-	size_t size;
-	typename Scheduler::CPUHierarchy cpu_hierarchy;
-	Scheduler scheduler;
+	// Number of rows in a
+	int m;
+	// Leading dimension (lda >= max(1, m))
+	int lda;
+	// Number of columns in a
+	int n;
 };
 
-template <class Scheduler>
-procs_t const SimpleLUPiv<Scheduler>::max_cpus = Scheduler::max_cpus;
+template <class Pheet, int BLOCK_SIZE>
+char const SimpleLUPivImpl<Pheet, BLOCK_SIZE>::name[] = "SimpleLUPiv";
 
-template <class Scheduler>
-char const SimpleLUPiv<Scheduler>::name[] = "Simple LUPiv";
+template <class Pheet, int BLOCK_SIZE>
+SimpleLUPivImpl<Pheet, BLOCK_SIZE>::SimpleLUPivImpl(double* a, int* pivot, int m, int lda, int n)
+: a(a), pivot(pivot), m(m), lda(lda), n(n) {
+	assert(m > 0);
+	assert(n > 0);
+	assert(lda >= m);
+	// TODO: debug cases n != m  - until then:
+	assert(m == n);
+}
 
-template <class Scheduler>
-char const * const SimpleLUPiv<Scheduler>::scheduler_name = Scheduler::name;
+template <class Pheet, int BLOCK_SIZE>
+SimpleLUPivImpl<Pheet, BLOCK_SIZE>::SimpleLUPivImpl(double* a, int* pivot, int size)
+: a(a), pivot(pivot), m(size), lda(size), n(size) {
+	assert(m > 0);
+	assert(n > 0);
+	assert(lda >= m);
+}
 
-template <class Scheduler>
-SimpleLUPiv<Scheduler>::SimpleLUPiv(procs_t cpus, double* data, int* pivot, size_t size)
-: data(data), pivot(pivot), size(size), cpu_hierarchy(cpus), scheduler(&cpu_hierarchy) {
+template <class Pheet, int BLOCK_SIZE>
+SimpleLUPivImpl<Pheet, BLOCK_SIZE>::~SimpleLUPivImpl() {
 
 }
 
-template <class Scheduler>
-SimpleLUPiv<Scheduler>::~SimpleLUPiv() {
+template <class Pheet, int BLOCK_SIZE>
+void SimpleLUPivImpl<Pheet, BLOCK_SIZE>::operator()() {
+	int num_blocks = std::min(n, m) / BLOCK_SIZE;
 
+	// Run sequential algorithm on first column
+	int out = 0;
+	int tmp = std::min(BLOCK_SIZE, n);
+	dgetf2_(&m, &tmp, a, &lda, pivot, &out);
+
+	if(num_blocks > 1) {
+		double* cur_a = a;
+		int* cur_piv = pivot;
+		int cur_m = m;
+		/*
+		 * Algorithm by blocks. For each iteration perform this work
+		 * Could be improved to be even more finegrained with a dag, where some dgemm tasks can still be performed
+		 * while we already execute the next iteration
+		 */
+		for(int i = 1; i < num_blocks; ++i) {
+			// Finish one iteration before you can start the next one
+			{typename Pheet::Finish f;
+				// Critical path
+				Pheet::template
+					spawn<SimpleLUPivCriticalPathTask<Pheet, BLOCK_SIZE> >(cur_a + i*BLOCK_SIZE*lda, cur_a + (i-1)*BLOCK_SIZE*lda, cur_piv, cur_m, lda, (i == num_blocks - 1)?(n - BLOCK_SIZE*i):(BLOCK_SIZE));
+
+				// Workflow for other unfinished columns
+				for(int j = i + 1; j < num_blocks; ++j) {
+					Pheet::template
+						spawn<SimpleLUPivStandardPathTask<Pheet, BLOCK_SIZE> >(cur_a + j*BLOCK_SIZE*lda, cur_a + (i-1)*BLOCK_SIZE*lda, cur_piv, cur_m, lda, (j == num_blocks - 1)?(n - BLOCK_SIZE*j):(BLOCK_SIZE));
+				}
+
+				// Pivoting for all other columns
+				for(int j = 0; j < (i-1); ++j) {
+					Pheet::template
+						spawn<LUPivPivotTask<Pheet> >(cur_a + j*BLOCK_SIZE*lda, cur_piv, std::min(cur_m, BLOCK_SIZE), lda, BLOCK_SIZE);
+				}
+
+				cur_a += BLOCK_SIZE;
+				cur_piv += BLOCK_SIZE;
+				cur_m -= BLOCK_SIZE;
+			}
+		}
+		{typename Pheet::Finish f;
+			// Pivoting for all other columns
+			for(int j = 0; j < (num_blocks-1); ++j) {
+				Pheet::template
+					spawn<LUPivPivotTask<Pheet> >(cur_a + j*BLOCK_SIZE*lda, cur_piv, std::min(cur_m, BLOCK_SIZE), lda, BLOCK_SIZE);
+			}
+		}
+
+		// Update pivots as the offsets are calculated from the beginning of the block
+		for(int i = BLOCK_SIZE; i < m; i += BLOCK_SIZE) {
+			for(int j = i; j < i+BLOCK_SIZE; j++) {
+				assert(pivot[j] != 0);
+				assert(pivot[j] <= m-i);
+				pivot[j] = pivot[j] + i;
+				assert(pivot[j] >= j+1);
+			}
+		}
+	}
 }
 
-template <class Scheduler>
-void SimpleLUPiv<Scheduler>::run() {
-	int n = (int)size;
-	scheduler.template finish<SimpleLUPivRootTask<typename Scheduler::Task> >(data, pivot, n, n, n);
-}
-
-template <class Scheduler>
-void SimpleLUPiv<Scheduler>::print_results() {
-	scheduler.print_performance_counter_values();
-}
-
-template <class Scheduler>
-void SimpleLUPiv<Scheduler>::print_headers() {
-	scheduler.print_performance_counter_headers();
-}
-
-template <class Scheduler>
-void SimpleLUPiv<Scheduler>::print_scheduler_name() {
-	Scheduler::print_name();
-}
+template <class Pheet>
+using SimpleLUPiv = SimpleLUPivImpl<Pheet, 128>;
 
 }
 

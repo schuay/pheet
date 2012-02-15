@@ -6,32 +6,35 @@
  *	   License: Ask Author
  */
 
+#include "pheet/pheet.h"
+#include "pheet/sched/Basic/Basic/BasicScheduler.h"
+
 #include "LUPivTests.h"
 #include "Simple/SimpleLUPiv.h"
 #include "LocalityStrategy/LocalityStrategyLUPiv.h"
-
-#include "../test_schedulers.h"
 
 #include <iostream>
 
 namespace pheet {
 
-LUPivTests<true>::LUPivTests() {
+LUPivTests::LUPivTests() {
 
 }
 
-LUPivTests<true>::~LUPivTests() {
+LUPivTests::~LUPivTests() {
 
 }
 
-void LUPivTests<true>::run_test() {
+void LUPivTests::run_test() {
 #ifdef LUPIV_TEST
 	std::cout << "----" << std::endl;
 
-	this->run_kernel<LocalityStrategyLUPiv<ArrayListHeapMultiStealPriorityScheduler> >();
-	this->run_kernel<LocalityStrategyLUPiv<ArrayListHeapPriorityScheduler> >();
-	this->run_kernel<SimpleLUPiv<ArrayListHeapMultiStealPriorityScheduler> >();
-	this->run_kernel<SimpleLUPiv<DefaultBasicScheduler> >();
+	this->run_kernel<	Pheet,
+						LocalityStrategyLUPiv>();
+	this->run_kernel<	Pheet,
+						SimpleLUPiv>();
+	this->run_kernel<	Pheet::WithScheduler<BasicScheduler>,
+						SimpleLUPiv>();
 #endif
 }
 

@@ -9,7 +9,7 @@
 #ifndef UTSTASK_H_
 #define UTSTASK_H_
 
-#include "../../../settings.h"
+#include <pheet/pheet.h>
 #include "../../../misc/types.h"
 #include "../../../misc/atomics.h"
 #include "../../test_schedulers.h"

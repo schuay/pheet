@@ -1,3 +1,3 @@
 
 
-TEST_OBJS += lib/test/lupiv/LUPivTests.o
+TEST_OBJS += lib/lupiv/LUPivTests.o

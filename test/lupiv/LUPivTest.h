@@ -23,7 +23,7 @@ void dgemm_(char * transA, char* transB, int* m, int* n, int* k, double* alpha, 
 
 namespace pheet {
 
-template <class Kernel>
+template <class Pheet, template <class P> class Kernel>
 class LUPivTest : Test {
 public:
 	LUPivTest(procs_t cpus, int type, size_t size, unsigned int seed);
@@ -43,41 +43,45 @@ private:
 	static char const* const types[];
 };
 
-template <class Kernel>
-char const* const LUPivTest<Kernel>::types[] = {"random"};
+template <class Pheet, template <class P> class Kernel>
+char const* const LUPivTest<Pheet, Kernel>::types[] = {"random"};
 
-template <class Kernel>
-LUPivTest<Kernel>::LUPivTest(procs_t cpus, int type, size_t size, unsigned int seed)
+template <class Pheet, template <class P> class Kernel>
+LUPivTest<Pheet, Kernel>::LUPivTest(procs_t cpus, int type, size_t size, unsigned int seed)
 : cpus(cpus), type(type), size(size), seed(seed) {
 
 }
 
-template <class Kernel>
-LUPivTest<Kernel>::~LUPivTest() {
+template <class Pheet, template <class P> class Kernel>
+LUPivTest<Pheet, Kernel>::~LUPivTest() {
 
 }
 
-template <class Kernel>
-void LUPivTest<Kernel>::run_test() {
+template <class Pheet, template <class P> class Kernel>
+void LUPivTest<Pheet, Kernel>::run_test() {
 	double* data = generate_data();
 	int* pivot = new int[size];
 
-	Kernel s(cpus, data, pivot, size);
+	typename Pheet::Environment::PerformanceCounters pc;
 
 	Time start, end;
-	check_time(start);
-	s.run();
-	check_time(end);
+
+	{typename Pheet::Environment env(cpus, pc);
+		check_time(start);
+		Pheet::template
+			finish<Kernel<Pheet> >(data, pivot, size);
+		check_time(end);
+	}
 
 	double eps = verify(data, pivot);
 	double seconds = calculate_seconds(start, end);
 	std::cout << "test\tkernel\tscheduler\ttype\tsize\tseed\tcpus\ttotal_time\teps\t";
-	s.print_headers();
+	Pheet::Environment::PerformanceCounters::print_headers();
 	std::cout << std::endl;
-	std::cout << "lu_piv\t" << Kernel::name << "\t";
-	Kernel::print_scheduler_name();
+	std::cout << "lu_piv\t" << Kernel<Pheet>::name << "\t";
+	Pheet::Environment::print_name();
 	std::cout << "\t" << types[type] << "\t" << size << "\t" << seed << "\t" << cpus << "\t" << seconds << "\t" << eps << "\t";
-	s.print_results();
+	pc.print_values();
 	std::cout << std::endl;
 
 	delete[] pivot;
@@ -85,8 +89,8 @@ void LUPivTest<Kernel>::run_test() {
 }
 
 
-template <class Kernel>
-double* LUPivTest<Kernel>::generate_data() {
+template <class Pheet, template <class P> class Kernel>
+double* LUPivTest<Pheet, Kernel>::generate_data() {
 	double* data = new double[size*size];
 
 	boost::mt19937 rng;
@@ -110,8 +114,8 @@ double* LUPivTest<Kernel>::generate_data() {
 	return data;
 }
 
-template <class Kernel>
-double LUPivTest<Kernel>::verify(double *matrix, int* pivot) {
+template <class Pheet, template <class P> class Kernel>
+double LUPivTest<Pheet, Kernel>::verify(double *matrix, int* pivot) {
 	double *origA = generate_data();
 
 	int n = (int)size;

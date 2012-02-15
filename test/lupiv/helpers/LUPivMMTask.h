@@ -9,7 +9,7 @@
 #ifndef LUPIVMMTASK_H_
 #define LUPIVMMTASK_H_
 
-#include "../../../settings.h"
+#include <pheet/pheet.h>
 
 extern "C" {
 void dgemm_(char * transA, char* transB, int* m, int* n, int* k, double* alpha, double* a, int* lda, double* b, int* ldb, double* beta, double* c, int* ldc);
@@ -17,13 +17,13 @@ void dgemm_(char * transA, char* transB, int* m, int* n, int* k, double* alpha, 
 
 namespace pheet {
 
-template <class Task>
-class LUPivMMTask : public Task {
+template <class Pheet>
+class LUPivMMTask : public Pheet::Task {
 public:
 	LUPivMMTask(double* a, double* b, double* c, int k, int lda);
 	virtual ~LUPivMMTask();
 
-	virtual void operator()(typename Task::TEC& tec);
+	virtual void operator()();
 
 private:
 	double* a;
@@ -33,19 +33,19 @@ private:
 	int lda;
 };
 
-template <class Task>
-LUPivMMTask<Task>::LUPivMMTask(double* a, double* b, double* c, int k, int lda)
+template <class Pheet>
+LUPivMMTask<Pheet>::LUPivMMTask(double* a, double* b, double* c, int k, int lda)
 : a(a), b(b), c(c), k(k), lda(lda) {
 
 }
 
-template <class Task>
-LUPivMMTask<Task>::~LUPivMMTask() {
+template <class Pheet>
+LUPivMMTask<Pheet>::~LUPivMMTask() {
 
 }
 
-template <class Task>
-void LUPivMMTask<Task>::operator()(typename Task::TEC& tec) {
+template <class Pheet>
+void LUPivMMTask<Pheet>::operator()() {
 	char trans_a = 'n';
 	char trans_b = 'n';
 	double alpha = -1.0;

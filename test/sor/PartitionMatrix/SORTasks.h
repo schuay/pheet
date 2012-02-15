@@ -9,7 +9,7 @@
 #ifndef SORTASK_H_
 #define SORTASK_H_
 
-#include "../../../settings.h"
+#include <pheet/pheet.h>
 #include "../../../misc/types.h"
 #include "../../../misc/atomics.h"
 #include "../../test_schedulers.h"

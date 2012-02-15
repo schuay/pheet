@@ -10,91 +10,94 @@
 #define IMPROVEDBRANCHBOUNDGRAPHBIPARTITIONING_H_
 
 #include "../graph_helpers.h"
+#include "ImprovedBranchBoundGraphBipartitioningSubproblem.h"
+#include "ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic.h"
 #include "ImprovedBranchBoundGraphBipartitioningPerformanceCounters.h"
+#include "ImprovedBranchBoundGraphBipartitioningTask.h"
 
 #include <iostream>
 
 namespace pheet {
 
-template <class Scheduler, class Logic, size_t MAX_SIZE = 64>
-class ImprovedBranchBoundGraphBipartitioning {
+template <class Pheet, template <class P, class SP> class Logic, size_t MaxSize = 64>
+class ImprovedBranchBoundGraphBipartitioningImpl {
 public:
-	ImprovedBranchBoundGraphBipartitioning(procs_t cpus, GraphVertex* data, size_t size);
-	~ImprovedBranchBoundGraphBipartitioning();
+	typedef ImprovedBranchBoundGraphBipartitioningImpl<Pheet, Logic, MaxSize> Self;
+	typedef GraphBipartitioningSolution<MaxSize> Solution;
+	typedef MaxReducer<Pheet, Solution> SolutionReducer;
+	typedef ImprovedBranchBoundGraphBipartitioningPerformanceCounters<Pheet> PerformanceCounters;
+	typedef ImprovedBranchBoundGraphBipartitioningSubproblem<Pheet, Logic, MaxSize> SubProblem;
+	typedef ImprovedBranchBoundGraphBipartitioningTask<Pheet, Logic, MaxSize> BBTask;
 
-	void partition();
-	GraphBipartitioningSolution<MAX_SIZE> const& get_solution();
+	template <template <class P, class SP> class NewLogic>
+		using WithLogic = ImprovedBranchBoundGraphBipartitioningImpl<Pheet, NewLogic, MaxSize>;
 
-	void print_results();
-	void print_headers();
+	template <size_t ms>
+		using WithMaxSize = ImprovedBranchBoundGraphBipartitioningImpl<Pheet, Logic, ms>;
 
-	static void print_scheduler_name();
+	ImprovedBranchBoundGraphBipartitioningImpl(GraphVertex* data, size_t size, Solution& solution, PerformanceCounters& pc);
+	~ImprovedBranchBoundGraphBipartitioningImpl();
 
-	static procs_t const max_cpus;
+	void operator()();
+
+	static void print_headers();
+	static void print_configuration();
+
 	static char const name[];
-	static char const * const scheduler_name;
 
 private:
 	GraphVertex* data;
 	size_t size;
-	typename Scheduler::CPUHierarchy cpu_hierarchy;
-	Scheduler scheduler;
-	GraphBipartitioningSolution<MAX_SIZE> solution;
-	ImprovedBranchBoundGraphBipartitioningPerformanceCounters<Scheduler> pc;
+	Solution& solution;
+	ImprovedBranchBoundGraphBipartitioningPerformanceCounters<Pheet> pc;
 };
 
-template <class Scheduler, class Logic, size_t MAX_SIZE>
-procs_t const ImprovedBranchBoundGraphBipartitioning<Scheduler, Logic, MAX_SIZE>::max_cpus = Scheduler::max_cpus;
+template <class Pheet, template <class P, class SP> class Logic, size_t MaxSize>
+char const ImprovedBranchBoundGraphBipartitioningImpl<Pheet, Logic, MaxSize>::name[] = "ImprovedBranchBoundGraphBipartitioning";
 
-template <class Scheduler, class Logic, size_t MAX_SIZE>
-char const ImprovedBranchBoundGraphBipartitioning<Scheduler, Logic, MAX_SIZE>::name[] = "ImprovedBranchBoundGraphBipartitioning";
-
-template <class Scheduler, class Logic, size_t MAX_SIZE>
-char const * const ImprovedBranchBoundGraphBipartitioning<Scheduler, Logic, MAX_SIZE>::scheduler_name = Scheduler::name;
-
-template <class Scheduler, class Logic, size_t MAX_SIZE>
-ImprovedBranchBoundGraphBipartitioning<Scheduler, Logic, MAX_SIZE>::ImprovedBranchBoundGraphBipartitioning(procs_t cpus, GraphVertex* data, size_t size)
-: data(data), size(size), cpu_hierarchy(cpus), scheduler(&cpu_hierarchy) {
+template <class Pheet, template <class P, class SP> class Logic, size_t MaxSize>
+ImprovedBranchBoundGraphBipartitioningImpl<Pheet, Logic, MaxSize>::ImprovedBranchBoundGraphBipartitioningImpl(GraphVertex* data, size_t size, Solution& solution, PerformanceCounters& pc)
+: data(data), size(size), solution(solution), pc(pc) {
 
 }
 
-template <class Scheduler, class Logic, size_t MAX_SIZE>
-ImprovedBranchBoundGraphBipartitioning<Scheduler, Logic, MAX_SIZE>::~ImprovedBranchBoundGraphBipartitioning() {
+template <class Pheet, template <class P, class SP> class Logic, size_t MaxSize>
+ImprovedBranchBoundGraphBipartitioningImpl<Pheet, Logic, MaxSize>::~ImprovedBranchBoundGraphBipartitioningImpl() {
 
 }
 
-template <class Scheduler, class Logic, size_t MAX_SIZE>
-void ImprovedBranchBoundGraphBipartitioning<Scheduler, Logic, MAX_SIZE>::partition() {
-	scheduler.template finish<ImprovedBranchBoundGraphBipartitioningRootTask<typename Scheduler::Task, Logic, MAX_SIZE> >(data, size, &solution, pc);
-	MEMORY_FENCE();
+template <class Pheet, template <class P, class SP> class Logic, size_t MaxSize>
+void ImprovedBranchBoundGraphBipartitioningImpl<Pheet, Logic, MaxSize>::operator()() {
+	SolutionReducer best;
+
+	size_t ub = std::numeric_limits< size_t >::max();
+
+	size_t k = size >> 1;
+	SubProblem* prob = new SubProblem(data, size, k);
+	Pheet::template
+		finish<BBTask>(prob, &ub, best, pc);
+
+	solution = best.get_max();
+	assert(solution.weight == ub);
+	assert(ub != std::numeric_limits< size_t >::max());
+	assert(solution.weight != std::numeric_limits< size_t >::max());
+	assert(solution.sets[0].count() == k);
+	assert(solution.sets[1].count() == size - k);
 }
 
-template <class Scheduler, class Logic, size_t MAX_SIZE>
-GraphBipartitioningSolution<MAX_SIZE> const& ImprovedBranchBoundGraphBipartitioning<Scheduler, Logic, MAX_SIZE>::get_solution() {
-	return solution;
-}
-
-template <class Scheduler, class Logic, size_t MAX_SIZE>
-void ImprovedBranchBoundGraphBipartitioning<Scheduler, Logic, MAX_SIZE>::print_results() {
-	Logic::print_name();
+template <class Pheet, template <class P, class SP> class Logic, size_t MaxSize>
+void ImprovedBranchBoundGraphBipartitioningImpl<Pheet, Logic, MaxSize>::print_configuration() {
+	Logic<Pheet, SubProblem>::print_name();
 	std::cout << "\t";
-//	std::cout << LowerBound::name << "\t" << NextVertex::name << "\t";
-	scheduler.print_performance_counter_values();
-	pc.print_values();
 }
 
-template <class Scheduler, class Logic, size_t MAX_SIZE>
-void ImprovedBranchBoundGraphBipartitioning<Scheduler, Logic, MAX_SIZE>::print_headers() {
+template <class Pheet, template <class P, class SP> class Logic, size_t MaxSize>
+void ImprovedBranchBoundGraphBipartitioningImpl<Pheet, Logic, MaxSize>::print_headers() {
 	std::cout << "logic\t";
-//	std::cout << "lower_bound\tnext_vertex\t";
-	scheduler.print_performance_counter_headers();
-	pc.print_headers();
 }
 
-template <class Scheduler, class Logic, size_t MAX_SIZE>
-void ImprovedBranchBoundGraphBipartitioning<Scheduler, Logic, MAX_SIZE>::print_scheduler_name() {
-	Scheduler::print_name();
-}
+template <class Pheet>
+using ImprovedBranchBoundGraphBipartitioning = ImprovedBranchBoundGraphBipartitioningImpl<Pheet, ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic, 64>;
 
 
 }

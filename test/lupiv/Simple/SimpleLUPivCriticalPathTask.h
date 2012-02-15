@@ -21,13 +21,13 @@ void dgetf2_(int *m, int *n, double *a, int *lda, int *piv, int *info);
 
 namespace pheet {
 
-template <class Task, int BLOCK_SIZE>
-class SimpleLUPivCriticalPathTask : public Task {
+template <class Pheet, int BLOCK_SIZE>
+class SimpleLUPivCriticalPathTask : public Pheet::Task {
 public:
 	SimpleLUPivCriticalPathTask(double* a, double* lu_col, int* pivot, int m, int lda, int n);
 	virtual ~SimpleLUPivCriticalPathTask();
 
-	virtual void operator()(typename Task::TEC& tec);
+	virtual void operator()();
 
 private:
 	double* a;
@@ -38,24 +38,24 @@ private:
 	int n;
 };
 
-template <class Task, int BLOCK_SIZE>
-SimpleLUPivCriticalPathTask<Task, BLOCK_SIZE>::SimpleLUPivCriticalPathTask(double* a, double* lu_col, int* pivot, int m, int lda, int n)
+template <class Pheet, int BLOCK_SIZE>
+SimpleLUPivCriticalPathTask<Pheet, BLOCK_SIZE>::SimpleLUPivCriticalPathTask(double* a, double* lu_col, int* pivot, int m, int lda, int n)
 : a(a), lu_col(lu_col), pivot(pivot), m(m), lda(lda), n(n) {
 
 }
 
-template <class Task, int BLOCK_SIZE>
-SimpleLUPivCriticalPathTask<Task, BLOCK_SIZE>::~SimpleLUPivCriticalPathTask() {
+template <class Pheet, int BLOCK_SIZE>
+SimpleLUPivCriticalPathTask<Pheet, BLOCK_SIZE>::~SimpleLUPivCriticalPathTask() {
 
 }
 
-template <class Task, int BLOCK_SIZE>
-void SimpleLUPivCriticalPathTask<Task, BLOCK_SIZE>::operator()(typename Task::TEC& tec) {
+template <class Pheet, int BLOCK_SIZE>
+void SimpleLUPivCriticalPathTask<Pheet, BLOCK_SIZE>::operator()() {
 	assert(n <= BLOCK_SIZE);
 
 	// Apply pivot to column
-	tec.template
-		call<LUPivPivotTask<Task> >(a, pivot, std::min(m, BLOCK_SIZE), lda, n);
+	Pheet::template
+		call<LUPivPivotTask<Pheet> >(a, pivot, std::min(m, BLOCK_SIZE), lda, n);
 
 	int k = std::min(std::min(m, n), BLOCK_SIZE);
 
@@ -70,12 +70,12 @@ void SimpleLUPivCriticalPathTask<Task, BLOCK_SIZE>::operator()(typename Task::TE
 
 	int num_blocks = m / BLOCK_SIZE;
 
-	{typename Task::Finish f(tec);
+	{typename Pheet::Finish f;
 		// Apply matrix multiplication to all other blocks
 		for(int i = 1; i < num_blocks; ++i) {
 			int pos = i * BLOCK_SIZE;
-			tec.template
-				spawn<LUPivMMTask<Task> >(lu_col + pos, a, a + pos, k, lda);
+			Pheet::template
+				spawn<LUPivMMTask<Pheet> >(lu_col + pos, a, a + pos, k, lda);
 		}
 	}
 

@@ -9,7 +9,7 @@
 #ifndef MIXEDMODEQUICKSORTTASK_H_
 #define MIXEDMODEQUICKSORTTASK_H_
 
-#include "../../../settings.h"
+#include <pheet/pheet.h>
 #include "../MixedMode/MixedModeQuicksortTask.h"
 #include "../../../primitives/Backoff/Exponential/ExponentialBackoff.h"
 #include "../../../primitives/Barrier/Simple/SimpleBarrier.h"

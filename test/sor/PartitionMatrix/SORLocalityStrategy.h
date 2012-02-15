@@ -9,8 +9,8 @@
 #ifndef SORLOCALITYSTRATEGY_H_
 #define SORLOCALITYSTRATEGY_H_
 
-#include "../../../settings.h"
-#include "../../../sched/strategies/BaseStrategy.h"
+#include <pheet/pheet.h>
+#include <pheet/sched/strategies/BaseStrategy.h>
 
 namespace pheet {
 

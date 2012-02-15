@@ -9,8 +9,10 @@
 #ifndef GRAPHBIPARTITIONINGTESTS_H_
 #define GRAPHBIPARTITIONINGTESTS_H_
 
+#ifdef GRAPH_BIPARTITIONING_TEST
 #include "GraphBipartitioningTest.h"
 #include "../test_settings.h"
+#endif
 
 /*
  *
@@ -31,6 +33,7 @@ private:
 
 template <class Pheet, template <class P> class Partitioner>
 void GraphBipartitioningTests::run_partitioner() {
+#ifdef GRAPH_BIPARTITIONING_TEST
 	for(size_t t = 0; t < sizeof(graph_bipartitioning_test_types)/sizeof(graph_bipartitioning_test_types[0]); t++) {
 		for(size_t pr = 0; pr < sizeof(graph_bipartitioning_test_problems)/sizeof(graph_bipartitioning_test_problems[0]); pr++) {
 /*			for(size_t n = 0; n < sizeof(graph_bipartitioning_test_n)/sizeof(graph_bipartitioning_test_n[0]); n++) {
@@ -50,6 +53,7 @@ void GraphBipartitioningTests::run_partitioner() {
 			}
 		}
 	}
+#endif
 }
 
 }

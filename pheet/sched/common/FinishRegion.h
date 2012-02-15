@@ -14,27 +14,23 @@
  */
 namespace pheet {
 
-template <class Sched>
+template <class Pheet>
 class FinishRegion {
 public:
-	typedef Sched Scheduler;
-
-	FinishRegion(typename Scheduler::TaskExecutionContext& tec);
+	FinishRegion();
 	~FinishRegion();
 
 private:
-	typename Scheduler::TaskExecutionContext& tec;
 };
 
-template <class Sched>
-FinishRegion<Sched>::FinishRegion(typename Scheduler::TaskExecutionContext& tec)
-	:tec(tec) {
-	tec.start_finish_region();
+template <class Pheet>
+FinishRegion<Pheet>::FinishRegion() {
+	Pheet::Environment::get_place()->start_finish_region();
 }
 
-template <class Sched>
-FinishRegion<Sched>::~FinishRegion() {
-	tec.end_finish_region();
+template <class Pheet>
+FinishRegion<Pheet>::~FinishRegion() {
+	Pheet::Environment::get_place()->end_finish_region();
 }
 
 }

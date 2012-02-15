@@ -9,7 +9,7 @@
 #ifndef INAROWGAME_H_
 #define INAROWGAME_H_
 
-#include "../../../settings.h"
+#include <pheet/pheet.h>
 #include "InARowGameTask.h"
 
 #include <iostream>

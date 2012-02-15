@@ -21,17 +21,17 @@ void dtrsm_(char *side, char *uplo, char* transa, char* diag, int *m, int *n, do
 
 namespace pheet {
 
-template <class Task, int BLOCK_SIZE>
-class LocalityStrategyLUPivStandardPathTask : public Task {
+template <class Pheet, int BLOCK_SIZE>
+class LocalityStrategyLUPivStandardPathTask : public Pheet::Task {
 public:
-	LocalityStrategyLUPivStandardPathTask(typename Task::TEC** owner_info, typename Task::TEC** block_owners, double* a, double* lu_col, int* pivot, int m, int lda, int n);
+	LocalityStrategyLUPivStandardPathTask(typename Pheet::Place** owner_info, typename Pheet::Place** block_owners, double* a, double* lu_col, int* pivot, int m, int lda, int n);
 	virtual ~LocalityStrategyLUPivStandardPathTask();
 
-	virtual void operator()(typename Task::TEC& tec);
+	virtual void operator()();
 
 private:
-	typename Task::TEC** owner_info;
-	typename Task::TEC** block_owners;
+	typename Pheet::Place** owner_info;
+	typename Pheet::Place** block_owners;
 	double* a;
 	double* lu_col;
 	int* pivot;
@@ -40,24 +40,24 @@ private:
 	int n;
 };
 
-template <class Task, int BLOCK_SIZE>
-LocalityStrategyLUPivStandardPathTask<Task, BLOCK_SIZE>::LocalityStrategyLUPivStandardPathTask(typename Task::TEC** owner_info, typename Task::TEC** block_owners, double* a, double* lu_col, int* pivot, int m, int lda, int n)
+template <class Pheet, int BLOCK_SIZE>
+LocalityStrategyLUPivStandardPathTask<Pheet, BLOCK_SIZE>::LocalityStrategyLUPivStandardPathTask(typename Pheet::Place** owner_info, typename Pheet::Place** block_owners, double* a, double* lu_col, int* pivot, int m, int lda, int n)
 : owner_info(owner_info), block_owners(block_owners), a(a), lu_col(lu_col), pivot(pivot), m(m), lda(lda), n(n) {
 
 }
 
-template <class Task, int BLOCK_SIZE>
-LocalityStrategyLUPivStandardPathTask<Task, BLOCK_SIZE>::~LocalityStrategyLUPivStandardPathTask() {
+template <class Pheet, int BLOCK_SIZE>
+LocalityStrategyLUPivStandardPathTask<Pheet, BLOCK_SIZE>::~LocalityStrategyLUPivStandardPathTask() {
 
 }
 
-template <class Task, int BLOCK_SIZE>
-void LocalityStrategyLUPivStandardPathTask<Task, BLOCK_SIZE>::operator()(typename Task::TEC& tec) {
+template <class Pheet, int BLOCK_SIZE>
+void LocalityStrategyLUPivStandardPathTask<Pheet, BLOCK_SIZE>::operator()() {
 	assert(n <= BLOCK_SIZE);
 
 	// Apply pivot to column
-	tec.template
-		call<LUPivPivotTask<Task> >(a, pivot, std::min(m, BLOCK_SIZE), lda, n);
+	Pheet::template
+		call<LUPivPivotTask<Pheet> >(a, pivot, std::min(m, BLOCK_SIZE), lda, n);
 
 	int k = std::min(std::min(m, n), BLOCK_SIZE);
 
@@ -75,9 +75,9 @@ void LocalityStrategyLUPivStandardPathTask<Task, BLOCK_SIZE>::operator()(typenam
 
 	for(int i = 1; i < num_blocks; ++i) {
 		int pos = i * BLOCK_SIZE;
-		tec.template
-			spawn_prio<LocalityStrategyLUPivMMTask<Task> >(
-					LUPivLocalityStrategy<typename Task::Scheduler>(block_owners[i], 4, 2),
+		Pheet::template
+			spawn_prio<LocalityStrategyLUPivMMTask<Pheet> >(
+					LUPivLocalityStrategy<Pheet>(block_owners[i], 4, 2),
 					block_owners + i,
 					lu_col + pos, a, a + pos, k, lda);
 	}

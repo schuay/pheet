@@ -9,7 +9,7 @@
 #ifndef SORRUN_H_
 #define SORRUN_H_
 
-#include "../../../settings.h"
+#include <pheet/pheet.h>
 #include "SORTasks.h"
 #include <boost/random/uniform_real.hpp>
 #include <boost/random/variate_generator.hpp>

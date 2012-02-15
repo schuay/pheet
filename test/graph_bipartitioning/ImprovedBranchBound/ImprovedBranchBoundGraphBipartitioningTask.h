@@ -14,52 +14,56 @@
 
 namespace pheet {
 
-template <class Task, class Logic, size_t MAX_SIZE = 64>
-class ImprovedBranchBoundGraphBipartitioningTask : public Task {
+template <class Pheet, template <class P, class SP> class Logic, size_t MaxSize = 64>
+class ImprovedBranchBoundGraphBipartitioningTask : public Pheet::Task {
 public:
-	typedef ImprovedBranchBoundGraphBipartitioningTask<Task, Logic, MAX_SIZE> BBTask;
-	typedef ExponentialBackoff<> Backoff;
+	typedef ImprovedBranchBoundGraphBipartitioningTask<Pheet, Logic, MaxSize> Self;
+	typedef GraphBipartitioningSolution<MaxSize> Solution;
+	typedef MaxReducer<Pheet, Solution> SolutionReducer;
+	typedef ImprovedBranchBoundGraphBipartitioningPerformanceCounters<Pheet> PerformanceCounters;
+	typedef ImprovedBranchBoundGraphBipartitioningSubproblem<Pheet, Logic, MaxSize> SubProblem;
 
-	ImprovedBranchBoundGraphBipartitioningTask(ImprovedBranchBoundGraphBipartitioningSubproblem<typename Task::Scheduler, Logic, MAX_SIZE>* sub_problem, size_t* upper_bound, MaxReducer<typename Task::Scheduler, GraphBipartitioningSolution<MAX_SIZE> >& best, ImprovedBranchBoundGraphBipartitioningPerformanceCounters<typename Task::Scheduler>& pc);
+	ImprovedBranchBoundGraphBipartitioningTask(SubProblem* sub_problem, size_t* upper_bound, SolutionReducer& best, PerformanceCounters& pc);
 	virtual ~ImprovedBranchBoundGraphBipartitioningTask();
 
-	virtual void operator()(typename Task::TEC& tec);
+	virtual void operator()();
 
 private:
-	ImprovedBranchBoundGraphBipartitioningSubproblem<typename Task::Scheduler, Logic, MAX_SIZE>* sub_problem;
+	SubProblem* sub_problem;
 	size_t* upper_bound;
-	MaxReducer<typename Task::Scheduler, GraphBipartitioningSolution<MAX_SIZE> > best;
-	ImprovedBranchBoundGraphBipartitioningPerformanceCounters<typename Task::Scheduler> pc;
+	SolutionReducer best;
+	PerformanceCounters pc;
 };
 
-template <class Task, class Logic, size_t MAX_SIZE>
-ImprovedBranchBoundGraphBipartitioningTask<Task, Logic, MAX_SIZE>::ImprovedBranchBoundGraphBipartitioningTask(ImprovedBranchBoundGraphBipartitioningSubproblem<typename Task::Scheduler, Logic, MAX_SIZE>* sub_problem, size_t* upper_bound, MaxReducer<typename Task::Scheduler, GraphBipartitioningSolution<MAX_SIZE> >& best, ImprovedBranchBoundGraphBipartitioningPerformanceCounters<typename Task::Scheduler>& pc)
+template <class Pheet, template <class P, class SP> class Logic, size_t MaxSize>
+ImprovedBranchBoundGraphBipartitioningTask<Pheet, Logic, MaxSize>::ImprovedBranchBoundGraphBipartitioningTask(SubProblem* sub_problem, size_t* upper_bound, SolutionReducer& best, PerformanceCounters& pc)
 : sub_problem(sub_problem), upper_bound(upper_bound), best(best), pc(pc) {
 
 }
 
-template <class Task, class Logic, size_t MAX_SIZE>
-ImprovedBranchBoundGraphBipartitioningTask<Task, Logic, MAX_SIZE>::~ImprovedBranchBoundGraphBipartitioningTask() {
+template <class Pheet, template <class P, class SP> class Logic, size_t MaxSize>
+ImprovedBranchBoundGraphBipartitioningTask<Pheet, Logic, MaxSize>::~ImprovedBranchBoundGraphBipartitioningTask() {
 	if(sub_problem != NULL) {
 		delete sub_problem;
 	}
 }
 
-template <class Task, class Logic, size_t MAX_SIZE>
-void ImprovedBranchBoundGraphBipartitioningTask<Task, Logic, MAX_SIZE>::operator()(typename Task::TEC& tec) {
+template <class Pheet, template <class P, class SP> class Logic, size_t MaxSize>
+void ImprovedBranchBoundGraphBipartitioningTask<Pheet, Logic, MaxSize>::operator()() {
 	if(sub_problem->get_lower_bound() >= *upper_bound) {
 		pc.num_irrelevant_tasks.incr();
 		return;
 	}
 
-	ImprovedBranchBoundGraphBipartitioningSubproblem<typename Task::Scheduler, Logic, MAX_SIZE>* sub_problem2 =
+	SubProblem* sub_problem2 =
 			sub_problem->split(pc.subproblem_pc);
 
 	if(sub_problem->is_solution()) {
 		sub_problem->update_solution(upper_bound, best, pc.subproblem_pc);
 	}
 	else if(sub_problem->get_lower_bound() < *upper_bound) {
-		tec.template spawn<BBTask>(sub_problem, upper_bound, best, pc);
+		Pheet::template
+			spawn<Self>(sub_problem, upper_bound, best, pc);
 		// Make sure subproblem doesn't get deleted in destructor
 		sub_problem = NULL;
 	}
@@ -69,7 +73,8 @@ void ImprovedBranchBoundGraphBipartitioningTask<Task, Logic, MAX_SIZE>::operator
 		delete sub_problem2;
 	}
 	else if(sub_problem2->get_lower_bound() < *upper_bound) {
-		tec.template call<BBTask>(sub_problem2, upper_bound, best, pc);
+		Pheet::template
+			call<Self>(sub_problem2, upper_bound, best, pc);
 	}
 	else {
 		delete sub_problem2;

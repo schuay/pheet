@@ -127,7 +127,8 @@ void ImprovedBranchBoundGraphBipartitioningSubproblem<Pheet, LogicT, MaxSize>::u
 	}
 	size_t cut = logic.get_cut();
 	size_t old_ub = *upper_bound;
-	if(cut < old_ub) {
+
+	while(cut < old_ub) {
 		if(SIZET_CAS(upper_bound, old_ub, cut)) {
 			pc.num_upper_bound_changes.incr();
 			GraphBipartitioningSolution<MaxSize> my_best;
@@ -135,6 +136,9 @@ void ImprovedBranchBoundGraphBipartitioningSubproblem<Pheet, LogicT, MaxSize>::u
 			my_best.sets[0] = sets[0];
 			my_best.sets[1] = sets[1];
 			best.add_value(my_best);
+		}
+		else {
+			old_ub = *upper_bound;
 		}
 	}
 }

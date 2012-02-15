@@ -9,7 +9,7 @@
 #ifndef PARALLELRECURSIVENQUEENSTASK_H_
 #define PARALLELRECURSIVENQUEENSTASK_H_
 
-#include "../../../settings.h"
+#include <pheet/pheet.h>
 #include "../../../misc/atomics.h"
 
 #include <cassert>

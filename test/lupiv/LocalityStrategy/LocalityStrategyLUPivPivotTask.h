@@ -9,7 +9,7 @@
 #ifndef LOCALITYSTRATEGYLUPIVPIVOTTASK_H_
 #define LOCALITYSTRATEGYLUPIVPIVOTTASK_H_
 
-#include "../../../settings.h"
+#include <pheet/pheet.h>
 
 extern "C" {
 void dswap_(int* n, double* sx, int* incx, double* sy, int* incy);
@@ -17,16 +17,16 @@ void dswap_(int* n, double* sx, int* incx, double* sy, int* incy);
 
 namespace pheet {
 
-template <class Task>
-class LocalityStrategyLUPivPivotTask : public Task {
+template <class Pheet>
+class LocalityStrategyLUPivPivotTask : public Pheet::Task {
 public:
-	LocalityStrategyLUPivPivotTask(typename Task::TEC** owner_info, double* a, int* pivot, int m, int lda, int n);
+	LocalityStrategyLUPivPivotTask(typename Pheet::Place** owner_info, double* a, int* pivot, int m, int lda, int n);
 	virtual ~LocalityStrategyLUPivPivotTask();
 
-	virtual void operator()(typename Task::TEC& tec);
+	virtual void operator()();
 
 private:
-	typename Task::TEC** owner_info;
+	typename Pheet::Place** owner_info;
 	double* a;
 	int* pivot;
 	int m;
@@ -34,20 +34,20 @@ private:
 	int n;
 };
 
-template <class Task>
-LocalityStrategyLUPivPivotTask<Task>::LocalityStrategyLUPivPivotTask(typename Task::TEC** owner_info, double* a, int* pivot, int m, int lda, int n)
+template <class Pheet>
+LocalityStrategyLUPivPivotTask<Pheet>::LocalityStrategyLUPivPivotTask(typename Pheet::Place** owner_info, double* a, int* pivot, int m, int lda, int n)
 : owner_info(owner_info), a(a), pivot(pivot), m(m), lda(lda), n(n) {
 
 }
 
-template <class Task>
-LocalityStrategyLUPivPivotTask<Task>::~LocalityStrategyLUPivPivotTask() {
+template <class Pheet>
+LocalityStrategyLUPivPivotTask<Pheet>::~LocalityStrategyLUPivPivotTask() {
 
 }
 
-template <class Task>
-void LocalityStrategyLUPivPivotTask<Task>::operator()(typename Task::TEC& tec) {
-	(*owner_info) = &tec;
+template <class Pheet>
+void LocalityStrategyLUPivPivotTask<Pheet>::operator()() {
+	(*owner_info) = Pheet::get_place();
 
 	for(int j = 0; j < m; ++j) {
 		if(pivot[j] != j + 1) {

@@ -9,7 +9,7 @@
 #ifndef LOCALITYSTRATEGYLUPIVMMTASK_H_
 #define LOCALITYSTRATEGYLUPIVMMTASK_H_
 
-#include "../../../settings.h"
+#include <pheet/pheet.h>
 
 extern "C" {
 void dgemm_(char * transA, char* transB, int* m, int* n, int* k, double* alpha, double* a, int* lda, double* b, int* ldb, double* beta, double* c, int* ldc);
@@ -17,16 +17,16 @@ void dgemm_(char * transA, char* transB, int* m, int* n, int* k, double* alpha, 
 
 namespace pheet {
 
-template <class Task>
-class LocalityStrategyLUPivMMTask : public Task {
+template <class Pheet>
+class LocalityStrategyLUPivMMTask : public Pheet::Task {
 public:
-	LocalityStrategyLUPivMMTask(typename Task::TEC** owner_info, double* a, double* b, double* c, int k, int lda);
+	LocalityStrategyLUPivMMTask(typename Pheet::Place** owner_info, double* a, double* b, double* c, int k, int lda);
 	virtual ~LocalityStrategyLUPivMMTask();
 
-	virtual void operator()(typename Task::TEC& tec);
+	virtual void operator()();
 
 private:
-	typename Task::TEC** owner_info;
+	typename Pheet::Place** owner_info;
 	double* a;
 	double* b;
 	double* c;
@@ -34,20 +34,20 @@ private:
 	int lda;
 };
 
-template <class Task>
-LocalityStrategyLUPivMMTask<Task>::LocalityStrategyLUPivMMTask(typename Task::TEC** owner_info, double* a, double* b, double* c, int k, int lda)
+template <class Pheet>
+LocalityStrategyLUPivMMTask<Pheet>::LocalityStrategyLUPivMMTask(typename Pheet::Place** owner_info, double* a, double* b, double* c, int k, int lda)
 : owner_info(owner_info), a(a), b(b), c(c), k(k), lda(lda) {
 
 }
 
-template <class Task>
-LocalityStrategyLUPivMMTask<Task>::~LocalityStrategyLUPivMMTask() {
+template <class Pheet>
+LocalityStrategyLUPivMMTask<Pheet>::~LocalityStrategyLUPivMMTask() {
 
 }
 
-template <class Task>
-void LocalityStrategyLUPivMMTask<Task>::operator()(typename Task::TEC& tec) {
-	(*owner_info) = &tec;
+template <class Pheet>
+void LocalityStrategyLUPivMMTask<Pheet>::operator()() {
+	(*owner_info) = Pheet::get_place();
 
 	char trans_a = 'n';
 	char trans_b = 'n';
