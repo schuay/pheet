@@ -43,7 +43,7 @@ private:
 template <class Pheet, class Monoid>
 template <typename ... ConsParams>
 OrderedReducer<Pheet, Monoid>::OrderedReducer(ConsParams&& ... params)
-:my_view(new View(static_cast<ConsParams&&>(params) ...)), parent_view(NULL), place_id(Pheet::get_place_id())
+:my_view(new View(std::forward<ConsParams&&>(params) ...)), parent_view(NULL), place_id(Pheet::get_place_id())
 {
 
 }
@@ -94,7 +94,7 @@ template <class Pheet, class Monoid>
 template <typename ... PutParams>
 void OrderedReducer<Pheet, Monoid>::add_data(PutParams&& ... params) {
 	my_view = my_view->fold();
-	my_view->add_data(static_cast<PutParams&&>(params) ...);
+	my_view->add_data(std::forward<PutParams&&>(params) ...);
 }
 
 template <class Pheet, class Monoid>

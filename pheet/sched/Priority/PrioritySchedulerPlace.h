@@ -753,7 +753,7 @@ template<class CallTaskType, typename ... TaskParams>
 void PrioritySchedulerPlace<Pheet, CallThreshold>::finish(TaskParams&& ... params) {
 	start_finish_region();
 
-	call<CallTaskType>(static_cast<TaskParams&&>(params) ...);
+	call<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 
 	end_finish_region();
 }
@@ -763,7 +763,7 @@ template<typename F, typename ... TaskParams>
 void PrioritySchedulerPlace<Pheet, CallThreshold>::finish(F&& f, TaskParams&& ... params) {
 	start_finish_region();
 
-	call(f, static_cast<TaskParams&&>(params) ...);
+	call(f, std::forward<TaskParams&&>(params) ...);
 
 	end_finish_region();
 }
@@ -771,13 +771,13 @@ void PrioritySchedulerPlace<Pheet, CallThreshold>::finish(F&& f, TaskParams&& ..
 template <class Pheet, uint8_t CallThreshold>
 template<class CallTaskType, typename ... TaskParams>
 void PrioritySchedulerPlace<Pheet, CallThreshold>::spawn(TaskParams&& ... params) {
-	spawn_prio<CallTaskType>(DefaultStrategy(), static_cast<TaskParams&&>(params) ...);
+	spawn_prio<CallTaskType>(DefaultStrategy(), std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, uint8_t CallThreshold>
 template<typename F, typename ... TaskParams>
 void PrioritySchedulerPlace<Pheet, CallThreshold>::spawn(F&& f, TaskParams&& ... params) {
-	spawn_prio(DefaultStrategy(), f, static_cast<TaskParams&&>(params) ...);
+	spawn_prio(DefaultStrategy(), f, std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, uint8_t CallThreshold>
@@ -788,7 +788,7 @@ void PrioritySchedulerPlace<Pheet, CallThreshold>::spawn_prio(Strategy s, TaskPa
 	if(task_storage.is_full(performance_counters.task_storage_performance_counters)) {
 		// Rigid limit in case the data-structure can not grow
 		performance_counters.num_spawns_to_call.incr();
-		call<CallTaskType>(static_cast<TaskParams&&>(params) ...);
+		call<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 	}
 	else {
 		// Limit dependent on currently not executed tasks of the current finish_stack element
@@ -799,7 +799,7 @@ void PrioritySchedulerPlace<Pheet, CallThreshold>::spawn_prio(Strategy s, TaskPa
 		if(blocking_finish_depth >= limit || current_tasks >= (limit - blocking_finish_depth)) {
 			call_mode = true;
 			performance_counters.num_spawns_to_call.incr();
-			call<CallTaskType>(static_cast<TaskParams&&>(params) ...);
+			call<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 		}
 		else {
 			call_mode = false;
@@ -824,7 +824,7 @@ void PrioritySchedulerPlace<Pheet, CallThreshold>::spawn_prio(Strategy s, F&& f,
 	if(task_storage.is_full(performance_counters.task_storage_performance_counters)) {
 		// Rigid limit in case the data-structure can not grow
 		performance_counters.num_spawns_to_call.incr();
-		call(f, static_cast<TaskParams&&>(params) ...);
+		call(f, std::forward<TaskParams&&>(params) ...);
 	}
 	else {
 		// Limit dependent on currently not executed tasks of the current finish_stack element
@@ -835,7 +835,7 @@ void PrioritySchedulerPlace<Pheet, CallThreshold>::spawn_prio(Strategy s, F&& f,
 		if(blocking_finish_depth >= limit || current_tasks >= (limit - blocking_finish_depth)) {
 			call_mode = true;
 			performance_counters.num_spawns_to_call.incr();
-			call(f, static_cast<TaskParams&&>(params) ...);
+			call(f, std::forward<TaskParams&&>(params) ...);
 		}
 		else {
 			call_mode = false;
@@ -859,7 +859,7 @@ template<class CallTaskType, typename ... TaskParams>
 void PrioritySchedulerPlace<Pheet, CallThreshold>::call(TaskParams&& ... params) {
 	performance_counters.num_calls.incr();
 	// Create task
-	CallTaskType task(static_cast<TaskParams&&>(params) ...);
+	CallTaskType task(std::forward<TaskParams&&>(params) ...);
 	// Execute task
 	task();
 }
@@ -869,7 +869,7 @@ template<typename F, typename ... TaskParams>
 void PrioritySchedulerPlace<Pheet, CallThreshold>::call(F&& f, TaskParams&& ... params) {
 	performance_counters.num_calls.incr();
 	// Execute task
-	f(static_cast<TaskParams&&>(params) ...);
+	f(std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, uint8_t CallThreshold>

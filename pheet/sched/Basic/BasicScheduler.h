@@ -190,7 +190,7 @@ template<class CallTaskType, typename ... TaskParams>
 void BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::finish(TaskParams&& ... params) {
 	Place* p = get_place();
 	pheet_assert(p != NULL);
-	p->finish<CallTaskType>(static_cast<TaskParams&&>(params) ...);
+	p->finish<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
@@ -198,7 +198,7 @@ template<typename F, typename ... TaskParams>
 void BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::finish(F&& f, TaskParams&& ... params) {
 	Place* p = get_place();
 	pheet_assert(p != NULL);
-	p->finish(f, static_cast<TaskParams&&>(params) ...);
+	p->finish(f, std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
@@ -206,7 +206,7 @@ template<class CallTaskType, typename ... TaskParams>
 void BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::spawn(TaskParams&& ... params) {
 	Place* p = get_place();
 	pheet_assert(p != NULL);
-	p->spawn<CallTaskType>(static_cast<TaskParams&&>(params) ...);
+	p->spawn<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
@@ -214,19 +214,19 @@ template<typename F, typename ... TaskParams>
 void BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::spawn(F&& f, TaskParams&& ... params) {
 	Place* p = get_place();
 	pheet_assert(p != NULL);
-	p->spawn(f, static_cast<TaskParams&&>(params) ...);
+	p->spawn(f, std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
 template<class CallTaskType, class Strategy, typename ... TaskParams>
 void BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::spawn_prio(Strategy s, TaskParams&& ... params) {
-	this->spawn<CallTaskType>(static_cast<TaskParams&&>(params) ...);
+	this->spawn<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
 template<class Strategy, typename F, typename ... TaskParams>
 void BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::spawn_prio(Strategy s, F&& f, TaskParams&& ... params) {
-	this->spawn(f, static_cast<TaskParams&&>(params) ...);
+	this->spawn(f, std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
@@ -234,7 +234,7 @@ template<class CallTaskType, typename ... TaskParams>
 void BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::call(TaskParams&& ... params) {
 	Place* p = get_place();
 	pheet_assert(p != NULL);
-	p->call<CallTaskType>(static_cast<TaskParams&&>(params) ...);
+	p->call<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
@@ -242,7 +242,7 @@ template<typename F, typename ... TaskParams>
 void BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::call(F&& f, TaskParams&& ... params) {
 	Place* p = get_place();
 	pheet_assert(p != NULL);
-	p->call(f, static_cast<TaskParams&&>(params) ...);
+	p->call(f, std::forward<TaskParams&&>(params) ...);
 }
 
 template<class Pheet, typename T>

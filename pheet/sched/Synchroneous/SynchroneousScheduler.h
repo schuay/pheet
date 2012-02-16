@@ -144,53 +144,53 @@ void SynchroneousScheduler<Pheet>::print_name() {
 template <class Pheet>
 template<class CallTaskType, typename ... TaskParams>
 void SynchroneousScheduler<Pheet>::finish(TaskParams&& ... params) {
-	CallTaskType task(static_cast<TaskParams&&>(params) ...);
+	CallTaskType task(std::forward<TaskParams&&>(params) ...);
 	task();
 }
 
 template <class Pheet>
 template<typename F, typename ... TaskParams>
 void SynchroneousScheduler<Pheet>::finish(F&& f, TaskParams&& ... params) {
-	f(static_cast<TaskParams&&>(params) ...);
+	f(std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet>
 template<class CallTaskType, typename ... TaskParams>
 void SynchroneousScheduler<Pheet>::spawn(TaskParams&& ... params) {
-	CallTaskType task(static_cast<TaskParams&&>(params) ...);
+	CallTaskType task(std::forward<TaskParams&&>(params) ...);
 	task();
 }
 
 template <class Pheet>
 template<typename F, typename ... TaskParams>
 void SynchroneousScheduler<Pheet>::spawn(F&& f, TaskParams&& ... params) {
-	f(static_cast<TaskParams&&>(params) ...);
+	f(std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet>
 template<class CallTaskType, typename ... TaskParams>
 void SynchroneousScheduler<Pheet>::call(TaskParams&& ... params) {
-	CallTaskType task(static_cast<TaskParams&&>(params) ...);
+	CallTaskType task(std::forward<TaskParams&&>(params) ...);
 	task();
 }
 
 template <class Pheet>
 template<typename F, typename ... TaskParams>
 void SynchroneousScheduler<Pheet>::call(F&& f, TaskParams&& ... params) {
-	f(static_cast<TaskParams&&>(params) ...);
+	f(std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet>
 template<class CallTaskType, class Strategy, typename ... TaskParams>
 void SynchroneousScheduler<Pheet>::spawn_prio(Strategy s, TaskParams&& ... params) {
-	CallTaskType task(static_cast<TaskParams&&>(params) ...);
+	CallTaskType task(std::forward<TaskParams&&>(params) ...);
 	task();
 }
 
 template <class Pheet>
 template<class Strategy, typename F, typename ... TaskParams>
 void SynchroneousScheduler<Pheet>::spawn_prio(Strategy s, F&& f, TaskParams&& ... params) {
-	f(static_cast<TaskParams&&>(params) ...);
+	f(std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet>

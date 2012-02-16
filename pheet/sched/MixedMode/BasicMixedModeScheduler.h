@@ -163,13 +163,13 @@ void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::i
 template <class CPUHierarchyT, template <class Scheduler, typename T> class StealingDeque, class Barrier, class BackoffT>
 template<class CallTaskType, typename ... TaskParams>
 void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::finish(TaskParams&& ... params) {
-	finish_nt<CallTaskType, TaskParams ...>((procs_t)1, static_cast<TaskParams&&>(params) ...);
+	finish_nt<CallTaskType, TaskParams ...>((procs_t)1, std::forward<TaskParams&&>(params) ...);
 }
 
 template <class CPUHierarchyT, template <class Scheduler, typename T> class StealingDeque, class Barrier, class BackoffT>
 template<class CallTaskType, typename ... TaskParams>
 void BasicMixedModeScheduler<CPUHierarchyT, StealingDeque, Barrier, BackoffT>::finish_nt(procs_t nt, TaskParams&& ... params) {
-	CallTaskType* task = new CallTaskType(static_cast<TaskParams&&>(params) ...);
+	CallTaskType* task = new CallTaskType(std::forward<TaskParams&&>(params) ...);
 	state.team_size = nt;
 	state.startup_task = task;
 	state.current_state = 1;

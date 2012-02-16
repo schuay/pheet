@@ -241,7 +241,7 @@ template<class CallTaskType, typename ... TaskParams>
 void PrioritySchedulerImpl<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::finish(TaskParams&& ... params) {
 	Place* p = get_place();
 	pheet_assert(p != NULL);
-	p->finish<CallTaskType>(static_cast<TaskParams&&>(params) ...);
+	p->finish<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P> class DefaultStrategyT, uint8_t CallThreshold>
@@ -249,7 +249,7 @@ template<typename F, typename ... TaskParams>
 void PrioritySchedulerImpl<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::finish(F&& f, TaskParams&& ... params) {
 	Place* p = get_place();
 	pheet_assert(p != NULL);
-	p->finish(f, static_cast<TaskParams&&>(params) ...);
+	p->finish(f, std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P> class DefaultStrategyT, uint8_t CallThreshold>
@@ -257,7 +257,7 @@ template<class CallTaskType, typename ... TaskParams>
 void PrioritySchedulerImpl<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::spawn(TaskParams&& ... params) {
 	Place* p = get_place();
 	pheet_assert(p != NULL);
-	p->spawn<CallTaskType>(static_cast<TaskParams&&>(params) ...);
+	p->spawn<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P> class DefaultStrategyT, uint8_t CallThreshold>
@@ -265,7 +265,7 @@ template<typename F, typename ... TaskParams>
 void PrioritySchedulerImpl<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::spawn(F&& f, TaskParams&& ... params) {
 	Place* p = get_place();
 	pheet_assert(p != NULL);
-	p->spawn(f, static_cast<TaskParams&&>(params) ...);
+	p->spawn(f, std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P> class DefaultStrategyT, uint8_t CallThreshold>
@@ -273,7 +273,7 @@ template<class CallTaskType, class Strategy, typename ... TaskParams>
 void PrioritySchedulerImpl<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::spawn_prio(Strategy s, TaskParams&& ... params) {
 	Place* p = get_place();
 	pheet_assert(p != NULL);
-	p->spawn_prio<CallTaskType>(s, static_cast<TaskParams&&>(params) ...);
+	p->spawn_prio<CallTaskType>(s, std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P> class DefaultStrategyT, uint8_t CallThreshold>
@@ -281,7 +281,7 @@ template<class Strategy, typename F, typename ... TaskParams>
 void PrioritySchedulerImpl<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::spawn_prio(Strategy s, F&& f, TaskParams&& ... params) {
 	Place* p = get_place();
 	pheet_assert(p != NULL);
-	p->spawn_prio(s, f, static_cast<TaskParams&&>(params) ...);
+	p->spawn_prio(s, f, std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P> class DefaultStrategyT, uint8_t CallThreshold>
@@ -289,7 +289,7 @@ template<class CallTaskType, typename ... TaskParams>
 void PrioritySchedulerImpl<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::call(TaskParams&& ... params) {
 	Place* p = get_place();
 	pheet_assert(p != NULL);
-	p->call<CallTaskType>(static_cast<TaskParams&&>(params) ...);
+	p->call<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P> class DefaultStrategyT, uint8_t CallThreshold>
@@ -297,7 +297,7 @@ template<typename F, typename ... TaskParams>
 void PrioritySchedulerImpl<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::call(F&& f, TaskParams&& ... params) {
 	Place* p = get_place();
 	pheet_assert(p != NULL);
-	p->call(f, static_cast<TaskParams&&>(params) ...);
+	p->call(f, std::forward<TaskParams&&>(params) ...);
 }
 
 template<class Pheet>

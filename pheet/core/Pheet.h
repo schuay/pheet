@@ -97,7 +97,7 @@ template<class CallTaskType, typename ... TaskParams>
 void PheetEnv<SchedulerT, SystemModelT, PrimitivesT, DataStructuresT, ConcurrentDataStructuresT>::finish(TaskParams&& ... params) {
 	Place* p = Scheduler::get_place();
 	pheet_assert(p != NULL);
-	p->finish<CallTaskType>(static_cast<TaskParams&&>(params) ...);
+	p->finish<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 }
 
 template <template <class Env> class SchedulerT, template <class Env> class SystemModelT, template <class Env> class PrimitivesT, template <class Env> class DataStructuresT, template <class Env> class ConcurrentDataStructuresT>
@@ -105,7 +105,7 @@ template<typename F, typename ... TaskParams>
 void PheetEnv<SchedulerT, SystemModelT, PrimitivesT, DataStructuresT, ConcurrentDataStructuresT>::finish(F&& f, TaskParams&& ... params) {
 	Place* p = Scheduler::get_place();
 	pheet_assert(p != NULL);
-	p->finish(f, static_cast<TaskParams&&>(params) ...);
+	p->finish(f, std::forward<TaskParams&&>(params) ...);
 }
 
 template <template <class Env> class SchedulerT, template <class Env> class SystemModelT, template <class Env> class PrimitivesT, template <class Env> class DataStructuresT, template <class Env> class ConcurrentDataStructuresT>
@@ -113,7 +113,7 @@ template<class CallTaskType, typename ... TaskParams>
 void PheetEnv<SchedulerT, SystemModelT, PrimitivesT, DataStructuresT, ConcurrentDataStructuresT>::spawn(TaskParams&& ... params) {
 	Place* p = Scheduler::get_place();
 	pheet_assert(p != NULL);
-	p->spawn<CallTaskType>(static_cast<TaskParams&&>(params) ...);
+	p->spawn<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 }
 
 template <template <class Env> class SchedulerT, template <class Env> class SystemModelT, template <class Env> class PrimitivesT, template <class Env> class DataStructuresT, template <class Env> class ConcurrentDataStructuresT>
@@ -121,7 +121,7 @@ template<typename F, typename ... TaskParams>
 void PheetEnv<SchedulerT, SystemModelT, PrimitivesT, DataStructuresT, ConcurrentDataStructuresT>::spawn(F&& f, TaskParams&& ... params) {
 	Place* p = Scheduler::get_place();
 	pheet_assert(p != NULL);
-	p->spawn(f, static_cast<TaskParams&&>(params) ...);
+	p->spawn(f, std::forward<TaskParams&&>(params) ...);
 }
 
 template <template <class Env> class SchedulerT, template <class Env> class SystemModelT, template <class Env> class PrimitivesT, template <class Env> class DataStructuresT, template <class Env> class ConcurrentDataStructuresT>
@@ -129,7 +129,7 @@ template<class CallTaskType, class Strategy, typename ... TaskParams>
 void PheetEnv<SchedulerT, SystemModelT, PrimitivesT, DataStructuresT, ConcurrentDataStructuresT>::spawn_prio(Strategy s, TaskParams&& ... params) {
 	Place* p = Scheduler::get_place();
 	pheet_assert(p != NULL);
-	p->spawn_prio<CallTaskType>(s, static_cast<TaskParams&&>(params) ...);
+	p->spawn_prio<CallTaskType>(s, std::forward<TaskParams&&>(params) ...);
 }
 
 template <template <class Env> class SchedulerT, template <class Env> class SystemModelT, template <class Env> class PrimitivesT, template <class Env> class DataStructuresT, template <class Env> class ConcurrentDataStructuresT>
@@ -137,7 +137,7 @@ template<class Strategy, typename F, typename ... TaskParams>
 void PheetEnv<SchedulerT, SystemModelT, PrimitivesT, DataStructuresT, ConcurrentDataStructuresT>::spawn_prio(Strategy s, F&& f, TaskParams&& ... params) {
 	Place* p = Scheduler::get_place();
 	pheet_assert(p != NULL);
-	p->spawn_prio(s, f, static_cast<TaskParams&&>(params) ...);
+	p->spawn_prio(s, f, std::forward<TaskParams&&>(params) ...);
 }
 
 template <template <class Env> class SchedulerT, template <class Env> class SystemModelT, template <class Env> class PrimitivesT, template <class Env> class DataStructuresT, template <class Env> class ConcurrentDataStructuresT>
@@ -145,7 +145,7 @@ template<class CallTaskType, typename ... TaskParams>
 void PheetEnv<SchedulerT, SystemModelT, PrimitivesT, DataStructuresT, ConcurrentDataStructuresT>::call(TaskParams&& ... params) {
 	Place* p = Scheduler::get_place();
 	pheet_assert(p != NULL);
-	p->call<CallTaskType>(static_cast<TaskParams&&>(params) ...);
+	p->call<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 }
 
 template <template <class Env> class SchedulerT, template <class Env> class SystemModelT, template <class Env> class PrimitivesT, template <class Env> class DataStructuresT, template <class Env> class ConcurrentDataStructuresT>
@@ -153,7 +153,7 @@ template<typename F, typename ... TaskParams>
 void PheetEnv<SchedulerT, SystemModelT, PrimitivesT, DataStructuresT, ConcurrentDataStructuresT>::call(F&& f, TaskParams&& ... params) {
 	Place* p = Scheduler::get_place();
 	pheet_assert(p != NULL);
-	p->call(f, static_cast<TaskParams&&>(params) ...);
+	p->call(f, std::forward<TaskParams&&>(params) ...);
 }
 
 template <template <class Env> class SchedulerT, template <class Env> class SystemModelT, template <class Env> class PrimitivesT, template <class Env> class DataStructuresT, template <class Env> class ConcurrentDataStructuresT>

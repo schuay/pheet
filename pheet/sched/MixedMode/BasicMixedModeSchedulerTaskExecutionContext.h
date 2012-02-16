@@ -1801,10 +1801,10 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::spaw
 			if(stealing_deques[level]->get_length() >= levels[level].spawn_same_size_threshold) {
 				performance_counters.num_spawns_to_call.incr();
 				// There are enough tasks in our queue - make a synchroneous call instead
-				call<CallTaskType>(static_cast<TaskParams&&>(params) ...);
+				call<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 			}
 			else {
-				CallTaskType* task = new CallTaskType(static_cast<TaskParams&&>(params) ...);
+				CallTaskType* task = new CallTaskType(std::forward<TaskParams&&>(params) ...);
 				pheet_assert(current_team_task->parent != NULL);
 				current_team_task->parent->num_spawned++;
 				DequeItem di;
@@ -1816,7 +1816,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::spaw
 		}
 		else {
 			// TODO: optimization to use call in some cases to prevent the deque from growing too large
-			CallTaskType* task = new CallTaskType(static_cast<TaskParams&&>(params) ...);
+			CallTaskType* task = new CallTaskType(std::forward<TaskParams&&>(params) ...);
 			pheet_assert(current_team_task->parent != NULL);
 			current_team_task->parent->num_spawned++;
 			DequeItem di;
@@ -1833,13 +1833,13 @@ template<class CallTaskType, typename ... TaskParams>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::local_spawn(TaskParams&& ... params) {
 	if(team_info->team_size == 1) {
 		// Use the optimized synchroneous version instead
-		spawn<CallTaskType, TaskParams ...>(static_cast<TaskParams&&>(params) ...);
+		spawn<CallTaskType, TaskParams ...>(std::forward<TaskParams&&>(params) ...);
 	}
 	else {
 		performance_counters.num_spawns.incr();
 
 		// We are out of sync, so calls instead of spawns are not possible
-		CallTaskType* task = new CallTaskType(static_cast<TaskParams&&>(params) ...);
+		CallTaskType* task = new CallTaskType(std::forward<TaskParams&&>(params) ...);
 		pheet_assert(finish_stack_filled_left > 0);
 		current_team_task->parent->num_spawned++;
 		DequeItem di;
@@ -1862,7 +1862,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::call
 			pheet_assert(true);
 		}
 		else {
-			CallTaskType task(static_cast<TaskParams&&>(params) ...);
+			CallTaskType task(std::forward<TaskParams&&>(params) ...);
 			task(*this);
 		}
 	}
@@ -1894,7 +1894,7 @@ template<class CallTaskType, typename ... TaskParams>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::finish(TaskParams&& ... params) {
 	start_finish_region();
 
-	call<CallTaskType>(static_cast<TaskParams&&>(params) ...);
+	call<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 
 	end_finish_region();
 
@@ -1928,7 +1928,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::spaw
 	procs_t level = get_level_for_num_threads(nt_size);
 	if(level == team_info->team_level) {
 		// If we stay at the same level use the optimized method for same-size spawns
-		spawn<CallTaskType, TaskParams ...>(static_cast<TaskParams&&>(params) ...);
+		spawn<CallTaskType, TaskParams ...>(std::forward<TaskParams&&>(params) ...);
 	}
 	else {
 		// TODO: optimization to use call in some cases to prevent the finish_stack from growing too large
@@ -1938,7 +1938,7 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::spaw
 		if(is_coordinator()) {
 			performance_counters.num_spawns.incr();
 
-			CallTaskType* task = new CallTaskType(static_cast<TaskParams&&>(params) ...);
+			CallTaskType* task = new CallTaskType(std::forward<TaskParams&&>(params) ...);
 			pheet_assert(current_team_task->parent != NULL);
 			current_team_task->parent->num_spawned++;
 			DequeItem di;
@@ -1956,10 +1956,10 @@ void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::loca
 	procs_t level = get_level_for_num_threads(nt_size);
 	if(level == team_info->team_level) {
 		// Use the optimized synchroneous version instead
-		spawn_nt<CallTaskType, TaskParams ...>(nt_size, static_cast<TaskParams&&>(params) ...);
+		spawn_nt<CallTaskType, TaskParams ...>(nt_size, std::forward<TaskParams&&>(params) ...);
 	}
 	else {
-		CallTaskType* task = new CallTaskType(static_cast<TaskParams&&>(params) ...);
+		CallTaskType* task = new CallTaskType(std::forward<TaskParams&&>(params) ...);
 		pheet_assert(finish_stack_filled_left > 0);
 		current_team_task->parent.num_spawned++;
 		DequeItem di;
@@ -1998,7 +1998,7 @@ template<class CallTaskType, typename ... TaskParams>
 void BasicMixedModeSchedulerTaskExecutionContext<Scheduler, StealingDeque>::finish_nt(procs_t nt_size, TaskParams&& ... params) {
 	start_finish_region();
 
-	call_nt<CallTaskType>(nt_size, static_cast<TaskParams&&>(params) ...);
+	call_nt<CallTaskType>(nt_size, std::forward<TaskParams&&>(params) ...);
 
 	end_finish_region();
 

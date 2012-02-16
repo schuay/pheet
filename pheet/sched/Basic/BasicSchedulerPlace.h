@@ -738,7 +738,7 @@ template<class CallTaskType, typename ... TaskParams>
 void BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::finish(TaskParams&& ... params) {
 	start_finish_region();
 
-	call<CallTaskType>(static_cast<TaskParams&&>(params) ...);
+	call<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 
 	end_finish_region();
 }
@@ -748,7 +748,7 @@ template<typename F, typename ... TaskParams>
 void BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::finish(F&& f, TaskParams&& ... params) {
 	start_finish_region();
 
-	call(f, static_cast<TaskParams&&>(params) ...);
+	call(f, std::forward<TaskParams&&>(params) ...);
 
 	end_finish_region();
 }
@@ -762,7 +762,7 @@ void BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::spawn(TaskParams
 	if(stealing_deque.get_length() >= limit) {
 		call_mode = true;
 		performance_counters.num_spawns_to_call.incr();
-		call<CallTaskType>(static_cast<TaskParams&&>(params) ...);
+		call<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 	}
 	else {
 		call_mode = false;
@@ -787,7 +787,7 @@ void BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::spawn(F&& f, Tas
 	if(stealing_deque.get_length() >= limit) {
 		call_mode = true;
 		performance_counters.num_spawns_to_call.incr();
-		call(f, static_cast<TaskParams&&>(params) ...);
+		call(f, std::forward<TaskParams&&>(params) ...);
 	}
 	else {
 		call_mode = false;
@@ -810,7 +810,7 @@ template<class CallTaskType, typename ... TaskParams>
 void BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::call(TaskParams&& ... params) {
 	performance_counters.num_calls.incr();
 	// Create task
-	CallTaskType task(static_cast<TaskParams&&>(params) ...);
+	CallTaskType task(std::forward<TaskParams&&>(params) ...);
 	// Execute task
 	task();
 }
@@ -820,7 +820,7 @@ template<typename F, typename ... TaskParams>
 void BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::call(F&& f, TaskParams&& ... params) {
 	performance_counters.num_calls.incr();
 	// Execute task
-	f(static_cast<TaskParams&&>(params) ...);
+	f(std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, template <class P, typename T> class StealingDequeT, uint8_t CallThreshold>

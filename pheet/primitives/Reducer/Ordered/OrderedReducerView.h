@@ -52,7 +52,7 @@ private:
 template <class Monoid>
 template <typename ... ConsParams>
 OrderedReducerView<Monoid>::OrderedReducerView(ConsParams&& ... params)
-:data(static_cast<ConsParams&&>(params) ...), local_pred(NULL), pred(NULL), reuse(NULL), state(0x0u) {
+:data(std::forward<ConsParams&&>(params) ...), local_pred(NULL), pred(NULL), reuse(NULL), state(0x0u) {
 
 }
 
@@ -166,7 +166,7 @@ OrderedReducerView<Monoid>* OrderedReducerView<Monoid>::create_parent_view() {
 		ret->state = 0x2;
 	}
 	else {
-		ret = new View(static_cast<Monoid const&>(data));
+		ret = new View(std::forward<Monoid const&>(data));
 		pheet_assert(ret->state == 0x2);
 	}
 	return ret;
@@ -299,7 +299,7 @@ template <typename Monoid>
 template <typename ... PutParams>
 void OrderedReducerView<Monoid>::add_data(PutParams&& ... params) {
 	state |= 0x4;
-	data.put(static_cast<PutParams&&>(params) ...);
+	data.put(std::forward<PutParams&&>(params) ...);
 }
 
 template <class Monoid>
