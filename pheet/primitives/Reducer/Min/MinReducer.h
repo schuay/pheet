@@ -33,6 +33,7 @@ class MinReducer : public MaxReducer<Pheet, T, M> {
 public:
 	MinReducer();
 	MinReducer(MinReducer<Pheet, T, M>& other);
+	MinReducer(MinReducer<Pheet, T, M>&& other);
 	~MinReducer();
 
 	T const& get_min();
@@ -46,6 +47,12 @@ inline MinReducer<Pheet, T, M>::MinReducer() {
 template <class Pheet, typename T, template <typename S> class M>
 inline MinReducer<Pheet, T, M>::MinReducer(MinReducer<Pheet, T, M>& other)
 : MaxReducer<Pheet, T, M>(other) {
+
+}
+
+template <class Pheet, typename T, template <typename S> class M>
+inline MinReducer<Pheet, T, M>::MinReducer(MinReducer<Pheet, T, M>&& other)
+: MaxReducer<Pheet, T, M>(std::move(other)) {
 
 }
 

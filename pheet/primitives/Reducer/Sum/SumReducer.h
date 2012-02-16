@@ -23,6 +23,7 @@ class SumReducer {
 public:
 	SumReducer();
 	SumReducer(SumReducer<Pheet, T, Op>& other);
+	SumReducer(SumReducer<Pheet, T, Op>&& other);
 	~SumReducer();
 
 	void incr();
@@ -44,6 +45,12 @@ SumReducer<Pheet, T, Op>::SumReducer() {
 template <class Pheet, typename T, template <typename S> class Op>
 SumReducer<Pheet, T, Op>::SumReducer(SumReducer<Pheet, T, Op>& other)
 : reducer(other.reducer) {
+
+}
+
+template <class Pheet, typename T, template <typename S> class Op>
+SumReducer<Pheet, T, Op>::SumReducer(SumReducer<Pheet, T, Op>&& other)
+: reducer(std::move(other.reducer)) {
 
 }
 

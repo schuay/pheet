@@ -19,7 +19,7 @@ const unsigned int sorting_test_seeds[] = {0, 1};
 const size_t sorting_test_n[] = {100000};
 const int sorting_test_types[] = {0, 1};
 
-const bool graph_bipartitioning_test = true;
+#define GRAPH_BIPARTITIONING_TEST true
 const procs_t graph_bipartitioning_test_cpus[] = {1, 2};
 const unsigned int graph_bipartitioning_test_seeds[] = {0, 1};
 const GraphBipartitioningProblem graph_bipartitioning_test_problems[] = {

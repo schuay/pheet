@@ -24,7 +24,7 @@
 #include "ImprovedBranchBound/ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic.h"
 */
 
-#include <pheet/sched/Basic/Basic/BasicScheduler.h>
+#include <pheet/sched/Basic/BasicScheduler.h>
 
 #include "ImprovedBranchBound/ImprovedBranchBoundGraphBipartitioning.h"
 #include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioning.h"

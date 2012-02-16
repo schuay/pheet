@@ -24,6 +24,7 @@ public:
 	template <typename ... ConsParams>
 	OrderedReducer(ConsParams&& ... params);
 	OrderedReducer(OrderedReducer& other);
+	OrderedReducer(OrderedReducer&& other);
 	~OrderedReducer();
 
 	template <typename ... PutParams>
@@ -60,24 +61,34 @@ OrderedReducer<Pheet, Monoid>::OrderedReducer(OrderedReducer& other)
 }
 
 template <class Pheet, class Monoid>
+OrderedReducer<Pheet, Monoid>::OrderedReducer(OrderedReducer&& other)
+: place_id(Pheet::get_place_id()){
+	// Move semantics. The other view gets invalidated!
+	my_view = other.my_view;
+	other.my_view = nullptr;
+}
+
+template <class Pheet, class Monoid>
 OrderedReducer<Pheet, Monoid>::~OrderedReducer() {
 	finalize();
 }
 
 template <class Pheet, class Monoid>
 void OrderedReducer<Pheet, Monoid>::finalize() {
-	minimize();
-	if(parent_view == NULL) {
-		pheet_assert(my_view->is_reduced());
-		delete my_view;
-	}
-	else if(place_id == Pheet::get_place_id()) {
-		// This reducer has only been used locally. No need for sync
-		parent_view->set_local_predecessor(my_view);
-	}
-	else {
-		// Notify parent view
-		parent_view->set_predecessor(my_view);
+	if(my_view != NULL) {
+		minimize();
+		if(parent_view == NULL) {
+			pheet_assert(my_view->is_reduced());
+			delete my_view;
+		}
+		else if(place_id == Pheet::get_place_id()) {
+			// This reducer has only been used locally. No need for sync
+			parent_view->set_local_predecessor(my_view);
+		}
+		else {
+			// Notify parent view
+			parent_view->set_predecessor(my_view);
+		}
 	}
 }
 
@@ -86,24 +97,34 @@ void OrderedReducer<Pheet, Monoid>::finalize() {
  */
 template <class Pheet, class Monoid>
 void OrderedReducer<Pheet, Monoid>::minimize() {
-	my_view = my_view->fold();
-	my_view->reduce();
+	pheet_assert(my_view != NULL);
+	if(place_id == Pheet::get_place_id()) {
+		my_view = my_view->fold();
+		my_view->reduce(true);
+	}
+	else {
+		// This reducer has been moved to another thread
+		my_view->reduce(false);
+	}
 }
 
 template <class Pheet, class Monoid>
 template <typename ... PutParams>
 void OrderedReducer<Pheet, Monoid>::add_data(PutParams&& ... params) {
-	my_view = my_view->fold();
+	pheet_assert(my_view != NULL);
+	if(place_id == Pheet::get_place_id()) {
+		my_view = my_view->fold();
+	}
 	my_view->add_data(std::forward<PutParams&&>(params) ...);
 }
 
 template <class Pheet, class Monoid>
 typename Monoid::OutputType OrderedReducer<Pheet, Monoid>::get_data() {
+	pheet_assert(my_view != NULL);
 	Backoff bo;
 	if(!my_view->is_reduced()) {
 		while(true) {
-			my_view = my_view->fold();
-			my_view->reduce();
+			minimize();
 			if(my_view->is_reduced()) {
 				break;
 			}

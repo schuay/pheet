@@ -30,7 +30,7 @@ public:
 
 	OrderedReducerView<Monoid>* fold();
 	OrderedReducerView<Monoid>* create_parent_view();
-	void reduce();
+	void reduce(bool allow_local);
 	bool is_reduced();
 	void set_finished();
 	void set_local_predecessor(OrderedReducerView<Monoid>* pred);
@@ -173,27 +173,33 @@ OrderedReducerView<Monoid>* OrderedReducerView<Monoid>::create_parent_view() {
 }
 
 template <class Monoid>
-void OrderedReducerView<Monoid>::reduce() {
+void OrderedReducerView<Monoid>::reduce(bool allow_local) {
 	if(local_pred != NULL) {
-		while(local_pred->local_pred != NULL) {
-			data.left_reduce(local_pred->data);
-			View* tmp = local_pred->local_pred;
-			delete local_pred;
-			local_pred = tmp;
+		if(allow_local) {
+			while(local_pred->local_pred != NULL) {
+				data.left_reduce(local_pred->data);
+				View* tmp = local_pred->local_pred;
+				delete local_pred;
+				local_pred = tmp;
+			}
+			if(local_pred->pred != NULL) {
+				data.left_reduce(local_pred->data);
+				View* tmp = local_pred->pred;
+				delete local_pred;
+				local_pred = NULL;
+				pred = tmp;
+			}
+			else if((local_pred->state & 0x2) == 0x0) {
+				data.left_reduce(local_pred->data);
+				delete local_pred;
+				local_pred = NULL;
+				// No more children
+				state &= 0xFD;
+			}
 		}
-		if(local_pred->pred != NULL) {
-			data.left_reduce(local_pred->data);
-			View* tmp = local_pred->pred;
-			delete local_pred;
-			local_pred = NULL;
-			pred = tmp;
-		}
-		else if((local_pred->state & 0x2) == 0x0) {
-			data.left_reduce(local_pred->data);
-			delete local_pred;
-			local_pred = NULL;
-			// No more children
-			state &= 0xFD;
+		else {
+			pred = local_pred;
+			local_pred = nullptr;
 		}
 	}
 	// TODO: manual unrolling to reduce number of fences used (a single fence should be enough,
@@ -201,6 +207,7 @@ void OrderedReducerView<Monoid>::reduce() {
 	if(pred != NULL) {
 		pheet_assert(local_pred == NULL);
 		state |= 0x4;
+		state |= 0x8; // We cannot be sure that we are local anymore
 		bool active;
 		do {
 			active = false;
@@ -268,15 +275,15 @@ bool OrderedReducerView<Monoid>::is_reduced() {
 
 template <class Monoid>
 void OrderedReducerView<Monoid>::set_local_predecessor(OrderedReducerView<Monoid>* local_pred) {
+	pheet_assert(this->pred == NULL);
+	pheet_assert(this->local_pred == NULL);
+	pheet_assert(local_pred != this);
 	if((state & 0x8) == 0x8) {
 		// This element has already been connected to some non-local element.
 		// Therefore we have to treat it like something non-local
-		set_predecessor(local_pred);
+		this->pred = local_pred;
 	}
 	else {
-		pheet_assert(this->pred == NULL);
-		pheet_assert(this->local_pred == NULL);
-		pheet_assert(local_pred != this);
 		this->local_pred = local_pred;
 	}
 }
@@ -290,8 +297,8 @@ void OrderedReducerView<Monoid>::set_predecessor(OrderedReducerView<Monoid>* pre
 	// OrderedReducer takes care that local elements are folded before the call to set_predecessor
 	// As local elements live in a sequential world we are guaranteed to have them either folded now, or
 	// warned if they are connected later
-	state |= 0x8;
-	MEMORY_FENCE();
+//	state |= 0x8;
+//	MEMORY_FENCE();
 	this->pred = pred;
 }
 

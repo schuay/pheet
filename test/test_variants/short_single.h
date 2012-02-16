@@ -19,18 +19,13 @@ const unsigned int sorting_test_seeds[] = {0};
 const size_t sorting_test_n[] = {10000000};
 const int sorting_test_types[] = {0};
 
-const bool graph_bipartitioning_test = true;
+#define GRAPH_BIPARTITIONING_TEST true
 const procs_t graph_bipartitioning_test_cpus[] = {1, 2, 4, 8};
 const unsigned int graph_bipartitioning_test_seeds[] = {0};
 const GraphBipartitioningProblem graph_bipartitioning_test_problems[] = {
 		// n, p, max_w
 		{35, 0.5, 1000}
 };
-/*
-const size_t graph_bipartitioning_test_n[] = {35};
-const double graph_bipartitioning_test_p[] = {0.5};
-const double graph_bipartitioning_test_max_w[] = {1000};
-*/
 const int graph_bipartitioning_test_types[] = {0};
 
 #define INAROW_TEST true

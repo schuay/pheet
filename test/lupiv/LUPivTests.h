@@ -11,7 +11,6 @@
 
 #include "../init.h"
 #include "../Test.h"
-#include "../init.h"
 #ifdef LUPIV_TEST
 #include "LUPivTest.h"
 #endif
