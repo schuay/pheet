@@ -11,23 +11,23 @@
 
 #include <pheet/pheet.h>
 #include "../MixedMode/MixedModeQuicksortTask.h"
-#include "../../../primitives/Backoff/Exponential/ExponentialBackoff.h"
-#include "../../../primitives/Barrier/Simple/SimpleBarrier.h"
+#include "../Dag/DagQuicksort.h"
 
 namespace pheet {
 
-template <class Task, size_t BLOCK_SIZE = 4096>
-class MixedModeQuicksortTask : public Task {
+template <class Pheet, size_t BLOCK_SIZE = 4096>
+class MixedModeQuicksortTask : public Pheet::Task {
 public:
-	typedef StandardExponentialBackoff Backoff;
+	typedef typename Pheet::Backoff Backoff;
+	typedef typename Pheet::Barrier Barrier;
 
 	MixedModeQuicksortTask(unsigned int* data, size_t length);
 	virtual ~MixedModeQuicksortTask();
 
-	virtual void operator()(typename Task::Scheduler::TaskExecutionContext &tec);
+	virtual void operator()();
 
 private:
-	void partition(typename Task::Scheduler::TaskExecutionContext &tec);
+	void partition();
 	void neutralize(ptrdiff_t &leftPos, ptrdiff_t &leftEnd, ptrdiff_t &rightPos, ptrdiff_t &rightEnd);
 	bool is_partitioned();
 	void assert_is_partitioned();
@@ -55,11 +55,11 @@ private:
 	ptrdiff_t remainingLeft;
 	ptrdiff_t remainingRight;
 
-	SimpleBarrier<Backoff> barrier;
+	Barrier barrier;
 };
 
-template <class Task, size_t BLOCK_SIZE>
-MixedModeQuicksortTask<Task, BLOCK_SIZE>::MixedModeQuicksortTask(unsigned int* data, size_t length)
+template <class Pheet, size_t BLOCK_SIZE>
+MixedModeQuicksortTask<Pheet, BLOCK_SIZE>::MixedModeQuicksortTask(unsigned int* data, size_t length)
 : data(data), length(length) {
 	pivotPosition = -1;
 
@@ -92,21 +92,21 @@ MixedModeQuicksortTask<Task, BLOCK_SIZE>::MixedModeQuicksortTask(unsigned int* d
 	remainingRight = length;
 }
 
-template <class Task, size_t BLOCK_SIZE>
-MixedModeQuicksortTask<Task, BLOCK_SIZE>::~MixedModeQuicksortTask() {
+template <class Pheet, size_t BLOCK_SIZE>
+MixedModeQuicksortTask<Pheet, BLOCK_SIZE>::~MixedModeQuicksortTask() {
 
 }
 
-template <class Task, size_t BLOCK_SIZE>
-void MixedModeQuicksortTask<Task, BLOCK_SIZE>::operator()(typename Task::Scheduler::TaskExecutionContext &tec) {
-	procs_t team_size = tec.get_team_size();
+template <class Pheet, size_t BLOCK_SIZE>
+void MixedModeQuicksortTask<Pheet, BLOCK_SIZE>::operator()() {
+	procs_t team_size = Pheet::Environment::get_place()->get_team_size();
 	if(team_size == 1) {
 		// For np == 1 switch to dag quicksort
-		tec.template call<DagQuicksortTask<Task>>(data, length);
+		Pheet::template call<DagQuicksort<Pheet>>(data, length);
 		return;
 	}
 
-	partition(tec);
+	partition();
 
 	barrier.barrier(0, team_size);
 	MEMORY_FENCE();
@@ -117,20 +117,20 @@ void MixedModeQuicksortTask<Task, BLOCK_SIZE>::operator()(typename Task::Schedul
 		procs = 1;
 	}
 	pheet_assert(procs == 1 || (len / procs) > BLOCK_SIZE * 2);
-	tec.template spawn_nt<MixedModeQuicksortTask<Task, BLOCK_SIZE> >(procs, data, len);
+	Pheet::Environment::template spawn_nt<MixedModeQuicksortTask<Pheet, BLOCK_SIZE> >(procs, data, len);
 	len = length - pivotPosition - 1;
 	procs = min(team_size - procs, ((len / BLOCK_SIZE) / 8) + 1);
 	if(procs == 0) {
 		procs = 1;
 	}
 	pheet_assert(procs == 1 || (len / procs) > BLOCK_SIZE * 2);
-	tec.template spawn_nt<MixedModeQuicksortTask<Task, BLOCK_SIZE>>(procs, data + pivotPosition + 1, len);
+	Pheet::Environment::template spawn_nt<MixedModeQuicksortTask<Pheet, BLOCK_SIZE>>(procs, data + pivotPosition + 1, len);
 }
 
-template <class Task, size_t BLOCK_SIZE>
-void MixedModeQuicksortTask<Task, BLOCK_SIZE>::partition(typename Task::Scheduler::TaskExecutionContext &tec) {
-	procs_t localId = tec.get_local_id();
-	procs_t team_size = tec.get_team_size();
+template <class Pheet, size_t BLOCK_SIZE>
+void MixedModeQuicksortTask<Pheet, BLOCK_SIZE>::partition() {
+	procs_t localId = Pheet::Environment::get_place()->get_local_id();
+	procs_t team_size = Pheet::Environment::get_place()->get_team_size();
 
 	ptrdiff_t localLeftBlock = localId;
 	ptrdiff_t localRightBlock = localId;
@@ -139,7 +139,7 @@ void MixedModeQuicksortTask<Task, BLOCK_SIZE>::partition(typename Task::Schedule
 	ptrdiff_t rightPos;
 	ptrdiff_t leftEnd;
 	ptrdiff_t rightEnd;
-	if(tec.is_coordinator()) {
+	if(Pheet::Environment::get_place()->is_coordinator()) {
 		// Special case for corner blocks, as they might not have the standard block size
 		leftPos = 0;
 		rightPos = length - 2;
@@ -188,7 +188,7 @@ void MixedModeQuicksortTask<Task, BLOCK_SIZE>::partition(typename Task::Schedule
 	}
 
 	// Now we need the complete team
-	tec.sync_team();
+	Pheet::Environment::get_place()->sync_team();
 
 	while(true) {
 		if(leftPos == leftEnd) {
@@ -385,8 +385,8 @@ void MixedModeQuicksortTask<Task, BLOCK_SIZE>::partition(typename Task::Schedule
 	}
 }
 
-template <class Task, size_t BLOCK_SIZE>
-void MixedModeQuicksortTask<Task, BLOCK_SIZE>::neutralize(ptrdiff_t &leftPos, ptrdiff_t &leftEnd, ptrdiff_t &rightPos, ptrdiff_t &rightEnd) {
+template <class Pheet, size_t BLOCK_SIZE>
+void MixedModeQuicksortTask<Pheet, BLOCK_SIZE>::neutralize(ptrdiff_t &leftPos, ptrdiff_t &leftEnd, ptrdiff_t &rightPos, ptrdiff_t &rightEnd) {
 	while(true) {
 		while(leftPos < leftEnd) {
 			if(data[leftPos] > pivot)
@@ -405,8 +405,8 @@ void MixedModeQuicksortTask<Task, BLOCK_SIZE>::neutralize(ptrdiff_t &leftPos, pt
 	}
 }
 
-template <class Task, size_t BLOCK_SIZE>
-bool MixedModeQuicksortTask<Task, BLOCK_SIZE>::is_partitioned() {
+template <class Pheet, size_t BLOCK_SIZE>
+bool MixedModeQuicksortTask<Pheet, BLOCK_SIZE>::is_partitioned() {
 	for(size_t i = 0; i < length; i++) {
 		if(i < pivotPosition && data[i] > pivot) {
 			return false;
@@ -432,8 +432,8 @@ bool MixedModeQuicksortTask<Task, BLOCK_SIZE>::is_partitioned() {
 	return true;
 }
 
-template <class Task, size_t BLOCK_SIZE>
-void MixedModeQuicksortTask<Task, BLOCK_SIZE>::assert_is_partitioned() {
+template <class Pheet, size_t BLOCK_SIZE>
+void MixedModeQuicksortTask<Pheet, BLOCK_SIZE>::assert_is_partitioned() {
 	for(size_t i = 0; i < length; i++) {
 		pheet_assert(i >= pivotPosition || data[i] <= pivot);
 		pheet_assert(i <= pivotPosition || data[i] >= pivot);

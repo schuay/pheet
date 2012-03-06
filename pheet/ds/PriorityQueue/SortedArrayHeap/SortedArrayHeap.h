@@ -24,7 +24,7 @@ struct SortedArrayHeapArray {
 	size_t min_heap_pos;
 };
 
-template <typename TT, class Comparator = std::less<TT> >
+template <class Pheet, typename TT, class Comparator = std::less<TT> >
 class SortedArrayHeap {
 public:
 	typedef TT T;
@@ -66,20 +66,20 @@ private:
 };
 
 
-template <typename TT, class Comparator>
-SortedArrayHeap<TT, Comparator>::SortedArrayHeap()
+template <class Pheet, typename TT, class Comparator>
+SortedArrayHeap<Pheet, TT, Comparator>::SortedArrayHeap()
 : capacity(4), heap_length(0), length(0), max_heap(new SortedArrayHeapArray<TT>*[capacity]), min_heap(new SortedArrayHeapArray<TT>*[capacity]), reuse_el(NULL) {
 
 }
 
-template <typename TT, class Comparator>
-SortedArrayHeap<TT, Comparator>::SortedArrayHeap(Comparator const& comp)
+template <class Pheet, typename TT, class Comparator>
+SortedArrayHeap<Pheet, TT, Comparator>::SortedArrayHeap(Comparator const& comp)
 : capacity(4), heap_length(0), length(0), max_heap(new SortedArrayHeapArray<TT>*[capacity]), min_heap(new SortedArrayHeapArray<TT>*[capacity]), is_less(comp), reuse_el(NULL) {
 
 }
 
-template <typename TT, class Comparator>
-SortedArrayHeap<TT, Comparator>::~SortedArrayHeap() {
+template <class Pheet, typename TT, class Comparator>
+SortedArrayHeap<Pheet, TT, Comparator>::~SortedArrayHeap() {
 	if(reuse_el != NULL) {
 		delete[] reuse_el->data;
 		delete reuse_el;
@@ -92,8 +92,8 @@ SortedArrayHeap<TT, Comparator>::~SortedArrayHeap() {
 	delete[] min_heap;
 }
 
-template <typename TT, class Comparator>
-void SortedArrayHeap<TT, Comparator>::push(T item) {
+template <class Pheet, typename TT, class Comparator>
+void SortedArrayHeap<Pheet, TT, Comparator>::push(T item) {
 	if(heap_length > 0) {
 		size_t pos = heap_length - 1;
 		// Try adding to existing heap
@@ -152,15 +152,15 @@ void SortedArrayHeap<TT, Comparator>::push(T item) {
 	// No bubbling needed, because otherwise we could have just added to the arrays
 }
 
-template <typename TT, class Comparator>
-TT SortedArrayHeap<TT, Comparator>::peek() {
+template <class Pheet, typename TT, class Comparator>
+TT SortedArrayHeap<Pheet, TT, Comparator>::peek() {
 	SortedArrayHeapArray<T>* el = max_heap[0];
 	return el->data[el->start % el->capacity];
 }
 
 
-template <typename TT, class Comparator>
-TT SortedArrayHeap<TT, Comparator>::pop() {
+template <class Pheet, typename TT, class Comparator>
+TT SortedArrayHeap<Pheet, TT, Comparator>::pop() {
 	SortedArrayHeapArray<T>* el = max_heap[0];
 	T ret = el->data[el->start % el->capacity];
 
@@ -194,15 +194,15 @@ TT SortedArrayHeap<TT, Comparator>::pop() {
 	return ret;
 }
 
-template <typename TT, class Comparator>
-TT SortedArrayHeap<TT, Comparator>::peek_min() {
+template <class Pheet, typename TT, class Comparator>
+TT SortedArrayHeap<Pheet, TT, Comparator>::peek_min() {
 	SortedArrayHeapArray<T>* el = min_heap[0];
 	return el->data[el->start % el->capacity];
 }
 
 
-template <typename TT, class Comparator>
-TT SortedArrayHeap<TT, Comparator>::pop_min() {
+template <class Pheet, typename TT, class Comparator>
+TT SortedArrayHeap<Pheet, TT, Comparator>::pop_min() {
 	SortedArrayHeapArray<T>* el = min_heap[0];
 	T ret = el->data[el->start % el->capacity];
 
@@ -236,18 +236,18 @@ TT SortedArrayHeap<TT, Comparator>::pop_min() {
 	return ret;
 }
 
-template <typename TT, class Comparator>
-size_t SortedArrayHeap<TT, Comparator>::get_length() {
+template <class Pheet, typename TT, class Comparator>
+size_t SortedArrayHeap<Pheet, TT, Comparator>::get_length() {
 	return length;
 }
 
-template <typename TT, class Comparator>
-bool SortedArrayHeap<TT, Comparator>::is_empty() {
+template <class Pheet, typename TT, class Comparator>
+bool SortedArrayHeap<Pheet, TT, Comparator>::is_empty() {
 	return length == 0;
 }
 
-template <typename TT, class Comparator>
-bool SortedArrayHeap<TT, Comparator>::max_heap_put(size_t index, T item) {
+template <class Pheet, typename TT, class Comparator>
+bool SortedArrayHeap<Pheet, TT, Comparator>::max_heap_put(size_t index, T item) {
 	size_t valid = index;
 	SortedArrayHeapArray<TT>* el = max_heap[index];
 
@@ -273,8 +273,8 @@ bool SortedArrayHeap<TT, Comparator>::max_heap_put(size_t index, T item) {
 	return true;
 }
 
-template <typename TT, class Comparator>
-bool SortedArrayHeap<TT, Comparator>::min_heap_put(size_t index, T item) {
+template <class Pheet, typename TT, class Comparator>
+bool SortedArrayHeap<Pheet, TT, Comparator>::min_heap_put(size_t index, T item) {
 	size_t valid = index;
 	SortedArrayHeapArray<TT>* el = min_heap[index];
 
@@ -300,8 +300,8 @@ bool SortedArrayHeap<TT, Comparator>::min_heap_put(size_t index, T item) {
 	return true;
 }
 
-template <typename TT, class Comparator>
-void SortedArrayHeap<TT, Comparator>::bubble_up_max(size_t index) {
+template <class Pheet, typename TT, class Comparator>
+void SortedArrayHeap<Pheet, TT, Comparator>::bubble_up_max(size_t index) {
 	size_t next = (index - 1) >> 1;
 	SortedArrayHeapArray<TT>* el = max_heap[index];
 	SortedArrayHeapArray<TT>* nel = max_heap[next];
@@ -315,8 +315,8 @@ void SortedArrayHeap<TT, Comparator>::bubble_up_max(size_t index) {
 	}
 }
 
-template <typename TT, class Comparator>
-void SortedArrayHeap<TT, Comparator>::bubble_up_min(size_t index) {
+template <class Pheet, typename TT, class Comparator>
+void SortedArrayHeap<Pheet, TT, Comparator>::bubble_up_min(size_t index) {
 	size_t next = (index - 1) >> 1;
 	SortedArrayHeapArray<TT>* el = min_heap[index];
 	SortedArrayHeapArray<TT>* nel = min_heap[next];
@@ -330,8 +330,8 @@ void SortedArrayHeap<TT, Comparator>::bubble_up_min(size_t index) {
 	}
 }
 
-template <typename TT, class Comparator>
-void SortedArrayHeap<TT, Comparator>::bubble_down_max(size_t index) {
+template <class Pheet, typename TT, class Comparator>
+void SortedArrayHeap<Pheet, TT, Comparator>::bubble_down_max(size_t index) {
 	size_t next = (index << 1) + 1;
 	while(next < heap_length) {
 		size_t nnext = next + 1;
@@ -359,8 +359,8 @@ void SortedArrayHeap<TT, Comparator>::bubble_down_max(size_t index) {
 	}
 }
 
-template <typename TT, class Comparator>
-void SortedArrayHeap<TT, Comparator>::bubble_down_min(size_t index) {
+template <class Pheet, typename TT, class Comparator>
+void SortedArrayHeap<Pheet, TT, Comparator>::bubble_down_min(size_t index) {
 	size_t next = (index << 1) + 1;
 	while(next < heap_length) {
 		size_t nnext = next + 1;
@@ -388,8 +388,8 @@ void SortedArrayHeap<TT, Comparator>::bubble_down_min(size_t index) {
 	}
 }
 
-template <typename TT, class Comparator>
-void SortedArrayHeap<TT, Comparator>::grow(SortedArrayHeapArray<TT>* el) {
+template <class Pheet, typename TT, class Comparator>
+void SortedArrayHeap<Pheet, TT, Comparator>::grow(SortedArrayHeapArray<TT>* el) {
 	size_t new_capacity = el->capacity << 1;
 	T* new_data = new T[new_capacity];
 
@@ -401,8 +401,8 @@ void SortedArrayHeap<TT, Comparator>::grow(SortedArrayHeapArray<TT>* el) {
 	el->capacity = new_capacity;
 }
 
-template <typename TT, class Comparator>
-void SortedArrayHeap<TT, Comparator>::print_name() {
+template <class Pheet, typename TT, class Comparator>
+void SortedArrayHeap<Pheet, TT, Comparator>::print_name() {
 	std::cout << "SortedArrayHeap";
 }
 

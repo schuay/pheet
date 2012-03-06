@@ -124,7 +124,7 @@ private:
 	bool root;
 
 	hwloc_cpuset_t prev_binding;
-#ifndef NDEBUG
+#ifdef PHEET_DEBUG_MODE
 	bool bound;
 #endif
 };
@@ -132,7 +132,7 @@ private:
 template <class Pheet>
 HWLocSMTMachineModel<Pheet>::HWLocSMTMachineModel()
 : topo(new HWLocSMTTopologyInfo<Pheet>()), node(topo->get_root_obj()), root(true), prev_binding(nullptr) {
-#ifndef NDEBUG
+#ifdef PHEET_DEBUG_MODE
 	bound = false;
 #endif
 }
@@ -140,7 +140,7 @@ HWLocSMTMachineModel<Pheet>::HWLocSMTMachineModel()
 template <class Pheet>
 HWLocSMTMachineModel<Pheet>::HWLocSMTMachineModel(HWLocSMTMachineModel<Pheet> const& other)
 : topo(other.topo), node(other.node), root(false), prev_binding(nullptr) {
-#ifndef NDEBUG
+#ifdef PHEET_DEBUG_MODE
 	bound = false;
 #endif
 }
@@ -148,7 +148,7 @@ HWLocSMTMachineModel<Pheet>::HWLocSMTMachineModel(HWLocSMTMachineModel<Pheet> co
 template <class Pheet>
 HWLocSMTMachineModel<Pheet>::HWLocSMTMachineModel(HWLocSMTMachineModel<Pheet> const&& other)
 : topo(other.topo), node(other.node), root(false), prev_binding(nullptr) {
-#ifndef NDEBUG
+#ifdef PHEET_DEBUG_MODE
 	bound = false;
 #endif
 }
@@ -156,7 +156,7 @@ HWLocSMTMachineModel<Pheet>::HWLocSMTMachineModel(HWLocSMTMachineModel<Pheet> co
 template <class Pheet>
 HWLocSMTMachineModel<Pheet>::HWLocSMTMachineModel(HWLocSMTTopologyInfo<Pheet>* topo, hwloc_obj_t node)
 : topo(topo), node(node), root(false), prev_binding(nullptr) {
-#ifndef NDEBUG
+#ifdef PHEET_DEBUG_MODE
 	bound = false;
 #endif
 }
@@ -206,7 +206,7 @@ bool HWLocSMTMachineModel<Pheet>::is_leaf() {
 
 template <class Pheet>
 void HWLocSMTMachineModel<Pheet>::bind() {
-#ifndef NDEBUG
+#ifdef PHEET_DEBUG_MODE
 	pheet_assert(!bound);
 	bound = true;
 #endif
@@ -216,7 +216,7 @@ void HWLocSMTMachineModel<Pheet>::bind() {
 
 template <class Pheet>
 void HWLocSMTMachineModel<Pheet>::unbind() {
-#ifndef NDEBUG
+#ifdef PHEET_DEBUG_MODE
 	pheet_assert(bound);
 	bound = false;
 #endif

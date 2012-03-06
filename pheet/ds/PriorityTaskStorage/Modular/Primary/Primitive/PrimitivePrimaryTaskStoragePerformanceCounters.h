@@ -12,7 +12,7 @@
 
 namespace pheet {
 
-template <class Scheduler>
+template <class Pheet>
 class PrimitivePrimaryTaskStoragePerformanceCounters {
 public:
 	PrimitivePrimaryTaskStoragePerformanceCounters();
@@ -22,22 +22,22 @@ public:
 	void print_headers();
 	void print_values();
 
-	BasicPerformanceCounter<Scheduler, task_storage_count_unsuccessful_pops> num_unsuccessful_pops;
-	BasicPerformanceCounter<Scheduler, task_storage_count_successful_pops> num_successful_pops;
-	BasicPerformanceCounter<Scheduler, task_storage_count_unsuccessful_takes> num_unsuccessful_takes;
-	BasicPerformanceCounter<Scheduler, task_storage_count_successful_takes> num_successful_takes;
-	BasicPerformanceCounter<Scheduler, task_storage_count_size_pop> total_size_pop;
-	TimePerformanceCounter<Scheduler, task_storage_measure_pop_time> pop_time;
-	TimePerformanceCounter<Scheduler, task_storage_measure_push_time> push_time;
+	BasicPerformanceCounter<Pheet, task_storage_count_unsuccessful_pops> num_unsuccessful_pops;
+	BasicPerformanceCounter<Pheet, task_storage_count_successful_pops> num_successful_pops;
+	BasicPerformanceCounter<Pheet, task_storage_count_unsuccessful_takes> num_unsuccessful_takes;
+	BasicPerformanceCounter<Pheet, task_storage_count_successful_takes> num_successful_takes;
+	BasicPerformanceCounter<Pheet, task_storage_count_size_pop> total_size_pop;
+	TimePerformanceCounter<Pheet, task_storage_measure_pop_time> pop_time;
+	TimePerformanceCounter<Pheet, task_storage_measure_push_time> push_time;
 };
 
-template <class Scheduler>
-inline PrimitivePrimaryTaskStoragePerformanceCounters<Scheduler>::PrimitivePrimaryTaskStoragePerformanceCounters() {
+template <class Pheet>
+inline PrimitivePrimaryTaskStoragePerformanceCounters<Pheet>::PrimitivePrimaryTaskStoragePerformanceCounters() {
 
 }
 
-template <class Scheduler>
-inline PrimitivePrimaryTaskStoragePerformanceCounters<Scheduler>::PrimitivePrimaryTaskStoragePerformanceCounters(PrimitivePrimaryTaskStoragePerformanceCounters& other)
+template <class Pheet>
+inline PrimitivePrimaryTaskStoragePerformanceCounters<Pheet>::PrimitivePrimaryTaskStoragePerformanceCounters(PrimitivePrimaryTaskStoragePerformanceCounters& other)
 :num_unsuccessful_pops(other.num_unsuccessful_pops),
  num_successful_pops(other.num_successful_pops),
  num_unsuccessful_takes(other.num_unsuccessful_takes),
@@ -49,24 +49,24 @@ inline PrimitivePrimaryTaskStoragePerformanceCounters<Scheduler>::PrimitivePrima
 
 }
 
-template <class Scheduler>
-inline PrimitivePrimaryTaskStoragePerformanceCounters<Scheduler>::~PrimitivePrimaryTaskStoragePerformanceCounters() {
+template <class Pheet>
+inline PrimitivePrimaryTaskStoragePerformanceCounters<Pheet>::~PrimitivePrimaryTaskStoragePerformanceCounters() {
 
 }
 
-template <class Scheduler>
-inline void PrimitivePrimaryTaskStoragePerformanceCounters<Scheduler>::print_headers() {
-	BasicPerformanceCounter<Scheduler, task_storage_count_unsuccessful_pops>::print_header("num_unsuccessful_pops\t");
-	BasicPerformanceCounter<Scheduler, task_storage_count_successful_pops>::print_header("num_successful_pops\t");
-	BasicPerformanceCounter<Scheduler, task_storage_count_unsuccessful_takes>::print_header("num_unsuccessful_takes\t");
-	BasicPerformanceCounter<Scheduler, task_storage_count_successful_takes>::print_header("num_successful_takes\t");
-	BasicPerformanceCounter<Scheduler, task_storage_count_size_pop>::print_header("total_size_pop\t");
-	TimePerformanceCounter<Scheduler, task_storage_measure_pop_time>::print_header("pop_time\t");
-	TimePerformanceCounter<Scheduler, task_storage_measure_push_time>::print_header("push_time\t");
+template <class Pheet>
+inline void PrimitivePrimaryTaskStoragePerformanceCounters<Pheet>::print_headers() {
+	BasicPerformanceCounter<Pheet, task_storage_count_unsuccessful_pops>::print_header("num_unsuccessful_pops\t");
+	BasicPerformanceCounter<Pheet, task_storage_count_successful_pops>::print_header("num_successful_pops\t");
+	BasicPerformanceCounter<Pheet, task_storage_count_unsuccessful_takes>::print_header("num_unsuccessful_takes\t");
+	BasicPerformanceCounter<Pheet, task_storage_count_successful_takes>::print_header("num_successful_takes\t");
+	BasicPerformanceCounter<Pheet, task_storage_count_size_pop>::print_header("total_size_pop\t");
+	TimePerformanceCounter<Pheet, task_storage_measure_pop_time>::print_header("pop_time\t");
+	TimePerformanceCounter<Pheet, task_storage_measure_push_time>::print_header("push_time\t");
 }
 
-template <class Scheduler>
-inline void PrimitivePrimaryTaskStoragePerformanceCounters<Scheduler>::print_values() {
+template <class Pheet>
+inline void PrimitivePrimaryTaskStoragePerformanceCounters<Pheet>::print_values() {
 	num_unsuccessful_pops.print("%d\t");
 	num_successful_pops.print("%d\t");
 	num_unsuccessful_takes.print("%d\t");

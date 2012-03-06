@@ -36,10 +36,7 @@ template <class Pheet, typename TT, template <class P, typename S> class Primary
 class MultiStealSecondaryTaskStorage {
 public:
 	typedef TT T;
-	typedef /*struct{
-		void print_headers() {}
-		void print_values() {}
-	}*/ MultiStealSecondaryTaskStoragePerformanceCounters<Pheet> PerformanceCounters;
+	typedef MultiStealSecondaryTaskStoragePerformanceCounters<Pheet> PerformanceCounters;
 	typedef MultiStealSecondaryTaskStorageHeapElement<typename Primary<Pheet, T>::iterator> HeapElement;
 	typedef MultiStealSecondaryTaskStorageComparator<HeapElement> Comparator;
 

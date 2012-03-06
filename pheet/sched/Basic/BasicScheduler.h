@@ -27,12 +27,12 @@ struct BasicSchedulerState {
 
 	uint8_t current_state;
 	typename Pheet::Barrier state_barrier;
-	typename Pheet::Scheduler::Task *startup_task;
+//	typename Pheet::Scheduler::Task *startup_task;
 };
 
 template <class Pheet>
 BasicSchedulerState<Pheet>::BasicSchedulerState()
-: current_state(0), startup_task(NULL) {
+: current_state(0) {
 
 }
 
@@ -78,28 +78,28 @@ public:
 	Place* get_place_at(procs_t place_id);
 
 	template<class CallTaskType, typename ... TaskParams>
-		void finish(TaskParams&& ... params);
+	static void finish(TaskParams&& ... params);
 
 	template<typename F, typename ... TaskParams>
-		void finish(F&& f, TaskParams&& ... params);
+	static void finish(F&& f, TaskParams&& ... params);
 
 	template<class CallTaskType, typename ... TaskParams>
-		void call(TaskParams&& ... params);
+	static void call(TaskParams&& ... params);
 
 	template<typename F, typename ... TaskParams>
-		void call(F&& f, TaskParams&& ... params);
+	static void call(F&& f, TaskParams&& ... params);
 
 	template<class CallTaskType, typename ... TaskParams>
-		void spawn(TaskParams&& ... params);
+	static void spawn(TaskParams&& ... params);
 
 	template<typename F, typename ... TaskParams>
-		void spawn(F&& f, TaskParams&& ... params);
+	static void spawn(F&& f, TaskParams&& ... params);
 
 	template<class CallTaskType, class Strategy, typename ... TaskParams>
-		void spawn_prio(Strategy s, TaskParams&& ... params);
+	static void spawn_prio(Strategy s, TaskParams&& ... params);
 
 	template<class Strategy, typename F, typename ... TaskParams>
-		void spawn_prio(Strategy s, F&& f, TaskParams&& ... params);
+	static void spawn_prio(Strategy s, F&& f, TaskParams&& ... params);
 
 	static char const name[];
 	static procs_t const max_cpus;
@@ -220,13 +220,13 @@ void BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::spawn(F&& f, TaskP
 template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
 template<class CallTaskType, class Strategy, typename ... TaskParams>
 void BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::spawn_prio(Strategy s, TaskParams&& ... params) {
-	this->spawn<CallTaskType>(std::forward<TaskParams&&>(params) ...);
+	spawn<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
 template<class Strategy, typename F, typename ... TaskParams>
 void BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::spawn_prio(Strategy s, F&& f, TaskParams&& ... params) {
-	this->spawn(f, std::forward<TaskParams&&>(params) ...);
+	spawn(f, std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>

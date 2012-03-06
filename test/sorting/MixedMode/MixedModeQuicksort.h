@@ -9,75 +9,65 @@
 #ifndef MIXEDMODEQUICKSORT_H_
 #define MIXEDMODEQUICKSORT_H_
 
-#include "../../../misc/types.h"
-#include "../../../misc/atomics.h"
+#include <pheet/pheet.h>
+#include <pheet/misc/types.h>
+#include <pheet/misc/atomics.h>
+
 #include "MixedModeQuicksortTask.h"
 
 namespace pheet {
 
-template <class Scheduler, size_t BLOCK_SIZE = 4096>
-class MixedModeQuicksort {
+template <class Pheet, size_t BLOCK_SIZE = 4096>
+class MixedModeQuicksortImpl : public Pheet::Task {
 public:
-	MixedModeQuicksort(procs_t cpus, unsigned int* data, size_t length);
-	~MixedModeQuicksort();
+	MixedModeQuicksortImpl(unsigned int* data, size_t length);
+	~MixedModeQuicksortImpl();
 
-	void sort();
-	void print_results();
+	void operator()();
 
-	void print_headers();
-
-	static void print_scheduler_name();
-
-	static procs_t const max_cpus;
 	static char const name[];
-	static char const * const scheduler_name;
 
 private:
 	unsigned int* data;
 	size_t length;
-	typename Scheduler::CPUHierarchy cpu_hierarchy;
-	Scheduler scheduler;
 };
 
-template <class Scheduler, size_t BLOCK_SIZE>
-procs_t const MixedModeQuicksort<Scheduler, BLOCK_SIZE>::max_cpus = Scheduler::max_cpus;
+template <class Pheet, size_t BLOCK_SIZE>
+char const MixedModeQuicksortImpl<Pheet, BLOCK_SIZE>::name[] = "MixedMode Quicksort";
 
-template <class Scheduler, size_t BLOCK_SIZE>
-char const MixedModeQuicksort<Scheduler, BLOCK_SIZE>::name[] = "MixedMode Quicksort";
-
-template <class Scheduler, size_t BLOCK_SIZE>
-char const * const MixedModeQuicksort<Scheduler, BLOCK_SIZE>::scheduler_name = Scheduler::name;
-
-template <class Scheduler, size_t BLOCK_SIZE>
-MixedModeQuicksort<Scheduler, BLOCK_SIZE>::MixedModeQuicksort(procs_t cpus, unsigned int *data, size_t length)
-: data(data), length(length), cpu_hierarchy(cpus), scheduler(&cpu_hierarchy) {
+template <class Pheet, size_t BLOCK_SIZE>
+MixedModeQuicksortImpl<Pheet, BLOCK_SIZE>::MixedModeQuicksortImpl(unsigned int *data, size_t length)
+: data(data), length(length) {
 
 }
 
-template <class Scheduler, size_t BLOCK_SIZE>
-MixedModeQuicksort<Scheduler, BLOCK_SIZE>::~MixedModeQuicksort() {
+template <class Pheet, size_t BLOCK_SIZE>
+MixedModeQuicksortImpl<Pheet, BLOCK_SIZE>::~MixedModeQuicksortImpl() {
 
 }
 
-template <class Scheduler, size_t BLOCK_SIZE>
-void MixedModeQuicksort<Scheduler, BLOCK_SIZE>::sort() {
-	scheduler.template finish_nt<MixedModeQuicksortTask<typename Scheduler::Task, BLOCK_SIZE> >(((length / BLOCK_SIZE) / 8) + 1, data, length);
+template <class Pheet, size_t BLOCK_SIZE>
+void MixedModeQuicksortImpl<Pheet, BLOCK_SIZE>::operator()() {
+	Pheet::Environment::template spawn_nt<MixedModeQuicksortTask<Pheet, BLOCK_SIZE> >(((length / BLOCK_SIZE) / 8) + 1, data, length);
 }
-
-template <class Scheduler, size_t BLOCK_SIZE>
-void MixedModeQuicksort<Scheduler, BLOCK_SIZE>::print_results() {
+/*
+template <class Pheet, size_t BLOCK_SIZE>
+void MixedModeQuicksortImpl<Pheet, BLOCK_SIZE>::print_results() {
 	scheduler.print_performance_counter_values();
 }
 
-template <class Scheduler, size_t BLOCK_SIZE>
-void MixedModeQuicksort<Scheduler, BLOCK_SIZE>::print_headers() {
+template <class Pheet, size_t BLOCK_SIZE>
+void MixedModeQuicksortImpl<Pheet, BLOCK_SIZE>::print_headers() {
 	scheduler.print_performance_counter_headers();
 }
 
-template <class Scheduler, size_t BLOCK_SIZE>
-void MixedModeQuicksort<Scheduler, BLOCK_SIZE>::print_scheduler_name() {
-	Scheduler::print_name();
-}
+template <class Pheet, size_t BLOCK_SIZE>
+void MixedModeQuicksortImpl<Pheet, BLOCK_SIZE>::print_scheduler_name() {
+	Pheet::print_name();
+}*/
+
+template <class Pheet>
+using MixedModeQuicksort = MixedModeQuicksortImpl<Pheet, 4096>;
 
 }
 

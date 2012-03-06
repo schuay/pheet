@@ -12,7 +12,7 @@
 #include "Reference/ReferenceSTLSort.h"
 #include "Reference/ReferenceQuicksort.h"
 #include "Dag/DagQuicksort.h"
-//#include "MixedMode/MixedModeQuicksort.h"
+#include "MixedMode/MixedModeQuicksort.h"
 #include "Reference/ReferenceHeapSort.h"
 
 #include <pheet/ds/PriorityQueue/Heap/Heap.h>
@@ -22,6 +22,7 @@
 #include <pheet/pheet.h>
 #include <pheet/sched/Basic/BasicScheduler.h>
 #include <pheet/sched/Synchroneous/SynchroneousScheduler.h>
+#include <pheet/sched/MixedMode/MixedModeScheduler.h>
 
 #include <iostream>
 #endif
@@ -53,6 +54,8 @@ void SortingTests::run_test() {
 						ReferenceQuicksort>();
 	this->run_sorter<	Pheet::WithScheduler<SynchroneousScheduler>,
 						ReferenceHeapSort>();
+	this->run_sorter<	Pheet::WithScheduler<MixedModeScheduler>,
+						MixedModeQuicksort>();
 
 /*	this->run_sorter<MixedModeQuicksort<DefaultMixedModeScheduler> >();
 	this->run_sorter<DagQuicksort<DefaultMixedModeScheduler> >();

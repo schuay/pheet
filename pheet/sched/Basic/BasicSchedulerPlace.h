@@ -277,7 +277,7 @@ BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::~BasicSchedulerPlace(
 		}
 
 		machine_model.unbind();
-		local_place = NULL;
+		local_place = nullptr;
 	}
 	delete[] stack;
 	delete[] levels;

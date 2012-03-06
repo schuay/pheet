@@ -11,7 +11,7 @@
 
 namespace pheet {
 
-template <class Scheduler>
+template <class Pheet>
 class ArrayListHeapPrimaryTaskStoragePerformanceCounters {
 public:
 	ArrayListHeapPrimaryTaskStoragePerformanceCounters();
@@ -21,31 +21,31 @@ public:
 	static void print_headers();
 	void print_values();
 
-	BasicPerformanceCounter<Scheduler, task_storage_count_unsuccessful_pops> num_unsuccessful_pops;
-	BasicPerformanceCounter<Scheduler, task_storage_count_successful_pops> num_successful_pops;
-	BasicPerformanceCounter<Scheduler, task_storage_count_unsuccessful_takes> num_unsuccessful_takes;
-	BasicPerformanceCounter<Scheduler, task_storage_count_successful_takes> num_successful_takes;
-	BasicPerformanceCounter<Scheduler, task_storage_count_size_pop> total_size_pop;
-	TimePerformanceCounter<Scheduler, task_storage_measure_pop_time> pop_time;
-	TimePerformanceCounter<Scheduler, task_storage_measure_push_time> push_time;
-	TimePerformanceCounter<Scheduler, task_storage_measure_clean_time> clean_time;
-	TimePerformanceCounter<Scheduler, task_storage_measure_create_control_block_time> create_control_block_time;
-	TimePerformanceCounter<Scheduler, task_storage_measure_configure_successor_time> configure_successor_time;
-	TimePerformanceCounter<Scheduler, task_storage_measure_heap_push_time> heap_push_time;
-	TimePerformanceCounter<Scheduler, task_storage_measure_put_time> put_time;
-	TimePerformanceCounter<Scheduler, task_storage_measure_strategy_alloc_time> strategy_alloc_time;
-	BasicPerformanceCounter<Scheduler, task_storage_count_skipped_cleanups> num_skipped_cleanups;
-	MaxPerformanceCounter<Scheduler, size_t, task_storage_measure_max_control_block_items> max_control_block_items;
-	MaxPerformanceCounter<Scheduler, size_t, task_storage_measure_max_heap_length> max_heap_length;
+	BasicPerformanceCounter<Pheet, task_storage_count_unsuccessful_pops> num_unsuccessful_pops;
+	BasicPerformanceCounter<Pheet, task_storage_count_successful_pops> num_successful_pops;
+	BasicPerformanceCounter<Pheet, task_storage_count_unsuccessful_takes> num_unsuccessful_takes;
+	BasicPerformanceCounter<Pheet, task_storage_count_successful_takes> num_successful_takes;
+	BasicPerformanceCounter<Pheet, task_storage_count_size_pop> total_size_pop;
+	TimePerformanceCounter<Pheet, task_storage_measure_pop_time> pop_time;
+	TimePerformanceCounter<Pheet, task_storage_measure_push_time> push_time;
+	TimePerformanceCounter<Pheet, task_storage_measure_clean_time> clean_time;
+	TimePerformanceCounter<Pheet, task_storage_measure_create_control_block_time> create_control_block_time;
+	TimePerformanceCounter<Pheet, task_storage_measure_configure_successor_time> configure_successor_time;
+	TimePerformanceCounter<Pheet, task_storage_measure_heap_push_time> heap_push_time;
+	TimePerformanceCounter<Pheet, task_storage_measure_put_time> put_time;
+	TimePerformanceCounter<Pheet, task_storage_measure_strategy_alloc_time> strategy_alloc_time;
+	BasicPerformanceCounter<Pheet, task_storage_count_skipped_cleanups> num_skipped_cleanups;
+	MaxPerformanceCounter<Pheet, size_t, task_storage_measure_max_control_block_items> max_control_block_items;
+	MaxPerformanceCounter<Pheet, size_t, task_storage_measure_max_heap_length> max_heap_length;
 };
 
-template <class Scheduler>
-inline ArrayListHeapPrimaryTaskStoragePerformanceCounters<Scheduler>::ArrayListHeapPrimaryTaskStoragePerformanceCounters() {
+template <class Pheet>
+inline ArrayListHeapPrimaryTaskStoragePerformanceCounters<Pheet>::ArrayListHeapPrimaryTaskStoragePerformanceCounters() {
 
 }
 
-template <class Scheduler>
-ArrayListHeapPrimaryTaskStoragePerformanceCounters<Scheduler>::ArrayListHeapPrimaryTaskStoragePerformanceCounters(ArrayListHeapPrimaryTaskStoragePerformanceCounters& other)
+template <class Pheet>
+ArrayListHeapPrimaryTaskStoragePerformanceCounters<Pheet>::ArrayListHeapPrimaryTaskStoragePerformanceCounters(ArrayListHeapPrimaryTaskStoragePerformanceCounters& other)
 :num_unsuccessful_pops(other.num_unsuccessful_pops),
  num_successful_pops(other.num_successful_pops),
  num_unsuccessful_takes(other.num_unsuccessful_takes),
@@ -66,33 +66,33 @@ ArrayListHeapPrimaryTaskStoragePerformanceCounters<Scheduler>::ArrayListHeapPrim
 
 }
 
-template <class Scheduler>
-inline ArrayListHeapPrimaryTaskStoragePerformanceCounters<Scheduler>::~ArrayListHeapPrimaryTaskStoragePerformanceCounters() {
+template <class Pheet>
+inline ArrayListHeapPrimaryTaskStoragePerformanceCounters<Pheet>::~ArrayListHeapPrimaryTaskStoragePerformanceCounters() {
 
 }
 
-template <class Scheduler>
-void ArrayListHeapPrimaryTaskStoragePerformanceCounters<Scheduler>::print_headers() {
-	BasicPerformanceCounter<Scheduler, task_storage_count_unsuccessful_pops>::print_header("num_unsuccessful_pops\t");
-	BasicPerformanceCounter<Scheduler, task_storage_count_successful_pops>::print_header("num_successful_pops\t");
-	BasicPerformanceCounter<Scheduler, task_storage_count_unsuccessful_takes>::print_header("num_unsuccessful_takes\t");
-	BasicPerformanceCounter<Scheduler, task_storage_count_successful_takes>::print_header("num_successful_takes\t");
-	BasicPerformanceCounter<Scheduler, task_storage_count_size_pop>::print_header("total_size_pop\t");
-	TimePerformanceCounter<Scheduler, task_storage_measure_pop_time>::print_header("pop_time\t");
-	TimePerformanceCounter<Scheduler, task_storage_measure_push_time>::print_header("push_time\t");
-	TimePerformanceCounter<Scheduler, task_storage_measure_clean_time>::print_header("clean_time\t");
-	TimePerformanceCounter<Scheduler, task_storage_measure_create_control_block_time>::print_header("create_control_block_time\t");
-	TimePerformanceCounter<Scheduler, task_storage_measure_configure_successor_time>::print_header("configure_successor_time\t");
-	TimePerformanceCounter<Scheduler, task_storage_measure_heap_push_time>::print_header("heap_push_time\t");
-	TimePerformanceCounter<Scheduler, task_storage_measure_put_time>::print_header("put_time\t");
-	TimePerformanceCounter<Scheduler, task_storage_measure_strategy_alloc_time>::print_header("strategy_alloc_time\t");
-	TimePerformanceCounter<Scheduler, task_storage_count_skipped_cleanups>::print_header("num_skipped_cleanups\t");
-	MaxPerformanceCounter<Scheduler, size_t, task_storage_measure_max_control_block_items>::print_header("max_control_block_items\t");
-	MaxPerformanceCounter<Scheduler, size_t, task_storage_measure_max_heap_length>::print_header("max_heap_length\t");
+template <class Pheet>
+void ArrayListHeapPrimaryTaskStoragePerformanceCounters<Pheet>::print_headers() {
+	BasicPerformanceCounter<Pheet, task_storage_count_unsuccessful_pops>::print_header("num_unsuccessful_pops\t");
+	BasicPerformanceCounter<Pheet, task_storage_count_successful_pops>::print_header("num_successful_pops\t");
+	BasicPerformanceCounter<Pheet, task_storage_count_unsuccessful_takes>::print_header("num_unsuccessful_takes\t");
+	BasicPerformanceCounter<Pheet, task_storage_count_successful_takes>::print_header("num_successful_takes\t");
+	BasicPerformanceCounter<Pheet, task_storage_count_size_pop>::print_header("total_size_pop\t");
+	TimePerformanceCounter<Pheet, task_storage_measure_pop_time>::print_header("pop_time\t");
+	TimePerformanceCounter<Pheet, task_storage_measure_push_time>::print_header("push_time\t");
+	TimePerformanceCounter<Pheet, task_storage_measure_clean_time>::print_header("clean_time\t");
+	TimePerformanceCounter<Pheet, task_storage_measure_create_control_block_time>::print_header("create_control_block_time\t");
+	TimePerformanceCounter<Pheet, task_storage_measure_configure_successor_time>::print_header("configure_successor_time\t");
+	TimePerformanceCounter<Pheet, task_storage_measure_heap_push_time>::print_header("heap_push_time\t");
+	TimePerformanceCounter<Pheet, task_storage_measure_put_time>::print_header("put_time\t");
+	TimePerformanceCounter<Pheet, task_storage_measure_strategy_alloc_time>::print_header("strategy_alloc_time\t");
+	TimePerformanceCounter<Pheet, task_storage_count_skipped_cleanups>::print_header("num_skipped_cleanups\t");
+	MaxPerformanceCounter<Pheet, size_t, task_storage_measure_max_control_block_items>::print_header("max_control_block_items\t");
+	MaxPerformanceCounter<Pheet, size_t, task_storage_measure_max_heap_length>::print_header("max_heap_length\t");
 }
 
-template <class Scheduler>
-void ArrayListHeapPrimaryTaskStoragePerformanceCounters<Scheduler>::print_values() {
+template <class Pheet>
+void ArrayListHeapPrimaryTaskStoragePerformanceCounters<Pheet>::print_values() {
 	num_unsuccessful_pops.print("%d\t");
 	num_successful_pops.print("%d\t");
 	num_unsuccessful_takes.print("%d\t");

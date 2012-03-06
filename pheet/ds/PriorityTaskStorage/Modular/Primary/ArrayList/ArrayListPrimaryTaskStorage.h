@@ -21,30 +21,31 @@
 
 namespace pheet {
 
-template <class Scheduler, typename TT>
+template <class Pheet, typename TT>
 struct ArrayListPrimaryTaskStorageItem {
 	TT data;
-	BaseStrategy<Scheduler>* s;
+	BaseStrategy<Pheet>* s;
 	prio_t pop_prio;
 	size_t index;
 };
 
 // BLOCK_SIZE has to be a power of 2 to work with wrap-around of index
-template <class Scheduler, typename TT, size_t BLOCK_SIZE = 256>
-class ArrayListPrimaryTaskStorage {
+template <class Pheet, typename TT, size_t BLOCK_SIZE>
+class ArrayListPrimaryTaskStorageImpl {
 public:
 	typedef TT T;
-	typedef ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE> ThisType;
+	typedef ArrayListPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE> ThisType;
 	// Not completely a standard iterator, as it doesn't support a dereference operation, but this makes implementation simpler for now (and even more lightweight)
 	typedef ArrayListPrimaryTaskStorageIterator<ThisType> iterator;
-	typedef ArrayListPrimaryTaskStoragePerformanceCounters<Scheduler> PerformanceCounters;
+	typedef ArrayListPrimaryTaskStoragePerformanceCounters<Pheet> PerformanceCounters;
 	typedef ArrayListPrimaryTaskStorageControlBlock<ThisType> ControlBlock;
-	typedef ArrayListPrimaryTaskStorageItem<Scheduler, T> Item;
-	typedef ExponentialBackoff<> Backoff;
+	typedef ArrayListPrimaryTaskStorageItem<Pheet, T> Item;
+	typedef typename Pheet::Backoff Backoff;
+	typedef typename Pheet::Environment::StealerDescriptor StealerDescriptor;
 
-	ArrayListPrimaryTaskStorage(size_t expected_capacity);
-//	ArrayListPrimaryTaskStorage(size_t expected_capacity, PerformanceCounters& perf_count);
-	~ArrayListPrimaryTaskStorage();
+	ArrayListPrimaryTaskStorageImpl(size_t expected_capacity);
+//	ArrayListPrimaryTaskStorageImpl(size_t expected_capacity, PerformanceCounters& perf_count);
+	~ArrayListPrimaryTaskStorageImpl();
 
 	iterator begin(PerformanceCounters& pc);
 	iterator end(PerformanceCounters& pc);
@@ -52,7 +53,7 @@ public:
 	T take(iterator item, PerformanceCounters& pc);
 	void transfer(ThisType& other, iterator* items, size_t num_items, PerformanceCounters& pc);
 	bool is_taken(iterator item, PerformanceCounters& pc);
-	prio_t get_steal_priority(iterator item, typename Scheduler::StealerDescriptor& sd, PerformanceCounters& pc);
+	prio_t get_steal_priority(iterator item, StealerDescriptor& sd, PerformanceCounters& pc);
 	size_t get_task_id(iterator item, PerformanceCounters& pc);
 	void deactivate_iterator(iterator item, PerformanceCounters& pc);
 
@@ -78,7 +79,7 @@ protected:
 private:
 	T local_take(size_t block, size_t block_index, PerformanceCounters& pc);
 	void clean(PerformanceCounters& pc);
-	void push_internal(BaseStrategy<Scheduler>* s, T item, PerformanceCounters& pc);
+	void push_internal(BaseStrategy<Pheet>* s, T item, PerformanceCounters& pc);
 
 	ControlBlock* acquire_control_block();
 	void create_next_control_block(PerformanceCounters& pc);
@@ -111,26 +112,26 @@ private:
 	friend class ArrayListPrimaryTaskStorageIterator<ThisType>;
 };
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE>
-const TT ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::null_element = nullable_traits<T>::null_value;
+template <class Pheet, typename TT, size_t BLOCK_SIZE>
+const TT ArrayListPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE>::null_element = nullable_traits<T>::null_value;
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE>
-const size_t ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::block_size = BLOCK_SIZE;
+template <class Pheet, typename TT, size_t BLOCK_SIZE>
+const size_t ArrayListPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE>::block_size = BLOCK_SIZE;
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE>
-inline ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::ArrayListPrimaryTaskStorage(size_t expected_capacity)
+template <class Pheet, typename TT, size_t BLOCK_SIZE>
+inline ArrayListPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE>::ArrayListPrimaryTaskStorageImpl(size_t expected_capacity)
 : start_index(0), end_index(0), length(0), current_control_block_id(0), cleanup_control_block_id(0), current_control_block(control_blocks), current_control_block_item_index(0) {
 	current_control_block->init_empty(0, block_reuse);
 }
 /*
-template <class Scheduler, typename TT, size_t BLOCK_SIZE>
-inline ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::ArrayListPrimaryTaskStorage(size_t expected_capacity, PerformanceCounters& perf_count)
+template <class Pheet, typename TT, size_t BLOCK_SIZE>
+inline ArrayListPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE>::ArrayListPrimaryTaskStorageImpl(size_t expected_capacity, PerformanceCounters& perf_count)
 : top(0), bottom(0), data(expected_capacity), perf_count(perf_count) {
 
 }*/
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE>
-inline ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::~ArrayListPrimaryTaskStorage() {
+template <class Pheet, typename TT, size_t BLOCK_SIZE>
+inline ArrayListPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE>::~ArrayListPrimaryTaskStorageImpl() {
 	Backoff bo;
 	while(cleanup_control_block_id != current_control_block_id) {
 		if(!control_blocks[cleanup_control_block_id].try_cleanup(block_reuse, 0)) {
@@ -167,18 +168,18 @@ inline ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::~ArrayListPrimary
 	}
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE>
-typename ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::iterator ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::begin(PerformanceCounters& pc) {
+template <class Pheet, typename TT, size_t BLOCK_SIZE>
+typename ArrayListPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE>::iterator ArrayListPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE>::begin(PerformanceCounters& pc) {
 	return iterator(start_index);
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE>
-typename ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::iterator ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::end(PerformanceCounters& pc) {
+template <class Pheet, typename TT, size_t BLOCK_SIZE>
+typename ArrayListPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE>::iterator ArrayListPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE>::end(PerformanceCounters& pc) {
 	return iterator(end_index);
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE>
-TT ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::local_take(size_t block, size_t block_index, PerformanceCounters& pc) {
+template <class Pheet, typename TT, size_t BLOCK_SIZE>
+TT ArrayListPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE>::local_take(size_t block, size_t block_index, PerformanceCounters& pc) {
 	pheet_assert(block < current_control_block->get_length());
 	typename ControlBlock::Item* ccb_data = current_control_block->get_data();
 	pheet_assert(block_index - ccb_data[block].offset < block_size);
@@ -187,7 +188,7 @@ TT ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::local_take(size_t blo
 	// so we can always decrease the length
 	--length;
 
-	ArrayListPrimaryTaskStorageItem<Scheduler, T>& ptsi = ccb_data[block].data[block_index - ccb_data[block].offset];
+	Item& ptsi = ccb_data[block].data[block_index - ccb_data[block].offset];
 
 	if(ptsi.index != block_index) {
 		pc.num_unsuccessful_takes.incr();
@@ -202,11 +203,11 @@ TT ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::local_take(size_t blo
 	return ptsi.data;
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE>
-TT ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::take(iterator item, PerformanceCounters& pc) {
+template <class Pheet, typename TT, size_t BLOCK_SIZE>
+TT ArrayListPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE>::take(iterator item, PerformanceCounters& pc) {
 	pheet_assert(item != end(pc));
 
-	ArrayListPrimaryTaskStorageItem<Scheduler, T>* ptsi = item.dereference(this);
+	Item* ptsi = item.dereference(this);
 
 	if(ptsi == NULL || ptsi->index != item.get_index()) {
 		pc.num_unsuccessful_takes.incr();
@@ -222,8 +223,8 @@ TT ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::take(iterator item, P
 	return ptsi->data;
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE>
-void ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::transfer(ThisType& other, iterator* items, size_t num_items, PerformanceCounters& pc) {
+template <class Pheet, typename TT, size_t BLOCK_SIZE>
+void ArrayListPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE>::transfer(ThisType& other, iterator* items, size_t num_items, PerformanceCounters& pc) {
 	pheet_assert(other.is_empty());
 
 	for(size_t i = 0; i < num_items; ++i) {
@@ -231,7 +232,7 @@ void ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::transfer(ThisType& 
 		pheet_assert(i == 0 || items[i].get_index() > items[i-1].get_index());
 
 		pheet_assert(items[i] != end(pc));
-		ArrayListPrimaryTaskStorageItem<Scheduler, T>* ptsi = items[i].dereference(this);
+		Item* ptsi = items[i].dereference(this);
 		if(ptsi == NULL || ptsi->index != items[i].get_index()) {
 			pc.num_unsuccessful_takes.incr();
 		}
@@ -247,14 +248,14 @@ void ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::transfer(ThisType& 
 	}
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE>
-bool ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::is_taken(iterator item, PerformanceCounters& pc) {
+template <class Pheet, typename TT, size_t BLOCK_SIZE>
+bool ArrayListPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE>::is_taken(iterator item, PerformanceCounters& pc) {
 	Item* deref = item.dereference(this);
 	return deref == NULL || deref->index != item.get_index();
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE>
-prio_t ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::get_steal_priority(iterator item, typename Scheduler::StealerDescriptor& sd, PerformanceCounters& pc) {
+template <class Pheet, typename TT, size_t BLOCK_SIZE>
+prio_t ArrayListPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE>::get_steal_priority(iterator item, StealerDescriptor& sd, PerformanceCounters& pc) {
 	Item* deref = item.dereference(this);
 	if(deref == NULL) {
 		return 0;
@@ -270,19 +271,19 @@ prio_t ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::get_steal_priorit
  * Warning! If multiple tasks are stolen and inserted into another queue, they have to be
  * inserted in the previous insertion order! (by increasing task_id)
  */
-template <class Scheduler, typename TT, size_t BLOCK_SIZE>
-inline size_t ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::get_task_id(iterator item, PerformanceCounters& pc) {
+template <class Pheet, typename TT, size_t BLOCK_SIZE>
+inline size_t ArrayListPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE>::get_task_id(iterator item, PerformanceCounters& pc) {
 	return item.get_index();
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE>
-inline void ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::deactivate_iterator(iterator item, PerformanceCounters& pc) {
+template <class Pheet, typename TT, size_t BLOCK_SIZE>
+inline void ArrayListPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE>::deactivate_iterator(iterator item, PerformanceCounters& pc) {
 	return item.deactivate();
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE>
+template <class Pheet, typename TT, size_t BLOCK_SIZE>
 template <class Strategy>
-inline void ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::push(Strategy& s, T item, PerformanceCounters& pc) {
+inline void ArrayListPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE>::push(Strategy& s, T item, PerformanceCounters& pc) {
 	pc.push_time.start_timer();
 
 	size_t offset = current_control_block->get_data()[current_control_block_item_index].offset;
@@ -313,8 +314,8 @@ inline void ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::push(Strateg
 	pc.push_time.stop_timer();
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE>
-inline void ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::push_internal(BaseStrategy<Scheduler>* s, T item, PerformanceCounters& pc) {
+template <class Pheet, typename TT, size_t BLOCK_SIZE>
+inline void ArrayListPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE>::push_internal(BaseStrategy<Pheet>* s, T item, PerformanceCounters& pc) {
 	pc.push_time.start_timer();
 
 	size_t offset = current_control_block->get_data()[current_control_block_item_index].offset;
@@ -345,8 +346,8 @@ inline void ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::push_interna
 	pc.push_time.stop_timer();
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE>
-TT ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::pop(PerformanceCounters& pc) {
+template <class Pheet, typename TT, size_t BLOCK_SIZE>
+TT ArrayListPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE>::pop(PerformanceCounters& pc) {
 	pc.total_size_pop.add(length);
 	pc.pop_time.start_timer();
 	T ret;
@@ -402,8 +403,8 @@ TT ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::pop(PerformanceCounte
 	return ret;
 }
 /*
-template <class Scheduler, typename TT, size_t BLOCK_SIZE>
-inline TT ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::local_take_best(PerformanceCounters& pc) {
+template <class Pheet, typename TT, size_t BLOCK_SIZE>
+inline TT ArrayListPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE>::local_take_best(PerformanceCounters& pc) {
 	size_t upper_bound_length = 0;
 	size_t l = current_control_block->get_length();
 	typename ControlBlock::Item* ccb_data = current_control_block->get_data();
@@ -449,8 +450,8 @@ inline TT ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::local_take_bes
 	}
 }*/
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE>
-inline TT ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::peek(PerformanceCounters& pc) {
+template <class Pheet, typename TT, size_t BLOCK_SIZE>
+inline TT ArrayListPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE>::peek(PerformanceCounters& pc) {
 	size_t l = current_control_block->get_length();
 	typename ControlBlock::Item* ccb_data = current_control_block->get_data();
 	size_t block_limit;
@@ -487,24 +488,24 @@ inline TT ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::peek(Performan
 	}
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE>
-inline size_t ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::get_length(PerformanceCounters& pc) {
+template <class Pheet, typename TT, size_t BLOCK_SIZE>
+inline size_t ArrayListPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE>::get_length(PerformanceCounters& pc) {
 	return length;
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE>
-inline bool ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::is_empty(PerformanceCounters& pc) {
+template <class Pheet, typename TT, size_t BLOCK_SIZE>
+inline bool ArrayListPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE>::is_empty(PerformanceCounters& pc) {
 	clean(pc);
 	return length == 0;
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE>
-inline bool ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::is_full(PerformanceCounters& pc) {
+template <class Pheet, typename TT, size_t BLOCK_SIZE>
+inline bool ArrayListPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE>::is_full(PerformanceCounters& pc) {
 	return false;
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE>
-void ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::clean(PerformanceCounters& pc) {
+template <class Pheet, typename TT, size_t BLOCK_SIZE>
+void ArrayListPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE>::clean(PerformanceCounters& pc) {
 	while(cleanup_control_block_id != current_control_block_id) {
 		if(!control_blocks[cleanup_control_block_id].try_cleanup(block_reuse, current_control_block->get_length())) {
 			break;
@@ -535,18 +536,18 @@ void ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::clean(PerformanceCo
 	start_index = current_control_block->get_data()[0].first;
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE>
-inline void ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::perform_maintenance(PerformanceCounters& pc) {
+template <class Pheet, typename TT, size_t BLOCK_SIZE>
+inline void ArrayListPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE>::perform_maintenance(PerformanceCounters& pc) {
 	clean(pc);
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE>
-void ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::print_name() {
+template <class Pheet, typename TT, size_t BLOCK_SIZE>
+void ArrayListPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE>::print_name() {
 	std::cout << "ArrayListPrimaryTaskStorage";
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE>
-typename ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::ControlBlock* ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::acquire_control_block() {
+template <class Pheet, typename TT, size_t BLOCK_SIZE>
+typename ArrayListPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE>::ControlBlock* ArrayListPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE>::acquire_control_block() {
 	Backoff bo;
 	while(true) {
 		ControlBlock* cb = current_control_block;
@@ -558,8 +559,8 @@ typename ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::ControlBlock* A
 	}
 }
 
-template <class Scheduler, typename TT, size_t BLOCK_SIZE>
-void ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::create_next_control_block(PerformanceCounters& pc) {
+template <class Pheet, typename TT, size_t BLOCK_SIZE>
+void ArrayListPrimaryTaskStorageImpl<Pheet, TT, BLOCK_SIZE>::create_next_control_block(PerformanceCounters& pc) {
 	clean(pc);
 
 	size_t new_id = (current_control_block_id + 1) % num_control_blocks;
@@ -586,6 +587,9 @@ void ArrayListPrimaryTaskStorage<Scheduler, TT, BLOCK_SIZE>::create_next_control
 
 	pc.max_control_block_items.add_value(current_control_block->get_length());
 }
+
+template <class Pheet, typename TT>
+using ArrayListPrimaryTaskStorage = ArrayListPrimaryTaskStorageImpl<Pheet, TT, 256>;
 
 }
 

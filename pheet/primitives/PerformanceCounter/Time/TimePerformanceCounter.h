@@ -92,7 +92,7 @@ public:
 private:
 	SumReducer<Pheet, double> reducer;
 	struct timeval start_time;
-#ifndef NDEBUG
+#ifdef PHEET_DEBUG_MODE
 	bool is_active;
 #endif
 };
@@ -100,7 +100,7 @@ private:
 template <class Pheet>
 inline
 TimePerformanceCounter<Pheet, true>::TimePerformanceCounter()
-#ifndef NDEBUG
+#ifdef PHEET_DEBUG_MODE
 : is_active(false)
 #endif
 {
@@ -111,7 +111,7 @@ template <class Pheet>
 inline
 TimePerformanceCounter<Pheet, true>::TimePerformanceCounter(TimePerformanceCounter<Pheet, true>& other)
 : reducer(other.reducer)
-#ifndef NDEBUG
+#ifdef PHEET_DEBUG_MODE
   , is_active(false)
 #endif
 {
@@ -127,7 +127,7 @@ TimePerformanceCounter<Pheet, true>::~TimePerformanceCounter() {
 template <class Pheet>
 inline
 void TimePerformanceCounter<Pheet, true>::start_timer() {
-#ifndef NDEBUG
+#ifdef PHEET_DEBUG_MODE
 	pheet_assert(!is_active);
 	is_active = true;
 #endif
@@ -141,7 +141,7 @@ void TimePerformanceCounter<Pheet, true>::stop_timer() {
 	gettimeofday(&stop_time, NULL);
 	double time = (stop_time.tv_sec - start_time.tv_sec) + 1.0e-6 * stop_time.tv_usec - 1.0e-6 * start_time.tv_usec;
 	reducer.add(time);
-#ifndef NDEBUG
+#ifdef PHEET_DEBUG_MODE
 	pheet_assert(is_active);
 	is_active = false;
 #endif
@@ -150,7 +150,7 @@ void TimePerformanceCounter<Pheet, true>::stop_timer() {
 template <class Pheet>
 inline
 void TimePerformanceCounter<Pheet, true>::print(char const* const formatting_string) {
-#ifndef NDEBUG
+#ifdef PHEET_DEBUG_MODE
 	pheet_assert(!is_active);
 #endif
 	printf(formatting_string, reducer.get_sum());

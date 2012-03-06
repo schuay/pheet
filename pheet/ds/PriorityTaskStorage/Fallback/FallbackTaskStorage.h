@@ -16,14 +16,12 @@
 
 namespace pheet {
 
-template <class Scheduler, typename TT, template <class EScheduler, typename S> class BaseType>
+template <class Pheet, typename TT, template <class EPheet, typename S> class BaseType>
 class FallbackTaskStorage {
 public:
 	typedef TT T;
-	typedef struct{
-		void print_headers() {}
-		void print_values() {}
-	} PerformanceCounters;
+	typedef typename BaseType::PerformanceCounters PerformanceCounters;
+	typedef typename Pheet::Environment::StealerDescriptor StealerDescriptor;
 
 	FallbackTaskStorage(size_t expected_capacity);
 //	FallbackTaskStorage(size_t expected_capacity, PerformanceCounters& perf_count);
@@ -37,11 +35,11 @@ public:
 	T pop(PerformanceCounters& pc);
 	T peek();
 	T peek(PerformanceCounters& pc);
-	T steal(typename Scheduler::StealerDescriptor& sd);
-	T steal(typename Scheduler::StealerDescriptor& sd, PerformanceCounters& pc);
+	T steal(StealerDescriptor& sd);
+	T steal(StealerDescriptor& sd, PerformanceCounters& pc);
 
-	T steal_push(FallbackTaskStorage<Scheduler, TT, BaseType> &other, typename Scheduler::StealerDescriptor& sd);
-	T steal_push(FallbackTaskStorage<Scheduler, TT, BaseType> &other, typename Scheduler::StealerDescriptor& sd, PerformanceCounters& pc);
+	T steal_push(FallbackTaskStorage<Pheet, TT, BaseType> &other, StealerDescriptor& sd);
+	T steal_push(FallbackTaskStorage<Pheet, TT, BaseType> &other, StealerDescriptor& sd, PerformanceCounters& pc);
 
 	size_t get_length();
 	size_t get_length(PerformanceCounters& pc);
@@ -56,117 +54,117 @@ public:
 	static void print_name();
 
 private:
-	BaseType<Scheduler, TT> data;
+	BaseType<Pheet, TT> data;
 
 	PerformanceCounters perf_count;
 };
 
-template <class Scheduler, typename TT, template <class EScheduler, typename S> class BaseType>
-inline FallbackTaskStorage<Scheduler, TT, BaseType>::FallbackTaskStorage(size_t expected_capacity)
+template <class Pheet, typename TT, template <class EPheet, typename S> class BaseType>
+inline FallbackTaskStorage<Pheet, TT, BaseType>::FallbackTaskStorage(size_t expected_capacity)
 : data(expected_capacity) {
 
 }
 /*
-template <class Scheduler, typename TT, template <class EScheduler, typename S> class BaseType>
-inline FallbackTaskStorage<Scheduler, TT, BaseType>::FallbackTaskStorage(size_t expected_capacity, PerformanceCounters& perf_count)
+template <class Pheet, typename TT, template <class EPheet, typename S> class BaseType>
+inline FallbackTaskStorage<Pheet, TT, BaseType>::FallbackTaskStorage(size_t expected_capacity, PerformanceCounters& perf_count)
 : data(expected_capacity), perf_count(perf_count) {
 
 }*/
 
-template <class Scheduler, typename TT, template <class EScheduler, typename S> class BaseType>
-inline FallbackTaskStorage<Scheduler, TT, BaseType>::~FallbackTaskStorage() {
+template <class Pheet, typename TT, template <class EPheet, typename S> class BaseType>
+inline FallbackTaskStorage<Pheet, TT, BaseType>::~FallbackTaskStorage() {
 
 }
 
-template <class Scheduler, typename TT, template <class EScheduler, typename S> class BaseType>
+template <class Pheet, typename TT, template <class EPheet, typename S> class BaseType>
 template <class Strategy>
-inline void FallbackTaskStorage<Scheduler, TT, BaseType>::push(Strategy s, T item) {
+inline void FallbackTaskStorage<Pheet, TT, BaseType>::push(Strategy s, T item) {
 	data.push(item);
 }
 
-template <class Scheduler, typename TT, template <class EScheduler, typename S> class BaseType>
+template <class Pheet, typename TT, template <class EPheet, typename S> class BaseType>
 template <class Strategy>
-inline void FallbackTaskStorage<Scheduler, TT, BaseType>::push(Strategy s, T item, PerformanceCounters& pc) {
+inline void FallbackTaskStorage<Pheet, TT, BaseType>::push(Strategy s, T item, PerformanceCounters& pc) {
 	data.push(item);
 }
 
-template <class Scheduler, typename TT, template <class EScheduler, typename S> class BaseType>
-inline TT FallbackTaskStorage<Scheduler, TT, BaseType>::pop() {
+template <class Pheet, typename TT, template <class EPheet, typename S> class BaseType>
+inline TT FallbackTaskStorage<Pheet, TT, BaseType>::pop() {
 	return data.pop();
 }
 
-template <class Scheduler, typename TT, template <class EScheduler, typename S> class BaseType>
-inline TT FallbackTaskStorage<Scheduler, TT, BaseType>::pop(PerformanceCounters& pc) {
+template <class Pheet, typename TT, template <class EPheet, typename S> class BaseType>
+inline TT FallbackTaskStorage<Pheet, TT, BaseType>::pop(PerformanceCounters& pc) {
 	return data.pop();
 }
 
-template <class Scheduler, typename TT, template <class EScheduler, typename S> class BaseType>
-inline TT FallbackTaskStorage<Scheduler, TT, BaseType>::peek() {
+template <class Pheet, typename TT, template <class EPheet, typename S> class BaseType>
+inline TT FallbackTaskStorage<Pheet, TT, BaseType>::peek() {
 	return data.peek();
 }
 
-template <class Scheduler, typename TT, template <class EScheduler, typename S> class BaseType>
-inline TT FallbackTaskStorage<Scheduler, TT, BaseType>::peek(PerformanceCounters& pc) {
+template <class Pheet, typename TT, template <class EPheet, typename S> class BaseType>
+inline TT FallbackTaskStorage<Pheet, TT, BaseType>::peek(PerformanceCounters& pc) {
 	return data.peek();
 }
 
-template <class Scheduler, typename TT, template <class EScheduler, typename S> class BaseType>
-inline TT FallbackTaskStorage<Scheduler, TT, BaseType>::steal(typename Scheduler::StealerDescriptor& sd) {
+template <class Pheet, typename TT, template <class EPheet, typename S> class BaseType>
+inline TT FallbackTaskStorage<Pheet, TT, BaseType>::steal(StealerDescriptor& sd) {
 	return data.steal();
 }
 
-template <class Scheduler, typename TT, template <class EScheduler, typename S> class BaseType>
-inline TT FallbackTaskStorage<Scheduler, TT, BaseType>::steal(typename Scheduler::StealerDescriptor& sd, PerformanceCounters& pc) {
+template <class Pheet, typename TT, template <class EPheet, typename S> class BaseType>
+inline TT FallbackTaskStorage<Pheet, TT, BaseType>::steal(StealerDescriptor& sd, PerformanceCounters& pc) {
 	return data.steal();
 }
 
-template <class Scheduler, typename TT, template <class EScheduler, typename S> class BaseType>
-inline TT FallbackTaskStorage<Scheduler, TT, BaseType>::steal_push(FallbackTaskStorage<Scheduler, TT, BaseType>& other, typename Scheduler::StealerDescriptor& sd) {
+template <class Pheet, typename TT, template <class EPheet, typename S> class BaseType>
+inline TT FallbackTaskStorage<Pheet, TT, BaseType>::steal_push(FallbackTaskStorage<Pheet, TT, BaseType>& other, StealerDescriptor& sd) {
 	return data.steal_push(other.data);
 }
 
-template <class Scheduler, typename TT, template <class EScheduler, typename S> class BaseType>
-inline TT FallbackTaskStorage<Scheduler, TT, BaseType>::steal_push(FallbackTaskStorage<Scheduler, TT, BaseType>& other, typename Scheduler::StealerDescriptor& sd, PerformanceCounters& pc) {
+template <class Pheet, typename TT, template <class EPheet, typename S> class BaseType>
+inline TT FallbackTaskStorage<Pheet, TT, BaseType>::steal_push(FallbackTaskStorage<Pheet, TT, BaseType>& other, StealerDescriptor& sd, PerformanceCounters& pc) {
 	return data.steal_push(other.data);
 }
 
-template <class Scheduler, typename TT, template <class EScheduler, typename S> class BaseType>
-inline size_t FallbackTaskStorage<Scheduler, TT, BaseType>::get_length() {
+template <class Pheet, typename TT, template <class EPheet, typename S> class BaseType>
+inline size_t FallbackTaskStorage<Pheet, TT, BaseType>::get_length() {
 	return data.get_length();
 }
 
-template <class Scheduler, typename TT, template <class EScheduler, typename S> class BaseType>
-inline size_t FallbackTaskStorage<Scheduler, TT, BaseType>::get_length(PerformanceCounters& pc) {
+template <class Pheet, typename TT, template <class EPheet, typename S> class BaseType>
+inline size_t FallbackTaskStorage<Pheet, TT, BaseType>::get_length(PerformanceCounters& pc) {
 	return data.get_length();
 }
 
-template <class Scheduler, typename TT, template <class EScheduler, typename S> class BaseType>
-inline bool FallbackTaskStorage<Scheduler, TT, BaseType>::is_empty() {
+template <class Pheet, typename TT, template <class EPheet, typename S> class BaseType>
+inline bool FallbackTaskStorage<Pheet, TT, BaseType>::is_empty() {
 	return data.is_empty();
 }
 
-template <class Scheduler, typename TT, template <class EScheduler, typename S> class BaseType>
-inline bool FallbackTaskStorage<Scheduler, TT, BaseType>::is_empty(PerformanceCounters& pc) {
+template <class Pheet, typename TT, template <class EPheet, typename S> class BaseType>
+inline bool FallbackTaskStorage<Pheet, TT, BaseType>::is_empty(PerformanceCounters& pc) {
 	return data.is_empty();
 }
 
-template <class Scheduler, typename TT, template <class EScheduler, typename S> class BaseType>
-inline bool FallbackTaskStorage<Scheduler, TT, BaseType>::is_full() {
+template <class Pheet, typename TT, template <class EPheet, typename S> class BaseType>
+inline bool FallbackTaskStorage<Pheet, TT, BaseType>::is_full() {
 	return data.is_full();
 }
 
-template <class Scheduler, typename TT, template <class EScheduler, typename S> class BaseType>
-inline bool FallbackTaskStorage<Scheduler, TT, BaseType>::is_full(PerformanceCounters& pc) {
+template <class Pheet, typename TT, template <class EPheet, typename S> class BaseType>
+inline bool FallbackTaskStorage<Pheet, TT, BaseType>::is_full(PerformanceCounters& pc) {
 	return data.is_full();
 }
 
-template <class Scheduler, typename TT, template <class EScheduler, typename S> class BaseType>
-inline void FallbackTaskStorage<Scheduler, TT, BaseType>::perform_maintenance(PerformanceCounters& pc) {
+template <class Pheet, typename TT, template <class EPheet, typename S> class BaseType>
+inline void FallbackTaskStorage<Pheet, TT, BaseType>::perform_maintenance(PerformanceCounters& pc) {
 
 }
 
-template <class Scheduler, typename TT, template <class EScheduler, typename S> class BaseType>
-void FallbackTaskStorage<Scheduler, TT, BaseType>::print_name() {
+template <class Pheet, typename TT, template <class EPheet, typename S> class BaseType>
+void FallbackTaskStorage<Pheet, TT, BaseType>::print_name() {
 	std::cout << "FallbackTaskStorage";
 }
 

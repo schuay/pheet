@@ -28,6 +28,9 @@ public:
 	template<template <class P, typename S> class NewCA>
 		using WithCircularArray = CircularArrayStealingDequeImpl<Pheet, TT, NewCA>;
 
+	template <class P, class TTT>
+	using BT = CircularArrayStealingDequeImpl<P, TTT, CircularArray>;
+
 	CircularArrayStealingDequeImpl();
 	CircularArrayStealingDequeImpl(PerformanceCounters& pc);
 	CircularArrayStealingDequeImpl(size_t initial_capacity);

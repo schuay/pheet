@@ -17,10 +17,10 @@
 
 namespace pheet {
 
-template <class Scheduler, typename TT>
+template <class Pheet, typename TT>
 struct PrimitiveHeapPrimaryTaskStorageItem {
 	TT data;
-	BaseStrategy<Scheduler>* s;
+	BaseStrategy<Pheet>* s;
 	prio_t pop_prio;
 	// We won't be able to just store the steal prio statically in the future,
 	// as there might be more types of steal priorities, and calculating those may be expensive!
@@ -43,25 +43,26 @@ private:
 	CircularArray* data;
 };
 
-template <class Scheduler, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT = STLPriorityQueueWrapper>
-class PrimitiveHeapPrimaryTaskStorage {
+template <class Pheet, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT = STLPriorityQueueWrapper>
+class PrimitiveHeapPrimaryTaskStorageImpl {
 public:
 	typedef TT T;
 	// Not completely a standard iterator, as it doesn't support a dereference operation, but this makes implementation simpler for now (and even more lightweight)
 	typedef size_t iterator;
-	typedef PrimitiveHeapPrimaryTaskStoragePerformanceCounters<Scheduler> PerformanceCounters;
-	typedef PriorityQueueT<iterator, PrimitiveHeapPrimaryTaskStorageComparator<CircularArray<PrimitiveHeapPrimaryTaskStorageItem<Scheduler, T> > > > PriorityQueue;
+	typedef PrimitiveHeapPrimaryTaskStoragePerformanceCounters<Pheet> PerformanceCounters;
+	typedef PriorityQueueT<iterator, PrimitiveHeapPrimaryTaskStorageComparator<CircularArray<PrimitiveHeapPrimaryTaskStorageItem<Pheet, T> > > > PriorityQueue;
+	typedef typename Pheet::Environment::StealerDescriptor StealerDescriptor;
 
-	PrimitiveHeapPrimaryTaskStorage(size_t initial_capacity);
-//	PrimitiveHeapPrimaryTaskStorage(size_t initial_capacity, PerformanceCounters& perf_count);
-	~PrimitiveHeapPrimaryTaskStorage();
+	PrimitiveHeapPrimaryTaskStorageImpl(size_t initial_capacity);
+//	PrimitiveHeapPrimaryTaskStorageImpl(size_t initial_capacity, PerformanceCounters& perf_count);
+	~PrimitiveHeapPrimaryTaskStorageImpl();
 
 	iterator begin(PerformanceCounters& pc);
 	iterator end(PerformanceCounters& pc);
 
 	T take(iterator item, PerformanceCounters& pc);
 	bool is_taken(iterator item, PerformanceCounters& pc);
-	prio_t get_steal_priority(iterator item, typename Scheduler::StealerDescriptor& sd, PerformanceCounters& pc);
+	prio_t get_steal_priority(iterator item, StealerDescriptor& sd, PerformanceCounters& pc);
 	size_t get_task_id(iterator item, PerformanceCounters& pc);
 
 	template <class Strategy>
@@ -86,7 +87,7 @@ private:
 	size_t top;
 	size_t bottom;
 
-	CircularArray<PrimitiveHeapPrimaryTaskStorageItem<Scheduler, T> > data;
+	CircularArray<PrimitiveHeapPrimaryTaskStorageItem<Pheet, T> > data;
 	PriorityQueue pq;
 
 //	PerformanceCounters perf_count;
@@ -94,47 +95,47 @@ private:
 	static const T null_element;
 };
 
-template <class Scheduler, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
-const TT PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQueueT>::null_element = nullable_traits<T>::null_value;
+template <class Pheet, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+const TT PrimitiveHeapPrimaryTaskStorageImpl<Pheet, TT, CircularArray, PriorityQueueT>::null_element = nullable_traits<T>::null_value;
 
-template <class Scheduler, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
-inline PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQueueT>::PrimitiveHeapPrimaryTaskStorage(size_t expected_capacity)
+template <class Pheet, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+inline PrimitiveHeapPrimaryTaskStorageImpl<Pheet, TT, CircularArray, PriorityQueueT>::PrimitiveHeapPrimaryTaskStorageImpl(size_t expected_capacity)
 : top(0), bottom(0), data(expected_capacity),
-  pq(PrimitiveHeapPrimaryTaskStorageComparator<CircularArray<PrimitiveHeapPrimaryTaskStorageItem<Scheduler, T> > >(&data)) {
+  pq(PrimitiveHeapPrimaryTaskStorageComparator<CircularArray<PrimitiveHeapPrimaryTaskStorageItem<Pheet, T> > >(&data)) {
 
 }
 /*
-template <class Scheduler, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
-inline PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQueueT>::PrimitiveHeapPrimaryTaskStorage(size_t expected_capacity, PerformanceCounters& perf_count)
+template <class Pheet, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+inline PrimitiveHeapPrimaryTaskStorageImpl<Pheet, TT, CircularArray, PriorityQueueT>::PrimitiveHeapPrimaryTaskStorageImpl(size_t expected_capacity, PerformanceCounters& perf_count)
 : top(0), bottom(0), data(expected_capacity),
-  heap(PrimitiveHeapPrimaryTaskStorageComparator<CircularArray<PrimitiveHeapPrimaryTaskStorageItem<Scheduler, T> > >(&data)),
+  heap(PrimitiveHeapPrimaryTaskStorageComparator<CircularArray<PrimitiveHeapPrimaryTaskStorageItem<Pheet, T> > >(&data)),
   perf_count(perf_count) {
 
 }*/
 
-template <class Scheduler, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
-inline PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQueueT>::~PrimitiveHeapPrimaryTaskStorage() {
+template <class Pheet, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+inline PrimitiveHeapPrimaryTaskStorageImpl<Pheet, TT, CircularArray, PriorityQueueT>::~PrimitiveHeapPrimaryTaskStorageImpl() {
 
 }
 
-template <class Scheduler, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
-typename PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQueueT>::iterator PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQueueT>::begin(PerformanceCounters& pc) {
+template <class Pheet, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+typename PrimitiveHeapPrimaryTaskStorageImpl<Pheet, TT, CircularArray, PriorityQueueT>::iterator PrimitiveHeapPrimaryTaskStorageImpl<Pheet, TT, CircularArray, PriorityQueueT>::begin(PerformanceCounters& pc) {
 	return top;
 }
 
-template <class Scheduler, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
-typename PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQueueT>::iterator PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQueueT>::end(PerformanceCounters& pc) {
+template <class Pheet, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+typename PrimitiveHeapPrimaryTaskStorageImpl<Pheet, TT, CircularArray, PriorityQueueT>::iterator PrimitiveHeapPrimaryTaskStorageImpl<Pheet, TT, CircularArray, PriorityQueueT>::end(PerformanceCounters& pc) {
 	return bottom;
 }
 
 /*
  * Same as take, but is only safe to be called by the owning thread (but is faster)
  */
-template <class Scheduler, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
-TT PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQueueT>::local_take(iterator item, PerformanceCounters& pc) {
+template <class Pheet, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+TT PrimitiveHeapPrimaryTaskStorageImpl<Pheet, TT, CircularArray, PriorityQueueT>::local_take(iterator item, PerformanceCounters& pc) {
 	pheet_assert(item < bottom);
 
-	PrimitiveHeapPrimaryTaskStorageItem<Scheduler, T>& ptsi = data.get(item);
+	PrimitiveHeapPrimaryTaskStorageItem<Pheet, T>& ptsi = data.get(item);
 
 	if(ptsi.index != item) {
 		pc.num_unsuccessful_takes.incr();
@@ -150,11 +151,11 @@ TT PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQueueT>
 	return ptsi.data;
 }
 
-template <class Scheduler, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
-TT PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQueueT>::take(iterator item, PerformanceCounters& pc) {
+template <class Pheet, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+TT PrimitiveHeapPrimaryTaskStorageImpl<Pheet, TT, CircularArray, PriorityQueueT>::take(iterator item, PerformanceCounters& pc) {
 	pheet_assert(item < bottom);
 
-	PrimitiveHeapPrimaryTaskStorageItem<Scheduler, T>& ptsi = data.get(item);
+	PrimitiveHeapPrimaryTaskStorageItem<Pheet, T>& ptsi = data.get(item);
 
 	if(ptsi.index != item) {
 		pc.num_unsuccessful_takes.incr();
@@ -164,7 +165,7 @@ TT PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQueueT>
 	MEMORY_FENCE();
 
 	T ret = ptsi.data;
-	BaseStrategy<Scheduler>* s = ptsi.s;
+	BaseStrategy<Pheet>* s = ptsi.s;
 	if(!SIZET_CAS(&(ptsi.index), item, item + 1)) {
 		pc.num_unsuccessful_takes.incr();
 		return null_element;
@@ -175,13 +176,13 @@ TT PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQueueT>
 	return ret;
 }
 
-template <class Scheduler, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
-bool PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQueueT>::is_taken(iterator item, PerformanceCounters& pc) {
+template <class Pheet, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+bool PrimitiveHeapPrimaryTaskStorageImpl<Pheet, TT, CircularArray, PriorityQueueT>::is_taken(iterator item, PerformanceCounters& pc) {
 	return data.get(item).index != item;
 }
 
-template <class Scheduler, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
-prio_t PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQueueT>::get_steal_priority(iterator item, typename Scheduler::StealerDescriptor& sd, PerformanceCounters& pc) {
+template <class Pheet, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+prio_t PrimitiveHeapPrimaryTaskStorageImpl<Pheet, TT, CircularArray, PriorityQueueT>::get_steal_priority(iterator item, StealerDescriptor& sd, PerformanceCounters& pc) {
 	return data.get(item).steal_prio;
 }
 
@@ -193,14 +194,14 @@ prio_t PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQue
  * Warning! If multiple tasks are stolen and inserted into another queue, they have to be
  * inserted in the previous insertion order! (by increasing task_id)
  */
-template <class Scheduler, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
-size_t PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQueueT>::get_task_id(iterator item, PerformanceCounters& pc) {
+template <class Pheet, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+size_t PrimitiveHeapPrimaryTaskStorageImpl<Pheet, TT, CircularArray, PriorityQueueT>::get_task_id(iterator item, PerformanceCounters& pc) {
 	return item;
 }
 
-template <class Scheduler, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+template <class Pheet, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
 template <class Strategy>
-inline void PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQueueT>::push(Strategy& s, T item, PerformanceCounters& pc) {
+inline void PrimitiveHeapPrimaryTaskStorageImpl<Pheet, TT, CircularArray, PriorityQueueT>::push(Strategy& s, T item, PerformanceCounters& pc) {
 	pc.push_time.start_timer();
 	if(bottom - top == data.get_capacity()) {
 		clean(pc);
@@ -210,11 +211,11 @@ inline void PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, Priori
 		}
 	}
 
-	PrimitiveHeapPrimaryTaskStorageItem<Scheduler, TT> to_put;
+	PrimitiveHeapPrimaryTaskStorageItem<Pheet, TT> to_put;
 	to_put.data = item;
 	to_put.s = new Strategy(s);
 	to_put.pop_prio = s.get_pop_priority(bottom);
-	typename Scheduler::StealerDescriptor sd;
+	StealerDescriptor sd;
 	to_put.steal_prio = s.get_steal_priority(bottom, sd);
 	to_put.index = bottom;
 
@@ -227,8 +228,8 @@ inline void PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, Priori
 	pc.push_time.stop_timer();
 }
 
-template <class Scheduler, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
-inline TT PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQueueT>::pop(PerformanceCounters& pc) {
+template <class Pheet, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+inline TT PrimitiveHeapPrimaryTaskStorageImpl<Pheet, TT, CircularArray, PriorityQueueT>::pop(PerformanceCounters& pc) {
 	pc.total_size_pop.add(pq.get_length());
 	pc.pop_time.start_timer();
 	T ret;
@@ -276,8 +277,8 @@ inline TT PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, Priority
 	return ret;
 }
 
-template <class Scheduler, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
-inline TT PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQueueT>::peek(PerformanceCounters& pc) {
+template <class Pheet, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+inline TT PrimitiveHeapPrimaryTaskStorageImpl<Pheet, TT, CircularArray, PriorityQueueT>::peek(PerformanceCounters& pc) {
 /*	iterator i = begin();
 	while(i != end() && is_taken(top)) {
 		++i;
@@ -289,12 +290,12 @@ inline TT PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, Priority
 	top = i;
 
 	iterator best = i;
-	PrimitiveHeapPrimaryTaskStorageItem<Scheduler, T> ret_item = data.get(i);
+	PrimitiveHeapPrimaryTaskStorageItem<Pheet, T> ret_item = data.get(i);
 	prio_t best_prio = ret_item.pop_prio;
 	++i;
 	for(; i != end(); ++i) {
 		if(!is_taken(i)) {
-			PrimitiveHeapPrimaryTaskStorageItem<Scheduler, T> tmp_item = data.get(i);
+			PrimitiveHeapPrimaryTaskStorageItem<Pheet, T> tmp_item = data.get(i);
 			prio_t tmp_prio = tmp_item.pop_prio;
 			if(tmp_prio > best_prio) {
 				best = i;
@@ -320,26 +321,26 @@ inline TT PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, Priority
 	return ret;
 }
 
-template <class Scheduler, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
-inline size_t PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQueueT>::get_length(PerformanceCounters& pc) {
+template <class Pheet, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+inline size_t PrimitiveHeapPrimaryTaskStorageImpl<Pheet, TT, CircularArray, PriorityQueueT>::get_length(PerformanceCounters& pc) {
 	clean(pc);
 	return bottom - top;
 }
 
-template <class Scheduler, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
-inline bool PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQueueT>::is_empty(PerformanceCounters& pc) {
+template <class Pheet, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+inline bool PrimitiveHeapPrimaryTaskStorageImpl<Pheet, TT, CircularArray, PriorityQueueT>::is_empty(PerformanceCounters& pc) {
 	clean_pq(pc);
 	return pq.is_empty();
 }
 
-template <class Scheduler, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
-inline bool PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQueueT>::is_full(PerformanceCounters& pc) {
+template <class Pheet, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+inline bool PrimitiveHeapPrimaryTaskStorageImpl<Pheet, TT, CircularArray, PriorityQueueT>::is_full(PerformanceCounters& pc) {
 	clean(pc);
 	return (!data.is_growable()) && (bottom - top == data.get_capacity());
 }
 
-template <class Scheduler, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
-void PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQueueT>::clean_pq(PerformanceCounters& pc) {
+template <class Pheet, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+void PrimitiveHeapPrimaryTaskStorageImpl<Pheet, TT, CircularArray, PriorityQueueT>::clean_pq(PerformanceCounters& pc) {
 	if(pq.is_empty()) {
 		return;
 	}
@@ -353,8 +354,8 @@ void PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQueue
 	}
 }
 
-template <class Scheduler, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
-void PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQueueT>::clean(PerformanceCounters& pc) {
+template <class Pheet, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+void PrimitiveHeapPrimaryTaskStorageImpl<Pheet, TT, CircularArray, PriorityQueueT>::clean(PerformanceCounters& pc) {
 	size_t i = top;
 	while(i < bottom && is_taken(i, pc)) {
 		++i;
@@ -362,18 +363,21 @@ void PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQueue
 	top = i;
 }
 
-template <class Scheduler, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
-inline void PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQueueT>::perform_maintenance(PerformanceCounters& pc) {
+template <class Pheet, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+inline void PrimitiveHeapPrimaryTaskStorageImpl<Pheet, TT, CircularArray, PriorityQueueT>::perform_maintenance(PerformanceCounters& pc) {
 	clean(pc);
 	clean_pq(pc);
 }
 
-template <class Scheduler, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
-void PrimitiveHeapPrimaryTaskStorage<Scheduler, TT, CircularArray, PriorityQueueT>::print_name() {
+template <class Pheet, typename TT, template <typename S> class CircularArray, template <typename S, typename Comp> class PriorityQueueT>
+void PrimitiveHeapPrimaryTaskStorageImpl<Pheet, TT, CircularArray, PriorityQueueT>::print_name() {
 	std::cout << "PrimitiveHeapPrimaryTaskStorage<";
 	PriorityQueue::print_name();
 	std::cout << ">";
 }
+
+template <class Pheet, typename TT>
+using PrimitiveHeapPrimaryTaskStorage = PrimitiveHeapPrimaryTaskStorageImpl<Pheet, TT, Pheet::CDS::template CircularArray, Pheet::DS::template PQ>;
 
 }
 

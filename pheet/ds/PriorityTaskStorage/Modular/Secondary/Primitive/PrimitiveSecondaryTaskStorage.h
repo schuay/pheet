@@ -12,57 +12,54 @@
 
 namespace pheet {
 
-template <class Scheduler, typename TT, template <class Sched, typename S> class Primary>
+template <class Pheet, typename TT, template <class SP, typename S> class Primary>
 class PrimitiveSecondaryTaskStorage {
 public:
 	typedef TT T;
-	typedef /*struct{
-		void print_headers() {}
-		void print_values() {}
-	}*/ PrimitiveSecondaryTaskStoragePerformanceCounters<Scheduler> PerformanceCounters;
+	typedef PrimitiveSecondaryTaskStoragePerformanceCounters<Pheet> PerformanceCounters;
 
-	PrimitiveSecondaryTaskStorage(Primary<Scheduler, TT>* primary, size_t expected_capacity);
+	PrimitiveSecondaryTaskStorage(Primary<Pheet, TT>* primary, size_t expected_capacity);
 //	PrimitiveSecondaryTaskStorage(Primary<TT>* primary, PerformanceCounters& perf_count);
 	~PrimitiveSecondaryTaskStorage();
 
-	TT steal(typename Scheduler::StealerDescriptor& sd, typename Primary<Scheduler, TT>::PerformanceCounters& ppc, PerformanceCounters& pc);
-	TT steal_push(Primary<Scheduler, TT>& other_primary, typename Scheduler::StealerDescriptor& sd, typename Primary<Scheduler, TT>::PerformanceCounters& ppc, PerformanceCounters& pc);
+	TT steal(typename Pheet::StealerDescriptor& sd, typename Primary<Pheet, TT>::PerformanceCounters& ppc, PerformanceCounters& pc);
+	TT steal_push(Primary<Pheet, TT>& other_primary, typename Pheet::StealerDescriptor& sd, typename Primary<Pheet, TT>::PerformanceCounters& ppc, PerformanceCounters& pc);
 
 	static void print_name();
 
 private:
-	Primary<Scheduler, TT>* primary;
+	Primary<Pheet, TT>* primary;
 
 //	PerformanceCounters perf_count;
 
 	static T const null_element;
 };
 
-template <class Scheduler, typename TT, template <class Sched, typename S> class Primary>
-TT const PrimitiveSecondaryTaskStorage<Scheduler, TT, Primary>::null_element = nullable_traits<TT>::null_value;
+template <class Pheet, typename TT, template <class SP, typename S> class Primary>
+TT const PrimitiveSecondaryTaskStorage<Pheet, TT, Primary>::null_element = nullable_traits<TT>::null_value;
 
-template <class Scheduler, typename TT, template <class Sched, typename S> class Primary>
-inline PrimitiveSecondaryTaskStorage<Scheduler, TT, Primary>::PrimitiveSecondaryTaskStorage(Primary<Scheduler, T>* primary, size_t expected_capacity)
+template <class Pheet, typename TT, template <class SP, typename S> class Primary>
+inline PrimitiveSecondaryTaskStorage<Pheet, TT, Primary>::PrimitiveSecondaryTaskStorage(Primary<Pheet, T>* primary, size_t expected_capacity)
 : primary(primary) {
 
 }
 /*
-template <class Scheduler, typename TT, template <class Sched, typename S> class Primary>
-inline PrimitiveSecondaryTaskStorage<Scheduler, TT, Primary>::PrimitiveSecondaryTaskStorage(Primary<Scheduler, T>* primary, PerformanceCounters& perf_count)
+template <class Pheet, typename TT, template <class SP, typename S> class Primary>
+inline PrimitiveSecondaryTaskStorage<Pheet, TT, Primary>::PrimitiveSecondaryTaskStorage(Primary<Pheet, T>* primary, PerformanceCounters& perf_count)
 : primary(primary), perf_count(perf_count) {
 
 }*/
 
-template <class Scheduler, typename TT, template <class Sched, typename S> class Primary>
-inline PrimitiveSecondaryTaskStorage<Scheduler, TT, Primary>::~PrimitiveSecondaryTaskStorage() {
+template <class Pheet, typename TT, template <class SP, typename S> class Primary>
+inline PrimitiveSecondaryTaskStorage<Pheet, TT, Primary>::~PrimitiveSecondaryTaskStorage() {
 
 }
 
-template <class Scheduler, typename TT, template <class Sched, typename S> class Primary>
-TT PrimitiveSecondaryTaskStorage<Scheduler, TT, Primary>::steal(typename Scheduler::StealerDescriptor& sd, typename Primary<Scheduler, TT>::PerformanceCounters& ppc, PerformanceCounters& pc) {
+template <class Pheet, typename TT, template <class SP, typename S> class Primary>
+TT PrimitiveSecondaryTaskStorage<Pheet, TT, Primary>::steal(typename Pheet::StealerDescriptor& sd, typename Primary<Pheet, TT>::PerformanceCounters& ppc, PerformanceCounters& pc) {
 	pc.steal_time.start_timer();
-	typename Primary<Scheduler, T>::iterator begin = primary->begin(ppc);
-	typename Primary<Scheduler, T>::iterator end = primary->end(ppc);
+	typename Primary<Pheet, T>::iterator begin = primary->begin(ppc);
+	typename Primary<Pheet, T>::iterator end = primary->end(ppc);
 
 	// If this happens we probably have invalid iterators
 	// We might change this assertion to use some number dependent on ptrdiff_t max, but for now this is better for debugging
@@ -70,10 +67,10 @@ TT PrimitiveSecondaryTaskStorage<Scheduler, TT, Primary>::steal(typename Schedul
 
 	pc.total_size_steal.add(end - begin);
 	// g++ 4.4 unfortunately generates a compiler warning for this. Just ignore it, 4.6.1 seems to be more intelligent.
-	typename Primary<Scheduler, T>::iterator best;
+	typename Primary<Pheet, T>::iterator best;
 	prio_t best_prio = 0;
 
-	for(typename Primary<Scheduler, T>::iterator i = begin; i != end; ++i) {
+	for(typename Primary<Pheet, T>::iterator i = begin; i != end; ++i) {
 		if(!primary->is_taken(i, ppc)) {
 			prio_t tmp_prio = primary->get_steal_priority(i, sd, ppc);
 			if(tmp_prio > best_prio) {
@@ -101,13 +98,13 @@ TT PrimitiveSecondaryTaskStorage<Scheduler, TT, Primary>::steal(typename Schedul
 	return ret;
 }
 
-template <class Scheduler, typename TT, template <class Sched, typename S> class Primary>
-TT PrimitiveSecondaryTaskStorage<Scheduler, TT, Primary>::steal_push(Primary<Scheduler, TT>& other_primary, typename Scheduler::StealerDescriptor& sd, typename Primary<Scheduler, TT>::PerformanceCounters& ppc, PerformanceCounters& pc) {
+template <class Pheet, typename TT, template <class SP, typename S> class Primary>
+TT PrimitiveSecondaryTaskStorage<Pheet, TT, Primary>::steal_push(Primary<Pheet, TT>& other_primary, typename Pheet::StealerDescriptor& sd, typename Primary<Pheet, TT>::PerformanceCounters& ppc, PerformanceCounters& pc) {
 	return steal(sd, ppc, pc);
 }
 
-template <class Scheduler, typename TT, template <class Sched, typename S> class Primary>
-void PrimitiveSecondaryTaskStorage<Scheduler, TT, Primary>::print_name() {
+template <class Pheet, typename TT, template <class SP, typename S> class Primary>
+void PrimitiveSecondaryTaskStorage<Pheet, TT, Primary>::print_name() {
 	std::cout << "PrimitiveSecondaryTaskStorage";
 }
 

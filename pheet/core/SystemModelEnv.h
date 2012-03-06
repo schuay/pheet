@@ -25,6 +25,9 @@ public:
 
 	template <class P>
 	using T = SystemModelEnv<P, MachineModelT>;
+
+	template <class P>
+	using BT = SystemModelEnv<P, MachineModelT>;
 };
 
 template<class Pheet>

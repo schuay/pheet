@@ -9,36 +9,41 @@
 #ifndef BACKOFFLOCK_H_
 #define BACKOFFLOCK_H_
 
-#include "../../Backoff/Exponential/ExponentialBackoff.h"
-
 namespace pheet {
 
-template <class Backoff = ExponentialBackoff>
-class BackoffLock {
+template <class Pheet, class Backoff>
+class BackoffLockImpl {
 public:
-	BackoffLock();
-	~BackoffLock();
+	template <class NewBO>
+	using WithBackoff = BackoffLockImpl<Pheet, NewBO>;
+
+	template <class P>
+	using T = BackoffLockImpl<P, Backoff>;
+
+	BackoffLockImpl();
+	~BackoffLockImpl();
 
 	void lock();
+	bool try_lock();
 	bool try_lock(long int time_ms);
 
 	void unlock();
 private:
-	int locked;
+	int volatile locked;
 };
 
-template <class Backoff>
-BackoffLock<Backoff>::BackoffLock()
+template <class Pheet, class Backoff>
+BackoffLockImpl<Pheet, Backoff>::BackoffLock()
 :locked(0) {
 
 }
 
-template <class Backoff>
-BackoffLock<Backoff>::~BackoffLock() {
+template <class Pheet, class Backoff>
+BackoffLockImpl<Pheet, Backoff>::~BackoffLock() {
 }
 
-template <class Backoff>
-void BackoffLock<Backoff>::lock() {
+template <class Pheet, class Backoff>
+void BackoffLockImpl<Pheet, Backoff>::lock() {
 	Backoff bo;
 	while(!INT_CAS(&locked, 0, 1)) {
 		while(locked) {
@@ -47,8 +52,13 @@ void BackoffLock<Backoff>::lock() {
 	};
 }
 
-template <class Backoff>
-bool BackoffLock<Backoff>::try_lock(long int time_ms) {
+template <class Pheet, class Backoff>
+bool BackoffLockImpl<Pheet, Backoff>::try_lock() {
+	return INT_CAS(&locked, 0, 1);
+}
+
+template <class Pheet, class Backoff>
+bool BackoffLockImpl<Pheet, Backoff>::try_lock(long int time_ms) {
 	Backoff bo;
 	struct timeval begin;
 	gettimeofday(&begin, NULL);
@@ -67,10 +77,13 @@ bool BackoffLock<Backoff>::try_lock(long int time_ms) {
 	return true;
 }
 
-template <class Backoff>
-void BackoffLock<Backoff>::unlock() {
+template <class Pheet, class Backoff>
+void BackoffLockImpl<Pheet, Backoff>::unlock() {
 	locked = 0;
 }
+
+template <class Pheet>
+using BackoffLock = BackoffLockImpl<Pheet, Pheet::Backoff>;
 
 }
 

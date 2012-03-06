@@ -16,7 +16,7 @@
 
 namespace pheet {
 
-template <typename TT, class Comparator = std::less<TT> >
+template <class Pheet, typename TT, class Comparator = std::less<TT> >
 class STLPriorityQueueWrapper {
 public:
 	typedef TT T;
@@ -39,52 +39,52 @@ private:
 };
 
 
-template <typename TT, class Comparator>
-STLPriorityQueueWrapper<TT, Comparator>::STLPriorityQueueWrapper() {
+template <class Pheet, typename TT, class Comparator>
+STLPriorityQueueWrapper<Pheet, TT, Comparator>::STLPriorityQueueWrapper() {
 
 }
 
-template <typename TT, class Comparator>
-STLPriorityQueueWrapper<TT, Comparator>::STLPriorityQueueWrapper(Comparator const& comp)
+template <class Pheet, typename TT, class Comparator>
+STLPriorityQueueWrapper<Pheet, TT, Comparator>::STLPriorityQueueWrapper(Comparator const& comp)
 : stl_pq(comp) {
 
 }
 
-template <typename TT, class Comparator>
-STLPriorityQueueWrapper<TT, Comparator>::~STLPriorityQueueWrapper() {
+template <class Pheet, typename TT, class Comparator>
+STLPriorityQueueWrapper<Pheet, TT, Comparator>::~STLPriorityQueueWrapper() {
 
 }
 
-template <typename TT, class Comparator>
-void STLPriorityQueueWrapper<TT, Comparator>::push(T item) {
+template <class Pheet, typename TT, class Comparator>
+void STLPriorityQueueWrapper<Pheet, TT, Comparator>::push(T item) {
 	stl_pq.push(item);
 }
 
-template <typename TT, class Comparator>
-TT STLPriorityQueueWrapper<TT, Comparator>::peek() {
+template <class Pheet, typename TT, class Comparator>
+TT STLPriorityQueueWrapper<Pheet, TT, Comparator>::peek() {
 	return stl_pq.top();
 }
 
 
-template <typename TT, class Comparator>
-TT STLPriorityQueueWrapper<TT, Comparator>::pop() {
+template <class Pheet, typename TT, class Comparator>
+TT STLPriorityQueueWrapper<Pheet, TT, Comparator>::pop() {
 	T ret = stl_pq.top();
 	stl_pq.pop();
 	return ret;
 }
 
-template <typename TT, class Comparator>
-size_t STLPriorityQueueWrapper<TT, Comparator>::get_length() {
+template <class Pheet, typename TT, class Comparator>
+size_t STLPriorityQueueWrapper<Pheet, TT, Comparator>::get_length() {
 	return stl_pq.size();
 }
 
-template <typename TT, class Comparator>
-bool STLPriorityQueueWrapper<TT, Comparator>::is_empty() {
+template <class Pheet, typename TT, class Comparator>
+bool STLPriorityQueueWrapper<Pheet, TT, Comparator>::is_empty() {
 	return stl_pq.empty();
 }
 
-template <typename TT, class Comparator>
-void STLPriorityQueueWrapper<TT, Comparator>::print_name() {
+template <class Pheet, typename TT, class Comparator>
+void STLPriorityQueueWrapper<Pheet, TT, Comparator>::print_name() {
 	std::cout << "STLPriorityQueueWrapper";
 }
 

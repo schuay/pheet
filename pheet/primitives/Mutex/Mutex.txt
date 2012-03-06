@@ -1,35 +1,6 @@
 Provides different lock implementations for mutual exclusion.
 
-As C++ does not support a standalone finally statement, the Critical Section
-object should be used. It acquires the lock on initialization, and releases
-it on destruction.
+Should conform to the C++11 mutex specification. (use std::lock_guard to create a critical section)
 
-Usage example:
+Some implementations still have different behaviour for try_lock, but this will be changed in the future
 
-/*
- *	Non-critical code
- */
-{CriticalSection<LockType> cs(&lock);
-	/*
-	 * critical code goes here
-	 */
-} // Lock is automatically released here
-/*
- * Non-critical code
- */
- 
-A CriticalSection object supporting try_lock has yet to be implemented.
-
-Lock Methods:
-void lock()
-Acquires the lock. Sooner or later acquires the lock (assuming there is no
-deadlock), but progress guarantees and liveness properties are 
-implementation dependent.
-
-void unlock()
-Unlocks the object
-
-void try_lock(long int time_ms)
-Optional.
-Tries to acquire the lock until at least time_ms milliseconds have passed.
-Should try to lock at least once, even for time_ms <= 0
