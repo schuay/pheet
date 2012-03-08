@@ -83,8 +83,8 @@ public:
 	typedef PriorityScheduler2Place<Pheet, CallThreshold> Place;
 	typedef PriorityScheduler2State<Pheet> State;
 	typedef FinishRegion<Pheet> Finish;
-	typedef PriorityScheduler2TaskDescriptor<Pheet> TaskDesc;
 	typedef PriorityScheduler2PlaceDescriptor<Pheet> PlaceDesc;
+	typedef PriorityScheduler2TaskDescriptor<Pheet> TaskDesc;
 	typedef DefaultStrategyT<Pheet> DefaultStrategy;
 	typedef typename Place::PerformanceCounters PerformanceCounters;
 
