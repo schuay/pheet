@@ -1,5 +1,5 @@
 /*
- * PriorityScheduler2PlaceDescriptor.h
+ * StrategySchedulerPlaceDescriptor.h
  *
  *  Created on: Mar 8, 2012
  *      Author: mwimmer
@@ -12,39 +12,40 @@
 namespace pheet {
 
 template <class Pheet>
-class PriorityScheduler2PlaceDescriptor {
+class StrategySchedulerPlaceDescriptor {
 public:
 	typedef typename Pheet::Scheduler::Place Place;
-	typedef PriorityScheduler2PlaceDescriptor<Pheet> Self;
+	typedef StrategySchedulerPlaceDescriptor<Pheet> Self;
 
-	PriorityScheduler2PlaceDescriptor(Place* place);
-	~PriorityScheduler2PlaceDescriptor();
+	StrategySchedulerPlaceDescriptor(Place* place);
+	~StrategySchedulerPlaceDescriptor();
 
 	procs_t get_distance(Self& other);
 	procs_t get_id();
 
+	Place* get_place();
 private:
 	Place* place;
 };
 
 template <class Pheet>
-PriorityScheduler2PlaceDescriptor<Pheet>::PriorityScheduler2PlaceDescriptor(Place* place)
+StrategySchedulerPlaceDescriptor<Pheet>::StrategySchedulerPlaceDescriptor(Place* place)
 : place(place) {
 
 }
 
 template <class Pheet>
-PriorityScheduler2PlaceDescriptor<Pheet>::~PriorityScheduler2PlaceDescriptor() {
+StrategySchedulerPlaceDescriptor<Pheet>::~StrategySchedulerPlaceDescriptor() {
 
 }
 
 template <class Pheet>
-procs_t PriorityScheduler2PlaceDescriptor<Pheet>::get_distance(Self& other) {
+procs_t StrategySchedulerPlaceDescriptor<Pheet>::get_distance(Self& other) {
 	return place->get_distance(other.place);
 }
 
 template <class Pheet>
-procs_t PriorityScheduler2PlaceDescriptor<Pheet>::get_id() {
+procs_t StrategySchedulerPlaceDescriptor<Pheet>::get_id() {
 	return place->get_id();
 }
 

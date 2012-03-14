@@ -1,5 +1,5 @@
 /*
- * PriorityScheduler2PerformanceCounters.h
+ * StrategySchedulerPerformanceCounters.h
  *
  *  Created on: Oct 28, 2011
  *      Author: mwimmer
@@ -18,10 +18,10 @@
 namespace pheet {
 
 template <class Pheet, class TaskStoragePerformanceCounters, class StealerPerformanceCounters>
-class PriorityScheduler2PerformanceCounters {
+class StrategySchedulerPerformanceCounters {
 public:
-	PriorityScheduler2PerformanceCounters() {}
-	PriorityScheduler2PerformanceCounters(PriorityScheduler2PerformanceCounters<Pheet, TaskStoragePerformanceCounters, class StealerPerformanceCounters>& other)
+	StrategySchedulerPerformanceCounters() {}
+	StrategySchedulerPerformanceCounters(StrategySchedulerPerformanceCounters<Pheet, TaskStoragePerformanceCounters, class StealerPerformanceCounters>& other)
 		: num_spawns(other.num_spawns), num_actual_spawns(other.num_actual_spawns),
 		  num_spawns_to_call(other.num_spawns_to_call),
 		  num_calls(other.num_calls), num_finishes(other.num_finishes),
@@ -60,7 +60,7 @@ public:
 };
 
 template <class Pheet, class TaskStoragePerformanceCounters>
-inline void PriorityScheduler2PerformanceCounters<Pheet, TaskStoragePerformanceCounters>::print_headers() {
+inline void StrategySchedulerPerformanceCounters<Pheet, TaskStoragePerformanceCounters>::print_headers() {
 	BasicPerformanceCounter<Pheet, scheduler_count_spawns>::print_header("spawns\t");
 	BasicPerformanceCounter<Pheet, scheduler_count_actual_spawns>::print_header("actual_spawns\t");
 	BasicPerformanceCounter<Pheet, scheduler_count_calls>::print_header("calls\t");
@@ -83,7 +83,7 @@ inline void PriorityScheduler2PerformanceCounters<Pheet, TaskStoragePerformanceC
 }
 
 template <class Pheet, class TaskStoragePerformanceCounters>
-inline void PriorityScheduler2PerformanceCounters<Pheet, TaskStoragePerformanceCounters>::print_values() {
+inline void StrategySchedulerPerformanceCounters<Pheet, TaskStoragePerformanceCounters>::print_values() {
 	num_spawns.print("%lu\t");
 	num_actual_spawns.print("%lu\t");
 	num_calls.print("%lu\t");
