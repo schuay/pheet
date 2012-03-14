@@ -4,8 +4,6 @@ LIBS =		-lpthread -lhwloc
 
 TEST_OBJS = 
 
-TEST_LIBS =	$(LIBS)  -lblas -llapack
-
 TEST_TARGET = bin/pheet_test
 
 include test/sub.mk
@@ -15,7 +13,7 @@ lib/%.o : test/%.cpp
 
 
 $(TEST_TARGET):	$(TEST_OBJS)
-	$(CXX) -o $(TEST_TARGET) $(TEST_OBJS) $(TEST_LIBS)
+	$(CXX) -o $(TEST_TARGET) $(TEST_OBJS) $(LIBS) $(TEST_LIBS)
 	
 all:	$(TEST_TARGET)
 

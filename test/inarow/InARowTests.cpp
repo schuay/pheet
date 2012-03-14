@@ -12,8 +12,8 @@
 #include "RecursiveSearch/InARowGame.h"
 #endif
 
-#include "../test_schedulers.h"
 #include <iostream>
+#include <algorithm>
 
 namespace pheet {
 
@@ -23,12 +23,25 @@ namespace pheet {
 	void InARowTests::test(unsigned int width, unsigned int height, unsigned int rowlength, unsigned int* scenario)
 	{
 #ifdef INAROW_TEST
+		typename Pheet::MachineModel mm;
+		procs_t max_cpus = std::min(mm.get_num_leaves(), Test::max_cpus);
+
 		for(size_t la = 0; la < sizeof(inarow_test_lookaheads)/sizeof(inarow_test_lookaheads[0]); la++) {
+			bool max_processed = false;
+			procs_t cpus;
 			for(size_t c = 0; c < sizeof(inarow_test_cpus)/sizeof(inarow_test_cpus[0]); c++) {
-				if(inarow_test_cpus[c] <= Test::max_cpus) {
-					InARowTest<Test> iart(inarow_test_cpus[c], width, height, rowlength, inarow_test_lookaheads[la], scenario);
-					iart.run_test();
+				cpus = inarow_test_cpus[c];
+				if(cpus >= max_cpus) {
+					if(!max_processed) {
+						cpus = max_cpus;
+						max_processed = true;
+					}
+					else {
+						continue;
+					}
 				}
+				InARowTest<Test> iart(cpus, width, height, rowlength, inarow_test_lookaheads[la], scenario);
+				iart.run_test();
 			}
 		}
 #endif
