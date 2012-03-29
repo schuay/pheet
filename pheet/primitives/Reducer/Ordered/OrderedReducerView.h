@@ -166,7 +166,7 @@ OrderedReducerView<Monoid>* OrderedReducerView<Monoid>::create_parent_view() {
 		ret->state = 0x2;
 	}
 	else {
-		ret = new View(std::forward<Monoid const&>(data));
+		ret = new View(static_cast<Monoid const&>(data));
 		pheet_assert(ret->state == 0x2);
 	}
 	return ret;
@@ -174,6 +174,7 @@ OrderedReducerView<Monoid>* OrderedReducerView<Monoid>::create_parent_view() {
 
 template <class Monoid>
 void OrderedReducerView<Monoid>::reduce(bool allow_local) {
+	// TODO: Check if we can't just always use a right reduction and keep the predecessor view while dropping the local one. This might simplify reducers a lot
 	if(local_pred != NULL) {
 		if(allow_local) {
 			while(local_pred->local_pred != NULL) {

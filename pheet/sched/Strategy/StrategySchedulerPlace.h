@@ -6,8 +6,10 @@
  *	   License: Ask Author
  */
 
-#ifndef PRIORITYSCHEDULER2PLACE_H_
-#define PRIORITYSCHEDULER2PLACE_H_
+#ifndef STRATEGYSCHEDULER2PLACE_H_
+#define STRATEGYSCHEDULER2PLACE_H_
+
+#include "StrategySchedulerPerformanceCounters.h"
 
 namespace pheet {
 
@@ -31,6 +33,7 @@ struct StrategySchedulerPlaceStackElement {
 	// unused on the left side
 	size_t reused_finish_depth;
 };
+
 
 template <class Place>
 struct StrategySchedulerPlaceLevelDescription {
@@ -58,11 +61,11 @@ public:
 	typedef typename Pheet::Scheduler::TaskStorageItem TaskStorageItem;
 	typedef typename Pheet::Scheduler::TaskStorage TaskStorage;
 	typedef typename Pheet::Scheduler::Stealer Stealer;
-	typedef typename Pheet::Scheduler::TaskDesc TaskDesc;
-	typedef typename Pheet::Scheduler::PlaceDesc PlaceDesc;
-	typedef StrategySchedulerPerformanceCounters<Pheet, typename TaskStorage::PerformanceCounters> PerformanceCounters;
+//	typedef typename Pheet::Scheduler::TaskDesc TaskDesc;
+//	typedef typename Pheet::Scheduler::PlaceDesc PlaceDesc;
+	typedef StrategySchedulerPerformanceCounters<Pheet, typename TaskStorage::PerformanceCounters, typename Stealer::PerformanceCounters> PerformanceCounters;
 	typedef typename Pheet::Scheduler::InternalMachineModel InternalMachineModel;
-	typedef typename Pheet::Scheduler::DefaultStrategy DefaultStrategy;
+	typedef typename Pheet::Scheduler::BaseStrategy BaseStrategy;
 
 	StrategySchedulerPlace(InternalMachineModel model, Place** places, procs_t num_places, typename Pheet::Scheduler::State* scheduler_state, PerformanceCounters& perf_count);
 	StrategySchedulerPlace(LevelDescription* levels, procs_t num_initialized_levels, InternalMachineModel model, typename Pheet::Scheduler::State* scheduler_state, PerformanceCounters& perf_count);
@@ -94,10 +97,10 @@ public:
 		void spawn(F&& f, TaskParams&& ... params);
 
 	template<class CallTaskType, class Strategy, typename ... TaskParams>
-		void spawn_prio(Strategy s, TaskParams&& ... params);
+		void spawn_s(Strategy s, TaskParams&& ... params);
 
 	template<class Strategy, typename F, typename ... TaskParams>
-		void spawn_prio(Strategy s, F&& f, TaskParams&& ... params);
+		void spawn_s(Strategy s, F&& f, TaskParams&& ... params);
 
 	std::mt19937& get_rng();
 
@@ -142,7 +145,7 @@ private:
 
 	typename Pheet::Scheduler::State* scheduler_state;
 
-	PlaceDesc place_desc;
+//	PlaceDesc place_desc;
 	TaskStorage task_storage;
 	Stealer stealer;
 
@@ -176,8 +179,8 @@ StrategySchedulerPlace<Pheet, CallThreshold>::StrategySchedulerPlace(InternalMac
   current_task_parent(nullptr),
   stack_filled_left(0), stack_filled_right(stack_size), stack_init_left(0),
   scheduler_state(scheduler_state),
-  place_desc(this), task_storage(place_desc, performance_counters.task_storage_performance_counters),
-  stealer(place_desc, performance_counters.stealer_performance_counters),
+  task_storage(performance_counters.task_storage_performance_counters),
+  stealer(performance_counters.stealer_performance_counters),
   spawn2call_counter(0),
   thread_executor(this),
   performance_counters(perf_count) {
@@ -206,8 +209,8 @@ StrategySchedulerPlace<Pheet, CallThreshold>::StrategySchedulerPlace(LevelDescri
   current_task_parent(nullptr),
   stack_filled_left(0), stack_filled_right(stack_size), stack_init_left(0),
   scheduler_state(scheduler_state),
-  place_desc(this), task_storage(place_desc, performance_counters.task_storage_performance_counters),
-  stealer(place_desc, performance_counters.stealer_performance_counters),
+  task_storage(performance_counters.task_storage_performance_counters),
+  stealer(performance_counters.stealer_performance_counters),
   spawn2call_counter(0),
   thread_executor(this),
   performance_counters(perf_count) {
@@ -453,7 +456,7 @@ void StrategySchedulerPlace<Pheet, CallThreshold>::main_loop() {
 						performance_counters.idle_time.stop_timer();
 						return;
 					}
-					task_storage.perform_maintenance(performance_counters.task_storage_performance_counters);
+//					task_storage.perform_maintenance(performance_counters.task_storage_performance_counters);
 					bo.backoff();
 				}
 				else {
@@ -504,7 +507,7 @@ void StrategySchedulerPlace<Pheet, CallThreshold>::wait_for_finish(StackElement*
 					if(parent->num_finished_remote + 1 == parent->num_spawned) {
 						return;
 					}
-					task_storage.perform_maintenance(performance_counters.task_storage_performance_counters);
+//					task_storage.perform_maintenance(performance_counters.task_storage_performance_counters);
 					bo.backoff();
 				}
 				else {
@@ -517,7 +520,7 @@ void StrategySchedulerPlace<Pheet, CallThreshold>::wait_for_finish(StackElement*
 
 template <class Pheet, uint8_t CallThreshold>
 void StrategySchedulerPlace<Pheet, CallThreshold>::process_queue() {
-	TaskStorageItem di = task_storage.pop(performance_counters.task_storage_performance_counters);
+	TaskStorageItem di = task_storage.pop();
 	while(di.task != NULL) {
 		// Warning, no distinction between locally spawned tasks and remote tasks
 		// But this makes it easier with the finish construct, etc.
@@ -525,13 +528,13 @@ void StrategySchedulerPlace<Pheet, CallThreshold>::process_queue() {
 		// which is bad for balancing
 		execute_task(di.task, di.stack_element);
 		delete di.task;
-		di = task_storage.pop(performance_counters.task_storage_performance_counters);
+		di = task_storage.pop();
 	}
 }
 
 template <class Pheet, uint8_t CallThreshold>
 bool StrategySchedulerPlace<Pheet, CallThreshold>::process_queue_until_finished(StackElement* parent) {
-	TaskStorageItem di = task_storage.pop(performance_counters.task_storage_performance_counters);
+	TaskStorageItem di = task_storage.pop();
 	while(di.task != NULL) {
 		// Warning, no distinction between locally spawned tasks and remote tasks
 		// But this makes it easier with the finish construct, etc.
@@ -542,7 +545,7 @@ bool StrategySchedulerPlace<Pheet, CallThreshold>::process_queue_until_finished(
 		if(parent->num_spawned == parent->num_finished_remote + 1) {
 			return true;
 		}
-		di = task_storage.pop(performance_counters.task_storage_performance_counters);
+		di = task_storage.pop();
 	}
 	return false;
 }
@@ -764,18 +767,18 @@ void StrategySchedulerPlace<Pheet, CallThreshold>::finish(F&& f, TaskParams&& ..
 template <class Pheet, uint8_t CallThreshold>
 template<class CallTaskType, typename ... TaskParams>
 void StrategySchedulerPlace<Pheet, CallThreshold>::spawn(TaskParams&& ... params) {
-	spawn_prio<CallTaskType>(DefaultStrategy(), std::forward<TaskParams&&>(params) ...);
+	spawn_s<CallTaskType>(BaseStrategy(), std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, uint8_t CallThreshold>
 template<typename F, typename ... TaskParams>
 void StrategySchedulerPlace<Pheet, CallThreshold>::spawn(F&& f, TaskParams&& ... params) {
-	spawn_prio(DefaultStrategy(), f, std::forward<TaskParams&&>(params) ...);
+	spawn_s(BaseStrategy(), f, std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, uint8_t CallThreshold>
 template<class CallTaskType, class Strategy, typename ... TaskParams>
-void StrategySchedulerPlace<Pheet, CallThreshold>::spawn_prio(Strategy s, TaskParams&& ... params) {
+void StrategySchedulerPlace<Pheet, CallThreshold>::spawn_s(Strategy s, TaskParams&& ... params) {
 	performance_counters.num_spawns.incr();
 
 	if(task_storage.is_full()) {
@@ -799,7 +802,7 @@ void StrategySchedulerPlace<Pheet, CallThreshold>::spawn_prio(Strategy s, TaskPa
 			TaskStorageItem di;
 			di.task = task;
 			di.stack_element = current_task_parent;
-			task_storage.push(s, di, performance_counters.task_storage_performance_counters);
+			task_storage.push(s, di);
 		}
 		else {
 			performance_counters.num_spawns_to_call.incr();
@@ -810,7 +813,7 @@ void StrategySchedulerPlace<Pheet, CallThreshold>::spawn_prio(Strategy s, TaskPa
 
 template <class Pheet, uint8_t CallThreshold>
 template<class Strategy, typename F, typename ... TaskParams>
-void StrategySchedulerPlace<Pheet, CallThreshold>::spawn_prio(Strategy s, F&& f, TaskParams&& ... params) {
+void StrategySchedulerPlace<Pheet, CallThreshold>::spawn_s(Strategy s, F&& f, TaskParams&& ... params) {
 	performance_counters.num_spawns.incr();
 
 	if(task_storage.is_full(performance_counters.task_storage_performance_counters)) {
@@ -836,7 +839,7 @@ void StrategySchedulerPlace<Pheet, CallThreshold>::spawn_prio(Strategy s, F&& f,
 			TaskStorageItem di;
 			di.task = task;
 			di.stack_element = current_task_parent;
-			task_storage.push(s, di, performance_counters.task_storage_performance_counters);
+			task_storage.push(std::move(s), di, performance_counters.task_storage_performance_counters);
 		}
 		else {
 			performance_counters.num_spawns_to_call.incr();
@@ -870,8 +873,6 @@ std::mt19937& StrategySchedulerPlace<Pheet, CallThreshold>::get_rng() {
 
 template <class Pheet, uint8_t CallThreshold>
 procs_t StrategySchedulerPlace<Pheet, CallThreshold>::get_distance(Self* other) {
-	pheet_assert(max_granularity_level < num_levels);
-
 	if(other == this) {
 		return 0;
 	}
@@ -922,4 +923,4 @@ inline procs_t StrategySchedulerPlace<Pheet, CallThreshold>::get_current_finish_
 
 }
 
-#endif /* PRIORITYSCHEDULER2PLACE_H_ */
+#endif /* STRATEGYSCHEDULER2PLACE_H_ */

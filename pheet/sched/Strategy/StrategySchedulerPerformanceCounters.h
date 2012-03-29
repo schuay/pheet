@@ -5,8 +5,8 @@
  *      Author: mwimmer
  */
 
-#ifndef PRIORITYSCHEDULERPERFORMANCECOUNTERS_H_
-#define PRIORITYSCHEDULERPERFORMANCECOUNTERS_H_
+#ifndef STRATEGYSCHEDULERPERFORMANCECOUNTERS_H_
+#define STRATEGYSCHEDULERPERFORMANCECOUNTERS_H_
 
 #include "../../settings.h"
 
@@ -21,7 +21,7 @@ template <class Pheet, class TaskStoragePerformanceCounters, class StealerPerfor
 class StrategySchedulerPerformanceCounters {
 public:
 	StrategySchedulerPerformanceCounters() {}
-	StrategySchedulerPerformanceCounters(StrategySchedulerPerformanceCounters<Pheet, TaskStoragePerformanceCounters, class StealerPerformanceCounters>& other)
+	StrategySchedulerPerformanceCounters(StrategySchedulerPerformanceCounters<Pheet, TaskStoragePerformanceCounters, StealerPerformanceCounters>& other)
 		: num_spawns(other.num_spawns), num_actual_spawns(other.num_actual_spawns),
 		  num_spawns_to_call(other.num_spawns_to_call),
 		  num_calls(other.num_calls), num_finishes(other.num_finishes),
@@ -59,8 +59,8 @@ public:
 	StealerPerformanceCounters stealer_performance_counters;
 };
 
-template <class Pheet, class TaskStoragePerformanceCounters>
-inline void StrategySchedulerPerformanceCounters<Pheet, TaskStoragePerformanceCounters>::print_headers() {
+template <class Pheet, class TaskStoragePerformanceCounters, class StealerPerformanceCounters>
+inline void StrategySchedulerPerformanceCounters<Pheet, TaskStoragePerformanceCounters, StealerPerformanceCounters>::print_headers() {
 	BasicPerformanceCounter<Pheet, scheduler_count_spawns>::print_header("spawns\t");
 	BasicPerformanceCounter<Pheet, scheduler_count_actual_spawns>::print_header("actual_spawns\t");
 	BasicPerformanceCounter<Pheet, scheduler_count_calls>::print_header("calls\t");
@@ -82,8 +82,8 @@ inline void StrategySchedulerPerformanceCounters<Pheet, TaskStoragePerformanceCo
 	StealerPerformanceCounters::print_headers();
 }
 
-template <class Pheet, class TaskStoragePerformanceCounters>
-inline void StrategySchedulerPerformanceCounters<Pheet, TaskStoragePerformanceCounters>::print_values() {
+template <class Pheet, class TaskStoragePerformanceCounters, class StealerPerformanceCounters>
+inline void StrategySchedulerPerformanceCounters<Pheet, TaskStoragePerformanceCounters, StealerPerformanceCounters>::print_values() {
 	num_spawns.print("%lu\t");
 	num_actual_spawns.print("%lu\t");
 	num_calls.print("%lu\t");
@@ -105,4 +105,4 @@ inline void StrategySchedulerPerformanceCounters<Pheet, TaskStoragePerformanceCo
 
 }
 
-#endif /* PRIORITYSCHEDULERPERFORMANCECOUNTERS_H_ */
+#endif /* STRATEGYSCHEDULERPERFORMANCECOUNTERS_H_ */
