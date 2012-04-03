@@ -87,7 +87,7 @@ void StrategyQuicksortImpl<Pheet, CUTOFF_LENGTH>::operator()() {
 			call<Self>(data, pivot);
 	}
 	Pheet::template
-			call<Self>(data + pivot + 1, length - pivot - 1);
+		call<Self>(data + pivot + 1, length - pivot - 1);
 /*
 	Pheet::template
 		spawn_s<Self>(StrategyQuicksortStrategy<Pheet>(length - pivot),

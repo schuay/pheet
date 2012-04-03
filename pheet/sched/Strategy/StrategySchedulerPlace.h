@@ -97,10 +97,10 @@ public:
 		void spawn(F&& f, TaskParams&& ... params);
 
 	template<class CallTaskType, class Strategy, typename ... TaskParams>
-		void spawn_s(Strategy s, TaskParams&& ... params);
+		void spawn_s(Strategy&& s, TaskParams&& ... params);
 
 	template<class Strategy, typename F, typename ... TaskParams>
-		void spawn_s(Strategy s, F&& f, TaskParams&& ... params);
+		void spawn_s(Strategy&& s, F&& f, TaskParams&& ... params);
 
 	std::mt19937& get_rng();
 
@@ -151,7 +151,7 @@ private:
 	TaskStorage task_storage;
 	Stealer stealer;
 
-	size_t spawn2call_counter;
+//	size_t spawn2call_counter;
 
 	CPUThreadExecutor<Self> thread_executor;
 
@@ -184,7 +184,7 @@ StrategySchedulerPlace<Pheet, CallThreshold>::StrategySchedulerPlace(InternalMac
   scheduler_state(scheduler_state),
   task_storage(performance_counters.task_storage_performance_counters),
   stealer(performance_counters.stealer_performance_counters),
-  spawn2call_counter(0),
+//  spawn2call_counter(0),
   thread_executor(this),
   task_id(0),
   performance_counters(perf_count) {
@@ -215,7 +215,7 @@ StrategySchedulerPlace<Pheet, CallThreshold>::StrategySchedulerPlace(LevelDescri
   scheduler_state(scheduler_state),
   task_storage(performance_counters.task_storage_performance_counters),
   stealer(performance_counters.stealer_performance_counters),
-  spawn2call_counter(0),
+//  spawn2call_counter(0),
   thread_executor(this),
   performance_counters(perf_count) {
 
@@ -782,7 +782,7 @@ void StrategySchedulerPlace<Pheet, CallThreshold>::spawn(F&& f, TaskParams&& ...
 
 template <class Pheet, uint8_t CallThreshold>
 template<class CallTaskType, class Strategy, typename ... TaskParams>
-inline void StrategySchedulerPlace<Pheet, CallThreshold>::spawn_s(Strategy s, TaskParams&& ... params) {
+inline void StrategySchedulerPlace<Pheet, CallThreshold>::spawn_s(Strategy&& s, TaskParams&& ... params) {
 	performance_counters.num_spawns.incr();
 
 	if(task_storage.is_full()) {
@@ -792,11 +792,11 @@ inline void StrategySchedulerPlace<Pheet, CallThreshold>::spawn_s(Strategy s, Ta
 	}
 	else {
 		// TUNE: offsets and parameters
-		spawn2call_counter += (s.get_transitive_weight() >> 10);
-		size_t current_tasks = task_storage.size();
-		size_t threshold = ((current_tasks << 4) /** (1 + (s.get_memory_footprint() >> 4))*/);
-		if(spawn2call_counter > threshold) {
-			spawn2call_counter = 0;
+		size_t weight /*+*/= (s.get_transitive_weight() >> 9);
+		size_t current_tasks = task_storage.size() /*<< 2*/;
+		size_t threshold = ((current_tasks * current_tasks /*<< 4*/) /** (1 + (s.get_memory_footprint() >> 4))*/);
+		if(weight > threshold) {
+		//	spawn2call_counter = 0;
 
 			performance_counters.num_actual_spawns.incr();
 			CallTaskType* task = new CallTaskType(params ...);
@@ -806,7 +806,7 @@ inline void StrategySchedulerPlace<Pheet, CallThreshold>::spawn_s(Strategy s, Ta
 			TaskStorageItem di;
 			di.task = task;
 			di.stack_element = current_task_parent;
-			task_storage.push(s, di);
+			task_storage.push(std::forward<Strategy&&>(s), di);
 		}
 		else {
 			performance_counters.num_spawns_to_call.incr();
@@ -817,7 +817,7 @@ inline void StrategySchedulerPlace<Pheet, CallThreshold>::spawn_s(Strategy s, Ta
 
 template <class Pheet, uint8_t CallThreshold>
 template<class Strategy, typename F, typename ... TaskParams>
-inline void StrategySchedulerPlace<Pheet, CallThreshold>::spawn_s(Strategy s, F&& f, TaskParams&& ... params) {
+inline void StrategySchedulerPlace<Pheet, CallThreshold>::spawn_s(Strategy&& s, F&& f, TaskParams&& ... params) {
 	performance_counters.num_spawns.incr();
 
 	if(task_storage.is_full()) {
@@ -827,11 +827,11 @@ inline void StrategySchedulerPlace<Pheet, CallThreshold>::spawn_s(Strategy s, F&
 	}
 	else {
 		// TUNE: offsets and parameters
-		spawn2call_counter += (s.get_transitive_weight() >> 10);
+		size_t weight = (s.get_transitive_weight() >> 9);
 		size_t current_tasks = task_storage.size();
-		size_t threshold = ((current_tasks << 4) /** (1 + (s.get_memory_footprint() >> 4))*/);
-		if(spawn2call_counter > threshold) {
-			spawn2call_counter = 0;
+		size_t threshold = ((current_tasks * current_tasks /*<< 4*/) /** (1 + (s.get_memory_footprint() >> 4))*/);
+		if(weight > threshold) {
+		//	spawn2call_counter = 0;
 
 			performance_counters.num_actual_spawns.incr();
 			auto bound = std::bind(f, params ...);
@@ -843,7 +843,7 @@ inline void StrategySchedulerPlace<Pheet, CallThreshold>::spawn_s(Strategy s, F&
 			TaskStorageItem di;
 			di.task = task;
 			di.stack_element = current_task_parent;
-			task_storage.push(std::move(s), di, performance_counters.task_storage_performance_counters);
+			task_storage.push(std::forward<Strategy&&>(s), di, performance_counters.task_storage_performance_counters);
 		}
 		else {
 			performance_counters.num_spawns_to_call.incr();

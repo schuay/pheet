@@ -44,7 +44,7 @@ public:
 	~LocalStrategyTaskStorageImpl();
 
 	template <class Strategy>
-	void push(Strategy& s, T item);
+	void push(Strategy&& s, T item);
 	T pop();
 	T& peek();
 
@@ -79,9 +79,9 @@ LocalStrategyTaskStorageImpl<Pheet, TT, StrategyHeapT>::~LocalStrategyTaskStorag
 
 template <class Pheet, typename TT, template <class SP, typename ST, class SR> class StrategyHeapT>
 template <class Strategy>
-void LocalStrategyTaskStorageImpl<Pheet, TT, StrategyHeapT>::push(Strategy& s, T item) {
+void LocalStrategyTaskStorageImpl<Pheet, TT, StrategyHeapT>::push(Strategy&& s, T item) {
 	Item it;
-	it.strategy = new Strategy(s);
+	it.strategy = new Strategy(std::move(s));
 	it.item = item;
 	heap.push<Strategy>(it);
 	++sz;

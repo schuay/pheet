@@ -104,13 +104,13 @@ public:
 
 	template<class Strategy, typename F, typename ... TaskParams>
 		void spawn_s(Strategy s, F&& f, TaskParams&& ... params);
-
+/*
 	template<class CallTaskType, class Strategy, typename ... TaskParams>
 		void spawn_s(Strategy&& s, TaskParams&& ... params);
 
 	template<class Strategy, typename F, typename ... TaskParams>
 		void spawn_s(Strategy&& s, F&& f, TaskParams&& ... params);
-
+*/
 	static char const name[];
 	static procs_t const max_cpus;
 
@@ -243,13 +243,13 @@ inline void StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>:
 	pheet_assert(p != NULL);
 	p->spawn_s(std::move(s), f, std::forward<TaskParams&&>(params) ...);
 }
-
+/*
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
 template<class CallTaskType, class Strategy, typename ... TaskParams>
 inline void StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>::spawn_s(Strategy&& s, TaskParams&& ... params) {
 	Place* p = get_place();
 	pheet_assert(p != NULL);
-	p->spawn_s<CallTaskType>(s, std::forward<TaskParams&&>(params) ...);
+	p->spawn_s<CallTaskType>(std::forward<Strategy&&>(s), std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
@@ -257,8 +257,8 @@ template<class Strategy, typename F, typename ... TaskParams>
 inline void StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>::spawn_s(Strategy&& s, F&& f, TaskParams&& ... params) {
 	Place* p = get_place();
 	pheet_assert(p != NULL);
-	p->spawn_s(s, f, std::forward<TaskParams&&>(params) ...);
-}
+	p->spawn_s(std::forward<Strategy&&>(s), f, std::forward<TaskParams&&>(params) ...);
+}*/
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
 template<class CallTaskType, typename ... TaskParams>
