@@ -15,7 +15,7 @@
 
 #include "../../ds/StrategyTaskStorage/Local/LocalStrategyTaskStorage.h"
 #include "../../ds/StrategyStealer/Dummy/DummyStrategyStealer.h"
-#include "strategies/Lifo/LifoStrategy2.h"
+#include "base_strategies/LifoFifo/LifoFifoBaseStrategy.h"
 
 namespace pheet {
 
@@ -48,7 +48,7 @@ public:
 	typedef StrategySchedulerTaskStorageItem<Pheet, Task, StrategySchedulerPlaceStackElement> TaskStorageItem;
 	typedef TaskStorageT<Pheet, TaskStorageItem> TaskStorage;
 	typedef StealerT<Pheet, TaskStorage> Stealer;
-	typedef StrategySchedulerPlace<Pheet, 3> Place;
+	typedef StrategySchedulerPlace<Pheet, 4> Place;
 	typedef StrategySchedulerState<Pheet> State;
 	typedef FinishRegion<Pheet> Finish;
 //	typedef StrategySchedulerPlaceDescriptor<Pheet> PlaceDesc;
@@ -278,7 +278,7 @@ inline void StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>:
 
 
 template<class Pheet>
-using StrategyScheduler = StrategySchedulerImpl<Pheet, LocalStrategyTaskStorage, DummyStrategyStealer, LifoStrategy2>;
+using StrategyScheduler = StrategySchedulerImpl<Pheet, LocalStrategyTaskStorage, DummyStrategyStealer, LifoFifoBaseStrategy>;
 
 }
 

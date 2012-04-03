@@ -88,13 +88,13 @@ public:
 	typedef BasicStrategyHeapBase<Pheet, T> Item;
 	typedef BasicStrategyHeapBase<Pheet, T> Base;
 	typedef BasicStrategyHeapComparator<Pheet, T, Strategy, StrategyRetriever> Comp;
-	typedef typename Comp::Prep Prep;
+//	typedef typename Comp::Prep Prep;
 
 	BasicStrategyHeapHeap(StrategyRetriever& sr, std::map<std::type_index, Base*>& heap_heaps)
 	:comp(sr) {
 		Base*& base = heap_heaps[std::type_index(typeid(typename Strategy::BaseStrategy))];
 		if(base == nullptr) {
-			base = new BasicStrategyHeapHeap<Pheet, T, BaseStrategy, typename Strategy::BaseStrategy, StrategyRetriever>(heap_heaps);
+			base = new BasicStrategyHeapHeap<Pheet, T, BaseStrategy, typename Strategy::BaseStrategy, StrategyRetriever>(sr, heap_heaps);
 		}
 		parent = static_cast<BasicStrategyHeapHeap<Pheet, T, BaseStrategy, typename Strategy::BaseStrategy, StrategyRetriever>*>(base);
 	}
@@ -177,7 +177,7 @@ private:
 
 	size_t bubble_up(size_t index) {
 		size_t next = (index - 1) >> 1;
-		while(index > 0 && comp(heap[next], heap[index])) {
+		while(index > 0 && comp(heap[next]->peek(), heap[index]->peek())) {
 			std::swap(heap[next], heap[index]);
 			heap[index]->parent_index = index;
 			heap[next]->parent_index = next;

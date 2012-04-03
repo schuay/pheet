@@ -11,6 +11,7 @@
 #ifdef SORTING_TEST
 #include "Reference/ReferenceSTLSort.h"
 #include "Reference/ReferenceQuicksort.h"
+#include "Strategy/StrategyQuicksort.h"
 #include "Dag/DagQuicksort.h"
 #include "MixedMode/MixedModeQuicksort.h"
 #include "Reference/ReferenceHeapSort.h"
@@ -21,6 +22,7 @@
 
 #include <pheet/pheet.h>
 #include <pheet/sched/Basic/BasicScheduler.h>
+#include <pheet/sched/Strategy/StrategyScheduler.h>
 #include <pheet/sched/Synchroneous/SynchroneousScheduler.h>
 #include <pheet/sched/MixedMode/MixedModeScheduler.h>
 
@@ -42,6 +44,10 @@ void SortingTests::run_test() {
 #ifdef SORTING_TEST
 	std::cout << "----" << std::endl;
 //std::cout << Pheet::Environment::max_cpus << std::endl;
+	this->run_sorter<	Pheet::WithScheduler<StrategyScheduler>,
+						StrategyQuicksort>();
+	this->run_sorter<	Pheet::WithScheduler<StrategyScheduler>,
+						DagQuicksort>();
 	this->run_sorter<	Pheet,
 						DagQuicksort>();
 	this->run_sorter<	Pheet::WithScheduler<BasicScheduler>,

@@ -113,6 +113,8 @@ public:
 	void start_finish_region();
 	void end_finish_region();
 
+	ptrdiff_t next_task_id() { return task_id++; }
+
 private:
 	void initialize_levels();
 	void grow_levels_structure();
@@ -154,6 +156,7 @@ private:
 	CPUThreadExecutor<Self> thread_executor;
 
 	std::mt19937 rng;
+	ptrdiff_t task_id;
 
 	PerformanceCounters performance_counters;
 
@@ -183,6 +186,7 @@ StrategySchedulerPlace<Pheet, CallThreshold>::StrategySchedulerPlace(InternalMac
   stealer(performance_counters.stealer_performance_counters),
   spawn2call_counter(0),
   thread_executor(this),
+  task_id(0),
   performance_counters(perf_count) {
 
 	// This is the root task execution context. It differs from the others in that it reuses the existing thread instead of creating a new one
@@ -778,7 +782,7 @@ void StrategySchedulerPlace<Pheet, CallThreshold>::spawn(F&& f, TaskParams&& ...
 
 template <class Pheet, uint8_t CallThreshold>
 template<class CallTaskType, class Strategy, typename ... TaskParams>
-void StrategySchedulerPlace<Pheet, CallThreshold>::spawn_s(Strategy s, TaskParams&& ... params) {
+inline void StrategySchedulerPlace<Pheet, CallThreshold>::spawn_s(Strategy s, TaskParams&& ... params) {
 	performance_counters.num_spawns.incr();
 
 	if(task_storage.is_full()) {
@@ -788,9 +792,9 @@ void StrategySchedulerPlace<Pheet, CallThreshold>::spawn_s(Strategy s, TaskParam
 	}
 	else {
 		// TUNE: offsets and parameters
-		spawn2call_counter += (s.get_transitive_weight() >> 4);
-		size_t current_tasks = task_storage.size(); // TODO: maybe the information on the finish stack is more accurate?
-		size_t threshold = ((task_storage.size() << 4) * (1 + (s.get_memory_footprint() >> 4)));
+		spawn2call_counter += (s.get_transitive_weight() >> 10);
+		size_t current_tasks = task_storage.size();
+		size_t threshold = ((current_tasks << 4) /** (1 + (s.get_memory_footprint() >> 4))*/);
 		if(spawn2call_counter > threshold) {
 			spawn2call_counter = 0;
 
@@ -813,19 +817,19 @@ void StrategySchedulerPlace<Pheet, CallThreshold>::spawn_s(Strategy s, TaskParam
 
 template <class Pheet, uint8_t CallThreshold>
 template<class Strategy, typename F, typename ... TaskParams>
-void StrategySchedulerPlace<Pheet, CallThreshold>::spawn_s(Strategy s, F&& f, TaskParams&& ... params) {
+inline void StrategySchedulerPlace<Pheet, CallThreshold>::spawn_s(Strategy s, F&& f, TaskParams&& ... params) {
 	performance_counters.num_spawns.incr();
 
-	if(task_storage.is_full(performance_counters.task_storage_performance_counters)) {
+	if(task_storage.is_full()) {
 		// Rigid limit in case the data-structure cannot grow
 		performance_counters.num_spawns_to_call.incr();
 		call(f, std::forward<TaskParams&&>(params) ...);
 	}
 	else {
 		// TUNE: offsets and parameters
-		spawn2call_counter += (s.get_transitive_weight() >> 4);
-		size_t current_tasks = task_storage.size(); // TODO: maybe the information on the finish stack is more accurate?
-		size_t threshold = ((task_storage.size() << 4) * (1 + (s.get_memory_footprint() >> 4)));
+		spawn2call_counter += (s.get_transitive_weight() >> 10);
+		size_t current_tasks = task_storage.size();
+		size_t threshold = ((current_tasks << 4) /** (1 + (s.get_memory_footprint() >> 4))*/);
 		if(spawn2call_counter > threshold) {
 			spawn2call_counter = 0;
 
