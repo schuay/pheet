@@ -48,15 +48,15 @@ public:
 	T pop();
 	T& peek();
 
-	size_t size() {
+	inline size_t size() {
 		return get_length();
 	}
 	size_t get_length();
-	bool empty() {
+	inline bool empty() {
 		return is_empty();
 	}
 	bool is_empty();
-	bool is_full() {
+	inline bool is_full() {
 		return false;
 	}
 
