@@ -61,16 +61,16 @@ public:
 private:
 	void clean_block(DataBlock* block);
 
-	// Entry point for stealers - acquire view and on success access front
 	View* current_view;
 
-//	DataBlock* front;
+	DataBlock* front;
 	DataBlock* back;
+	size_t back_index;
 
 	StrategyHeap heap;
 
-	// Linear dependencies between views - view may only be reused after predecessor is reused
-	std::queue<View*> view_reuse;
+	std::vector<View*> view_reuse;
+	std::vector<View*> blocked_freed_views;
 };
 
 template <class Pheet, typename TT, template <class SP, typename ST, class SR> class StrategyHeapT, size_t BlockSize>
@@ -86,7 +86,7 @@ LinkedListStrategyTaskStorage<Pheet, TT, StrategyHeapT, BlockSize>::~LinkedListS
 		delete *i;
 	}
 
-	DataBlock* tmp = current_view->front;
+	DataBlock* tmp = front;
 
 	while (tmp != back) {
 		DataBlock* next = tmp->next;
