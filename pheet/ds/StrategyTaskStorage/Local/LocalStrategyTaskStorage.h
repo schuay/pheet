@@ -26,6 +26,9 @@ struct LocalStrategyTaskStorageStrategyRetriever {
 	typename Pheet::Scheduler::BaseStrategy& operator()(Item& item) {
 		return *(item.strategy);
 	}
+
+	inline bool is_active() { return true; }
+	inline void mark_removed() {}
 };
 
 /*

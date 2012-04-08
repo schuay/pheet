@@ -64,6 +64,14 @@ public:
 		return deref(t2).prioritize(deref(t1));
 	}
 
+	bool try_remove(T& t) {
+		if(sr.is_active(t)) {
+			return false;
+		}
+		sr.mark_removed(t);
+		return true;
+	}
+
 private:
 	StrategyRetriever& sr;
 /*	TaskDesc<Strategy> td1;
@@ -357,6 +365,18 @@ private:
 		return index;
 	}
 
+	size_t perform_cleanup() {
+		size_t cleaned = 0;
+		// Never cleanup first element as this requires additional cleanup
+		while(heap.size() > 1) {
+			if(!comp.try_remove(heap.back()))
+				return cleaned;
+			heap.pop_back();
+			++cleaned;
+		}
+		return cleaned;
+	}
+
 	BasicStrategyHeapComparator<Pheet, T, Strategy, StrategyRetriever> comp;
 	std::vector<T> heap;
 	BasicStrategyHeapHeap<Pheet, T, BaseStrategy, Strategy, StrategyRetriever>* parent;
@@ -380,6 +400,7 @@ public:
 	T& peek();
 
 	bool is_empty();
+	size_t size() { return total_size; }
 
 	static void print_name();
 
@@ -389,11 +410,13 @@ private:
 	StrategyRetriever sr;
 	BasicStrategyHeapHeap<Pheet, TT, BaseStrategy, BaseStrategy, StrategyRetriever> root_heap;
 	PerformanceCounters pc;
+
+	size_t total_size;
 };
 
 template <class Pheet, typename TT, class StrategyRetriever>
 BasicStrategyHeap<Pheet, TT, StrategyRetriever>::BasicStrategyHeap(StrategyRetriever sr, PerformanceCounters& pc)
-:sr(std::move(sr)), root_heap(sr, heap_heaps), pc(pc) {
+:sr(std::move(sr)), root_heap(sr, heap_heaps), pc(pc), total_size(0) {
 	heap_heaps[std::type_index(typeid(BaseStrategy))] = &root_heap;
 }
 
@@ -417,11 +440,15 @@ void BasicStrategyHeap<Pheet, TT, StrategyRetriever>::push(T& item) {
 		bheap = new BasicStrategyItemHeap<Pheet, TT, BaseStrategy, Strategy, StrategyRetriever>(sr, heap_heaps);
 	}
 	BasicStrategyItemHeap<Pheet, TT, BaseStrategy, Strategy, StrategyRetriever>* heap = static_cast<BasicStrategyItemHeap<Pheet, TT, BaseStrategy, Strategy, StrategyRetriever>*>(bheap);
+	total_size -= heap->perform_cleanup();
 	heap->push(item);
+	++total_size;
 }
 
 template <class Pheet, typename TT, class StrategyRetriever>
 TT BasicStrategyHeap<Pheet, TT, StrategyRetriever>::pop() {
+	total_size -= heap->perform_cleanup();
+	++total_size;
 	return root_heap.pop();
 }
 
@@ -432,6 +459,7 @@ TT& BasicStrategyHeap<Pheet, TT, StrategyRetriever>::peek() {
 
 template <class Pheet, typename TT, class StrategyRetriever>
 bool BasicStrategyHeap<Pheet, TT, StrategyRetriever>::is_empty() {
+	pheet_assert((total_size == 0) == root_heap.is_empty());
 	return root_heap.is_empty();
 }
 

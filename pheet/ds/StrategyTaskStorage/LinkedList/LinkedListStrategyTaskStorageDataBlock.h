@@ -22,12 +22,13 @@ public:
 	View* first_view;
 	Self* prev;
 	Self* next;
+	size_t filled;
 
-	size_t freed;
+	size_t active;
 };
 
 LinkedListStrategyTaskStorageDataBlock:LinkedListStrategyTaskStorageDataBlock(size_t id, View* first_view, Self* prev)
-:id(id), first_view(first_view), prev(prev), next(nullptr), freed(0) {
+:id(id), first_view(first_view), prev(prev), next(nullptr), filled(0), active(BlockSize) {
 
 }
 
