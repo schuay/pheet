@@ -16,6 +16,7 @@
 #include "MixedMode/MixedModeQuicksort.h"
 #include "Reference/ReferenceHeapSort.h"
 
+//#include <pheet/ds/StealingDeque/CircularArray11/CircularArrayStealingDeque11.h>
 #include <pheet/ds/PriorityQueue/Heap/Heap.h>
 #include <pheet/ds/PriorityQueue/STLPriorityQueueWrapper/STLPriorityQueueWrapper.h>
 #include <pheet/ds/PriorityQueue/SortedArrayHeap/SortedArrayHeap.h>
@@ -52,6 +53,8 @@ void SortingTests::run_test() {
 						DagQuicksort>();
 	this->run_sorter<	Pheet::WithScheduler<BasicScheduler>,
 						DagQuicksort>();
+//	this->run_sorter<	Pheet::WithScheduler<BasicScheduler>::WithStealingDeque<CircularArrayStealingDeque11>,
+//						DagQuicksort>();
 	this->run_sorter<	Pheet::WithScheduler<SynchroneousScheduler>,
 						DagQuicksort>();
 	this->run_sorter<	Pheet::WithScheduler<SynchroneousScheduler>,

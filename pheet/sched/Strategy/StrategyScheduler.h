@@ -13,7 +13,8 @@
 #include "StrategySchedulerPerformanceCounters.h"
 #include "StrategySchedulerTaskStorageItem.h"
 
-#include "../../ds/StrategyTaskStorage/Local/LocalStrategyTaskStorage.h"
+//#include "../../ds/StrategyTaskStorage/Local/LocalStrategyTaskStorage.h"
+#include "../../ds/StrategyTaskStorage/LinkedList/LinkedListStrategyTaskStorage.h"
 #include "../../ds/StrategyStealer/Dummy/DummyStrategyStealer.h"
 #include "base_strategies/LifoFifo/LifoFifoBaseStrategy.h"
 
@@ -126,7 +127,7 @@ private:
 
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
-char const StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>::name[] = "PriorityScheduler";
+char const StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>::name[] = "StrategyScheduler";
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
 procs_t const StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>::max_cpus = std::numeric_limits<procs_t>::max() >> 1;
@@ -278,7 +279,7 @@ inline void StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>:
 
 
 template<class Pheet>
-using StrategyScheduler = StrategySchedulerImpl<Pheet, LocalStrategyTaskStorage, DummyStrategyStealer, LifoFifoBaseStrategy>;
+using StrategyScheduler = StrategySchedulerImpl<Pheet, /*LocalStrategyTaskStorage*/ LinkedListStrategyTaskStorage, DummyStrategyStealer, LifoFifoBaseStrategy>;
 
 }
 

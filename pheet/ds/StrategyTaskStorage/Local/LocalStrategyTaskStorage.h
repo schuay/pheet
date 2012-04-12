@@ -27,8 +27,8 @@ struct LocalStrategyTaskStorageStrategyRetriever {
 		return *(item.strategy);
 	}
 
-	inline bool is_active() { return true; }
-	inline void mark_removed() {}
+	inline bool is_active(Item& item) { return true; }
+	inline void mark_removed(Item& item) {}
 };
 
 /*

@@ -51,7 +51,13 @@ public:
 	using WithScheduler = PheetEnv<NewSched, SystemModelT, PrimitivesT, DataStructuresT, ConcurrentDataStructuresT>;
 
 	template<template <class P> class NewMM>
-	using WithMachineModel = PheetEnv<SchedulerT, SystemModel::template WithMachineModel<NewMM>::template T, PrimitivesT, DataStructuresT, ConcurrentDataStructuresT>;
+	using WithMachineModel = PheetEnv<SchedulerT, SystemModel::template WithMachineModel<NewMM>::template BT, PrimitivesT, DataStructuresT, ConcurrentDataStructuresT>;
+
+	template<template <class P> class NewCDS>
+	using WithCDS = PheetEnv<SchedulerT, SystemModelT, PrimitivesT, DataStructuresT, NewCDS>;
+
+	template<template <class P, typename T> class T>
+	using WithStealingDeque = WithCDS<CDS::template WithStealingDeque<T>::template BT>;
 
 
 	PheetEnv() {}

@@ -338,6 +338,18 @@ public:
 		}
 	}
 
+	size_t perform_cleanup() {
+		size_t cleaned = 0;
+		// Never cleanup first element as this requires additional cleanup
+		while(heap.size() > 1) {
+			if(!comp.try_remove(heap.back()))
+				return cleaned;
+			heap.pop_back();
+			++cleaned;
+		}
+		return cleaned;
+	}
+
 private:
 	void bubble_down(size_t index) {
 		size_t next = (index << 1) + 1;
@@ -363,18 +375,6 @@ private:
 			next = (index - 1) >> 1;
 		}
 		return index;
-	}
-
-	size_t perform_cleanup() {
-		size_t cleaned = 0;
-		// Never cleanup first element as this requires additional cleanup
-		while(heap.size() > 1) {
-			if(!comp.try_remove(heap.back()))
-				return cleaned;
-			heap.pop_back();
-			++cleaned;
-		}
-		return cleaned;
 	}
 
 	BasicStrategyHeapComparator<Pheet, T, Strategy, StrategyRetriever> comp;
@@ -447,7 +447,7 @@ void BasicStrategyHeap<Pheet, TT, StrategyRetriever>::push(T& item) {
 
 template <class Pheet, typename TT, class StrategyRetriever>
 TT BasicStrategyHeap<Pheet, TT, StrategyRetriever>::pop() {
-	total_size -= heap->perform_cleanup();
+//	total_size -= heap->perform_cleanup();
 	++total_size;
 	return root_heap.pop();
 }

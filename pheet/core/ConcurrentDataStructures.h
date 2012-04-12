@@ -25,6 +25,11 @@ public:
 	template<typename T>
 		using StealingDeque = StealingDequeT<Pheet, T>;
 
+	template<template <class P, typename T> class T>
+		using WithStealingDeque = ConcurrentDataStructuresEnv<Pheet, CircularArrayT, FixedSizeCircularArrayT, T>;
+
+	template <class P>
+		using BT = ConcurrentDataStructuresEnv<P, CircularArrayT, FixedSizeCircularArrayT, StealingDequeT>;
 };
 
 template<class Pheet>

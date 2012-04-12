@@ -23,7 +23,7 @@ public:
 	inline ~LinkedListStrategyTaskStoragePerformanceCounters() {}
 
 	inline static void print_headers() {
-		strategy_heap_performance_counters.print_headers();
+		StrategyHeapPerformanceCounters::print_headers();
 	}
 	inline void print_values() {
 		strategy_heap_performance_counters.print_values();

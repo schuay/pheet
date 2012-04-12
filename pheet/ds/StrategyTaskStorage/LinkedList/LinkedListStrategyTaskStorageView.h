@@ -12,22 +12,35 @@
 #include <vector>
 #include "../../../misc/atomics.h"
 
+#include "LinkedListStrategyTaskStorageDataBlock.h"
+
 namespace pheet {
 
+template <class Pheet, typename TT, size_t BlockSize>
 class LinkedListStrategyTaskStorageView {
 public:
-	LinkedListStrategyTaskStorageView();
+	typedef LinkedListStrategyTaskStorageView<Pheet, TT, BlockSize> Self;
+	typedef LinkedListStrategyTaskStorageDataBlock<Pheet, TT, Self, BlockSize> DataBlock;
+
+	LinkedListStrategyTaskStorageView(DataBlock*& front);
+	LinkedListStrategyTaskStorageView(DataBlock*& front, Self* prev);
 	~LinkedListStrategyTaskStorageView();
 
-	void clean();
+	void mark_empty(DataBlock* block);
+
+	void clean(std::vector<Self*>& view_reuse);
 
 	bool try_register();
 	void deregister();
 
 	bool is_reusable() { return created_blocks == 0; }
+	bool needs_cleanup() { return created_blocks >= (freed_blocks.size() << 1); }
 
 	bool try_lock();
+
+	void reset(Self* prev);
 private:
+	DataBlock*& front;
 	Self* prev;
 	Self* next;
 
@@ -37,12 +50,20 @@ private:
 	ptrdiff_t reg;
 };
 
-LinkedListStrategyTaskStorageView::LinkedListStrategyTaskStorageView()
-:prev(nullptr), next(nullptr), created_blocks(0), reg(0) {
+template <class Pheet, typename TT, size_t BlockSize>
+LinkedListStrategyTaskStorageView<Pheet, TT, BlockSize>::LinkedListStrategyTaskStorageView(DataBlock*& front)
+:front(front), prev(nullptr), next(nullptr), created_blocks(0), reg(0) {
 
 }
 
-LinkedListStrategyTaskStorageView::~LinkedListStrategyTaskStorageView() {
+template <class Pheet, typename TT, size_t BlockSize>
+LinkedListStrategyTaskStorageView<Pheet, TT, BlockSize>::LinkedListStrategyTaskStorageView(DataBlock*& front, Self* prev)
+:front(front), prev(prev), next(nullptr), created_blocks(0), reg(0) {
+
+}
+
+template <class Pheet, typename TT, size_t BlockSize>
+LinkedListStrategyTaskStorageView<Pheet, TT, BlockSize>::~LinkedListStrategyTaskStorageView() {
 	pheet_assert(reg <= 0);
 
 	for(auto i = freed_blocks.begin(); i != freed_blocks.end(); ++i) {
@@ -50,7 +71,16 @@ LinkedListStrategyTaskStorageView::~LinkedListStrategyTaskStorageView() {
 	}
 }
 
-bool LinkedListStrategyTaskStorageView::try_lock() {
+template <class Pheet, typename TT, size_t BlockSize>
+void LinkedListStrategyTaskStorageView<Pheet, TT, BlockSize>::mark_empty(DataBlock* block) {
+	freed_blocks.push_back(block);
+	if(front == block) {
+		block = front->get_next();
+	}
+}
+
+template <class Pheet, typename TT, size_t BlockSize>
+bool LinkedListStrategyTaskStorageView<Pheet, TT, BlockSize>::try_lock() {
 	if(reg == 0) {
 		if(PTRDIFFT_CAS(&reg, 0, -1)) {
 			return true;
@@ -59,7 +89,8 @@ bool LinkedListStrategyTaskStorageView::try_lock() {
 	return reg == -1;
 }
 
-void LinkedListStrategyTaskStorageView::clean(std::vector<Self*>& view_reuse) {
+template <class Pheet, typename TT, size_t BlockSize>
+void LinkedListStrategyTaskStorageView<Pheet, TT, BlockSize>::clean(std::vector<Self*>& view_reuse) {
 	pheet_assert(reg == -1);
 	for(auto i = freed_blocks.begin(); i != freed_blocks.end(); ++i) {
 		if((*i)->first_view == this) {
@@ -71,6 +102,7 @@ void LinkedListStrategyTaskStorageView::clean(std::vector<Self*>& view_reuse) {
 			prev->freed_blocks.push_back(*i);
 		}
 	}
+	freed_blocks.clear();
 	if(prev != nullptr && prev->reg == -1) {
 		prev->clean(view_reuse);
 		if(created_blocks == 0) {
@@ -82,6 +114,21 @@ void LinkedListStrategyTaskStorageView::clean(std::vector<Self*>& view_reuse) {
 		next->prev = prev;
 		view_reuse.push_back(this);
 	}
+}
+
+template <class Pheet, typename TT, size_t BlockSize>
+void LinkedListStrategyTaskStorageView<Pheet, TT, BlockSize>::reset(Self* prev) {
+	pheet_assert(reg == -1);
+	pheet_assert(prev != nullptr);
+	pheet_assert(freed_blocks.empty());
+
+	this->prev = prev;
+	next = nullptr;
+	created_blocks = prev->created_blocks;
+
+	MEMORY_FENCE();
+
+	reg = 0;
 }
 
 }
