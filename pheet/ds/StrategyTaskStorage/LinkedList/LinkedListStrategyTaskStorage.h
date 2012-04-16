@@ -15,11 +15,14 @@
 #include "../../StrategyHeap/Basic/BasicStrategyHeap.h"
 #include "../../../misc/type_traits.h"
 #include <queue>
+#include <iostream>
 
 namespace pheet {
 
 template <class Pheet, typename TT>
 struct LinkedListStrategyTaskStorageItem {
+	typedef TT Item;
+
 	typename Pheet::Scheduler::BaseStrategy* strategy;
 	TT item;
 	int taken;
@@ -34,26 +37,22 @@ struct LinkedListStrategyTaskStorageLocalReference {
 template <class Pheet, class TaskStorage>
 class LinkedListStrategyTaskStorageStrategyRetriever {
 public:
-	typedef typename TaskStorage::LocalReference Item;
+	typedef typename TaskStorage::LocalRef Item;
 
 	LinkedListStrategyTaskStorageStrategyRetriever(TaskStorage* task_storage)
 	:task_storage(task_storage) {}
 
 
 	typename Pheet::Scheduler::BaseStrategy& operator()(Item& item) {
-		return *(item.block.data[item.index].strategy);
+		return *(item.block->get_data(item.index).strategy);
 	}
 
 	inline bool is_active(Item& item) {
-		return item.block.data[item.index].taken != 0;
+		return item.block->get_data(item.index).taken == 0;
 	}
 
 	inline void mark_removed(Item& item) {
-		pheet_assert(item.block->active > 0);
-		--(item.block->active);
-		if(item.block->active == 0) {
-			task_storage->clean_block(item.block);
-		}
+		item.block->mark_removed(item.index, task_storage->get_current_view());
 	}
 
 private:
@@ -63,14 +62,19 @@ private:
 template <class Pheet, typename TT, template <class SP, typename ST, class SR> class StrategyHeapT, size_t BlockSize>
 class LinkedListStrategyTaskStorageImpl {
 public:
+	typedef LinkedListStrategyTaskStorageImpl<Pheet, TT, StrategyHeapT, BlockSize> Self;
+
 	typedef TT T;
 	typedef LinkedListStrategyTaskStorageItem<Pheet, T> Item;
-	typedef LinkedListStrategyTaskStorageStrategyRetriever<Pheet, Item> StrategyRetriever;
+	typedef LinkedListStrategyTaskStorageView<Pheet, Item, BlockSize> View;
+	typedef LinkedListStrategyTaskStorageDataBlock<Pheet, Item, View, BlockSize> DataBlock;
+
+	typedef LinkedListStrategyTaskStorageLocalReference<Pheet, DataBlock> LocalRef;
+	typedef LinkedListStrategyTaskStorageStrategyRetriever<Pheet, Self> StrategyRetriever;
+
 	typedef StrategyHeapT<Pheet, LocalRef, StrategyRetriever> StrategyHeap;
 	typedef LinkedListStrategyTaskStoragePerformanceCounters<Pheet, typename StrategyHeap::PerformanceCounters>
 		PerformanceCounters;
-	typedef LinkedListStrategyTaskStorageView<Pheet, Item, BlockSize> View;
-	typedef LinkedListStrategyTaskStorageDataBlock<Pheet, Item, View, BlockSize> DataBlock;
 
 	LinkedListStrategyTaskStorageImpl();
 	LinkedListStrategyTaskStorageImpl(PerformanceCounters& pc);
@@ -93,7 +97,18 @@ public:
 		return false;
 	}
 
-	static void print_name();
+	inline View* get_current_view() { return current_view; }
+	View* acquire_current_view() {
+		View* ret;
+		do {
+			ret = current_view;
+		} while(!ret->try_register());
+		return ret;
+	}
+
+	static void print_name() {
+		std::cout << "LinkedListStrategyTaskStorage";
+	}
 private:
 
 	void check_view();
@@ -165,7 +180,7 @@ void LinkedListStrategyTaskStorageImpl<Pheet, TT, StrategyHeapT, BlockSize>::pus
 }
 
 template <class Pheet, typename TT, template <class SP, typename ST, class SR> class StrategyHeapT, size_t BlockSize>
-T LinkedListStrategyTaskStorageImpl<Pheet, TT, StrategyHeapT, BlockSize>::pop() {
+TT LinkedListStrategyTaskStorageImpl<Pheet, TT, StrategyHeapT, BlockSize>::pop() {
 	while(heap.size() > 0) {
 		LocalRef r = heap.pop();
 
@@ -180,7 +195,7 @@ T LinkedListStrategyTaskStorageImpl<Pheet, TT, StrategyHeapT, BlockSize>::pop() 
 }
 
 template <class Pheet, typename TT, template <class SP, typename ST, class SR> class StrategyHeapT, size_t BlockSize>
-T& LinkedListStrategyTaskStorageImpl<Pheet, TT, StrategyHeapT, BlockSize>::peek() {
+TT& LinkedListStrategyTaskStorageImpl<Pheet, TT, StrategyHeapT, BlockSize>::peek() {
 	auto r = heap.peek();
 	return r.block->peek(r.index);
 }
@@ -189,9 +204,12 @@ template <class Pheet, typename TT, template <class SP, typename ST, class SR> c
 void LinkedListStrategyTaskStorageImpl<Pheet, TT, StrategyHeapT, BlockSize>::check_view() {
 	if(current_view->needs_cleanup()) {
 		check_blocked_freed_views();
+		View* next_view;
 		if(!view_reuse.empty()) {
-			next_view = view_reuse.pop();
-			next_view->reset();
+			next_view = view_reuse.back();
+			view_reuse.pop_back();
+			// Has a fence inside
+			next_view->reset(current_view);
 		}
 		else {
 			next_view = new View(front, current_view);
@@ -199,6 +217,7 @@ void LinkedListStrategyTaskStorageImpl<Pheet, TT, StrategyHeapT, BlockSize>::che
 		}
 
 		blocked_freed_views.push_back(current_view);
+		// We should only update current_view after the fence to ensure consistency
 		current_view = next_view;
 	}
 }

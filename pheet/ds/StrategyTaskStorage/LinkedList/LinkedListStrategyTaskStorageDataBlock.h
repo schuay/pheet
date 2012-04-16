@@ -20,15 +20,25 @@ public:
 	LinkedListStrategyTaskStorageDataBlock(size_t id, View* first_view, Self* prev);
 	~LinkedListStrategyTaskStorageDataBlock() {}
 
-	bool take(size_t index, T& ret, View* current_view);
-	void clean(View* current_view);
+	bool take(size_t index, typename T::Item& ret, View* current_view);
+	void mark_removed(size_t index, View* current_view);
 	T& peek(size_t index);
 
 	size_t push(T&& item, View* current_view);
 
+	inline T& get_data(size_t index) {
+		pheet_assert(index < filled);
+		return data[index];
+	}
 	inline Self* get_next() { return next; }
+	inline View* get_first_view() { return first_view; }
+	inline bool is_active() { return active != 0; }
+	inline size_t get_size() { return filled; }
+	inline size_t get_max_size() { return BlockSize; }
 
 private:
+	void clean(View* current_view);
+
 	T data[BlockSize];
 
 	size_t id;
@@ -47,7 +57,7 @@ LinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::LinkedListSt
 }
 
 template <class Pheet, typename TT, class View, size_t BlockSize>
-bool LinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::take(size_t index, T& ret, View* current_view) {
+bool LinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::take(size_t index, typename T::Item& ret, View* current_view) {
 	pheet_assert(active > 0);
 	pheet_assert(index < filled);
 	--active;
@@ -61,6 +71,14 @@ bool LinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::take(si
 	}
 	clean(current_view);
 	return false;
+}
+
+template <class Pheet, typename TT, class View, size_t BlockSize>
+void LinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::mark_removed(size_t index, View* current_view) {
+	pheet_assert(active > 0);
+	pheet_assert(index < filled);
+	--active;
+	clean(current_view);
 }
 
 template <class Pheet, typename TT, class View, size_t BlockSize>
@@ -87,15 +105,13 @@ void LinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::clean(V
 		pheet_assert(next != nullptr);
 		next->prev = prev;
 		current_view->mark_empty(this);
-		if(prev == nullptr) {
-			current_view->front = next;
-		}
-		else {
+		if(prev != nullptr) {
 			prev->next = next;
 			// Tail recursion
-			prev->clean();
+			prev->clean(current_view);
 		}
 	}
+	current_view->update_front();
 }
 
 template <class Pheet, typename TT, class View, size_t BlockSize>
@@ -113,6 +129,7 @@ size_t LinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::push(
 		MEMORY_FENCE();
 	}
 	++filled;
+	return filled - 1;
 }
 
 }

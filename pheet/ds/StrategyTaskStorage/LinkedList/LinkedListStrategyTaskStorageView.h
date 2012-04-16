@@ -39,6 +39,7 @@ public:
 	bool try_lock();
 
 	void reset(Self* prev);
+	void update_front();
 private:
 	DataBlock*& front;
 	Self* prev;
@@ -59,7 +60,8 @@ LinkedListStrategyTaskStorageView<Pheet, TT, BlockSize>::LinkedListStrategyTaskS
 template <class Pheet, typename TT, size_t BlockSize>
 LinkedListStrategyTaskStorageView<Pheet, TT, BlockSize>::LinkedListStrategyTaskStorageView(DataBlock*& front, Self* prev)
 :front(front), prev(prev), next(nullptr), created_blocks(0), reg(0) {
-
+	pheet_assert(prev->next == nullptr);
+	prev->next = this;
 }
 
 template <class Pheet, typename TT, size_t BlockSize>
@@ -93,7 +95,7 @@ template <class Pheet, typename TT, size_t BlockSize>
 void LinkedListStrategyTaskStorageView<Pheet, TT, BlockSize>::clean(std::vector<Self*>& view_reuse) {
 	pheet_assert(reg == -1);
 	for(auto i = freed_blocks.begin(); i != freed_blocks.end(); ++i) {
-		if((*i)->first_view == this) {
+		if((*i)->get_first_view() == this) {
 			--created_blocks;
 			delete *i;
 		}
@@ -125,11 +127,21 @@ void LinkedListStrategyTaskStorageView<Pheet, TT, BlockSize>::reset(Self* prev) 
 	this->prev = prev;
 	next = nullptr;
 	created_blocks = prev->created_blocks;
+	pheet_assert(prev->next == nullptr);
+	prev->next = this;
 
 	MEMORY_FENCE();
 
 	reg = 0;
 }
+
+template <class Pheet, typename TT, size_t BlockSize>
+void LinkedListStrategyTaskStorageView<Pheet, TT, BlockSize>::update_front() {
+	while(!front->is_active()) {
+		front = front->get_next();
+	}
+}
+
 
 }
 

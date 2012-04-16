@@ -311,6 +311,7 @@ public:
 
 	T pop() {
 		T ret = this->top;
+		pheet_assert(heap.size() > 0);
 		pheet_assert(!comp(this->top, heap[0]) && !comp(heap[0], this->top));
 		if(heap.size() == 1) {
 			heap.pop_back();
@@ -326,7 +327,7 @@ public:
 		return ret;
 	}
 
-	void push(T& item) {
+	void push(T const& item) {
 		heap.push_back(item);
 		if(heap.size() == 1) {
 			this->top = item;
@@ -394,7 +395,7 @@ public:
 	~BasicStrategyHeap();
 
 	template <class Strategy>
-	void push(T& item);
+	void push(T const& item);
 
 	T pop();
 	T& peek();
@@ -434,7 +435,7 @@ BasicStrategyHeap<Pheet, TT, StrategyRetriever>::~BasicStrategyHeap() {
 
 template <class Pheet, typename TT, class StrategyRetriever>
 template <class Strategy>
-void BasicStrategyHeap<Pheet, TT, StrategyRetriever>::push(T& item) {
+void BasicStrategyHeap<Pheet, TT, StrategyRetriever>::push(T const& item) {
 	HeapBase*& bheap = item_heaps[std::type_index(typeid(Strategy))];
 	if(bheap == nullptr) {
 		bheap = new BasicStrategyItemHeap<Pheet, TT, BaseStrategy, Strategy, StrategyRetriever>(sr, heap_heaps);
@@ -448,7 +449,7 @@ void BasicStrategyHeap<Pheet, TT, StrategyRetriever>::push(T& item) {
 template <class Pheet, typename TT, class StrategyRetriever>
 TT BasicStrategyHeap<Pheet, TT, StrategyRetriever>::pop() {
 //	total_size -= heap->perform_cleanup();
-	++total_size;
+	--total_size;
 	return root_heap.pop();
 }
 
