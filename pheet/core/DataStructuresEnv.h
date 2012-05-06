@@ -28,7 +28,7 @@ public:
 		using PDQ = PriorityDequeT<Pheet, T, Comp>;
 
 	template<typename T, typename Comp = std::less<T>>
-		using Heap = Heap<Pheet, T, Comp>;
+		using Heap = pheet::Heap<Pheet, T, Comp>;
 
 };
 

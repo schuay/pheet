@@ -241,7 +241,7 @@ template<class CallTaskType, typename ... TaskParams>
 void PrioritySchedulerImpl<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::finish(TaskParams&& ... params) {
 	Place* p = get_place();
 	pheet_assert(p != NULL);
-	p->finish<CallTaskType>(std::forward<TaskParams&&>(params) ...);
+	p->template finish<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P> class DefaultStrategyT, uint8_t CallThreshold>
@@ -257,7 +257,7 @@ template<class CallTaskType, typename ... TaskParams>
 void PrioritySchedulerImpl<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::spawn(TaskParams&& ... params) {
 	Place* p = get_place();
 	pheet_assert(p != NULL);
-	p->spawn<CallTaskType>(std::forward<TaskParams&&>(params) ...);
+	p->template spawn<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P> class DefaultStrategyT, uint8_t CallThreshold>
@@ -273,7 +273,7 @@ template<class CallTaskType, class Strategy, typename ... TaskParams>
 void PrioritySchedulerImpl<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::spawn_prio(Strategy s, TaskParams&& ... params) {
 	Place* p = get_place();
 	pheet_assert(p != NULL);
-	p->spawn_prio<CallTaskType>(s, std::forward<TaskParams&&>(params) ...);
+	p->template spawn_prio<CallTaskType>(s, std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P> class DefaultStrategyT, uint8_t CallThreshold>
@@ -289,7 +289,7 @@ template<class CallTaskType, typename ... TaskParams>
 void PrioritySchedulerImpl<Pheet, TaskStorageT, DefaultStrategyT, CallThreshold>::call(TaskParams&& ... params) {
 	Place* p = get_place();
 	pheet_assert(p != NULL);
-	p->call<CallTaskType>(std::forward<TaskParams&&>(params) ...);
+	p->template call<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P> class DefaultStrategyT, uint8_t CallThreshold>
