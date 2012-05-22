@@ -3,7 +3,7 @@
  *
  *  Created on: 12.02.2012
  *      Author: Martin Wimmer
- *     License: Pheet License
+ *     License: Boost Software License 1.0 (BSL1.0)
  */
 
 #ifndef CONCURRENTDATASTRUCTURES_H_

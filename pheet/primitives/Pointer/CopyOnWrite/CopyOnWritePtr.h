@@ -3,7 +3,7 @@
  *
  *  Created on: Feb 16, 2012
  *      Author: mwimmer
- *	   License: Ask Author
+ *	   License: Boost Software License 1.0 (BSL1.0)
  */
 
 #ifndef COPYONWRITEPTR_H_

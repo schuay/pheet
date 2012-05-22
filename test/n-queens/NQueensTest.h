@@ -3,7 +3,7 @@
  *
  *  Created on: 2011-09-22
  *      Author: Anders Gidenstam, Martin Wimmer
- *     License: Pheet license
+ *     License: Boost Software License 1.0 (BSL1.0)
  */
 
 #ifndef NQUEENSTEST_H_

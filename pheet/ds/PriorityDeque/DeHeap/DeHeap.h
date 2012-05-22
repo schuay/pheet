@@ -3,7 +3,7 @@
  *
  *  Created on: 06.01.2012
  *      Author: Martin Wimmer
- *     License: Pheet License
+ *     License: Boost Software License 1.0 (BSL1.0)
  */
 
 #ifndef DEHEAP_H_

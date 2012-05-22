@@ -3,7 +3,7 @@
  *
  *  Created on: 11.04.2011
  *      Author: Martin Wimmer
- *     License: Pheet license
+ *     License: Boost Software License 1.0 (BSL1.0)
  */
 
 #ifndef SHORT_SINGLE_H_

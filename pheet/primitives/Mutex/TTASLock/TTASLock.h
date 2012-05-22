@@ -3,7 +3,7 @@
  *
  *  Created on: 10.08.2011
  *      Author: Martin Wimmer
- *     License: Pheet License
+ *     License: Boost Software License 1.0 (BSL1.0)
  */
 
 #ifndef TTASLOCK_H_

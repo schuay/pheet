@@ -3,7 +3,7 @@
  *
  *  Created on: 30.07.2011
  *      Author: Martin Wimmer
- *     License: Pheet License
+ *     License: Boost Software License 1.0 (BSL1.0)
  */
 
 #ifndef MIXEDMODEQUICKSORT_H_

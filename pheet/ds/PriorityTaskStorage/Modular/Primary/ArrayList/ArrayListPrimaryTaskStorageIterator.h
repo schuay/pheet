@@ -3,7 +3,7 @@
  *
  *  Created on: Nov 24, 2011
  *      Author: mwimmer
- *	   License: Ask Author
+ *	   License: Boost Software License 1.0 (BSL1.0)
  */
 
 #ifndef LINKEDARRAYLISTPRIMARYTASKSTORAGEITERATOR_H_

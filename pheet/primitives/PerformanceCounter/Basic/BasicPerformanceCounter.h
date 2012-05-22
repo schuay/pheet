@@ -3,7 +3,7 @@
  *
  *  Created on: 10.08.2011
  *   Author(s): Martin Wimmer
- *     License: Pheet license
+ *     License: Boost Software License 1.0 (BSL1.0)
  */
 
 #ifndef BASICPERFORMANCECOUNTER_H_

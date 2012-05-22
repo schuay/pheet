@@ -3,7 +3,7 @@
  *
  *  Created on: 2011-10-11
  *      Author: Anders Gidenstam
- *     License: Pheet license
+ *     License: Boost Software License 1.0 (BSL1.0)
  */
 
 #ifndef PARALLELRECURSIVENQUEENS_H_

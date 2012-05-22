@@ -3,7 +3,7 @@
  *
  *  Created on: 19.09.2011
  *      Author: Martin Wimmer
- *     License: Pheet license
+ *     License: Boost Software License 1.0 (BSL1.0)
  */
 
 #ifndef PRIORITYSCHEDULER_H_

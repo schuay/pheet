@@ -3,7 +3,7 @@
 *
 *  Created on: 5.12.2011
 *      Author: Daniel Cederman
-*     License: Pheet license
+*     License: Boost Software License 1.0 (BSL1.0)
 */
 
 #ifndef SORTEST_H_

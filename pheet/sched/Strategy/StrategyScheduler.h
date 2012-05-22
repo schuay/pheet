@@ -3,7 +3,7 @@
  *
  *  Created on: Mar 7, 2012
  *      Author: mwimmer
- *	   License: Ask Author
+ *	   License: Boost Software License 1.0 (BSL1.0)
  */
 
 #ifndef STRATEGYSCHEDULER2_H_

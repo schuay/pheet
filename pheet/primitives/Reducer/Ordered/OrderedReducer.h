@@ -3,7 +3,7 @@
  *
  *  Created on: 09.08.2011
  *   Author(s): Martin Wimmer
- *     License: Ask author
+ *     License: Boost Software License 1.0 (BSL1.0)
  */
 
 #ifndef ORDEREDREDUCER_H_

@@ -3,7 +3,7 @@
  *
  *  Created on: Nov 30, 2011
  *      Author: mwimmer
- *	   License: Pheet license
+ *	   License: Boost Software License 1.0 (BSL1.0)
  */
 
 #ifndef HEAP_H_

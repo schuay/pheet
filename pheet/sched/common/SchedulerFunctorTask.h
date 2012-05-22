@@ -3,7 +3,7 @@
  *
  *  Created on: Feb 14, 2012
  *      Author: mwimmer
- *	   License: Ask Author
+ *	   License: Boost Software License 1.0 (BSL1.0)
  */
 
 #ifndef SCHEDULERFUNCTORTASK_H_

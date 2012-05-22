@@ -33,9 +33,6 @@ Try to use C++ pendants instead where possible
 Template parameter types:
 CamelCase
 
-Template parameter variables
-UPPER_CASE_WITH_UNDERSCORES
-
 Memory allocation:
 new
 
@@ -80,18 +77,8 @@ e.g.:
  *
  *  Created on: 07.04.2011
  *   Author(s): Martin Wimmer
- *     License: Pheet license
+ *     License: Boost Software License 1.0 (BSL1.0)
  */
 
-Contributors should decide on one of the following licenses:
-- Boost Software License - Best for small contributions.
-- Pheet license - Requires the contributor to sign a copyright assignment
-	or a contributor license agreement (CLA). This allows us to provide
-	your code as part of the pheet library under the licenses we want to use
-- LGPL 3 or later - Allows us to use your code in GPL and LGPL licensed 
-	versions of	PHEET, but we have to exclude your code when publishing it
-	under some other license.
-- GPL 3 or later - Allows us to use your code in GPL licensed versions of
-	PHEET, but we have to exclude your code when publishing it under some 
-	other license.
- 
+For contributions to be accepted for Pheet, they have to be submitted 
+using the Boost Software License 1.0 
