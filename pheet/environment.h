@@ -43,6 +43,8 @@
 #error "Pheet requires g++ version 4.7 or higher"
 #endif
 
+#define ENV_GCC 1
+
 #else
 
 #define ENV_GCC 1
