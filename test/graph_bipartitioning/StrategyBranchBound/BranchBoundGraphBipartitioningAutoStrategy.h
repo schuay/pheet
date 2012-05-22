@@ -2,7 +2,7 @@
  * AutoStrategy.h
  *
  *  Created on: Oct 10, 2011
- *      Author: mwimmer
+ *      Author: Martin Wimmer
  */
 
 #ifndef AUTOSTRATEGY_H_

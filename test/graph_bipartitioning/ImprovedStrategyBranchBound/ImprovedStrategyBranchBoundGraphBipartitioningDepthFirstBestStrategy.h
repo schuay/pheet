@@ -2,7 +2,7 @@
  * ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy.h
  *
  *  Created on: Jan 12, 2012
- *      Author: mwimmer
+ *      Author: Martin Wimmer
  *	   License: Boost Software License 1.0 (BSL1.0)
  */
 

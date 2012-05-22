@@ -2,7 +2,7 @@
  * LifoStrategy.h
  *
  *  Created on: 22.09.2011
- *      Author: mwimmer
+ *      Author: Martin Wimmer
  */
 
 #ifndef LIFOSTRATEGY_H_

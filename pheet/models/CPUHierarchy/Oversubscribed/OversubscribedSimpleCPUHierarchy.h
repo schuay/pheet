@@ -2,7 +2,7 @@
  * OversubscribedSimpleCPUHierarchy.h
  *
  *  Created on: 20.04.2011
- *      Author: mwimmer
+ *      Author: Martin Wimmer
  */
 
 #ifndef OVERSUBSCRIBEDSIMPLECPUHIERARCHY_H_

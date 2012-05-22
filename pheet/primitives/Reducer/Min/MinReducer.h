@@ -2,7 +2,7 @@
  * MinReducer.h
  *
  *  Created on: Nov 7, 2011
- *      Author: mwimmer
+ *      Author: Martin Wimmer
  */
 
 #ifndef MINREDUCER_H_

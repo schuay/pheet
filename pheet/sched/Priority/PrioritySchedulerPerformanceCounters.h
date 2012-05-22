@@ -2,7 +2,7 @@
  * PrioritySchedulerPerformanceCounters.h
  *
  *  Created on: Oct 28, 2011
- *      Author: mwimmer
+ *      Author: Martin Wimmer
  */
 
 #ifndef PRIORITYSCHEDULERPERFORMANCECOUNTERS_H_

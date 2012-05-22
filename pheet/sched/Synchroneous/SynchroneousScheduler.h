@@ -13,6 +13,7 @@
 #include "../common/SchedulerTask.h"
 #include "../common/SchedulerFunctorTask.h"
 #include "../common/FinishRegion.h"
+#include "../common/PlaceBase.h"
 #include "SynchroneousSchedulerPerformanceCounters.h"
 
 #include <vector>
@@ -21,7 +22,7 @@
 namespace pheet {
 
 template <class Pheet>
-class SynchroneousScheduler {
+class SynchroneousScheduler :public PlaceBase<Pheet> {
 public:
 	typedef SynchroneousScheduler<Pheet> Self;
 	typedef SchedulerTask<Pheet> Task;
@@ -60,12 +61,6 @@ public:
 		void finish(F&& f, TaskParams&& ... params);
 
 	template<class CallTaskType, typename ... TaskParams>
-		void call(TaskParams&& ... params);
-
-	template<typename F, typename ... TaskParams>
-		void call(F&& f, TaskParams&& ... params);
-
-	template<class CallTaskType, typename ... TaskParams>
 		void spawn(TaskParams&& ... params);
 
 	template<typename F, typename ... TaskParams>
@@ -77,8 +72,6 @@ public:
 	template<class Strategy, typename F, typename ... TaskParams>
 		void spawn_prio(Strategy s, F&& f, TaskParams&& ... params);
 
-	std::mt19937& get_rng() { return rng; }
-
 	void start_finish_region() {}
 	void end_finish_region() {}
 
@@ -89,8 +82,6 @@ private:
 	PerformanceCounters pc;
 
 	Self* parent_place;
-
-	std::mt19937 rng;
 
 	static thread_local Self* local_place;
 };
@@ -166,7 +157,7 @@ template<typename F, typename ... TaskParams>
 void SynchroneousScheduler<Pheet>::spawn(F&& f, TaskParams&& ... params) {
 	f(std::forward<TaskParams&&>(params) ...);
 }
-
+/*
 template <class Pheet>
 template<class CallTaskType, typename ... TaskParams>
 void SynchroneousScheduler<Pheet>::call(TaskParams&& ... params) {
@@ -178,7 +169,7 @@ template <class Pheet>
 template<typename F, typename ... TaskParams>
 void SynchroneousScheduler<Pheet>::call(F&& f, TaskParams&& ... params) {
 	f(std::forward<TaskParams&&>(params) ...);
-}
+}*/
 
 template <class Pheet>
 template<class CallTaskType, class Strategy, typename ... TaskParams>

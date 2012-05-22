@@ -2,7 +2,7 @@
  * Pheet.h
  *
  *  Created on: Jan 31, 2012
- *      Author: mwimmer
+ *      Author: Martin Wimmer
  *	   License: Boost Software License 1.0 (BSL1.0)
  */
 
@@ -104,6 +104,7 @@ public:
 	template <typename IntT> static IntT rand_int(IntT min, IntT max);
 	static Place* get_place();
 	static procs_t get_place_id();
+	template <typename T> static T& place_singleton();
 
 private:
 
@@ -247,6 +248,13 @@ IntT
 PheetEnv<SchedulerT, SystemModelT, PrimitivesT, DataStructuresT, ConcurrentDataStructuresT>::rand_int(IntT min, IntT max) {
 	std::uniform_int_distribution<IntT> dist(min, max);
 	return dist(get_rng());
+}
+
+template <template <class Env> class SchedulerT, template <class Env> class SystemModelT, template <class Env> class PrimitivesT, template <class Env> class DataStructuresT, template <class Env> class ConcurrentDataStructuresT>
+template <typename T>
+inline
+T& PheetEnv<SchedulerT, SystemModelT, PrimitivesT, DataStructuresT, ConcurrentDataStructuresT>::place_singleton() {
+	return Scheduler::get_place()->template singleton<T>();
 }
 
 }

@@ -2,7 +2,7 @@
  * InARowGame.h
  *
  *  Created on: Nov 23, 2011
- *      Author: mwimmer
+ *      Author: Martin Wimmer
  *	   License: Boost Software License 1.0 (BSL1.0)
  */
 

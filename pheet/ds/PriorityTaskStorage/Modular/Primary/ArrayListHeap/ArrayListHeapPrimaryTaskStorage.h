@@ -2,7 +2,7 @@
  * ArrayListHeapPrimaryTaskStorage.h
  *
  *  Created on: Dec 6, 2011
- *      Author: mwimmer
+ *      Author: Martin Wimmer
  *	   License: Boost Software License 1.0 (BSL1.0)
  */
 

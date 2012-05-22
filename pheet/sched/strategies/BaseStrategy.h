@@ -2,7 +2,7 @@
  * BaseStrategy.h
  *
  *  Created on: 19.09.2011
- *      Author: mwimmer
+ *      Author: Martin Wimmer
  */
 
 #ifndef BASESTRATEGY_H_

@@ -2,7 +2,7 @@
  * PrimitiveSecondaryTaskStoragePerformanceCounters.h
  *
  *  Created on: Nov 8, 2011
- *      Author: mwimmer
+ *      Author: Martin Wimmer
  */
 
 #ifndef PRIMITIVESECONDARYTASKSTORAGEPERFORMANCECOUNTERS_H_

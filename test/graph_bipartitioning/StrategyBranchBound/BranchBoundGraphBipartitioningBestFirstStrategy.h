@@ -2,7 +2,7 @@
  * BranchBoundGraphBipartitioningBestFirstStrategy.h
  *
  *  Created on: Nov 15, 2011
- *      Author: mwimmer
+ *      Author: Martin Wimmer
  */
 
 #ifndef BRANCHBOUNDGRAPHBIPARTITIONINGBESTFIRSTSTRATEGY_H_

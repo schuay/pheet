@@ -2,7 +2,7 @@
  * FallbackTaskStorage.h
  *
  *  Created on: 21.09.2011
- *      Author: mwimmer
+ *      Author: Martin Wimmer
  */
 
 #ifndef FALLBACKTASKSTORAGE_H_

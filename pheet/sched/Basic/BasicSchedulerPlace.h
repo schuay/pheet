@@ -12,12 +12,12 @@
 #include "../../settings.h"
 #include "../common/CPUThreadExecutor.h"
 #include "../common/FinishRegion.h"
+#include "../common/PlaceBase.h"
 #include "../../misc/atomics.h"
 #include "../../misc/bitops.h"
 #include "../../misc/type_traits.h"
 #include "BasicSchedulerPerformanceCounters.h"
 
-#include <random>
 #include <functional>
 
 namespace pheet {
@@ -85,7 +85,7 @@ template <class Pheet>
 BasicSchedulerPlaceDequeItem<Pheet> const nullable_traits<BasicSchedulerPlaceDequeItem<Pheet> >::null_value;
 
 template <class Pheet, template <class P, typename T> class StealingDequeT, uint8_t CallThreshold>
-class BasicSchedulerPlace {
+class BasicSchedulerPlace : public PlaceBase<Pheet> {
 public:
 	typedef BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold> Self;
 	typedef Self Place;
@@ -129,8 +129,6 @@ public:
 	template<typename F, typename ... TaskParams>
 		void spawn(F&& f, TaskParams&& ... params);
 
-	std::mt19937& get_rng();
-
 	void start_finish_region();
 	void end_finish_region();
 
@@ -171,8 +169,6 @@ private:
 	StealingDeque stealing_deque;
 
 	CPUThreadExecutor<Self> thread_executor;
-
-	std::mt19937 rng;
 
 	static thread_local Self* local_place;
 
@@ -459,7 +455,7 @@ void BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::main_loop() {
 					// For all except the last level we assume num_partners > 0
 					pheet_assert(levels[level].num_partners > 0);
 					std::uniform_int_distribution<procs_t> n_r_gen(0, levels[level].num_partners - 1);
-					procs_t next_rand = n_r_gen(rng);
+					procs_t next_rand = n_r_gen(this->get_rng());
 					pheet_assert(next_rand < levels[level].num_partners);
 					pheet_assert(levels[level].partners[next_rand] != this);
 
@@ -517,7 +513,7 @@ void BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::wait_for_finish(
 					// For all except the last level we assume num_partners > 0
 					pheet_assert(levels[level].num_partners > 0);
 					std::uniform_int_distribution<procs_t> n_r_gen(0, levels[level].num_partners - 1);
-					procs_t next_rand = n_r_gen(rng);
+					procs_t next_rand = n_r_gen(this->get_rng());
 					pheet_assert(levels[level].partners[next_rand] != this);
 					performance_counters.num_steal_calls.incr();
 					di = levels[level].partners[next_rand]->stealing_deque.steal_push(this->stealing_deque);
@@ -821,11 +817,6 @@ void BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::call(F&& f, Task
 	performance_counters.num_calls.incr();
 	// Execute task
 	f(std::forward<TaskParams&&>(params) ...);
-}
-
-template <class Pheet, template <class P, typename T> class StealingDequeT, uint8_t CallThreshold>
-std::mt19937& BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::get_rng() {
-	return rng;
 }
 
 }

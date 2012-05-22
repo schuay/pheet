@@ -2,7 +2,7 @@
  * StrategyBranchBoundGraphBipartitioningPerformanceCounters.h
  *
  *  Created on: Feb 15, 2012
- *      Author: mwimmer
+ *      Author: Martin Wimmer
  *	   License: Boost Software License 1.0 (BSL1.0)
  */
 

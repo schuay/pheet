@@ -2,7 +2,7 @@
  * StrategyScheduler2Place.h
  *
  *  Created on: Mar 8, 2012
- *      Author: mwimmer
+ *      Author: Martin Wimmer
  *	   License: Boost Software License 1.0 (BSL1.0)
  */
 
@@ -10,6 +10,7 @@
 #define STRATEGYSCHEDULER2PLACE_H_
 
 #include "StrategySchedulerPerformanceCounters.h"
+#include "../common/PlaceBase.h"
 
 namespace pheet {
 
@@ -48,7 +49,7 @@ struct StrategySchedulerPlaceLevelDescription {
 
 
 template <class Pheet, uint8_t CallThreshold>
-class StrategySchedulerPlace {
+class StrategySchedulerPlace : public PlaceBase<Pheet> {
 public:
 	typedef StrategySchedulerPlace<Pheet, CallThreshold> Self;
 	typedef Self Place;
@@ -102,8 +103,6 @@ public:
 	template<class Strategy, typename F, typename ... TaskParams>
 		void spawn_s(Strategy&& s, F&& f, TaskParams&& ... params);
 
-	std::mt19937& get_rng();
-
 	procs_t get_distance(Self* other);
 //	procs_t get_distance(Self* other, procs_t max_granularity_level);
 	procs_t get_max_distance();
@@ -155,7 +154,6 @@ private:
 
 	CPUThreadExecutor<Self> thread_executor;
 
-	std::mt19937 rng;
 	ptrdiff_t task_id;
 
 	PerformanceCounters performance_counters;
@@ -430,7 +428,7 @@ void StrategySchedulerPlace<Pheet, CallThreshold>::main_loop() {
 					// For all except the top level we assume num_partners > 0
 					pheet_assert(levels[level].num_partners > 0);
 					std::uniform_int_distribution<procs_t> n_r_gen(0, levels[level].num_partners - 1);
-					procs_t next_rand = n_r_gen(rng);
+					procs_t next_rand = n_r_gen(this->get_rng());
 					pheet_assert(next_rand < levels[level].num_partners);
 					pheet_assert(levels[level].partners[next_rand] != this);
 
@@ -487,7 +485,7 @@ void StrategySchedulerPlace<Pheet, CallThreshold>::wait_for_finish(StackElement*
 					// For all except the top level we assume num_partners > 0
 					pheet_assert(levels[level].num_partners > 0);
 					std::uniform_int_distribution<procs_t> n_r_gen(0, levels[level].num_partners - 1);
-					procs_t next_rand = n_r_gen(rng);
+					procs_t next_rand = n_r_gen(this->get_rng());
 					pheet_assert(levels[level].partners[next_rand] != this);
 					performance_counters.num_steal_calls.incr();
 				//	StealerDescriptor sd(levels[level].partners[next_rand], this, num_levels - 1);
@@ -868,11 +866,6 @@ void StrategySchedulerPlace<Pheet, CallThreshold>::call(F&& f, TaskParams&& ... 
 	performance_counters.num_calls.incr();
 	// Execute task
 	f(std::forward<TaskParams&&>(params) ...);
-}
-
-template <class Pheet, uint8_t CallThreshold>
-std::mt19937& StrategySchedulerPlace<Pheet, CallThreshold>::get_rng() {
-	return rng;
 }
 
 template <class Pheet, uint8_t CallThreshold>

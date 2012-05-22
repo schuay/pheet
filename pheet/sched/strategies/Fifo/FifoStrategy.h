@@ -2,7 +2,7 @@
  * FifoStrategy.h
  *
  *  Created on: 22.09.2011
- *      Author: mwimmer
+ *      Author: Martin Wimmer
  */
 
 #ifndef FIFOSTRATEGY_H_

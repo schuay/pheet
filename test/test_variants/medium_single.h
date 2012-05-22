@@ -2,7 +2,7 @@
  * medium_single.h
  *
  *  Created on: Nov 18, 2011
- *      Author: mwimmer
+ *      Author: Martin Wimmer
  */
 
 #ifndef MEDIUM_SINGLE_H_

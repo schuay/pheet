@@ -12,6 +12,7 @@
 #include "../../settings.h"
 #include "../common/CPUThreadExecutor.h"
 #include "../common/FinishRegion.h"
+#include "../common/PlaceBase.h"
 #include "../../misc/atomics.h"
 #include "../../misc/bitops.h"
 #include "../../misc/type_traits.h"
@@ -151,7 +152,7 @@ template <class Place>
 MixedModeSchedulerPlaceDequeItem<Place> const nullable_traits<MixedModeSchedulerPlaceDequeItem<Place> >::null_value;
 
 template <class Pheet, template <class SP, typename T> class StealingDequeT>
-class MixedModeSchedulerPlace {
+class MixedModeSchedulerPlace : public PlaceBase<Pheet> {
 public:
 	typedef MixedModeSchedulerPlace<Pheet, StealingDequeT> Self;
 	typedef MixedModeSchedulerPlaceRegistration Registration;
@@ -214,8 +215,6 @@ public:
 	procs_t get_coordinator_id();
 	procs_t get_team_size();
 	procs_t get_max_team_size();
-
-	std::mt19937& get_rng();
 
 	void start_finish_region();
 	void end_finish_region();
@@ -318,8 +317,6 @@ private:
 	PerformanceCounters performance_counters;
 
 	CPUThreadExecutor<Self> thread_executor;
-
-	std::mt19937 rng;
 
 	static thread_local Place* local_place;
 
@@ -1420,7 +1417,7 @@ void MixedModeSchedulerPlace<Pheet, StealingDequeT>::visit_partners() {
 			// For all except the last level we assume num_partners > 0
 			pheet_assert(levels[level].num_partners > 0);
 			std::uniform_int_distribution<procs_t> n_r_gen(0, levels[level].num_partners - 1);
-			procs_t next_rand = n_r_gen(rng);
+			procs_t next_rand = n_r_gen(this->get_rng());
 			pheet_assert(next_rand < levels[level].num_partners);
 			Place* partner = levels[level].partners[next_rand];
 			pheet_assert(partner != this);
@@ -1486,7 +1483,7 @@ void MixedModeSchedulerPlace<Pheet, StealingDequeT>::visit_partners_until_finish
 			// For all except the last level we assume num_partners > 0
 			pheet_assert(levels[level].num_partners > 0);
 			std::uniform_int_distribution<procs_t> n_r_gen(0, levels[level].num_partners - 1);
-			procs_t next_rand = n_r_gen(rng);
+			procs_t next_rand = n_r_gen(this->get_rng());
 			pheet_assert(next_rand < levels[level].num_partners);
 			Place* partner = levels[level].partners[next_rand];
 			pheet_assert(partner != this);
@@ -1553,7 +1550,7 @@ void MixedModeSchedulerPlace<Pheet, StealingDequeT>::visit_partners_until_synced
 			// For all except the last level we assume num_partners > 0
 			pheet_assert(levels[level].num_partners > 0);
 			std::uniform_int_distribution<procs_t> n_r_gen(0, levels[level].num_partners - 1);
-			procs_t next_rand = n_r_gen(rng);
+			procs_t next_rand = n_r_gen(this->get_rng());
 			pheet_assert(next_rand < levels[level].num_partners);
 			Place* partner = levels[level].partners[next_rand];
 			pheet_assert(partner != this);
@@ -2419,11 +2416,6 @@ bool MixedModeSchedulerPlace<Pheet, StealingDequeT>::deregister_from_team(TeamAn
 
 	current_team = NULL;
 	return true;
-}
-
-template <class Pheet, template <class SP, typename T> class StealingDequeT>
-std::mt19937& MixedModeSchedulerPlace<Pheet, StealingDequeT>::get_rng() {
-	return rng;
 }
 
 }

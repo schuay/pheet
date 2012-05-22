@@ -2,7 +2,7 @@
  * PrimitiveHeapPrimaryTaskStoragePerformanceCounters.h
  *
  *  Created on: Oct 31, 2011
- *      Author: mwimmer
+ *      Author: Martin Wimmer
  */
 
 #ifndef PrimitiveHeapPrimaryTaskStoragePerformanceCounters_H_

@@ -2,7 +2,7 @@
  * ModularTaskStoragePerformanceCounters.h
  *
  *  Created on: Oct 28, 2011
- *      Author: mwimmer
+ *      Author: Martin Wimmer
  */
 
 #ifndef MODULARTASKSTORAGEPERFORMANCECOUNTERS_H_

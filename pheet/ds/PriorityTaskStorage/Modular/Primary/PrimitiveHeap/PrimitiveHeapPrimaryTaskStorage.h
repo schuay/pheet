@@ -2,7 +2,7 @@
  * PrimitiveHeapPrimaryTaskStorage.h
  *
  *  Created on: 21.09.2011
- *      Author: mwimmer
+ *      Author: Martin Wimmer
  */
 
 #ifndef PRIMITIVEHEAPPRIMARYTASKSTORAGE_H_

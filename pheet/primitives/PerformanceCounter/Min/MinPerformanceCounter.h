@@ -2,7 +2,7 @@
  * MinPerformanceCounter.h
  *
  *  Created on: Nov 8, 2011
- *      Author: mwimmer
+ *      Author: Martin Wimmer
  */
 
 #ifndef MINPERFORMANCECOUNTER_H_

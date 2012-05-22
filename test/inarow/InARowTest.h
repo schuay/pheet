@@ -2,7 +2,7 @@
  * InARowTest.h
  *
  *  Created on: Nov 23, 2011
- *      Author: mwimmer
+ *      Author: Martin Wimmer
  */
 
 #ifndef INAROWTEST_H_
