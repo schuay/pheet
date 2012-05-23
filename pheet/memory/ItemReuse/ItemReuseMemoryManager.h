@@ -41,7 +41,7 @@ public:
 	T& acquire_item() {
 		// Search for reusable overhead
 		while(head->next != tail) {
-			if(reuse_check(head->next)) {
+			if(reuse_check(head->next->item)) {
 				// Found reusable element
 				head = head->next;
 				// We can advance tail
@@ -50,7 +50,7 @@ public:
 				if(tail != head) {
 					tail = tail->next;
 				}
-				return *head;
+				return head->item;
 			}
 			head = head->next;
 		}
@@ -61,7 +61,7 @@ public:
 		head->next->next = tail;
 		head = head->next;
 		tail = tail->next;
-		return *head;
+		return head->item;
 	}
 
 private:

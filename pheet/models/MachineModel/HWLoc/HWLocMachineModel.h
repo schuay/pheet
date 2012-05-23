@@ -23,8 +23,8 @@ public:
 	~HWLocTopologyInfo();
 
 	hwloc_obj_t get_root_obj();
-	int get_root_depth();
-	int get_total_depth();
+	unsigned int get_root_depth();
+	unsigned int get_total_depth();
 	unsigned int get_total_width();
 
 	hwloc_cpuset_t get_binding();
@@ -34,8 +34,8 @@ private:
 	HWLocTopologyInfo(HWLocTopologyInfo* topo, int depth);
 
 	hwloc_topology_t topology;
-	int root_depth;
-	int total_depth;
+	unsigned int root_depth;
+	unsigned int total_depth;
 };
 
 template <class Pheet>
@@ -61,12 +61,12 @@ hwloc_obj_t HWLocTopologyInfo<Pheet>::get_root_obj() {
 }
 
 template <class Pheet>
-int HWLocTopologyInfo<Pheet>::get_root_depth() {
+unsigned int HWLocTopologyInfo<Pheet>::get_root_depth() {
 	return root_depth;
 }
 
 template <class Pheet>
-int HWLocTopologyInfo<Pheet>::get_total_depth() {
+unsigned int HWLocTopologyInfo<Pheet>::get_total_depth() {
 	return total_depth;
 }
 

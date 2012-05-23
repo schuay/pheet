@@ -25,10 +25,10 @@ public:
 	typedef FinisherLocalViewReuseCheck<Self> ReuseCheck;
 
 	FinisherLocalView()
-	: p(Pheet::get_place()), parent(nullptr), local(1), remote(0), flag(1) {}
+	: p(Pheet::get_place())/*, parent(nullptr), local(1), remote(0)*/, flag(1) {}
 	~FinisherLocalView() {}
 
-	typename Pheet::Place* p;
+	typename Pheet::Environment::Place* p;
 	Self* parent;
 	size_t local;
 	size_t remote;

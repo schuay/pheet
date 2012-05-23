@@ -38,6 +38,7 @@ public:
 
 	typedef typename Primitives::Backoff Backoff;
 	typedef typename Primitives::Barrier Barrier;
+	typedef typename Primitives::Finisher Finisher;
 
 	typedef SchedulerT<Self> Scheduler;
 	typedef Scheduler Environment;

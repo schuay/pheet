@@ -49,7 +49,7 @@ public:
 		if(s == nullptr) {
 			s = new PlaceBaseSingleton<T>();
 		}
-		return static_cast<PlaceBaseSingleton<T> >(s)->content;
+		return static_cast<PlaceBaseSingleton<T>*>(s)->content;
 	}
 
 	template<class CallTaskType, typename ... TaskParams>

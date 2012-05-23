@@ -16,9 +16,6 @@ class ItemReuseMemoryManagerItem {
 public:
 	typedef ItemReuseMemoryManagerItem<Pheet, T> Self;
 
-	ItemReuseMemoryManagerItem();
-	~ItemReuseMemoryManagerItem();
-
 	T item;
 	Self* next;
 };

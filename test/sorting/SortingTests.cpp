@@ -23,6 +23,7 @@
 
 #include <pheet/pheet.h>
 #include <pheet/sched/Basic/BasicScheduler.h>
+#include <pheet/sched/Finisher/FinisherScheduler.h>
 //#include <pheet/sched/Strategy/StrategyScheduler.h>
 #include <pheet/sched/Synchroneous/SynchroneousScheduler.h>
 #include <pheet/sched/MixedMode/MixedModeScheduler.h>
@@ -65,6 +66,8 @@ void SortingTests::run_test() {
 						ReferenceHeapSort>();
 	this->run_sorter<	Pheet::WithScheduler<MixedModeScheduler>,
 						MixedModeQuicksort>();
+	this->run_sorter<	Pheet::WithScheduler<FinisherScheduler>,
+						DagQuicksort>();
 
 /*	this->run_sorter<MixedModeQuicksort<DefaultMixedModeScheduler> >();
 	this->run_sorter<DagQuicksort<DefaultMixedModeScheduler> >();

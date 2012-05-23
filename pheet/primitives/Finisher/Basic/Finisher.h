@@ -71,19 +71,23 @@ FinisherImpl<Pheet, MemoryManagerT>::~FinisherImpl() {
 template <class Pheet, template <class, typename, class> class MemoryManagerT>
 void FinisherImpl<Pheet, MemoryManagerT>::activate() {
 	pheet_assert(local_view == nullptr);
-	MemoryManager& mm = Pheet::template place_singleton<MemoryManagerT>();
+	MemoryManager& mm = Pheet::template place_singleton<MemoryManager>();
 	local_view = &(mm.acquire_item());
+	++(local_view->flag);
+	local_view->local = 1;
+	local_view->remote = 0;
+	local_view->parent = nullptr;
 }
 
 template <class Pheet, template <class, typename, class> class MemoryManagerT>
 void FinisherImpl<Pheet, MemoryManagerT>::deactivate() {
 	pheet_assert(local_view != nullptr);
-	LocalView v = get_local_view();
+	LocalView* v = get_local_view();
 	size_t f = v->flag;
 	pheet_assert((f & 1) == 0);
 	MEMORY_FENCE();
 	--(v->local);
-	if(v->local == v->remote && SIZET_CAS(v->flag, f, f + 1)) {
+	if(v->local == v->remote && SIZET_CAS(&(v->flag), f, f + 1)) {
 		// No need to delete local view. Memory manager acts as a garbage collector
 		// TODO: try if a local reuse list can improve performance
 
@@ -95,8 +99,8 @@ void FinisherImpl<Pheet, MemoryManagerT>::deactivate() {
 			v = p;
 			p = v->parent;
 			f = v->flag;
-			size_t r = SIZET_FETCH_AND_ADD(v->remote, 1);
-			if(v->local != r + 1 || !SIZET_CAS(v->flag, f, f + 1)) {
+			size_t r = SIZET_FETCH_AND_ADD(&(v->remote), 1);
+			if(v->local != r + 1 || !SIZET_CAS(&(v->flag), f, f + 1)) {
 				// No need to clean up, or clean up by other thread
 				break;
 			}
@@ -145,12 +149,17 @@ void FinisherImpl<Pheet, MemoryManagerT>::make_locally_unique() {
 template <class Pheet, template <class, typename, class> class MemoryManagerT>
 typename FinisherImpl<Pheet, MemoryManagerT>::LocalView*
 FinisherImpl<Pheet, MemoryManagerT>::get_local_view() {
-	if(local_view->place != Pheet::get_place()) {
+	if(local_view->p != Pheet::get_place()) {
 		LocalView* p = local_view;
-		MemoryManager& mm = Pheet::template place_singleton<MemoryManagerT>();
+		MemoryManager& mm = Pheet::template place_singleton<MemoryManager>();
 		local_view = &(mm.acquire_item());
+		pheet_assert((local_view->flag & 1) == 1);
+		++(local_view->flag);
+		local_view->local = 1;
+		local_view->remote = 0;
 		local_view->parent = p;
 	}
+	return local_view;
 }
 
 template <class Pheet, template <class, typename, class> class MemoryManagerT>
@@ -163,6 +172,7 @@ FinisherImpl<Pheet, MemoryManagerT>::operator=(Self& other) {
 	if(local_view != nullptr) {
 		++(local_view->local);
 	}
+	return *this;
 }
 
 template <class Pheet, template <class, typename, class> class MemoryManagerT>
@@ -173,6 +183,7 @@ FinisherImpl<Pheet, MemoryManagerT>::operator=(Self&& other) {
 	}
 	local_view = other.local_view;
 	other.local_view = nullptr;
+	return *this;
 }
 
 template <class Pheet>

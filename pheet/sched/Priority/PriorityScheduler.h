@@ -42,12 +42,12 @@ PrioritySchedulerState<Pheet>::PrioritySchedulerState()
 
 template <class Pheet>
 struct PrioritySchedulerTaskStorageItem {
-	typedef typename Pheet::Place Place;
+	typedef typename Pheet::Environment::Place Place;
 
 	PrioritySchedulerTaskStorageItem();
 
-	typename Pheet::Place::Task* task;
-	typename Pheet::Place::StackElement* stack_element;
+	typename Pheet::Environment::Place::Task* task;
+	typename Pheet::Environment::Place::StackElement* stack_element;
 
 	bool operator==(PrioritySchedulerTaskStorageItem<Pheet> const& other) const;
 	bool operator!=(PrioritySchedulerTaskStorageItem<Pheet> const& other) const;
