@@ -119,6 +119,7 @@ public:
 	void end_finish_region();
 */
 	Finisher current_finisher;
+	void wait_for_finish(Finisher f);
 
 private:
 	void initialize_levels();
@@ -128,7 +129,6 @@ private:
 	void main_loop();
 	void process_queue();
 	bool process_queue_until_finished(Finisher& f);
-	void wait_for_finish(Finisher f);
 
 	void empty_stack();
 //	StackElement* create_non_blocking_finish_region(StackElement* parent);

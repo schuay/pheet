@@ -42,7 +42,7 @@ void LUPivTests::run_kernel() {
 			bool max_processed = false;
 			procs_t cpus;
 			for(size_t c = 0; c < sizeof(lupiv_test_cpus)/sizeof(lupiv_test_cpus[0]); c++) {
-				cpus = sorting_test_cpus[c];
+				cpus = lupiv_test_cpus[c];
 				if(cpus >= max_cpus) {
 					if(!max_processed) {
 						cpus = max_cpus;

@@ -12,6 +12,7 @@
 
 #include <pheet/pheet.h>
 #include <pheet/sched/Basic/BasicScheduler.h>
+#include <pheet/sched/Finisher/FinisherScheduler.h>
 #include <pheet/models/MachineModel/HWLoc/HWLocSMTMachineModel.h>
 
 #include <iostream>
@@ -37,6 +38,8 @@ void LUPivTests::run_test() {
 	this->run_kernel<	Pheet,
 						SimpleLUPiv>();
 	this->run_kernel<	Pheet::WithScheduler<BasicScheduler>,
+						SimpleLUPiv>();
+	this->run_kernel<	Pheet::WithScheduler<FinisherScheduler>,
 						SimpleLUPiv>();
 #endif
 }

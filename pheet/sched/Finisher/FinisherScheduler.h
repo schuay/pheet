@@ -11,7 +11,7 @@
 
 //#include "../common/SchedulerTask.h"
 #include "../common/SchedulerFunctorTask.h"
-#include "../common/FinishRegion.h"
+#include "FinisherSchedulerFinishRegion.h"
 #include "FinisherSchedulerPlace.h"
 #include "FinisherSchedulerTask.h"
 #include "../common/CPUThreadExecutor.h"
@@ -52,7 +52,7 @@ public:
 		using FunctorTask = SchedulerFunctorTask<Pheet, F>;
 	typedef FinisherSchedulerPlace<Pheet, StealingDeque, CallThreshold> Place;
 	typedef FinisherSchedulerState<Pheet> State;
-	typedef FinishRegion<Pheet> Finish;
+	typedef FinisherSchedulerFinishRegion<Pheet> Finish;
 	typedef typename Place::PerformanceCounters PerformanceCounters;
 
 	template<uint8_t NewVal>
