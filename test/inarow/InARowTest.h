@@ -8,8 +8,8 @@
 #ifndef INAROWTEST_H_
 #define INAROWTEST_H_
 
-#include "../../settings.h"
-#include "../../misc/types.h"
+#include "../settings.h"
+#include "../../pheet/misc/types.h"
 #include "../Test.h"
 
 #include <iostream>
