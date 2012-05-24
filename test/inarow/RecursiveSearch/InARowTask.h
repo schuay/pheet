@@ -10,9 +10,9 @@
 #define INAROWTASK_H_
 
 #include <pheet/pheet.h>
-#include "../../../misc/types.h"
-#include "../../../misc/atomics.h"
-#include "../../test_schedulers.h"
+#include "../../../pheet/misc/types.h"
+#include "../../../pheet/misc/atomics.h"
+//#include "../../test_schedulers.h"
 #include <string.h>
 #include <stdlib.h>
 #include <iostream>

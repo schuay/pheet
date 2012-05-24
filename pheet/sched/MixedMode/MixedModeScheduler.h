@@ -276,7 +276,7 @@ template<class CallTaskType, typename ... TaskParams>
 void MixedModeSchedulerImpl<Pheet, StealingDeque>::spawn(TaskParams&& ... params) {
 	Place* p = get_place();
 	pheet_assert(p != NULL);
-	p->spawn<CallTaskType>(std::forward<TaskParams&&>(params) ...);
+	p->template spawn<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, template <class P, typename T> class StealingDeque>
@@ -292,7 +292,7 @@ template<class CallTaskType, typename ... TaskParams>
 void MixedModeSchedulerImpl<Pheet, StealingDeque>::spawn_nt(procs_t nt, TaskParams&& ... params) {
 	Place* p = get_place();
 	pheet_assert(p != NULL);
-	p->spawn_nt<CallTaskType>(nt, std::forward<TaskParams&&>(params) ...);
+	p->template spawn_nt<CallTaskType>(nt, std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, template <class P, typename T> class StealingDeque>
@@ -320,7 +320,7 @@ template<class CallTaskType, typename ... TaskParams>
 void MixedModeSchedulerImpl<Pheet, StealingDeque>::call(TaskParams&& ... params) {
 	Place* p = get_place();
 	pheet_assert(p != NULL);
-	p->call<CallTaskType>(std::forward<TaskParams&&>(params) ...);
+	p->template call<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, template <class P, typename T> class StealingDeque>
