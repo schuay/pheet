@@ -10,6 +10,7 @@
 #define GLOBALLOCKSTACK_H_
 
 #include <vector>
+#include <iostream>
 #include "../../../misc/type_traits.h"
 
 namespace pheet {
@@ -52,6 +53,12 @@ public:
 
 	inline size_t size() {
 		return get_length();
+	}
+
+	static void print_name() {
+		std::cout << "GlobalLockStack<";
+		Mutex::print_name();
+		std::cout << ">";
 	}
 
 private:

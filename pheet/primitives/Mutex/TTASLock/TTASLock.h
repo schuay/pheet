@@ -9,6 +9,7 @@
 #ifndef TTASLOCK_H_
 #define TTASLOCK_H_
 
+#include <iostream>
 #include "../common/BasicLockGuard.h"
 
 namespace pheet {
@@ -27,6 +28,10 @@ public:
 	bool try_lock(long int time_ms);
 
 	void unlock();
+
+	static void print_name() {
+		std::cout << "TTASLock";
+	}
 private:
 	// Volatile needed to ensure the compiler doesn't optimize the while(locked) loop
 	int volatile locked;

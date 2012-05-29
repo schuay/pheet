@@ -173,7 +173,9 @@ CentralizedSchedulerImpl<Pheet, TaskStorageT, CallThreshold>::~CentralizedSchedu
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, uint8_t CallThreshold>
 void CentralizedSchedulerImpl<Pheet, TaskStorageT, CallThreshold>::print_name() {
-	std::cout << name;
+	std::cout << name  << "<";
+	Place::TaskStorage::print_name();
+	std::cout << ", " << (int)CallThreshold << ">";
 }
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, uint8_t CallThreshold>

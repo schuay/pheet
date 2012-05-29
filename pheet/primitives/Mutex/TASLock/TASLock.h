@@ -9,6 +9,7 @@
 #ifndef TASLOCK_H_
 #define TASLOCK_H_
 
+#include <iostream>
 #include "../common/BasicLockGuard.h"
 
 namespace pheet {
@@ -27,6 +28,10 @@ public:
 	bool try_lock(long int time_ms);
 
 	void unlock();
+
+	static void print_name() {
+		std::cout << "TASLock";
+	}
 private:
 	int locked;
 };

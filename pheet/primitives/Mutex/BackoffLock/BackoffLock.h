@@ -10,6 +10,7 @@
 #define BACKOFFLOCK_H_
 
 #include "../common/BasicLockGuard.h"
+#include <iostream>
 #include <sys/time.h>
 
 namespace pheet {
@@ -34,6 +35,10 @@ public:
 	bool try_lock(long int time_ms);
 
 	void unlock();
+
+	static void print_name() {
+		std::cout << "BackoffLock";
+	}
 private:
 	int volatile locked;
 };

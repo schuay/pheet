@@ -27,6 +27,11 @@
 #include <pheet/sched/Basic/BasicScheduler.h>
 #include <pheet/sched/Centralized/CentralizedScheduler.h>
 
+#include <pheet/ds/Queue/GlobalLock/GlobalLockQueue.h>
+
+#include <pheet/primitives/Mutex/TASLock/TASLock.h>
+#include <pheet/primitives/Mutex/TTASLock/TTASLock.h>
+
 #include "ImprovedBranchBound/ImprovedBranchBoundGraphBipartitioning.h"
 #include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioning.h"
 #include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy.h"
@@ -79,6 +84,14 @@ void GraphBipartitioningTests::run_test() {
 
 #elif AMP_LOCK_TEST
 
+	this->run_partitioner<	Pheet::WithScheduler<CentralizedScheduler>,
+						ImprovedBranchBoundGraphBipartitioning>();
+	this->run_partitioner<	Pheet::WithScheduler<CentralizedScheduler>::WithMutex<TASLock>,
+						ImprovedBranchBoundGraphBipartitioning>();
+	this->run_partitioner<	Pheet::WithScheduler<CentralizedScheduler>::WithMutex<TTASLock>,
+						ImprovedBranchBoundGraphBipartitioning>();
+	this->run_partitioner<	Pheet::WithScheduler<BasicScheduler>,
+						ImprovedBranchBoundGraphBipartitioning>();
 
 #else
 

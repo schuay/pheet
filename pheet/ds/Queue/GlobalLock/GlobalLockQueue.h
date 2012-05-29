@@ -10,6 +10,7 @@
 #define GLOBALLOCKQUEUE_H_
 
 #include <queue>
+#include <iostream>
 #include "../../../misc/type_traits.h"
 
 namespace pheet {
@@ -52,6 +53,12 @@ public:
 
 	inline size_t size() {
 		return get_length();
+	}
+
+	static void print_name() {
+		std::cout << "GlobalLockQueue<";
+		Mutex::print_name();
+		std::cout << ">";
 	}
 
 private:
