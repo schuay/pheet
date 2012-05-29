@@ -60,6 +60,12 @@ public:
 	typedef FinishRegion<Pheet> Finish;
 	typedef typename Place::PerformanceCounters PerformanceCounters;
 
+	template <class NP>
+	using BT = MixedModeSchedulerImpl<NP, StealingDeque>;
+
+	template <template <class, typename> class NewTS>
+		using WithTaskStorage = MixedModeSchedulerImpl<Pheet, NewTS>;
+
 	/*
 	 * Uses complete machine
 	 */

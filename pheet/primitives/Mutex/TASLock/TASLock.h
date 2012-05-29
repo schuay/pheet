@@ -9,11 +9,16 @@
 #ifndef TASLOCK_H_
 #define TASLOCK_H_
 
+#include "../common/BasicLockGuard.h"
+
 namespace pheet {
 
 template <class Pheet>
 class TASLock {
 public:
+	typedef TASLock<Pheet> Self;
+	typedef BasicLockGuard<Pheet, Self> LockGuard;
+
 	TASLock();
 	~TASLock();
 
@@ -64,6 +69,7 @@ bool TASLock<Pheet>::try_lock(long int time_ms) {
 
 template <class Pheet>
 void TASLock<Pheet>::unlock() {
+	MEMORY_FENCE();
 	locked = 0;
 }
 

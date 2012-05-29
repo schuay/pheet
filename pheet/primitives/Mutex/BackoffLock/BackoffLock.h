@@ -9,11 +9,17 @@
 #ifndef BACKOFFLOCK_H_
 #define BACKOFFLOCK_H_
 
+#include "../common/BasicLockGuard.h"
+#include <sys/time.h>
+
 namespace pheet {
 
 template <class Pheet, class Backoff>
 class BackoffLockImpl {
 public:
+	typedef BackoffLockImpl<Pheet, Backoff> Self;
+	typedef BasicLockGuard<Pheet, Self> LockGuard;
+
 	template <class NewBO>
 	using WithBackoff = BackoffLockImpl<Pheet, NewBO>;
 
@@ -33,13 +39,13 @@ private:
 };
 
 template <class Pheet, class Backoff>
-BackoffLockImpl<Pheet, Backoff>::BackoffLock()
+BackoffLockImpl<Pheet, Backoff>::BackoffLockImpl()
 :locked(0) {
 
 }
 
 template <class Pheet, class Backoff>
-BackoffLockImpl<Pheet, Backoff>::~BackoffLock() {
+BackoffLockImpl<Pheet, Backoff>::~BackoffLockImpl() {
 }
 
 template <class Pheet, class Backoff>
@@ -79,11 +85,12 @@ bool BackoffLockImpl<Pheet, Backoff>::try_lock(long int time_ms) {
 
 template <class Pheet, class Backoff>
 void BackoffLockImpl<Pheet, Backoff>::unlock() {
+	MEMORY_FENCE();
 	locked = 0;
 }
 
 template <class Pheet>
-using BackoffLock = BackoffLockImpl<Pheet, Pheet::Backoff>;
+using BackoffLock = BackoffLockImpl<Pheet, typename Pheet::Primitives::Backoff>;
 
 }
 

@@ -20,10 +20,12 @@
 #include <pheet/ds/PriorityQueue/Heap/Heap.h>
 #include <pheet/ds/PriorityQueue/STLPriorityQueueWrapper/STLPriorityQueueWrapper.h>
 #include <pheet/ds/PriorityQueue/SortedArrayHeap/SortedArrayHeap.h>
+#include <pheet/ds/Queue/GlobalLock/GlobalLockQueue.h>
 
 #include <pheet/pheet.h>
 #include <pheet/sched/Basic/BasicScheduler.h>
 #include <pheet/sched/Finisher/FinisherScheduler.h>
+#include <pheet/sched/Centralized/CentralizedScheduler.h>
 //#include <pheet/sched/Strategy/StrategyScheduler.h>
 #include <pheet/sched/Synchroneous/SynchroneousScheduler.h>
 #include <pheet/sched/MixedMode/MixedModeScheduler.h>
@@ -45,11 +47,31 @@ SortingTests::~SortingTests() {
 void SortingTests::run_test() {
 #ifdef SORTING_TEST
 	std::cout << "----" << std::endl;
-//std::cout << Pheet::Environment::max_cpus << std::endl;
-//	this->run_sorter<	Pheet::WithScheduler<StrategyScheduler>,
-//						StrategyQuicksort>();
-//	this->run_sorter<	Pheet::WithScheduler<StrategyScheduler>,
+
+#ifdef AMP_STEALING_DEQUE_TEST
+//	this->run_sorter<	Pheet::WithScheduler<BasicScheduler>::WithTaskStorage<YourImplementation>,
 //						DagQuicksort>();
+	this->run_sorter<	Pheet::WithScheduler<BasicScheduler>,
+						DagQuicksort>();
+
+#elif AMP_QUEUE_STACK_TEST
+
+	typedef Pheet::WithScheduler<CentralizedScheduler> PheetCent;
+
+	this->run_sorter<	Pheet::WithScheduler<CentralizedScheduler>,
+						DagQuicksort>();
+	this->run_sorter<	PheetCent::WithTaskStorage<GlobalLockQueue>,
+						DagQuicksort>();
+	this->run_sorter<	Pheet::WithScheduler<BasicScheduler>,
+						DagQuicksort>();
+#elif AMP_SKIPLIST_TEST
+
+
+#elif AMP_LOCK_TEST
+
+
+#else
+	// default tests
 	this->run_sorter<	Pheet,
 						DagQuicksort>();
 	this->run_sorter<	Pheet::WithScheduler<BasicScheduler>,
@@ -68,19 +90,8 @@ void SortingTests::run_test() {
 						MixedModeQuicksort>();
 	this->run_sorter<	Pheet::WithScheduler<FinisherScheduler>,
 						DagQuicksort>();
+#endif
 
-/*	this->run_sorter<MixedModeQuicksort<DefaultMixedModeScheduler> >();
-	this->run_sorter<DagQuicksort<DefaultMixedModeScheduler> >();
-	this->run_sorter<DagQuicksort<DefaultBasicScheduler> >();
-	this->run_sorter<DagQuicksort<PrimitiveHeapPriorityScheduler> >();
-	this->run_sorter<DagQuicksort<PrimitivePriorityScheduler> >();
-	this->run_sorter<DagQuicksort<FallbackPriorityScheduler> >();
-	this->run_sorter<DagQuicksort<DefaultSynchroneousScheduler> >();
-	this->run_sorter<ReferenceQuicksort>();
-	this->run_sorter<ReferenceSTLSort>();
-	this->run_sorter<ReferenceHeapSort<STLPriorityQueueWrapper> >();
-	this->run_sorter<ReferenceHeapSort<Heap> >();*/
-//	this->run_sorter<ReferenceHeapSort<SortedArrayHeap> >();
 #endif
 }
 

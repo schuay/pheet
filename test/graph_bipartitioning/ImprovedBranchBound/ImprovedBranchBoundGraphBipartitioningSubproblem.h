@@ -105,9 +105,9 @@ ImprovedBranchBoundGraphBipartitioningSubproblem<Pheet, LogicT, MaxSize>* Improv
 template <class Pheet, template <class P, class SP> class LogicT, size_t MaxSize>
 void ImprovedBranchBoundGraphBipartitioningSubproblem<Pheet, LogicT, MaxSize>::update(uint8_t set, size_t pos) {
 	pheet_assert((set & 1) == set);
-	pheet_assert(pos < size);
-	pheet_assert(!sets[set].test(pos));
-	pheet_assert(sets[2].test(pos));
+	pheet_assert(pos < this->size);
+	pheet_assert(!this->sets[set].test(pos));
+	pheet_assert(this->sets[2].test(pos));
 
 	this->sets[2].set(pos, false);
 	this->sets[set].set(pos);

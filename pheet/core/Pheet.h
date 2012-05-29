@@ -39,6 +39,8 @@ public:
 	typedef typename Primitives::Backoff Backoff;
 	typedef typename Primitives::Barrier Barrier;
 	typedef typename Primitives::Finisher Finisher;
+	typedef typename Primitives::Mutex Mutex;
+	typedef typename Primitives::LockGuard LockGuard;
 
 	typedef SchedulerT<Self> Scheduler;
 	typedef Scheduler Environment;
@@ -59,6 +61,15 @@ public:
 
 	template<template <class P, typename> class T>
 	using WithStealingDeque = WithCDS<CDS::template WithStealingDeque<T>::template BT>;
+
+	template<template <class P, typename> class NewTS>
+	using WithTaskStorage = PheetEnv<Scheduler::template WithTaskStorage<NewTS>::template BT, SystemModelT, PrimitivesT, DataStructuresT, ConcurrentDataStructuresT>;
+
+	template <template <class> class NewPrim>
+	using WithPrimitives = PheetEnv<SchedulerT, SystemModelT, NewPrim, DataStructuresT, ConcurrentDataStructuresT>;
+
+	template<template <class> class M>
+	using WithMutex = WithPrimitives<Primitives::template WithMutex<M>::template BT>;
 
 
 	PheetEnv() {}

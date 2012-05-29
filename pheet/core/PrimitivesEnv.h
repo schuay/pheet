@@ -12,19 +12,28 @@
 #include "../primitives/Backoff/Exponential/ExponentialBackoff.h"
 #include "../primitives/Barrier/Simple/SimpleBarrier.h"
 #include "../primitives/Finisher/Basic/Finisher.h"
+#include "../primitives/Mutex/BackoffLock/BackoffLock.h"
 
 namespace pheet {
 
-template <class Env, template <class E> class BackoffT, template <class E> class BarrierT, template <class> class FinisherT>
+template <class Env, template <class E> class BackoffT, template <class E> class BarrierT, template <class> class FinisherT, template <class> class MutexT>
 class PrimitivesEnv {
 public:
+	template <class P>
+	using BT = PrimitivesEnv<P, BackoffT, BarrierT, FinisherT, MutexT>;
+
 	typedef BackoffT<Env> Backoff;
 	typedef BarrierT<Env> Barrier;
 	typedef FinisherT<Env> Finisher;
+	typedef MutexT<Env> Mutex;
+	typedef typename Mutex::LockGuard LockGuard;
+
+	template <template <class> class NewMutex>
+	using WithMutex = PrimitivesEnv<Env, BackoffT, BarrierT, FinisherT, NewMutex>;
 };
 
 template<class Pheet>
-using Primitives = PrimitivesEnv<Pheet, ExponentialBackoff, SimpleBarrier, Finisher>;
+using Primitives = PrimitivesEnv<Pheet, ExponentialBackoff, SimpleBarrier, Finisher, BackoffLock>;
 
 }
 

@@ -58,6 +58,11 @@ public:
 	typedef BaseStrategyT<Pheet> BaseStrategy;
 	typedef typename Place::PerformanceCounters PerformanceCounters;
 
+	template <class NP>
+	using BT = StrategySchedulerImpl<NP, TaskStorageT, StealerT, BaseStrategyT>;
+	template <template <class, typename> class NewTS>
+		using WithTaskStorage = StrategySchedulerImpl<Pheet, NewTS, StealerT, BaseStrategyT>;
+
 	/*
 	 * Uses complete machine
 	 */

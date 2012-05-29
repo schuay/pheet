@@ -101,8 +101,13 @@ public:
 	typedef DefaultStrategyT<Pheet> DefaultStrategy;
 	typedef typename Place::PerformanceCounters PerformanceCounters;
 
+	template <class NP>
+	using BT = PrioritySchedulerImpl<NP, TaskStorageT, DefaultStrategyT, CallThreshold>;
+
 	template<uint8_t NewVal>
 		using WithCallThreshold = PrioritySchedulerImpl<Pheet, TaskStorageT, DefaultStrategyT, NewVal>;
+	template <template <class, typename> class NewTS>
+		using WithTaskStorage = PrioritySchedulerImpl<Pheet, NewTS, DefaultStrategyT, CallThreshold>;
 
 	/*
 	 * Uses complete machine

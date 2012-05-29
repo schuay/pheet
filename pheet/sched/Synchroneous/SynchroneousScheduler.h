@@ -32,6 +32,13 @@ public:
 	typedef FinishRegion<SynchroneousScheduler> Finish;
 	typedef SynchroneousSchedulerPerformanceCounters<Pheet> PerformanceCounters;
 
+	template <class NP>
+	using BT = SynchroneousScheduler<NP>;
+	template <template <class, typename> class NewTS>
+		using WithTaskStorage = SynchroneousScheduler<Pheet>;
+
+
+
 	/*
 	 * Uses complete machine
 	 */

@@ -54,8 +54,13 @@ public:
 	typedef FinishRegion<Pheet> Finish;
 	typedef typename Place::PerformanceCounters PerformanceCounters;
 
+	template <class NP>
+	using BT = BasicSchedulerImpl<NP, StealingDeque, CallThreshold>;
+
 	template<uint8_t NewVal>
 		using WithCallThreshold = BasicSchedulerImpl<Pheet, StealingDeque, NewVal>;
+	template <template <class, typename> class NewTS>
+		using WithTaskStorage = BasicSchedulerImpl<Pheet, NewTS, CallThreshold>;
 
 	/*
 	 * Uses complete machine
