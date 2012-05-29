@@ -25,6 +25,7 @@
 */
 
 #include <pheet/sched/Basic/BasicScheduler.h>
+#include <pheet/sched/Centralized/CentralizedScheduler.h>
 
 #include "ImprovedBranchBound/ImprovedBranchBoundGraphBipartitioning.h"
 #include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioning.h"
@@ -59,6 +60,28 @@ void GraphBipartitioningTests::run_test() {
 #ifdef GRAPH_BIPARTITIONING_TEST
 	std::cout << "----" << std::endl;
 
+#ifdef AMP_STEALING_DEQUE_TEST
+
+
+#elif AMP_QUEUE_STACK_TEST
+
+	this->run_partitioner<	Pheet::WithScheduler<CentralizedScheduler>,
+						ImprovedBranchBoundGraphBipartitioning>();
+
+	this->run_partitioner<	Pheet::WithScheduler<CentralizedScheduler>::WithTaskStorage<GlobalLockQueue>,
+						ImprovedBranchBoundGraphBipartitioning>();
+
+	this->run_partitioner<	Pheet::WithScheduler<BasicScheduler>,
+						ImprovedBranchBoundGraphBipartitioning>();
+
+#elif AMP_SKIPLIST_TEST
+
+
+#elif AMP_LOCK_TEST
+
+
+#else
+
 	this->run_partitioner<	Pheet,
 							ImprovedStrategyBranchBoundGraphBipartitioning<>::WithSchedulingStrategy<ImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategy>::T >();
 	this->run_partitioner<	Pheet,
@@ -81,6 +104,8 @@ void GraphBipartitioningTests::run_test() {
 							ImprovedBranchBoundGraphBipartitioning>();
 	this->run_partitioner<	Pheet::WithScheduler<BasicScheduler>,
 							ImprovedBranchBoundGraphBipartitioning>();
+
+#endif
 
 #endif
 		/*

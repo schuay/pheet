@@ -56,11 +56,9 @@ void SortingTests::run_test() {
 
 #elif AMP_QUEUE_STACK_TEST
 
-	typedef Pheet::WithScheduler<CentralizedScheduler> PheetCent;
-
 	this->run_sorter<	Pheet::WithScheduler<CentralizedScheduler>,
 						DagQuicksort>();
-	this->run_sorter<	PheetCent::WithTaskStorage<GlobalLockQueue>,
+	this->run_sorter<	Pheet::WithScheduler<CentralizedScheduler>::WithTaskStorage<GlobalLockQueue>,
 						DagQuicksort>();
 	this->run_sorter<	Pheet::WithScheduler<BasicScheduler>,
 						DagQuicksort>();

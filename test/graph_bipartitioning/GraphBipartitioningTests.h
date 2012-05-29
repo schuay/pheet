@@ -54,7 +54,7 @@ void GraphBipartitioningTests::run_partitioner() {
 					}
 				}
 				for(size_t s = 0; s < sizeof(graph_bipartitioning_test_seeds)/sizeof(graph_bipartitioning_test_seeds[0]); s++) {
-					GraphBipartitioningTest<Pheet, Partitioner> gbt(graph_bipartitioning_test_cpus[c], graph_bipartitioning_test_types[t],
+					GraphBipartitioningTest<Pheet, Partitioner> gbt(cpus, graph_bipartitioning_test_types[t],
 							graph_bipartitioning_test_problems[pr].n,
 							graph_bipartitioning_test_problems[pr].p,
 							graph_bipartitioning_test_problems[pr].max_w,
