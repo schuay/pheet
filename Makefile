@@ -132,30 +132,6 @@ test/Test.cpp.s:
 	$(MAKE) -f CMakeFiles/pheet_test.dir/build.make CMakeFiles/pheet_test.dir/test/Test.cpp.s
 .PHONY : test/Test.cpp.s
 
-test/UTSImp.o: test/UTSImp.cpp.o
-.PHONY : test/UTSImp.o
-
-# target to build an object file
-test/UTSImp.cpp.o:
-	$(MAKE) -f CMakeFiles/pheet_test.dir/build.make CMakeFiles/pheet_test.dir/test/UTSImp.cpp.o
-.PHONY : test/UTSImp.cpp.o
-
-test/UTSImp.i: test/UTSImp.cpp.i
-.PHONY : test/UTSImp.i
-
-# target to preprocess a source file
-test/UTSImp.cpp.i:
-	$(MAKE) -f CMakeFiles/pheet_test.dir/build.make CMakeFiles/pheet_test.dir/test/UTSImp.cpp.i
-.PHONY : test/UTSImp.cpp.i
-
-test/UTSImp.s: test/UTSImp.cpp.s
-.PHONY : test/UTSImp.s
-
-# target to generate assembly for a file
-test/UTSImp.cpp.s:
-	$(MAKE) -f CMakeFiles/pheet_test.dir/build.make CMakeFiles/pheet_test.dir/test/UTSImp.cpp.s
-.PHONY : test/UTSImp.cpp.s
-
 test/graph_bipartitioning/BranchBound/BasicLowerBound.o: test/graph_bipartitioning/BranchBound/BasicLowerBound.cpp.o
 .PHONY : test/graph_bipartitioning/BranchBound/BasicLowerBound.o
 
@@ -420,6 +396,30 @@ test/uts/RecursiveSearch/uts.cpp.s:
 	$(MAKE) -f CMakeFiles/pheet_test.dir/build.make CMakeFiles/pheet_test.dir/test/uts/RecursiveSearch/uts.cpp.s
 .PHONY : test/uts/RecursiveSearch/uts.cpp.s
 
+test/uts/UTSImp.o: test/uts/UTSImp.cpp.o
+.PHONY : test/uts/UTSImp.o
+
+# target to build an object file
+test/uts/UTSImp.cpp.o:
+	$(MAKE) -f CMakeFiles/pheet_test.dir/build.make CMakeFiles/pheet_test.dir/test/uts/UTSImp.cpp.o
+.PHONY : test/uts/UTSImp.cpp.o
+
+test/uts/UTSImp.i: test/uts/UTSImp.cpp.i
+.PHONY : test/uts/UTSImp.i
+
+# target to preprocess a source file
+test/uts/UTSImp.cpp.i:
+	$(MAKE) -f CMakeFiles/pheet_test.dir/build.make CMakeFiles/pheet_test.dir/test/uts/UTSImp.cpp.i
+.PHONY : test/uts/UTSImp.cpp.i
+
+test/uts/UTSImp.s: test/uts/UTSImp.cpp.s
+.PHONY : test/uts/UTSImp.s
+
+# target to generate assembly for a file
+test/uts/UTSImp.cpp.s:
+	$(MAKE) -f CMakeFiles/pheet_test.dir/build.make CMakeFiles/pheet_test.dir/test/uts/UTSImp.cpp.s
+.PHONY : test/uts/UTSImp.cpp.s
+
 test/uts/UTSTests.o: test/uts/UTSTests.cpp.o
 .PHONY : test/uts/UTSTests.o
 
@@ -456,9 +456,6 @@ help:
 	@echo "... test/Test.o"
 	@echo "... test/Test.i"
 	@echo "... test/Test.s"
-	@echo "... test/UTSImp.o"
-	@echo "... test/UTSImp.i"
-	@echo "... test/UTSImp.s"
 	@echo "... test/graph_bipartitioning/BranchBound/BasicLowerBound.o"
 	@echo "... test/graph_bipartitioning/BranchBound/BasicLowerBound.i"
 	@echo "... test/graph_bipartitioning/BranchBound/BasicLowerBound.s"
@@ -492,6 +489,9 @@ help:
 	@echo "... test/uts/RecursiveSearch/uts.o"
 	@echo "... test/uts/RecursiveSearch/uts.i"
 	@echo "... test/uts/RecursiveSearch/uts.s"
+	@echo "... test/uts/UTSImp.o"
+	@echo "... test/uts/UTSImp.i"
+	@echo "... test/uts/UTSImp.s"
 	@echo "... test/uts/UTSTests.o"
 	@echo "... test/uts/UTSTests.i"
 	@echo "... test/uts/UTSTests.s"
