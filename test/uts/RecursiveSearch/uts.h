@@ -16,6 +16,7 @@
 #ifndef _UTS_H
 #define _UTS_H
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -69,8 +70,8 @@ typedef enum uts_trees_e    tree_t;
 typedef enum uts_geoshape_e geoshape_t;
 
 /* Strings for the above enums */
-extern char * uts_trees_str[];
-extern char * uts_geoshapes_str[];
+extern const char * uts_trees_str[];
+extern const char * uts_geoshapes_str[];
 
 
 /* Tree  parameters */
@@ -93,7 +94,7 @@ typedef unsigned long long counter_t;
 
 /* Utility Functions */
 #define max(a,b) (((a) > (b)) ? (a) : (b))
-#define min(a,b) (((a) < (b)) ? (a) : (b))
+#define min(a,b) (((a) < (b)) ? (a) : (b))7
 
 void   uts_error(char *str);
 void   uts_parseParams(int argc, char **argv);
@@ -124,5 +125,7 @@ void   impl_abort(int err);
 #ifdef __cplusplus
 }
 #endif
+
+
 
 #endif /* _UTS_H */

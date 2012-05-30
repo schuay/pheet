@@ -29,27 +29,59 @@ namespace pheet {
 		Human = 2  // The human player - the maximizer
 	};
 
-	template <class Task>
+	template <class Pheet>
+		class DepthStrategy : public Pheet::Environment::BaseStrategy {
+		public:
+			typedef DepthStrategy<Pheet> Self;
+			typedef typename Pheet::Environment::BaseStrategy BaseStrategy;
+
+			DepthStrategy(size_t depth)
+			: depth(depth) {
+				//this->set_memory_footprint(length);
+				//this->set_transitive_weight(length * find_last_bit_set(length));
+			}
+
+			DepthStrategy(Self& other)
+			: BaseStrategy(other), depth(other.depth) {}
+
+			DepthStrategy(Self&& other)
+			: BaseStrategy(other), depth(other.depth) {}
+
+			~DepthStrategy() {}
+
+			inline bool prioritize(Self& other) {
+				if(this->get_place() == other.get_place() && this->get_place() == Pheet::get_place())
+					return this->depth < other.depth;
+				else
+					return this->depth > other.depth;
+			}
+
+		private:
+			size_t depth;
+		};
+
+
+	template <class Pheet>
 	class InARowGameTask;
 
-	template <class Task>
-	class InARowTask : public Task 
+	template <class Pheet>
+	class InARowTask : public Pheet::Task
 	{
 		unsigned int depth;
 		char* board;
 		unsigned int move;
 		bool player;
 		int* val;
-		InARowGameTask<Task>* iar;
+		InARowGameTask<Pheet>* iar;
 		unsigned int movecount;
 		int boardval;
 		bool debug;
 	public:
-		InARowTask(unsigned int depth, char* board, unsigned int move, bool player, int* val, InARowGameTask<Task>* iar, int boardval, bool debug)
+		InARowTask(unsigned int depth, char* board, unsigned int move, bool player, int* val, InARowGameTask<Pheet>* iar, int boardval, bool debug)
 			:depth(depth),board(board),move(move),player(player),val(val),iar(iar),boardval(boardval),debug(debug)  { }
 		virtual ~InARowTask() {}
 
-		void operator()(typename Task::TEC& tec)
+		void operator()() //typename Task::TEC& tec)
 		{
 			//if(debug)
 				//cout << "Depth: " << depth << " Boardval: "<< boardval << endl;
@@ -97,15 +129,14 @@ namespace pheet {
 			memset(vals,0,iar->getBoardWidth()*sizeof(int));
 
 			{
-				typename Task::Finish f(tec);
+				typename Pheet::Finish f;
 
 				for(unsigned int i = 0; i<iar->getBoardWidth(); i++)
 				{
 					if(newboard[(iar->getBoardHeight()-1)*iar->getBoardWidth()+i]!=0)
 						continue;
 
-					
-										tec.template spawn_prio<InARowTask<Task> >(UserDefinedPriority<typename Task::Scheduler>(100-depth,depth), depth-1, newboard, i, !player, &vals[i],iar, boardval, debug&& i==0);
+					Pheet::template spawn_s<InARowTask<Pheet> >(DepthStrategy<Pheet>(depth), depth-1, newboard, i, !player, &vals[i],iar, boardval, debug&& i==0);
 										//tec.template spawn<InARowTask<Task> >(depth-1, newboard, i, !player, &vals[i],iar, boardval, debug&& i==0);
 				}
 			}

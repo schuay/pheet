@@ -11,7 +11,7 @@
 
 #include <cstdlib>
 #include <iostream>
-#include "../../misc/types.h"
+#include "../../pheet/misc/types.h"
 #include "../Test.h"
 #include <exception>
 

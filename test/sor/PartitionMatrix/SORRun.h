@@ -19,7 +19,7 @@
 
 namespace pheet {
 
-template <class Scheduler>
+template <class Pheet>
 class SORRun {
 public:
   SORRun(procs_t cpus, int M, int N, int slices, double omega, int iterations, bool prio);
@@ -33,34 +33,35 @@ public:
 	static void print_name();
 	static void print_scheduler_name();
 
-	static procs_t const max_cpus;
-	static char const name[];
+//	static procs_t const max_cpus;
+//	static char const name[];
 
 	double getTotal();
 
 private:
-	typename Scheduler::CPUHierarchy cpu_hierarchy;
-	Scheduler scheduler;
+//	typename Scheduler::CPUHierarchy cpu_hierarchy;
+//	Scheduler scheduler;
+	unsigned int cpus;
 	int iterations;
 	SORParams sp;
 	double* backend;
 };
 
-template <class Scheduler>
-procs_t const SORRun<Scheduler>::max_cpus = Scheduler::max_cpus;
+//template <class Scheduler>
+//procs_t const SORRun<Scheduler>::max_cpus = Scheduler::max_cpus;
 
-template <class Scheduler>
-char const SORRun<Scheduler>::name[] = "PartitionMatrix";
+//template <class Scheduler>
+//char const SORRun<Scheduler>::name[] = "PartitionMatrix";
 
-template <class Scheduler>
-double SORRun<Scheduler>::getTotal()
+template <class Pheet>
+double SORRun<Pheet>::getTotal()
 {
 	return sp.total;
 }
 
-template <class Scheduler>
-  SORRun<Scheduler>::SORRun(procs_t cpus, int M, int N, int slices, double omega, int iterations, bool prio):
-cpu_hierarchy(cpus), scheduler(&cpu_hierarchy), iterations(iterations) {
+template <class Pheet>
+  SORRun<Pheet>::SORRun(procs_t cpus, int M, int N, int slices, double omega, int iterations, bool prio):
+cpus(cpus), iterations(iterations) {
 	
 	sp.M=M;
 	sp.N=N;
@@ -68,7 +69,7 @@ cpu_hierarchy(cpus), scheduler(&cpu_hierarchy), iterations(iterations) {
 	sp.omega=omega;
 	  sp.prio = prio;
 
-	typedef boost::mt19937 base_generator_type;
+	typedef std::mt19937 base_generator_type;
 	base_generator_type generator(42);
 	boost::uniform_real<> uni_dist(0,1);
 	boost::variate_generator<base_generator_type&, boost::uniform_real<> > uni(generator, uni_dist);
@@ -94,37 +95,38 @@ cpu_hierarchy(cpus), scheduler(&cpu_hierarchy), iterations(iterations) {
 
 }
 
-template <class Scheduler>
-SORRun<Scheduler>::~SORRun() {
+template <class Pheet>
+SORRun<Pheet>::~SORRun() {
 	delete[] sp.G;
 	delete[] backend;
 
 }
 
-template <class Scheduler>
-void SORRun<Scheduler>::run() {
+template <class Pheet>
+void SORRun<Pheet>::run() {
 	// Start here
-	scheduler.template finish<SORStartTask<typename Scheduler::Task> >(sp, iterations);
+	typename Pheet::Environment env(cpus);
+	Pheet::template finish<SORStartTask<Pheet> >(sp, iterations);
 }
 
-template <class Scheduler>
-void SORRun<Scheduler>::print_results() {
-	scheduler.print_performance_counter_values();
+template <class Pheet>
+void SORRun<Pheet>::print_results() {
+//	scheduler.print_performance_counter_values();
 }
 
-template <class Scheduler>
-void SORRun<Scheduler>::print_headers() {
-	scheduler.print_performance_counter_headers();
+template <class Pheet>
+void SORRun<Pheet>::print_headers() {
+//	scheduler.print_performance_counter_headers();
 }
 
-template <class Scheduler>
-void SORRun<Scheduler>::print_name() {
-	std::cout << name;
+template <class Pheet>
+void SORRun<Pheet>::print_name() {
+	//std::cout << name;
 }
 
-template <class Scheduler>
-void SORRun<Scheduler>::print_scheduler_name() {
-	Scheduler::print_name();
+template <class Pheet>
+void SORRun<Pheet>::print_scheduler_name() {
+	//Scheduler::print_name();
 }
 }
 

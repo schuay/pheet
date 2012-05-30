@@ -40,8 +40,8 @@
  *  and their default values are given below.              *
  ***********************************************************/
 
-char * uts_trees_str[]     = { "Binomial", "Geometric", "Hybrid", "Balanced" };
-char * uts_geoshapes_str[] = { "Linear decrease", "Exponential decrease", "Cyclic", 
+const char * uts_trees_str[]     = { "Binomial", "Geometric", "Hybrid", "Balanced" };
+const char * uts_geoshapes_str[] = { "Linear decrease", "Exponential decrease", "Cyclic",
                               "Fixed branching factor" };
 
 /* Tree type
@@ -108,7 +108,7 @@ int verbose  = 1;
  ***********************************************************/
 
 /* fatal error */
-void uts_error(char *str) {
+void uts_error(const char *str) {
   printf("*** Error: %s\n", str);
   impl_abort(1);
 }

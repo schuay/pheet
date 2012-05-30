@@ -10,7 +10,7 @@
 #define PARALLELRECURSIVENQUEENSTASK_H_
 
 #include <pheet/pheet.h>
-#include "../../../misc/atomics.h"
+#include "../../../pheet/misc/atomics.h"
 
 #include <cassert>
 #include <cstdlib>
@@ -18,8 +18,8 @@
 
 namespace pheet {
 
-template <class Task>
-class ParallelRecursiveNQueensTask : public Task {
+template <class Pheet>
+class ParallelRecursiveNQueensTask : public Pheet::Task {
 public:
 
   typedef struct {
@@ -31,28 +31,30 @@ public:
 
   ParallelRecursiveNQueensTask(subproblem_t* p);
   virtual ~ParallelRecursiveNQueensTask();
-
-  virtual void operator()(typename Task::Scheduler::TaskExecutionContext &tec);
+  virtual void operator()();
+//  virtual void operator()(typename Task::Scheduler::TaskExecutionContext &tec);
 
 private:
   subproblem_t* problem;
 };
 
 
-template <class Task>
-ParallelRecursiveNQueensTask<Task>::ParallelRecursiveNQueensTask(typename ParallelRecursiveNQueensTask<Task>::subproblem_t* p)
+template <class Pheet>
+ParallelRecursiveNQueensTask<Pheet>::ParallelRecursiveNQueensTask(typename ParallelRecursiveNQueensTask<Pheet>::subproblem_t* p)
   : problem(p) {
 
 }
 
-template <class Task>
-ParallelRecursiveNQueensTask<Task>::~ParallelRecursiveNQueensTask() {
+template <class Pheet>
+ParallelRecursiveNQueensTask<Pheet>::~ParallelRecursiveNQueensTask() {
 
 }
 
-template <class Task>
-void ParallelRecursiveNQueensTask<Task>::operator()(typename Task::Scheduler::TaskExecutionContext &tec) {
-  typename Task::Finish wait_for_all_children(tec);
+template <class Pheet>
+void ParallelRecursiveNQueensTask<Pheet>::operator()() {
+//(typename Task::Scheduler::TaskExecutionContext &tec) {
+
+	typename Pheet::Finish wait_for_all_children();
   // There is no need for the task to wait for its children.
 
   for (int row = 0; row < problem->N; row++) {
@@ -103,7 +105,7 @@ void ParallelRecursiveNQueensTask<Task>::operator()(typename Task::Scheduler::Ta
 	sp->solution = (int*)malloc(problem->N * sizeof(int));
 	memcpy(sp->solution, problem->solution, problem->N * sizeof(int));
 
-	tec.template spawn<ParallelRecursiveNQueensTask<Task> >(sp);
+	Pheet::template spawn<ParallelRecursiveNQueensTask<Pheet> >(sp);
       }
     }
   }

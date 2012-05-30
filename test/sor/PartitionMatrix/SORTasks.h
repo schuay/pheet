@@ -10,9 +10,9 @@
 #define SORTASK_H_
 
 #include <pheet/pheet.h>
-#include "../../../misc/types.h"
-#include "../../../misc/atomics.h"
-#include "../../test_schedulers.h"
+#include "../../../pheet/misc/types.h"
+#include "../../../pheet/misc/atomics.h"
+//#include "../../test_schedulers.h"
 #include <string.h>
 #include <stdlib.h>
 #include <iostream>
@@ -36,11 +36,11 @@ namespace pheet {
 		bool prio;
 	};
 
-	template <class Task>
+	template <class Pheet>
 	class SORSliceTask;
 
-	template <class Task>
-	class SORStartTask : public Task 
+	template <class Pheet>
+	class SORStartTask : public Pheet::Task
 	{
 		SORParams& sp;
 		int iterations;
@@ -49,24 +49,28 @@ namespace pheet {
 		SORStartTask(SORParams& sp, int iterations):sp(sp),iterations(iterations) { }
 		virtual ~SORStartTask() {}
 
-		void operator()(typename Task::TEC& tec)
+		void operator()() //typename Task::TEC& tec)
 		{
-			typename Task::TEC** column_owners = new typename Task::TEC*[sp.slices];
+			// TODO replace with new
+			//typename Task::TEC** column_owners = new typename Task::TEC*[sp.slices];
 
-			for(int i=0;i<sp.slices;i++)
-				column_owners[i]=0;//&tec;
+			// TODO replace with new
+			/*for(int i=0;i<sp.slices;i++)
+				column_owners[i]=0;*/
 
 			for (int p=0; p<2*iterations; p++) 
 			  {
 			    {
-			      typename Task::Finish f(tec);
+			      typename Pheet::Finish f;
 			      
 			      for(int i = 0; i < sp.slices; i++)
 				{
 				  if(!sp.prio)
-				    tec.template spawn<SORSliceTask<Task> >(column_owners+i,i,sp,p);
+						// TODO replace with new
+				    Pheet::template spawn<SORSliceTask<Pheet> >(/*column_owners+i,*/i,sp,p);
 				  else
-				    tec.template spawn_prio<SORSliceTask<Task> >(SORLocalityStrategy<typename Task::Scheduler>(column_owners[i], 3, 5),column_owners+i,i,sp,p);
+						// TODO replace with new
+				    Pheet::template spawn_s<SORSliceTask<Pheet>>(SORLocalityStrategy<Pheet>(/*column_owners[i],*/)/*,column_owners+i*/,i,sp,p);
 				}
 			    }
 			}
@@ -88,25 +92,26 @@ namespace pheet {
 	};
 
 
-	template <class Task>
-	class SORSliceTask : public Task 
+	template <class Pheet>
+	class SORSliceTask : public Pheet::Task
 	{
-		typename Task::TEC** owner_info;
+		// TODO replace with new
+//		typename Task::TEC** owner_info;
 		int id;
 		SORParams sp;
 		int p;
 	public:
 
-		SORSliceTask(typename Task::TEC** owner_info, int id, SORParams& sp, int p):owner_info(owner_info),id(id),sp(sp),p(p) {}
+		// TODO replace with new
+		SORSliceTask(/*typename Task::TEC** owner_info,*/ int id, SORParams& sp, int p):/*owner_info(owner_info),*/id(id),sp(sp),p(p) {}
 		virtual ~SORSliceTask() {}
 
-		void operator()(typename Task::TEC& tec)
+		void operator()()
 		{
-		  //			if((*owner_info) != &tec)
-		  //		printf(".");
 
-		  	if(*owner_info == 0)
-			  (*owner_info) = &tec;
+			// TODO replace with new
+//		  	if(*owner_info == 0)
+//			  (*owner_info) = &tec;
 			double omega_over_four = sp.omega * 0.25;
 			double one_minus_omega = 1.0 - sp.omega;
 

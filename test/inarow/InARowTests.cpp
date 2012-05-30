@@ -12,6 +12,8 @@
 #include "RecursiveSearch/InARowGame.h"
 #endif
 
+#include <pheet/sched/Strategy/StrategyScheduler.h>
+
 #include <iostream>
 #include <algorithm>
 
@@ -24,7 +26,8 @@ namespace pheet {
 	{
 #ifdef INAROW_TEST
 		typename Pheet::MachineModel mm;
-		procs_t max_cpus = std::min(mm.get_num_leaves(), Test::max_cpus);
+		procs_t max_cpus = mm.get_num_leaves();
+				//std::min(mm.get_num_leaves(), Test::max_cpus);
 
 		for(size_t la = 0; la < sizeof(inarow_test_lookaheads)/sizeof(inarow_test_lookaheads[0]); la++) {
 			bool max_processed = false;
@@ -58,8 +61,8 @@ namespace pheet {
 			//		return;
 			//test<DefaultBasicScheduler>(8,8,4,7,8,(unsigned int*)scenario2);
 
-			test<InARowGame<PrimitivePriorityScheduler> >(8,8,4,(unsigned int*)scenario2);
-			test<InARowGame<PrimitiveHeapPriorityScheduler> >(8,8,4,(unsigned int*)scenario2);
+			test<InARowGame<Pheet::WithScheduler<StrategyScheduler> > >(8,8,4,(unsigned int*)scenario2);
+	//		test<InARowGame<PrimitiveHeapPriorityScheduler> >(8,8,4,(unsigned int*)scenario2);
 		//	test<DefaultBasicScheduler>(8,8,4,7,8,(unsigned int*)scenario2);
 		}
 #endif

@@ -11,7 +11,7 @@
 
 #include <algorithm>
 
-#include "../../../misc/types.h"
+#include "../../../pheet/misc/types.h"
 #include "ParallelRecursiveNQueensTask.h"
 
 namespace pheet {
@@ -33,23 +33,24 @@ public:
   static const char * const scheduler_name;
 
 private:
+  size_t cpus;
   size_t N;
-  typename Scheduler::CPUHierarchy cpu_hierarchy;
+//  typename Scheduler::CPUHierarchy cpu_hierarchy;
   Scheduler scheduler;
 };
 
-template <class Scheduler>
-procs_t const ParallelRecursiveNQueens<Scheduler>::max_cpus = Scheduler::max_cpus;
+//template <class Scheduler>
+//procs_t const ParallelRecursiveNQueens<Scheduler>::max_cpus = Scheduler::max_cpus;
 
-template <class Scheduler>
-char const ParallelRecursiveNQueens<Scheduler>::name[] = "Parallel Recursive N-Queens";
+//template <class Scheduler>
+//char const ParallelRecursiveNQueens<Scheduler>::name[] = "Parallel Recursive N-Queens";
 
-template <class Scheduler>
-char const * const ParallelRecursiveNQueens<Scheduler>::scheduler_name = Scheduler::name;
+//template <class Scheduler>
+//char const * const ParallelRecursiveNQueens<Scheduler>::scheduler_name = Scheduler::name;
 
 template <class Scheduler>
 ParallelRecursiveNQueens<Scheduler>::ParallelRecursiveNQueens(procs_t cpus, size_t n)
-  : N(n), cpu_hierarchy(cpus), scheduler(&cpu_hierarchy) {
+  : cpus(cpus), N(n) { //, cpu_hierarchy(cpus), scheduler(&cpu_hierarchy) {
 
 }
 
@@ -69,8 +70,9 @@ int* ParallelRecursiveNQueens<Scheduler>::solve() {
   problem->column   = 0;
   problem->solution = (int*)calloc(N, sizeof(int));
   problem->result   = &result;
-
+  {typename Pheet::Environment env(cpus);
   scheduler.template finish<ParallelRecursiveNQueensTask<typename Scheduler::Task> >(problem);
+  }
   return result;
 }
 

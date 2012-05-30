@@ -13,7 +13,8 @@
 #include "SORTest.h"
 #include "PartitionMatrix/SORRun.h"
 
-#include "../test_schedulers.h"
+#include <pheet/sched/Strategy/StrategyScheduler.h>
+//#include "../test_schedulers.h"
 #include <iostream>
 
 #endif
@@ -46,7 +47,7 @@ namespace pheet {
 #ifdef SOR_TEST
 		if(sor_test) {
 			//	test<SORRun<PrimitiveHeapPriorityScheduler> >();
-			test<SORRun<ArrayListHeapMultiStealPriorityScheduler> >();
+			test<SORRun<Pheet::WithScheduler<StrategyScheduler> > >();
 		}
 #endif
 	}

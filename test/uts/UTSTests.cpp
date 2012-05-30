@@ -10,7 +10,9 @@
 #include "UTSTest.h"
 #include "RecursiveSearch/UTSRun.h"
 
-#include "../test_schedulers.h"
+#include <pheet/sched/Basic/BasicScheduler.h>
+
+//#include "../test_schedulers.h"
 #include <iostream>
 
 namespace pheet {
@@ -42,7 +44,7 @@ namespace pheet {
 	{
 #ifdef UTS_TEST
 		if(uts_test) {
-			test<UTSRun<PrimitiveHeapPriorityScheduler> >();
+			test<UTSRun<Pheet::WithScheduler<BasicScheduler> > >();
 		}
 #endif
 	}
