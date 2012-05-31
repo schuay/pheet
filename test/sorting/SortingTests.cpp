@@ -21,6 +21,7 @@
 #include <pheet/ds/PriorityQueue/STLPriorityQueueWrapper/STLPriorityQueueWrapper.h>
 #include <pheet/ds/PriorityQueue/SortedArrayHeap/SortedArrayHeap.h>
 #include <pheet/ds/Queue/GlobalLock/GlobalLockQueue.h>
+#include <pheet/ds/MultiSet/GlobalLock/GlobalLockMultiSet.h>
 
 #include <pheet/primitives/Mutex/TASLock/TASLock.h>
 #include <pheet/primitives/Mutex/TTASLock/TTASLock.h>
@@ -29,6 +30,7 @@
 #include <pheet/sched/Basic/BasicScheduler.h>
 #include <pheet/sched/Finisher/FinisherScheduler.h>
 #include <pheet/sched/Centralized/CentralizedScheduler.h>
+#include <pheet/sched/CentralizedPriority/CentralizedPriorityScheduler.h>
 //#include <pheet/sched/Strategy/StrategyScheduler.h>
 #include <pheet/sched/Synchroneous/SynchroneousScheduler.h>
 #include <pheet/sched/MixedMode/MixedModeScheduler.h>
@@ -66,7 +68,14 @@ void SortingTests::run_test() {
 	this->run_sorter<	Pheet::WithScheduler<BasicScheduler>,
 						DagQuicksort>();
 #elif AMP_SKIPLIST_TEST
-
+	this->run_sorter<	Pheet::WithScheduler<CentralizedPriorityScheduler>,
+						DagQuicksort>();
+	this->run_sorter<	Pheet::WithScheduler<CentralizedPriorityScheduler>::WithPriorityTaskStorage<GlobalLockMultiSetPriorityQueue>,
+						DagQuicksort>();
+	this->run_sorter<	Pheet,
+						DagQuicksort>();
+	this->run_sorter<	Pheet::WithScheduler<BasicScheduler>,
+						DagQuicksort>();
 
 #elif AMP_LOCK_TEST
 

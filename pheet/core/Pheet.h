@@ -65,12 +65,17 @@ public:
 	template<template <class P, typename> class NewTS>
 	using WithTaskStorage = PheetEnv<Scheduler::template WithTaskStorage<NewTS>::template BT, SystemModelT, PrimitivesT, DataStructuresT, ConcurrentDataStructuresT>;
 
+	template<template <class P, typename, typename> class NewTS>
+	using WithPriorityTaskStorage = PheetEnv<Scheduler::template WithPriorityTaskStorage<NewTS>::template BT, SystemModelT, PrimitivesT, DataStructuresT, ConcurrentDataStructuresT>;
+
 	template <template <class> class NewPrim>
 	using WithPrimitives = PheetEnv<SchedulerT, SystemModelT, NewPrim, DataStructuresT, ConcurrentDataStructuresT>;
 
 	template<template <class> class M>
 	using WithMutex = WithPrimitives<Primitives::template WithMutex<M>::template BT>;
 
+	template<template <class> class M>
+	using WithBackoff = WithPrimitives<Primitives::template WithBackoff<M>::template BT>;
 
 	PheetEnv() {}
 	~PheetEnv() {}

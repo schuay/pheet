@@ -129,6 +129,8 @@ public:
 	template<typename F, typename ... TaskParams>
 		void spawn(F&& f, TaskParams&& ... params);
 
+	procs_t get_distance(Self* other);
+
 	void start_finish_region();
 	void end_finish_region();
 
@@ -457,7 +459,6 @@ void CentralizedSchedulerPlace<Pheet, TaskStorageT, CallThreshold>::main_loop() 
 		{Backoff bo;
 			do {
 				if(scheduler_state->current_state >= 2) {
-					performance_counters.idle_time.stop_timer();
 					return;
 				}
 				bo.backoff();
@@ -732,6 +733,21 @@ void CentralizedSchedulerPlace<Pheet, TaskStorageT, CallThreshold>::call(F&& f, 
 	f(std::forward<TaskParams&&>(params) ...);
 }
 
+template <class Pheet, template <class P, typename T> class TaskStorageT, uint8_t CallThreshold>
+procs_t CentralizedSchedulerPlace<Pheet, TaskStorageT, CallThreshold>::get_distance(Self* other) {
+	if(other == this) {
+		return 0;
+	}
+
+	procs_t offset = std::max(levels[num_levels - 1].memory_level, other->levels[other->num_levels - 1].memory_level);
+	procs_t i = min(num_levels - 1, other->num_levels - 1);
+	while(levels[i].global_id_offset != other->levels[i].global_id_offset) {
+		pheet_assert(i > 0);
+		--i;
+	}
+	pheet_assert(levels[i].memory_level <= offset);
+	return offset - levels[i].memory_level;
+}
 }
 
 #endif /* CENTRALIZEDSCHEDULERPLACE_H_ */

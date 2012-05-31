@@ -1,17 +1,17 @@
 /*
- * queue_stack.h
+ * skiplist.h
  *
- *  Created on: May 29, 2012
+ *  Created on: May 30, 2012
  *      Author: Martin Wimmer
  *	   License: Boost Software License 1.0
  */
 
-#ifndef AMP_QUEUE_STACK_H_
-#define AMP_QUEUE_STACK_H_
+#ifndef AMP_SKIPLIST_H_
+#define AMP_SKIPLIST_H_
 
 namespace pheet {
 
-#define AMP_QUEUE_STACK_TEST true
+#define AMP_SKIPLIST_TEST true
 
 
 // Debug configuration
@@ -53,4 +53,5 @@ const int graph_bipartitioning_test_types[] = {0};
 */
 }
 
-#endif /* AMP_QUEUE_STACK_H_ */
+
+#endif /* AMP_SKIPLIST_H_ */

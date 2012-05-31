@@ -63,6 +63,9 @@ public:
 		using WithCallThreshold = CentralizedSchedulerImpl<Pheet, TaskStorageT, NewVal>;
 	template <template <class, typename> class NewTS>
 	using WithTaskStorage = CentralizedSchedulerImpl<Pheet, NewTS, CallThreshold>;
+	template <template <class, typename, typename> class NewTS>
+		using WithPriorityTaskStorage = Self;
+
 
 	/*
 	 * Uses complete machine

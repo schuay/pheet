@@ -36,6 +36,8 @@ public:
 	using BT = SynchroneousScheduler<NP>;
 	template <template <class, typename> class NewTS>
 		using WithTaskStorage = SynchroneousScheduler<Pheet>;
+	template <template <class, typename, typename> class NewTS>
+		using WithPriorityTaskStorage = Self;
 
 
 
@@ -78,6 +80,11 @@ public:
 
 	template<class Strategy, typename F, typename ... TaskParams>
 		void spawn_prio(Strategy s, F&& f, TaskParams&& ... params);
+
+	procs_t get_distance(Self* other) {
+		pheet_assert(other == this);
+		return 0;
+	}
 
 	void start_finish_region() {}
 	void end_finish_region() {}
