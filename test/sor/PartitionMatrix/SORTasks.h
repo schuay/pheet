@@ -51,12 +51,10 @@ namespace pheet {
 
 		void operator()() //typename Task::TEC& tec)
 		{
-			// TODO replace with new
-			//typename Task::TEC** column_owners = new typename Task::TEC*[sp.slices];
+			typename Pheet::Place** column_owners = new typename Pheet::Place*[sp.slices];
 
-			// TODO replace with new
-			/*for(int i=0;i<sp.slices;i++)
-				column_owners[i]=0;*/
+			for(int i=0;i<sp.slices;i++)
+				column_owners[i]=0;
 
 			for (int p=0; p<2*iterations; p++) 
 			  {
@@ -66,11 +64,9 @@ namespace pheet {
 			      for(int i = 0; i < sp.slices; i++)
 				{
 				  if(!sp.prio)
-						// TODO replace with new
-				    Pheet::template spawn<SORSliceTask<Pheet> >(/*column_owners+i,*/i,sp,p);
+				    Pheet::template spawn<SORSliceTask<Pheet> >(column_owners+i,i,sp,p);
 				  else
-						// TODO replace with new
-				    Pheet::template spawn_s<SORSliceTask<Pheet>>(SORLocalityStrategy<Pheet>(/*column_owners[i],*/)/*,column_owners+i*/,i,sp,p);
+				    Pheet::template spawn_s<SORSliceTask<Pheet>>(SORLocalityStrategy<Pheet>(column_owners[i]),column_owners+i,i,sp,p);
 				}
 			    }
 			}
@@ -96,22 +92,20 @@ namespace pheet {
 	class SORSliceTask : public Pheet::Task
 	{
 		// TODO replace with new
-//		typename Task::TEC** owner_info;
+		typename Pheet::Place** owner_info;
 		int id;
 		SORParams sp;
 		int p;
 	public:
 
-		// TODO replace with new
-		SORSliceTask(/*typename Task::TEC** owner_info,*/ int id, SORParams& sp, int p):/*owner_info(owner_info),*/id(id),sp(sp),p(p) {}
+		SORSliceTask(typename Pheet::Place** owner_info, int id, SORParams& sp, int p):owner_info(owner_info),id(id),sp(sp),p(p) {}
 		virtual ~SORSliceTask() {}
 
 		void operator()()
 		{
 
-			// TODO replace with new
-//		  	if(*owner_info == 0)
-//			  (*owner_info) = &tec;
+		  	if(*owner_info == 0)
+			  (*owner_info) = Pheet::get_place();
 			double omega_over_four = sp.omega * 0.25;
 			double one_minus_omega = 1.0 - sp.omega;
 

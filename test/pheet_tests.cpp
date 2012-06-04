@@ -16,17 +16,17 @@
 #include "inarow/InARowTests.h"
 #include "n-queens/NQueensTests.h"
 #include "lupiv/LUPivTests.h"
-#include "uts/UTSTests.h"
-#include "sor/SORTests.h"*/
+#include "uts/UTSTests.h"*/
+#include "sor/SORTests.h"
 
 using namespace pheet;
 
 int main(int argc, char* argv[]) {
-  	SortingTests st;
+  /*	SortingTests st;
   	st.run_test();
 
   	GraphBipartitioningTests gpt;
-  	gpt.run_test();
+  	gpt.run_test();*/
 /*
 	InARowTests iarts;
 	iarts.run_test();
@@ -34,14 +34,14 @@ int main(int argc, char* argv[]) {
 	NQueensTests nqt;
 	nqt.run_test();
 */
-	LUPivTests lpt;
-	lpt.run_test();
+/*	LUPivTests lpt;
+	lpt.run_test();*/
 /*
 	UTSTests utss;
 	utss.run_test();
-
+*/
 	SORTests sors;
-	sors.run_test();*/
+	sors.run_test();
 
 	return 0;
 }

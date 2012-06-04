@@ -5,7 +5,6 @@
  *      Author: Martin Wimmer
  *	   License: Boost Software License 1.0 (BSL1.0)
  */
-
 #ifndef SORLOCALITYSTRATEGY_H_
 #define SORLOCALITYSTRATEGY_H_
 
@@ -21,26 +20,27 @@ public:
 	typedef SORLocalityStrategy<Pheet> Self;
 	typedef typename Pheet::Environment::BaseStrategy BaseStrategy;
 
-	// TODO replace with new
-	SORLocalityStrategy(/*size_t depth*/)
+	SORLocalityStrategy(typename Pheet::Place* last_place):last_place(last_place)
 	/*: depth(depth)*/ {
 		//this->set_memory_footprint(length);
 		//this->set_transitive_weight(length * find_last_bit_set(length));
 	}
 
-	// TODO replace with new
 	SORLocalityStrategy(Self& other)
-	: BaseStrategy(other)//, depth(other.depth)
+	: BaseStrategy(other), last_place(other.last_place)
 	{}
 
-	// TODO replace with new
 	SORLocalityStrategy(Self&& other)
-	: BaseStrategy(other)//, depth(other.depth)
+	: BaseStrategy(other), last_place(other.last_place)
 	{}
 
 	~SORLocalityStrategy() {}
 
 	inline bool prioritize(Self& other) {
+
+		return ((last_place)==other.get_place());
+
+
 		// TODO replace with new
 	/*	if(this->get_place() == other.get_place() && this->get_place() == Pheet::get_place())
 			return this->depth < other.depth;
@@ -51,8 +51,7 @@ public:
 
 private:
 
-	// TODO replace with new
-	//	typename Scheduler::TaskExecutionContext* last_owner;
+	typename Pheet::Place* last_place;
 };
 
 
