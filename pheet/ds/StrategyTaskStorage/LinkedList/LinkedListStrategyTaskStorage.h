@@ -14,6 +14,8 @@
 #include "LinkedListStrategyTaskStorageView.h"
 #include "../../StrategyHeap/Basic/BasicStrategyHeap.h"
 #include "../../../misc/type_traits.h"
+#include <pheet/memory/ItemReuse/ItemReuseMemoryManager.h>
+
 #include <queue>
 #include <iostream>
 
@@ -59,6 +61,13 @@ private:
 	TaskStorage* task_storage;
 };
 
+template <class View>
+struct LinkedListStrategyTaskStorageViewReuseCheck {
+	bool operator()(View& v) {
+		return v.try_lock();
+	}
+};
+
 template <class Pheet, typename TT, template <class SP, typename ST, class SR> class StrategyHeapT, size_t BlockSize>
 class LinkedListStrategyTaskStorageImpl {
 public:
@@ -75,6 +84,8 @@ public:
 	typedef StrategyHeapT<Pheet, LocalRef, StrategyRetriever> StrategyHeap;
 	typedef LinkedListStrategyTaskStoragePerformanceCounters<Pheet, typename StrategyHeap::PerformanceCounters>
 		PerformanceCounters;
+
+	typedef ItemReuseMemoryManager<Pheet, View, LinkedListStrategyTaskStorageViewReuseCheck<View> > ViewMemoryManager;
 
 	LinkedListStrategyTaskStorageImpl();
 	LinkedListStrategyTaskStorageImpl(PerformanceCounters& pc);
@@ -112,8 +123,9 @@ public:
 private:
 
 	void check_view();
-	void check_blocked_freed_views();
+//	void check_blocked_freed_views();
 
+	ViewMemoryManager views;
 	View* current_view;
 
 	DataBlock* front;
@@ -122,15 +134,12 @@ private:
 
 	PerformanceCounters pc;
 	StrategyHeap heap;
-
-	std::vector<View*> view_reuse;
-	std::vector<View*> blocked_freed_views;
 };
 
 template <class Pheet, typename TT, template <class SP, typename ST, class SR> class StrategyHeapT, size_t BlockSize>
 LinkedListStrategyTaskStorageImpl<Pheet, TT, StrategyHeapT, BlockSize>::LinkedListStrategyTaskStorageImpl()
 :heap(StrategyRetriever(this), pc.strategy_heap_performance_counters){
-	current_view = new View(front);
+	current_view = &(views.acquire_item());
 	front = new DataBlock(0, current_view, nullptr);
 	back = front;
 }
@@ -138,17 +147,13 @@ LinkedListStrategyTaskStorageImpl<Pheet, TT, StrategyHeapT, BlockSize>::LinkedLi
 template <class Pheet, typename TT, template <class SP, typename ST, class SR> class StrategyHeapT, size_t BlockSize>
 LinkedListStrategyTaskStorageImpl<Pheet, TT, StrategyHeapT, BlockSize>::LinkedListStrategyTaskStorageImpl(PerformanceCounters& pc)
 :pc(pc), heap(StrategyRetriever(this), this->pc.strategy_heap_performance_counters){
-	current_view = new View(front);
+	current_view = &(views.acquire_item());
 	front = new DataBlock(0, current_view, nullptr);
 	back = front;
 }
 
 template <class Pheet, typename TT, template <class SP, typename ST, class SR> class StrategyHeapT, size_t BlockSize>
 LinkedListStrategyTaskStorageImpl<Pheet, TT, StrategyHeapT, BlockSize>::~LinkedListStrategyTaskStorageImpl() {
-	for(auto i = view_reuse.begin(); i != view_reuse.end(); ++i) {
-		delete *i;
-	}
-
 	DataBlock* tmp = front;
 
 	while (tmp != back) {
@@ -157,8 +162,6 @@ LinkedListStrategyTaskStorageImpl<Pheet, TT, StrategyHeapT, BlockSize>::~LinkedL
 		tmp = next;
 	}
 	delete tmp;
-
-	delete current_view;
 }
 
 template <class Pheet, typename TT, template <class SP, typename ST, class SR> class StrategyHeapT, size_t BlockSize>
@@ -203,8 +206,14 @@ TT& LinkedListStrategyTaskStorageImpl<Pheet, TT, StrategyHeapT, BlockSize>::peek
 template <class Pheet, typename TT, template <class SP, typename ST, class SR> class StrategyHeapT, size_t BlockSize>
 void LinkedListStrategyTaskStorageImpl<Pheet, TT, StrategyHeapT, BlockSize>::check_view() {
 	if(current_view->needs_cleanup()) {
-		check_blocked_freed_views();
-		View* next_view;
+//		check_blocked_freed_views();
+		View* next_view = &(views.acquire_item());
+
+		// Has a fence inside
+		next_view->reset();
+
+		current_view = next_view;
+/*
 		if(!view_reuse.empty()) {
 			next_view = view_reuse.back();
 			view_reuse.pop_back();
@@ -218,10 +227,10 @@ void LinkedListStrategyTaskStorageImpl<Pheet, TT, StrategyHeapT, BlockSize>::che
 
 		blocked_freed_views.push_back(current_view);
 		// We should only update current_view after the fence to ensure consistency
-		current_view = next_view;
+		current_view = next_view;*/
 	}
 }
-
+/*
 template <class Pheet, typename TT, template <class SP, typename ST, class SR> class StrategyHeapT, size_t BlockSize>
 void LinkedListStrategyTaskStorageImpl<Pheet, TT, StrategyHeapT, BlockSize>::check_blocked_freed_views() {
 	for(size_t i = blocked_freed_views.size(); view_reuse.empty() && i > 0;) {
@@ -230,13 +239,13 @@ void LinkedListStrategyTaskStorageImpl<Pheet, TT, StrategyHeapT, BlockSize>::che
 		if(tmp->try_lock()) {
 			if(i < blocked_freed_views.size() - 1) {
 				blocked_freed_views[i] = blocked_freed_views[blocked_freed_views.size() - 1];
-				blocked_freed_views.pop_back();
 			}
+			blocked_freed_views.pop_back();
 
 			tmp->clean(view_reuse);
 		}
 	}
-}
+}*/
 
 template <class Pheet, typename T>
 using LinkedListStrategyTaskStorage = LinkedListStrategyTaskStorageImpl<Pheet, T, BasicStrategyHeap, 256>;
