@@ -29,7 +29,7 @@ public:
 	typedef FibonacciHeapNode<TT> Node;
 
 	FibonacciHeap()
-	:max(nullptr) {}
+	:max(nullptr), _size(0) {}
 
 	~FibonacciHeap() {
 		if(max != nullptr) {
@@ -43,6 +43,7 @@ public:
 		tmp->data = item;
 		tmp->children = nullptr;
 		if(max == nullptr) {
+			pheet_assert(_size == 0);
 			tmp->next = tmp;
 			tmp->prev = tmp;
 			max = tmp;
@@ -57,6 +58,7 @@ public:
 				max = tmp;
 			}
 		}
+		++_size;
 	}
 
 	TT peek() {
@@ -64,18 +66,28 @@ public:
 	}
 
 	TT pop() {
+		--_size;
 		T ret = max->data;
 
-		combine(max, max->children);
+		if(max->children != nullptr) {
+			combine(max, max->children);
+		}
 
-		Node* next = max->next;
-		next->prev = max->prev;
-		max->prev->next = next;
+		if(max->next != max) {
+			Node* next = max->next;
+			next->prev = max->prev;
+			max->prev->next = next;
 
-		delete max;
-		max = next;
+			delete max;
+			max = next;
 
-		consolidate();
+			consolidate();
+		}
+		else {
+			pheet_assert(_size == 0);
+			delete max;
+			max = nullptr;
+		}
 
 		return ret;
 	}
@@ -115,32 +127,80 @@ private:
 		std::swap(list1->prev, list2->prev);
 	}
 
+	Node* combine_trees(Node* smaller, Node* larger) {
+		pheet_assert(smaller->d == larger->d);
+		if(!is_less(smaller->data, larger->data)){
+			std::swap(smaller, larger);
+		}
+		pheet_assert(smaller != max || !is_less(smaller->data, larger->data));
+		smaller->prev->next = smaller->next;
+		smaller->next->prev = smaller->prev;
+
+		if(larger->children == nullptr) {
+			pheet_assert(larger->d == 0);
+			larger->children = smaller;
+			smaller->next = smaller;
+			smaller->prev = smaller;
+		}
+		else {
+			smaller->next = larger->children;
+			smaller->prev = larger->children->prev;
+			smaller->prev->next = smaller;
+			larger->children->prev = smaller;
+		}
+		++(larger->d);
+		return larger;
+	}
+
 	void consolidate() {
 		pheet_assert(max != nullptr);
 
 		size_t init = 0;
-		Node* helper[64];
+		Node* helper[65];
 
-		Node* node = max->prev;
-		Node* end = node;
+		Node* node;
+		Node* end = max->prev;
+		Node* next = max;
 		do {
-			node = node->next;
+			node = next;
+			next = node->next;
+			pheet_assert(node->d < 64);
 			for(; init <= node->d; ++init) {
 				helper[init] = nullptr;
 			}
 			if(is_less(max->data, node->data)) {
 				max = node;
 			}
-			if(helper[node->d] == nullptr) {
-				helper[node->d] = node;
+			Node* tmp = node;
+			while(helper[tmp->d] != nullptr) {
+			//	pheet_assert(count_nodes(max) == _size);
+				tmp = combine_trees(helper[tmp->d], tmp);
+				if(tmp != max && !is_less(tmp->data, max->data)) {
+					// In case of equality make sure that max is not part of a subtree
+					max = tmp;
+				}
+			//	pheet_assert(count_nodes(max) == _size);
+				helper[tmp->d - 1] = nullptr;
 			}
-			else if(is_less(helper[node->d]->data, node->data)){
-				// TODO
-			}
-			else {
-				// TODO
+			pheet_assert(helper[tmp->d] == nullptr);
+			helper[tmp->d] = tmp;
+			for(; init <= tmp->d + 1; ++init) {
+				helper[init] = nullptr;
 			}
 		} while(node != end);
+	}
+
+	size_t count_nodes(Node* node) {
+		size_t ret = 0;
+		Node* i = node;
+		do {
+			if(i->children != nullptr) {
+				ret += count_nodes(i->children);
+			}
+			ret++;
+			i = i->next;
+		}while(i != node);
+		return ret;
 	}
 
 	Node* max;

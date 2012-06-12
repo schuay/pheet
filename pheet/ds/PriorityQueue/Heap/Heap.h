@@ -23,6 +23,8 @@ template <class Pheet, typename TT, class Comparator = std::less<TT> >
 class Heap {
 public:
 	typedef TT T;
+	template <class NP, typename NT, class NComparator = std::less<TT> >
+	using BT = Heap<NP, NT, NComparator>;
 
 	Heap();
 	Heap(Comparator const& comp);
