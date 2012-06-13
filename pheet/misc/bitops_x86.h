@@ -12,11 +12,11 @@
 namespace pheet {
 
 /* find last bit set */
-static inline unsigned int find_last_bit_set(unsigned int x) {
+static inline unsigned int find_last_bit_set(unsigned long int x) {
 if(x == 0) {
 	return 0;
 }
-int r;
+unsigned long int r;
 
 __asm__ ("bsrl %0, %1\n"
          "incl %1\n"
