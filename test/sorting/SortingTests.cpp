@@ -21,6 +21,7 @@
 #include <pheet/ds/PriorityQueue/STLPriorityQueueWrapper/STLPriorityQueueWrapper.h>
 //#include <pheet/ds/PriorityQueue/SortedArrayHeap/SortedArrayHeap.h>
 #include <pheet/ds/PriorityQueue/Fibonacci/FibonacciHeap.h>
+#include <pheet/ds/PriorityQueue/FibonacciSame/FibonacciSameHeap.h>
 #include <pheet/ds/PriorityQueue/Fibolike/FibolikeHeap.h>
 #include <pheet/ds/Queue/GlobalLock/GlobalLockQueue.h>
 #include <pheet/ds/MultiSet/GlobalLock/GlobalLockMultiSet.h>
@@ -103,6 +104,8 @@ void SortingTests::run_test() {
 						ReferenceSTLSort>();
 	this->run_sorter<	Pheet::WithScheduler<SynchroneousScheduler>,
 						ReferenceQuicksort>();
+//	this->run_sorter<	Pheet::WithScheduler<SynchroneousScheduler>,
+//						ReferenceHeapSort<Pheet>::WithPriorityQueue<FibonacciSameHeap>::template BT >();
 //	this->run_sorter<	Pheet::WithScheduler<SynchroneousScheduler>,
 //						ReferenceHeapSort<Pheet>::WithPriorityQueue<FibolikeHeap>::template BT >();
 //	this->run_sorter<	Pheet::WithScheduler<SynchroneousScheduler>,
