@@ -11,15 +11,27 @@
 
 namespace pheet {
 
+/*
+ * less for age. (younger is less)
+ */
+template <class DataBlock>
+struct LinkedListStrategyTaskStorageDataBlockAgeComparator {
+	bool operator()(DataBlock* b1, DataBlock* b2) {
+		return ((ptrdiff_t)(b1->get_first_view_id() - b2->get_first_view_id())) > 0;
+	}
+};
+
 template <class Pheet, typename TT, class View, size_t BlockSize>
 class LinkedListStrategyTaskStorageDataBlock {
 public:
 	typedef TT T;
 	typedef LinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize> Self;
+	typedef LinkedListStrategyTaskStorageDataBlockAgeComparator<Self> AgeComparator;
 
-	LinkedListStrategyTaskStorageDataBlock(size_t id, View* first_view, Self* prev);
+	LinkedListStrategyTaskStorageDataBlock(size_t id, size_t first_view_id, Self* prev);
 	~LinkedListStrategyTaskStorageDataBlock() {}
 
+	bool local_take(size_t index, typename T::Item& ret, View* current_view);
 	bool take(size_t index, typename T::Item& ret, View* current_view);
 	void mark_removed(size_t index, View* current_view);
 	T& peek(size_t index);
@@ -31,7 +43,7 @@ public:
 		return data[index];
 	}
 	inline Self* get_next() { return next; }
-	inline View* get_first_view() { return first_view; }
+	inline size_t get_first_view_id() { return first_view_id; }
 	inline bool is_active() { return active != 0; }
 	inline size_t get_size() { return filled; }
 	inline size_t get_max_size() { return BlockSize; }
@@ -42,22 +54,34 @@ private:
 	T data[BlockSize];
 
 	size_t id;
-	View* first_view;
+	size_t first_view_id;
 	Self* prev;
 	Self* next;
+	Self* orig_prev;
+	Self* orig_next;
 	size_t filled;
 
 	size_t active;
 };
 
 template <class Pheet, typename TT, class View, size_t BlockSize>
-LinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::LinkedListStrategyTaskStorageDataBlock(size_t id, View* first_view, Self* prev)
-:id(id), first_view(first_view), prev(prev), next(nullptr), filled(0), active(BlockSize) {
+LinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::LinkedListStrategyTaskStorageDataBlock(size_t id, size_t first_view_id, Self* prev)
+:id(id), first_view_id(first_view_id), prev(prev), next(nullptr), orig_prev(prev), orig_next(next), filled(0), active(BlockSize) {
 
 }
 
 template <class Pheet, typename TT, class View, size_t BlockSize>
-bool LinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::take(size_t index, typename T::Item& ret, View* current_view) {
+LinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::~LinkedListStrategyTaskStorageDataBlock() {
+	if(orig_prev != nullptr) {
+		orig_prev->next = next;
+	}
+	if(orig_next != nullptr) {
+		orig_next->prev = prev;
+	}
+}
+
+template <class Pheet, typename TT, class View, size_t BlockSize>
+bool LinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::local_take(size_t index, typename T::Item& ret, View* current_view) {
 	pheet_assert(active > 0);
 	pheet_assert(index < filled);
 	--active;
@@ -74,12 +98,25 @@ bool LinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::take(si
 }
 
 template <class Pheet, typename TT, class View, size_t BlockSize>
+bool LinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::take(size_t index, typename T::Item& ret) {
+	pheet_assert(index < filled);
+
+	if(data[index].taken == 0) {
+		if(INT_CAS(&(data[index].taken), 0, 1)) {
+			ret = data[index].item;
+			return true;
+		}
+	}
+	return false;
+}
+/*
+template <class Pheet, typename TT, class View, size_t BlockSize>
 void LinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::mark_removed(size_t index, View* current_view) {
 	pheet_assert(active > 0);
 	pheet_assert(index < filled);
 	--active;
 	clean(current_view);
-}
+}*/
 
 template <class Pheet, typename TT, class View, size_t BlockSize>
 TT& LinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::peek(size_t index) {
@@ -97,7 +134,7 @@ void LinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::clean(V
 	// and rare in any case (it's linear to the number of wraparounds and not logarithmic)
 
 	if(active == 0 // Check if block is not used any more
-			&& (id == 0 // Either free block if has id 0 (special case)
+			&& (orig_prev == nullptr // Either no predecessor exists anymore
 					// Or make sure the next block is a higher power of two (to guarantee O(log(n)) access times
 					// for other threads missing elements (don't want them to have O(n) for elements they never need)
 					|| ((next->id & id) != next->id))) {
