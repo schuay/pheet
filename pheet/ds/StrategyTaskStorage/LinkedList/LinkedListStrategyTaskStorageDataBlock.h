@@ -29,10 +29,10 @@ public:
 	typedef LinkedListStrategyTaskStorageDataBlockAgeComparator<Self> AgeComparator;
 
 	LinkedListStrategyTaskStorageDataBlock(size_t id, size_t first_view_id, Self* prev);
-	~LinkedListStrategyTaskStorageDataBlock() {}
+	~LinkedListStrategyTaskStorageDataBlock();
 
 	bool local_take(size_t index, typename T::Item& ret, View* current_view);
-	bool take(size_t index, typename T::Item& ret, View* current_view);
+	bool take(size_t index, typename T::Item& ret);
 	void mark_removed(size_t index, View* current_view);
 	T& peek(size_t index);
 
@@ -78,6 +78,15 @@ LinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::~LinkedListS
 	if(orig_next != nullptr) {
 		orig_next->prev = prev;
 	}
+}
+
+template <class Pheet, typename TT, class View, size_t BlockSize>
+void LinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::mark_removed(size_t index, View* current_view) {
+	pheet_assert(active > 0);
+	pheet_assert(data[index].taken == 1);
+
+	--active;
+	clean(current_view);
 }
 
 template <class Pheet, typename TT, class View, size_t BlockSize>
@@ -158,7 +167,7 @@ size_t LinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::push(
 	data[filled] = item;
 
 	if(filled == BlockSize - 1) {
-		Self* tmp = new Self(id + 1, current_view, this);
+		Self* tmp = new Self(id + 1, current_view->get_id(), this);
 		MEMORY_FENCE();
 		next = tmp;
 	}

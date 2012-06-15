@@ -94,6 +94,8 @@ void SortingTests::run_test() {
 	// default tests
 	this->run_sorter<	Pheet,
 						DagQuicksort>();
+//	this->run_sorter<	Pheet::WithScheduler<StrategyScheduler>,
+//						StrategyQuicksort>();
 	this->run_sorter<	Pheet::WithScheduler<BasicScheduler>,
 						DagQuicksort>();
 //	this->run_sorter<	Pheet::WithScheduler<BasicScheduler>::WithStealingDeque<CircularArrayStealingDeque11>,

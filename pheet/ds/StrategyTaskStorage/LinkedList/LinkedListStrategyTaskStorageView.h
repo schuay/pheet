@@ -23,9 +23,16 @@ public:
 	typedef LinkedListStrategyTaskStorageDataBlock<Pheet, TT, Self, BlockSize> DataBlock;
 	typedef MergeablePriorityQueue<Pheet, DataBlock*, typename DataBlock::AgeComparator> FreedBlocksQueue;
 
-	LinkedListStrategyTaskStorageView(DataBlock*& front);
-	LinkedListStrategyTaskStorageView(DataBlock*& front, Self* prev);
+	LinkedListStrategyTaskStorageView();
+//	LinkedListStrategyTaskStorageView(Self* prev);
 	~LinkedListStrategyTaskStorageView();
+
+	DataBlock* get_front() {
+		return front;
+	}
+	size_t get_id() {
+		return id;
+	}
 
 	void mark_empty(DataBlock* block);
 
@@ -38,6 +45,7 @@ public:
 
 	bool try_reuse();
 
+	void init_first(DataBlock* front);
 	void reset(Self* prev);
 	void update_front();
 private:
@@ -45,7 +53,7 @@ private:
 
 	size_t id;
 
-	DataBlock*& front;
+	DataBlock* front;
 	Self* prev;
 	Self* next;
 
@@ -56,17 +64,17 @@ private:
 };
 
 template <class Pheet, typename TT, template <class, typename, class> class MergeablePriorityQueue, size_t BlockSize>
-LinkedListStrategyTaskStorageView<Pheet, TT, MergeablePriorityQueue, BlockSize>::LinkedListStrategyTaskStorageView(DataBlock*& front)
-:id(0), front(front), prev(nullptr), next(nullptr), active_blocks(0), reg(0) {
+LinkedListStrategyTaskStorageView<Pheet, TT, MergeablePriorityQueue, BlockSize>::LinkedListStrategyTaskStorageView()
+:id(0), front(nullptr), prev(nullptr), next(nullptr), active_blocks(0), reg(-1) {
 
 }
-
+/*
 template <class Pheet, typename TT, template <class, typename, class> class MergeablePriorityQueue, size_t BlockSize>
 LinkedListStrategyTaskStorageView<Pheet, TT, MergeablePriorityQueue, BlockSize>::LinkedListStrategyTaskStorageView(DataBlock*& front, Self* prev)
-:id(prev->id + 1), front(front), prev(prev), next(nullptr), active_blocks(prev->active_blocks), reg(0) {
+:id(prev->id + 1), front(nullptr), prev(prev), next(nullptr), active_blocks(prev->active_blocks), reg(0) {
 	pheet_assert(prev->next == nullptr);
 	prev->next = this;
-}
+}*/
 
 template <class Pheet, typename TT, template <class, typename, class> class MergeablePriorityQueue, size_t BlockSize>
 LinkedListStrategyTaskStorageView<Pheet, TT, MergeablePriorityQueue, BlockSize>::~LinkedListStrategyTaskStorageView() {
@@ -89,7 +97,7 @@ void LinkedListStrategyTaskStorageView<Pheet, TT, MergeablePriorityQueue, BlockS
 
 template <class Pheet, typename TT, template <class, typename, class> class MergeablePriorityQueue, size_t BlockSize>
 bool LinkedListStrategyTaskStorageView<Pheet, TT, MergeablePriorityQueue, BlockSize>::try_register() {
-	size_t r = reg;
+	ptrdiff_t r = reg;
 	if(r >= 0) {
 		if(PTRDIFFT_CAS(&reg, r, r + 1)) {
 			return true;
@@ -101,7 +109,7 @@ bool LinkedListStrategyTaskStorageView<Pheet, TT, MergeablePriorityQueue, BlockS
 template <class Pheet, typename TT, template <class, typename, class> class MergeablePriorityQueue, size_t BlockSize>
 void LinkedListStrategyTaskStorageView<Pheet, TT, MergeablePriorityQueue, BlockSize>::deregister() {
 	pheet_assert(reg > 0);
-	PTRDIFFT_ATOMIC_SUB(&reg, 1));
+	PTRDIFFT_ATOMIC_SUB(&reg, 1);
 }
 
 template <class Pheet, typename TT, template <class, typename, class> class MergeablePriorityQueue, size_t BlockSize>
@@ -135,6 +143,7 @@ void LinkedListStrategyTaskStorageView<Pheet, TT, MergeablePriorityQueue, BlockS
 
 		while(!freed_blocks.empty() && ((ptrdiff_t)(freed_blocks.peek()->get_first_view_id() - prev_id)) > 0) {
 			DataBlock* db = freed_blocks.pop();
+			delete db;
 		}
 
 		prev->freed_blocks.merge(std::move(freed_blocks));
@@ -171,12 +180,33 @@ void LinkedListStrategyTaskStorageView<Pheet, TT, MergeablePriorityQueue, BlockS
 	}
 }*/
 
+
+template <class Pheet, typename TT, template <class, typename, class> class MergeablePriorityQueue, size_t BlockSize>
+void LinkedListStrategyTaskStorageView<Pheet, TT, MergeablePriorityQueue, BlockSize>::init_first(DataBlock* front) {
+	pheet_assert(reg == -1);
+	pheet_assert(prev == nullptr);
+	pheet_assert(id == 0);
+	pheet_assert(active_blocks == 0);
+	pheet_assert(freed_blocks.empty());
+
+	this->front = front;
+//	this->prev = prev;
+//	this->id = prev->id + 1;
+	next = nullptr;
+	active_blocks = 1;
+
+	MEMORY_FENCE();
+
+	reg = 0;
+}
+
 template <class Pheet, typename TT, template <class, typename, class> class MergeablePriorityQueue, size_t BlockSize>
 void LinkedListStrategyTaskStorageView<Pheet, TT, MergeablePriorityQueue, BlockSize>::reset(Self* prev) {
 	pheet_assert(reg == -1);
-	pheet_assert(prev != nullptr);
+//	pheet_assert(prev != nullptr);
 	pheet_assert(freed_blocks.empty());
 
+	this->front = prev->front;
 	this->prev = prev;
 	this->id = prev->id + 1;
 	next = nullptr;

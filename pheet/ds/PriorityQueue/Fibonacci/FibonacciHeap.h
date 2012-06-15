@@ -25,6 +25,7 @@ struct FibonacciHeapNode {
 template <class Pheet, typename TT, class Comparator = std::less<TT> >
 class FibonacciHeap {
 public:
+	typedef FibonacciHeap<Pheet, TT, Comparator> Self;
 	typedef TT T;
 	typedef FibonacciHeapNode<TT> Node;
 
@@ -90,6 +91,30 @@ public:
 		}
 
 		return ret;
+	}
+
+	void merge(Self&& other) {
+		if(other.empty()) {
+			return;
+		}
+		if(max == nullptr) {
+			max = other.max;
+			_size = other.size;
+
+			other.max = nullptr;
+			other._size = 0;
+		}
+		else {
+			combine(max, other.max);
+			_size += other._size;
+
+			if(is_less(max->data, other.max->data)) {
+				max = other.max;
+			}
+
+			other.max = nullptr;
+			other._size = 0;
+		}
 	}
 
 	bool empty() {

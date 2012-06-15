@@ -76,7 +76,7 @@ public:
 
 	typedef TT T;
 	typedef LinkedListStrategyTaskStorageItem<Pheet, T> Item;
-	typedef LinkedListStrategyTaskStorageView<Pheet, Item, BlockSize> View;
+	typedef LinkedListStrategyTaskStorageView<Pheet, Item, MergeablePriorityQueue, BlockSize> View;
 	typedef LinkedListStrategyTaskStorageDataBlock<Pheet, Item, View, BlockSize> DataBlock;
 
 	typedef LinkedListStrategyTaskStorageLocalReference<Pheet, DataBlock> LocalRef;
@@ -129,7 +129,7 @@ private:
 	ViewMemoryManager views;
 	View* current_view;
 
-	DataBlock* front;
+//	DataBlock* front;
 	DataBlock* back;
 	size_t back_index;
 
@@ -141,28 +141,34 @@ template <class Pheet, typename TT, template <class SP, typename ST, class SR> c
 LinkedListStrategyTaskStorageImpl<Pheet, TT, StrategyHeapT, MergeablePriorityQueue, BlockSize>::LinkedListStrategyTaskStorageImpl()
 :heap(StrategyRetriever(this), pc.strategy_heap_performance_counters){
 	current_view = &(views.acquire_item());
-	front = new DataBlock(0, current_view, nullptr);
-	back = front;
+	current_view->init_first(new DataBlock(0, current_view->get_id(), nullptr));
+	back = current_view->get_front();
 }
 
 template <class Pheet, typename TT, template <class SP, typename ST, class SR> class StrategyHeapT, template <class, typename, class> class MergeablePriorityQueue, size_t BlockSize>
 LinkedListStrategyTaskStorageImpl<Pheet, TT, StrategyHeapT, MergeablePriorityQueue, BlockSize>::LinkedListStrategyTaskStorageImpl(PerformanceCounters& pc)
 :pc(pc), heap(StrategyRetriever(this), this->pc.strategy_heap_performance_counters){
 	current_view = &(views.acquire_item());
-	front = new DataBlock(0, current_view, nullptr);
-	back = front;
+	current_view->init_first(new DataBlock(0, current_view->get_id(), nullptr));
+	back = current_view->get_front();
 }
 
 template <class Pheet, typename TT, template <class SP, typename ST, class SR> class StrategyHeapT, template <class, typename, class> class MergeablePriorityQueue, size_t BlockSize>
 LinkedListStrategyTaskStorageImpl<Pheet, TT, StrategyHeapT, MergeablePriorityQueue, BlockSize>::~LinkedListStrategyTaskStorageImpl() {
-	DataBlock* tmp = front;
+	// Presumably on shutdown only a single data-block (back) will not be in data-blocks as a freed view
+	// Delete it
+	delete back;
+
+	// Views are automatically deleted by the memory manager
+
+/*	DataBlock* tmp = front;
 
 	while (tmp != back) {
 		DataBlock* next = tmp->get_next();
 		delete tmp;
 		tmp = next;
 	}
-	delete tmp;
+	delete tmp;*/
 }
 
 template <class Pheet, typename TT, template <class SP, typename ST, class SR> class StrategyHeapT, template <class, typename, class> class MergeablePriorityQueue, size_t BlockSize>
@@ -189,7 +195,7 @@ TT LinkedListStrategyTaskStorageImpl<Pheet, TT, StrategyHeapT, MergeablePriority
 		LocalRef r = heap.pop();
 
 		T ret;
-		if(r.block->take(r.index, ret, current_view)) {
+		if(r.block->local_take(r.index, ret, current_view)) {
 			check_view();
 			return ret;
 		}
@@ -249,7 +255,7 @@ void LinkedListStrategyTaskStorageImpl<Pheet, TT, StrategyHeapT, MergeablePriori
 }*/
 
 template <class Pheet, typename T>
-using LinkedListStrategyTaskStorage = LinkedListStrategyTaskStorageImpl<Pheet, T, BasicStrategyHeap, 256>;
+using LinkedListStrategyTaskStorage = LinkedListStrategyTaskStorageImpl<Pheet, T, BasicStrategyHeap, FibonacciSameHeap, 256>;
 
 }
 
