@@ -61,6 +61,9 @@ public:
 		using WithCallThreshold = BasicSchedulerImpl<Pheet, StealingDeque, NewVal>;
 	template <template <class, typename> class NewTS>
 		using WithTaskStorage = BasicSchedulerImpl<Pheet, NewTS, CallThreshold>;
+	template <template <class, typename, typename> class NewTS>
+		using WithPriorityTaskStorage = Self;
+
 
 	/*
 	 * Uses complete machine

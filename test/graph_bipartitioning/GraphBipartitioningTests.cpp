@@ -28,6 +28,7 @@
 #include <pheet/sched/Centralized/CentralizedScheduler.h>
 
 #include <pheet/ds/Queue/GlobalLock/GlobalLockQueue.h>
+#include <pheet/ds/MultiSet/GlobalLock/GlobalLockMultiSet.h>
 
 #include <pheet/primitives/Mutex/TASLock/TASLock.h>
 #include <pheet/primitives/Mutex/TTASLock/TTASLock.h>
@@ -66,7 +67,10 @@ void GraphBipartitioningTests::run_test() {
 	std::cout << "----" << std::endl;
 
 #ifdef AMP_STEALING_DEQUE_TEST
-
+//	this->run_partitioner<	Pheet::WithScheduler<BasicScheduler>::WithTaskStorage<YourImplementation>,
+//							ImprovedBranchBoundGraphBipartitioning>();
+	this->run_partitioner<	Pheet::WithScheduler<BasicScheduler>,
+							ImprovedBranchBoundGraphBipartitioning>();
 
 #elif AMP_QUEUE_STACK_TEST
 
@@ -80,6 +84,14 @@ void GraphBipartitioningTests::run_test() {
 						ImprovedBranchBoundGraphBipartitioning>();
 
 #elif AMP_SKIPLIST_TEST
+	this->run_partitioner<	Pheet::WithScheduler<CentralizedScheduler>,
+						ImprovedBranchBoundGraphBipartitioning>();
+	this->run_partitioner<	Pheet::WithScheduler<CentralizedScheduler>::WithPriorityTaskStorage<GlobalLockMultiSetPriorityQueue>,
+						ImprovedBranchBoundGraphBipartitioning>();
+	this->run_partitioner<	Pheet,
+						ImprovedBranchBoundGraphBipartitioning>();
+	this->run_partitioner<	Pheet::WithScheduler<BasicScheduler>,
+						ImprovedBranchBoundGraphBipartitioning>();
 
 
 #elif AMP_LOCK_TEST

@@ -30,6 +30,9 @@ public:
 
 	template <template <class> class NewMutex>
 	using WithMutex = PrimitivesEnv<Env, BackoffT, BarrierT, FinisherT, NewMutex>;
+
+	template <template <class> class NewBackoff>
+	using WithBackoff = PrimitivesEnv<Env, NewBackoff, BarrierT, FinisherT, MutexT>;
 };
 
 template<class Pheet>

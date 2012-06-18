@@ -62,6 +62,9 @@ public:
 	using BT = StrategySchedulerImpl<NP, TaskStorageT, StealerT, BaseStrategyT>;
 	template <template <class, typename> class NewTS>
 		using WithTaskStorage = StrategySchedulerImpl<Pheet, NewTS, StealerT, BaseStrategyT>;
+	template <template <class, typename, typename> class NewTS>
+		using WithPriorityTaskStorage = Self;
+
 
 	/*
 	 * Uses complete machine

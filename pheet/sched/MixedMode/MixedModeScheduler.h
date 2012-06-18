@@ -65,6 +65,8 @@ public:
 
 	template <template <class, typename> class NewTS>
 		using WithTaskStorage = MixedModeSchedulerImpl<Pheet, NewTS>;
+	template <template <class, typename, typename> class NewTS>
+		using WithPriorityTaskStorage = Self;
 
 	/*
 	 * Uses complete machine

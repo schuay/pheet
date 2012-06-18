@@ -108,6 +108,9 @@ public:
 		using WithCallThreshold = PrioritySchedulerImpl<Pheet, TaskStorageT, DefaultStrategyT, NewVal>;
 	template <template <class, typename> class NewTS>
 		using WithTaskStorage = PrioritySchedulerImpl<Pheet, NewTS, DefaultStrategyT, CallThreshold>;
+	template <template <class, typename, typename> class NewTS>
+		using WithPriorityTaskStorage = Self;
+
 
 	/*
 	 * Uses complete machine
