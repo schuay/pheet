@@ -13,11 +13,14 @@
 
 namespace pheet {
 
-template <class Pheet, template <typename T, typename Comp> class PriorityQueue>
+template <class Pheet, template <class, typename T, typename Comp> class PriorityQueue>
 class ReferenceHeapSortImpl {
 public:
-	template<template <typename T, typename Comp> class NewPQ>
+	template<template <class, typename T, typename Comp> class NewPQ>
 	using WithPriorityQueue = ReferenceHeapSortImpl<Pheet, NewPQ>;
+
+	template <class NP>
+	using BT = ReferenceHeapSortImpl<NP, PriorityQueue>;
 
 	ReferenceHeapSortImpl(unsigned int* data, size_t length);
 	~ReferenceHeapSortImpl();
@@ -33,31 +36,31 @@ private:
 	size_t length;
 };
 
-template <class Pheet, template <typename T, typename Comp> class PriorityQueue>
+template <class Pheet, template <class, typename T, typename Comp> class PriorityQueue>
 const char ReferenceHeapSortImpl<Pheet, PriorityQueue>::name[] = "ReferenceHeapSortImpl";
 
-template <class Pheet, template <typename T, typename Comp> class PriorityQueue>
+template <class Pheet, template <class, typename T, typename Comp> class PriorityQueue>
 ReferenceHeapSortImpl<Pheet, PriorityQueue>::ReferenceHeapSortImpl(unsigned int* data, size_t length)
 : data(data), length(length) {
 
 }
 
-template <class Pheet, template <typename T, typename Comp> class PriorityQueue>
+template <class Pheet, template <class, typename T, typename Comp> class PriorityQueue>
 ReferenceHeapSortImpl<Pheet, PriorityQueue>::~ReferenceHeapSortImpl() {
 
 }
 
-template <class Pheet, template <typename T, typename Comp> class PriorityQueue>
+template <class Pheet, template <class, typename T, typename Comp> class PriorityQueue>
 void ReferenceHeapSortImpl<Pheet, PriorityQueue>::operator()() {
 	sort(data, length);
 }
 
-template <class Pheet, template <typename T, typename Comp> class PriorityQueue>
+template <class Pheet, template <class, typename T, typename Comp> class PriorityQueue>
 void ReferenceHeapSortImpl<Pheet, PriorityQueue>::sort(unsigned int* data, size_t length) {
 	if(length <= 1)
 		return;
 
-	PriorityQueue<unsigned int, std::less<unsigned int> > pq;
+	PriorityQueue<Pheet, unsigned int, std::less<unsigned int> > pq;
 
 	for(size_t i = 0; i < length; ++i) {
 		pq.push(data[i]);
@@ -69,8 +72,11 @@ void ReferenceHeapSortImpl<Pheet, PriorityQueue>::sort(unsigned int* data, size_
 	}
 }
 
+template <class Pheet, typename T, typename Comp>
+using ReferenceHeapSortDefaultPQ = typename Pheet::DataStructures::template PriorityQueue<T, Comp>;
+
 template<class Pheet>
-using ReferenceHeapSort = ReferenceHeapSortImpl<Pheet, Pheet::DataStructures::template PriorityQueue>;
+using ReferenceHeapSort = ReferenceHeapSortImpl<Pheet, ReferenceHeapSortDefaultPQ>;
 
 }
 

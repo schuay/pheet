@@ -16,7 +16,7 @@ static inline unsigned int find_last_bit_set(unsigned int x) {
 if(x == 0) {
 	return 0;
 }
-int r;
+unsigned int r;
 
 __asm__ ("bsrl %0, %1\n"
          "incl %1\n"
