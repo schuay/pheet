@@ -42,7 +42,7 @@ public:
 			size_t d1 = cur_place->get_distance(place);
 			size_t d2 = cur_place->get_distance(other.place);
 			if(d1 != d2) {
-				return d1 > d2;
+				return d1 < d2;
 			}
 			else {
 				// We have to prioritize some place to keep the ordering property, although we don't actually care
