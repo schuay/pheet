@@ -46,7 +46,6 @@ namespace pheet {
 	{
 #ifdef SOR_TEST
 		if(sor_test) {
-			//	test<SORRun<PrimitiveHeapPriorityScheduler> >();
 			test<SORRun<Pheet::WithScheduler<StrategyScheduler> > >();
 		}
 #endif

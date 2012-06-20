@@ -30,8 +30,7 @@ public:
 	static void print_name();
 	static void print_scheduler_name();
 
-//	static procs_t const max_cpus;
-//	static char const name[];
+	static char const name[];
 private:
 	unsigned int cpus;
 	unsigned int width;
@@ -39,14 +38,11 @@ private:
 	unsigned int rowlength;
 	unsigned int lookahead;
 	unsigned int* scenario;
-//	Scheduler scheduler;
+	typename Pheet::Environment::PerformanceCounters pc;
 };
 
-//template <class Scheduler>
-//procs_t const InARowGame<Scheduler>::max_cpus = Scheduler::max_cpus;
-
-//template <class Pheet>
-//char const InARowGame<Pheet>::name[] = "RecursiveSearch";
+template <class Pheet>
+char const InARowGame<Pheet>::name[] = "InARowGame";
 
 template <class Pheet>
 InARowGame<Pheet>::InARowGame(procs_t cpus, unsigned int width, unsigned int height, unsigned int rowlength, unsigned int lookahead, unsigned int* scenario)
@@ -61,28 +57,28 @@ InARowGame<Pheet>::~InARowGame() {
 
 template <class Pheet>
 void InARowGame<Pheet>::run() {
-	typename Pheet::Environment env(cpus);
+	typename Pheet::Environment env(cpus,pc);
 	Pheet::template finish<InARowGameTask<Pheet> >(width, height, rowlength, lookahead, scenario);
 }
 
 template <class Pheet>
 void InARowGame<Pheet>::print_results() {
-//	scheduler.print_performance_counter_values();
-}
+	pc.print_values();
+	}
 
 template <class Pheet>
 void InARowGame<Pheet>::print_headers() {
-//	scheduler.print_performance_counter_headers();
+	Pheet::Environment::PerformanceCounters::print_headers();
 }
 
 template <class Pheet>
 void InARowGame<Pheet>::print_name() {
-//	std::cout << name;
+	std::cout << name;
 }
 
 template <class Pheet>
 void InARowGame<Pheet>::print_scheduler_name() {
-	//Scheduler::print_name();
+	Pheet::Environment::print_name();
 }
 }
 

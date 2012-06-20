@@ -33,25 +33,21 @@ public:
 	static void print_name();
 	static void print_scheduler_name();
 
-//	static procs_t const max_cpus;
-//	static char const name[];
+	static char const name[];
 
 	double getTotal();
 
 private:
-//	typename Scheduler::CPUHierarchy cpu_hierarchy;
-//	Scheduler scheduler;
 	unsigned int cpus;
 	int iterations;
 	SORParams sp;
 	double* backend;
+	typename Pheet::Environment::PerformanceCounters pc;
 };
 
-//template <class Scheduler>
-//procs_t const SORRun<Scheduler>::max_cpus = Scheduler::max_cpus;
 
-//template <class Scheduler>
-//char const SORRun<Scheduler>::name[] = "PartitionMatrix";
+template <class Scheduler>
+char const SORRun<Scheduler>::name[] = "SORPartitionMatrix";
 
 template <class Pheet>
 double SORRun<Pheet>::getTotal()
@@ -105,28 +101,28 @@ SORRun<Pheet>::~SORRun() {
 template <class Pheet>
 void SORRun<Pheet>::run() {
 	// Start here
-	typename Pheet::Environment env(cpus);
+	typename Pheet::Environment env(cpus,pc);
 	Pheet::template finish<SORStartTask<Pheet> >(sp, iterations);
 }
 
 template <class Pheet>
 void SORRun<Pheet>::print_results() {
-//	scheduler.print_performance_counter_values();
+	pc.print_values();
 }
 
 template <class Pheet>
 void SORRun<Pheet>::print_headers() {
-//	scheduler.print_performance_counter_headers();
+	Pheet::Environment::PerformanceCounters::print_headers();
 }
 
 template <class Pheet>
 void SORRun<Pheet>::print_name() {
-	//std::cout << name;
+	std::cout << name;
 }
 
 template <class Pheet>
 void SORRun<Pheet>::print_scheduler_name() {
-	//Scheduler::print_name();
+	Pheet::Environment::print_name();
 }
 }
 

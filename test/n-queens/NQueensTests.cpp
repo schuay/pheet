@@ -10,7 +10,7 @@
 
 #ifdef NQUEENS_TEST
 #include "ParallelRecursive/ParallelRecursiveNQueens.h"
-#include <pheet/sched/Basic/BasicScheduler.h>
+#include <pheet/sched/Strategy/StrategyScheduler.h>
 
 //#include "../test_schedulers.h"
 #include <iostream>
@@ -31,7 +31,7 @@ void NQueensTests::run_test() {
 	std::cout << "----" << std::endl;
 
 	//	this->run_solver<ParallelRecursiveNQueens<DefaultSynchroneousScheduler> >();
-		this->run_solver<ParallelRecursiveNQueens<Pheet::WithScheduler<BasicScheduler>>>();
+		this->run_solver<ParallelRecursiveNQueens<Pheet::WithScheduler<StrategyScheduler>>>();
      //           this->run_solver<ParallelRecursiveNQueens<DefaultBasicScheduler> >();
       //          this->run_solver<ParallelRecursiveNQueens<DefaultMixedModeScheduler> >();
        //         this->run_solver<ParallelRecursiveNQueens<PrimitiveHeapPriorityScheduler> >();

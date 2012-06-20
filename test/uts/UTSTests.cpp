@@ -44,7 +44,7 @@ namespace pheet {
 	{
 #ifdef UTS_TEST
 		if(uts_test) {
-			test<UTSRun<Pheet::WithScheduler<BasicScheduler> > >();
+			test<UTSRun<Pheet::WithScheduler<StrategyScheduler> > >();
 		}
 #endif
 	}
