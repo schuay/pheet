@@ -10,7 +10,7 @@
 #include "UTSTest.h"
 #include "RecursiveSearch/UTSRun.h"
 
-#include <pheet/sched/Basic/BasicScheduler.h>
+#include <pheet/sched/Strategy/StrategyScheduler.h>
 
 //#include "../test_schedulers.h"
 #include <iostream>
