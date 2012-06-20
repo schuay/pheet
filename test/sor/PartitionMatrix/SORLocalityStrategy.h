@@ -42,7 +42,7 @@ public:
 		{
 			if(this->get_place() == Pheet::get_place())
 				return true;
-			if(other->get_place() == Pheet::get_place())
+			if(other.get_place() == Pheet::get_place())
 				return false;
 		}
 		return BaseStrategy::prioritize(other);
