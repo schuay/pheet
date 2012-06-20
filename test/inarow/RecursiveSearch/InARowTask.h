@@ -37,8 +37,8 @@ namespace pheet {
 
 			DepthStrategy(size_t depth)
 			: depth(depth) {
-				//this->set_memory_footprint(length);
-				//this->set_transitive_weight(length * find_last_bit_set(length));
+				this->set_memory_footprint(1);
+				this->set_transitive_weight(1000-depth);
 			}
 
 			DepthStrategy(Self& other)
@@ -51,9 +51,9 @@ namespace pheet {
 
 			inline bool prioritize(Self& other) {
 				if(this->get_place() == other.get_place() && this->get_place() == Pheet::get_place())
-					return this->depth < other.depth;
-				else
 					return this->depth > other.depth;
+				else
+					return this->depth < other.depth;
 			}
 
 		private:
