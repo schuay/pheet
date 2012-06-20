@@ -59,12 +59,12 @@ void UTSRun<Pheet>::run() {
 
 template <class Pheet>
 void UTSRun<Pheet>::print_results() {
-	Pheet::print_performance_counter_values();
+	Pheet::Environment::PerformanceCounters::print_values();
 }
 
 template <class Pheet>
 void UTSRun<Pheet>::print_headers() {
-	Pheet::print_performance_counter_headers();
+	Pheet::Environment::PerformanceCounters::print_headers();
 }
 
 template <class Pheet>
@@ -74,7 +74,7 @@ void UTSRun<Pheet>::print_name() {
 
 template <class Pheet>
 void UTSRun<Pheet>::print_scheduler_name() {
-	Pheet::print_name();
+	Pheet::Environment::print_name();
 }
 }
 
