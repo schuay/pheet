@@ -21,9 +21,9 @@ public:
 	typedef typename Pheet::Environment::BaseStrategy BaseStrategy;
 
 	SORLocalityStrategy(typename Pheet::Place* last_place):last_place(last_place)
-	/*: depth(depth)*/ {
-		//this->set_memory_footprint(length);
-		//this->set_transitive_weight(length * find_last_bit_set(length));
+	{
+		this->set_memory_footprint(1);
+		this->set_transitive_weight(1);
 	}
 
 	SORLocalityStrategy(Self& other)
@@ -38,19 +38,17 @@ public:
 
 	inline bool prioritize(Self& other) {
 
-		return ((last_place)==other.get_place());
-
-
-		// TODO replace with new
-	/*	if(this->get_place() == other.get_place() && this->get_place() == Pheet::get_place())
-			return this->depth < other.depth;
-		else
-			return this->depth > other.depth;*/
-		return true;
+		if(this->get_place() != other.get_place())
+		{
+			if(this->get_place() == Pheet::get_place())
+				return true;
+			if(other-get_place() == Pheet::get_place())
+				return false;
+		}
+		return BaseStrategy::prioritize(other);
 	}
 
 private:
-
 	typename Pheet::Place* last_place;
 };
 
