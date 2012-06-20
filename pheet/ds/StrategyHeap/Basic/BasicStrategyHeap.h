@@ -44,8 +44,8 @@ public:
 
 	}
 
-	Strategy& deref(T& t) {
-		return reinterpret_cast<Strategy&>(sr(t));
+	Strategy* deref(T& t) {
+		return reinterpret_cast<Strategy*>(sr(t));
 	}
 /*
 	bool prepare(T& t1, Prep& ) {
@@ -56,14 +56,14 @@ public:
 		return sr.prepare<Strategy>(t2, td2);
 	}
 */
-	bool operator()(Strategy& s1, Strategy& s2) {
-		return s2.prioritize(s1);
+	bool operator()(Strategy* s1, Strategy* s2) {
+		return s2->prioritize(*s1);
 	}
 
 	bool operator()(T& t1, T& t2) {
-		return deref(t2).prioritize(deref(t1));
+		return deref(t2)->prioritize(*deref(t1));
 	}
-
+/*
 	bool try_remove(T& t) {
 		if(sr.is_active(t)) {
 			return false;
@@ -71,7 +71,7 @@ public:
 		sr.mark_removed(t);
 		return true;
 	}
-
+*/
 private:
 	StrategyRetriever& sr;
 /*	TaskDesc<Strategy> td1;
@@ -338,7 +338,7 @@ public:
 			parent->reorder_index(this->parent_index);
 		}
 	}
-
+/*
 	size_t perform_cleanup() {
 		size_t cleaned = 0;
 		// Never cleanup first element as this requires additional cleanup
@@ -350,7 +350,7 @@ public:
 		}
 		return cleaned;
 	}
-
+*/
 private:
 	void bubble_down(size_t index) {
 		size_t next = (index << 1) + 1;
@@ -441,7 +441,7 @@ void BasicStrategyHeap<Pheet, TT, StrategyRetriever>::push(T const& item) {
 		bheap = new BasicStrategyItemHeap<Pheet, TT, BaseStrategy, Strategy, StrategyRetriever>(sr, heap_heaps);
 	}
 	BasicStrategyItemHeap<Pheet, TT, BaseStrategy, Strategy, StrategyRetriever>* heap = static_cast<BasicStrategyItemHeap<Pheet, TT, BaseStrategy, Strategy, StrategyRetriever>*>(bheap);
-	total_size -= heap->perform_cleanup();
+//	total_size -= heap->perform_cleanup();
 	heap->push(item);
 	++total_size;
 }

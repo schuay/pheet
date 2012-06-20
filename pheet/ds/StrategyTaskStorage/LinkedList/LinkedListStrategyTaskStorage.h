@@ -46,8 +46,8 @@ public:
 	:task_storage(task_storage) {}
 
 
-	typename Pheet::Scheduler::BaseStrategy& operator()(Item& item) {
-		return *(item.block->get_data(item.index).strategy);
+	typename Pheet::Scheduler::BaseStrategy* operator()(Item& item) {
+		return (item.block->get_data(item.index).strategy);
 	}
 
 	inline bool is_active(Item& item) {
@@ -87,6 +87,12 @@ public:
 		PerformanceCounters;
 
 	typedef ItemReuseMemoryManager<Pheet, View, LinkedListStrategyTaskStorageViewReuseCheck<View> > ViewMemoryManager;
+
+	template <template <class, typename, class> class NewStrategyHeap>
+	using WithStrategyHeap = LinkedListStrategyTaskStorageImpl<Pheet, TT, NewStrategyHeap, MergeablePriorityQueue, BlockSize>;
+
+	template <class NewPheet, typename NewTT>
+	using BT = LinkedListStrategyTaskStorageImpl<NewPheet, NewTT, StrategyHeapT, MergeablePriorityQueue, BlockSize>;
 
 	LinkedListStrategyTaskStorageImpl();
 	LinkedListStrategyTaskStorageImpl(PerformanceCounters& pc);
