@@ -33,6 +33,7 @@ public:
 	static char const name[];
 private:
     procs_t cpus;
+	typename Pheet::Environment::PerformanceCounters pc;
 };
 
 template <class Pheet>
@@ -53,13 +54,13 @@ void UTSRun<Pheet>::run() {
 	
 	Node root;
 	uts_initRoot(&root, type);
-	typename Pheet::Environment env(cpus);
+	typename Pheet::Environment env(cpus,pc);
 	Pheet::template finish<UTSStartTask<Pheet> >(root);
 }
 
 template <class Pheet>
 void UTSRun<Pheet>::print_results() {
-	Pheet::Environment::PerformanceCounters::print_values();
+	pc.print_values();
 }
 
 template <class Pheet>
