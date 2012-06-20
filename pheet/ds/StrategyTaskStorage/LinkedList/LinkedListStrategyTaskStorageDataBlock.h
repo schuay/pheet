@@ -146,7 +146,7 @@ void LinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::clean(V
 			&& (orig_prev == nullptr // Either no predecessor exists anymore
 					// Or make sure the next block is a higher power of two (to guarantee O(log(n)) access times
 					// for other threads missing elements (don't want them to have O(n) for elements they never need)
-					|| ((next->id & id) != next->id))) {
+					|| ((next->id & id) != id))) {
 		 // Only free blocks if they have a successor (I believe as it may only be inactive if there is a successor)
 		pheet_assert(next != nullptr);
 		next->prev = prev;

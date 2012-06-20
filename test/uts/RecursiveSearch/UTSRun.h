@@ -30,19 +30,13 @@ public:
 	static void print_name();
 	static void print_scheduler_name();
 
-//	static procs_t const max_cpus;
-//	static char const name[];
+	static char const name[];
 private:
     procs_t cpus;
-//	typename Scheduler::CPUHierarchy cpu_hierarchy;
-//	Scheduler scheduler;
 };
 
-//template <class Scheduler>
-//procs_t const UTSRun<Scheduler>::max_cpus = Scheduler::max_cpus;
-
-//template <class Scheduler>
-//char const UTSRun<Scheduler>::name[] = "RecursiveSearch";
+template <class Pheet>
+char const UTSRun<Pheet>::name[] = "UTSRecursiveSearch";
 
 template <class Pheet>
 UTSRun<Pheet>::UTSRun(procs_t cpus): cpus(cpus) {
@@ -65,22 +59,22 @@ void UTSRun<Pheet>::run() {
 
 template <class Pheet>
 void UTSRun<Pheet>::print_results() {
-//	scheduler.print_performance_counter_values();
+	Pheet::print_performance_counter_values();
 }
 
 template <class Pheet>
 void UTSRun<Pheet>::print_headers() {
-//	scheduler.print_performance_counter_headers();
+	Pheet::print_performance_counter_headers();
 }
 
 template <class Pheet>
 void UTSRun<Pheet>::print_name() {
-//	std::cout << name;
+	std::cout << name;
 }
 
 template <class Pheet>
 void UTSRun<Pheet>::print_scheduler_name() {
-//	Scheduler::print_name();
+	Pheet::print_name();
 }
 }
 
