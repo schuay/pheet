@@ -52,6 +52,7 @@ namespace pheet {
 					test<SORRun<Pheet::WithScheduler<StrategyScheduler> > >(sor_prio[pp]);
 				 else
 					 test<SORRun<Pheet::WithScheduler<StrategyScheduler> > >(sor_prio[pp]);
+			  }
 		}
 #endif
 	}

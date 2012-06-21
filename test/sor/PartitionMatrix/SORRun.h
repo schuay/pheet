@@ -65,9 +65,9 @@ cpus(cpus), iterations(iterations) {
 	sp.N=N;
 	sp.slices=slices;
 	sp.omega=omega;
-	  sp.prio = prio;
+	sp.prio = prio;
 
-	  pc.add(slices);
+	ppc.slices_rescheduled_at_same_place.add(slices);
 
 	typedef std::mt19937 base_generator_type;
 	base_generator_type generator(42);
