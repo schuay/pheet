@@ -11,11 +11,13 @@
 #define SORTESTS_H_
 
 #include "../Test.h"
+#include "../Tests.h"
+
 #include "../init.h"
 
 namespace pheet {
 
-	class SORTests
+	class SORTests : Tests
 	{
 	public:
 		void run_test();
