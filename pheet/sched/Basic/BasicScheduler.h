@@ -14,6 +14,7 @@
 #include "../common/FinishRegion.h"
 #include "BasicSchedulerPlace.h"
 #include "../common/CPUThreadExecutor.h"
+#include "../common/DummyBaseStrategy.h"
 #include "../../models/MachineModel/BinaryTree/BinaryTreeMachineModel.h"
 
 #include <stdint.h>
@@ -53,6 +54,8 @@ public:
 	typedef BasicSchedulerState<Pheet> State;
 	typedef FinishRegion<Pheet> Finish;
 	typedef typename Place::PerformanceCounters PerformanceCounters;
+
+	typedef DummyBaseStrategy<Pheet> BaseStrategy;
 
 	template <class NP>
 	using BT = BasicSchedulerImpl<NP, StealingDeque, CallThreshold>;
