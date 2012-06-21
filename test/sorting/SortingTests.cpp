@@ -11,7 +11,7 @@
 #ifdef SORTING_TEST
 #include "Reference/ReferenceSTLSort.h"
 #include "Reference/ReferenceQuicksort.h"
-//#include "Strategy/StrategyQuicksort.h"
+#include "Strategy/StrategyQuicksort.h"
 #include "Dag/DagQuicksort.h"
 #include "MixedMode/MixedModeQuicksort.h"
 #include "Reference/ReferenceHeapSort.h"
@@ -25,6 +25,7 @@
 #include <pheet/ds/PriorityQueue/Fibolike/FibolikeHeap.h>
 #include <pheet/ds/Queue/GlobalLock/GlobalLockQueue.h>
 #include <pheet/ds/MultiSet/GlobalLock/GlobalLockMultiSet.h>
+#include <pheet/ds/StrategyHeap/Volatile/VolatileStrategyHeap.h>
 
 #include <pheet/primitives/Mutex/TASLock/TASLock.h>
 #include <pheet/primitives/Mutex/TTASLock/TTASLock.h>
@@ -34,7 +35,7 @@
 #include <pheet/sched/Finisher/FinisherScheduler.h>
 #include <pheet/sched/Centralized/CentralizedScheduler.h>
 #include <pheet/sched/CentralizedPriority/CentralizedPriorityScheduler.h>
-//#include <pheet/sched/Strategy/StrategyScheduler.h>
+#include <pheet/sched/Strategy/StrategyScheduler.h>
 #include <pheet/sched/Synchroneous/SynchroneousScheduler.h>
 #include <pheet/sched/MixedMode/MixedModeScheduler.h>
 
@@ -94,7 +95,9 @@ void SortingTests::run_test() {
 	// default tests
 	this->run_sorter<	Pheet,
 						DagQuicksort>();
-//	this->run_sorter<	Pheet::WithScheduler<StrategyScheduler>,
+//	this->run_sorter<	typename Pheet::WithScheduler<StrategyScheduler>::template WithTaskStorage<Pheet::WithScheduler<StrategyScheduler>::Environment::TaskStorage::WithStrategyHeap<VolatileStrategyHeap>::template BT >,
+//						StrategyQuicksort>();
+//	this->run_sorter<	typename Pheet::WithScheduler<StrategyScheduler>,
 //						StrategyQuicksort>();
 	this->run_sorter<	Pheet::WithScheduler<BasicScheduler>,
 						DagQuicksort>();

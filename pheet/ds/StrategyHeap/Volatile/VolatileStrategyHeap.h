@@ -33,7 +33,7 @@ public:
 	typedef VolatileStrategyHeapNode<Self, T> Node;
 
 	VolatileStrategyHeapBase()
-	:max(nullptr) {}
+	:max(nullptr), parent_node(nullptr) {}
 
 	virtual ~VolatileStrategyHeapBase() {
 		if(max != nullptr) {
@@ -97,6 +97,8 @@ protected:
 	}
 
 	Node* max;
+public:
+	Node* parent_node;
 };
 
 template <class Pheet, class T, class Strategy, class StrategyRetriever>
@@ -193,6 +195,9 @@ public:
 			if(tmp != nullptr) {
 				this->combine(this->max, tmp);
 			}
+			else {
+				this->max->sub_heap->parent_node = nullptr;
+			}
 		}
 
 		if(this->max->next != this->max) {
@@ -220,18 +225,18 @@ public:
 	void push(Node* node) {
 		pheet_assert(node->d == 0);
 		pheet_assert(node->children == nullptr);
-		if(parent_node == nullptr) {
+		if(this->parent_node == nullptr) {
 			node->sub_heap = this;
 			parent->push(node);
 			return;
 		}
 
-		Strategy* parent_s = comp.deref(parent_node->data);
+		Strategy* parent_s = comp.deref(this->parent_node->data);
 		Strategy* node_s = comp.deref(node->data);
 		pheet_assert(node_s != nullptr);
 		if(parent_s != nullptr && comp(node_s, parent_s)) {
-			parent->swap_node(parent_node, node);
-			node = parent_node;
+			parent->swap_node(this->parent_node, node);
+			node = this->parent_node;
 			node_s = parent_s;
 		}
 
@@ -251,14 +256,20 @@ public:
 				this->max = node;
 			}
 		}
+
+		if(node->sub_heap != nullptr) {
+			pheet_assert(node->sub_heap->parent_node == nullptr);
+			node->sub_heap->parent_node = node;
+		}
 	}
 
 	void swap_node(Node* my_node, Node* other_node) {
 		Strategy* node_s = comp.deref(other_node->data);
-		Strategy* parent_s = comp.deref(parent_node->data);
+		pheet_assert(this->parent_node != nullptr);
+		Strategy* parent_s = comp.deref(this->parent_node->data);
 		if(parent_s != nullptr && comp(node_s, parent_s)) {
-			parent->swap_node(parent_node, other_node);
-			other_node = parent_node;
+			parent->swap_node(this->parent_node, other_node);
+			other_node = this->parent_node;
 			node_s = parent_s;
 		}
 
@@ -290,6 +301,13 @@ public:
 			else if(comp(node_s, max_s)) {
 				this->max = other_node;
 			}
+		}
+
+		std::swap(my_node->sub_heap, other_node->sub_heap);
+
+		if(other_node->sub_heap != nullptr) {
+			pheet_assert(other_node->sub_heap->parent_node == my_node);
+			other_node->sub_heap->parent_node = other_node;
 		}
 	}
 
@@ -353,7 +371,6 @@ private:
 
 	VolatileStrategyHeapComparator<Pheet, T, Strategy, StrategyRetriever> comp;
 	Parent* parent;
-	Node* parent_node;
 	bool reconsolidate;
 };
 
@@ -505,17 +522,19 @@ private:
 			while(helper[tmp->d] != nullptr) {
 			//	pheet_assert(count_nodes(max) == _size);
 
-				if(helper[tmp->d] == this->max || (comp(helper_s[tmp->d], node_s))) {
-					pheet_assert(tmp != this->max);
+				if(helper[tmp->d] == this->max || (tmp != this->max && comp(helper_s[tmp->d], node_s))) {
+			//		pheet_assert(tmp != this->max);
 					this->combine_trees(tmp, helper[tmp->d]);
-					tmp = helper[tmp->d];
 					node_s = helper_s[tmp->d];
+					tmp = helper[tmp->d];
+					pheet_assert(node_s != nullptr);
 				}
 				else {
 					this->combine_trees(helper[tmp->d], tmp);
 				}
 			//	pheet_assert(count_nodes(max) == _size);
 				helper[tmp->d - 1] = nullptr;
+				helper_s[tmp->d - 1] = nullptr;
 			}
 			pheet_assert(helper[tmp->d] == nullptr);
 			helper[tmp->d] = tmp;
