@@ -18,11 +18,14 @@
 #include "uts/UTSTests.h"
 #include "sor/SORTests.h"
 
+#include <map>
+#include <string>
+
 using namespace pheet;
 
 int main(int argc, char* argv[]) {
 
-	std::map<std::string, Test*> tests;
+	std::map<std::string, Tests*> tests;
 
 	SORTests sors;
 

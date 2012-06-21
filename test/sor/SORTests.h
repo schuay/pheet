@@ -17,7 +17,7 @@
 
 namespace pheet {
 
-	class SORTests : Tests
+	class SORTests : public Tests
 	{
 	public:
 		void run_test();

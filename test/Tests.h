@@ -15,8 +15,8 @@ namespace pheet {
 
 class Tests {
 public:
-	virtual ~Tests();
-	virtual void run_test() = 0;
+  virtual ~Tests() {};
+  virtual void run_test() = 0;
 };
 
 }
