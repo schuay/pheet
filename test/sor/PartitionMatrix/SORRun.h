@@ -67,6 +67,8 @@ cpus(cpus), iterations(iterations) {
 	sp.omega=omega;
 	  sp.prio = prio;
 
+	  pc.add(slices);
+
 	typedef std::mt19937 base_generator_type;
 	base_generator_type generator(42);
 	boost::uniform_real<> uni_dist(0,1);

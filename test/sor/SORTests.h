@@ -23,7 +23,7 @@ namespace pheet {
 		void run_test();
 	private:
 		template <class Scheduler>
-		void test();
+		void test(bool prio);
 	};
 
 }

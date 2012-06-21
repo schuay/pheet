@@ -67,7 +67,7 @@ namespace pheet {
 			      for(int i = 0; i < sp.slices; i++)
 				{
 				  if(!sp.prio)
-				    Pheet::template spawn<SORSliceTask<Pheet> >(column_owners+i,i,sp,p);
+				    Pheet::template spawn<SORSliceTask<Pheet> >(column_owners+i,i,sp,p,pc);
 				  else
 				    Pheet::template spawn_s<SORSliceTask<Pheet>>(SORLocalityStrategy<Pheet>(column_owners[i]),column_owners+i,i,sp,p,pc);
 				}
@@ -94,11 +94,11 @@ namespace pheet {
 	template <class Pheet>
 	class SORSliceTask : public Pheet::Task
 	{
-		SORPerformanceCounters<Pheet> pc;
 		typename Pheet::Place** owner_info;
 		int id;
 		SORParams sp;
 		int p;
+		SORPerformanceCounters<Pheet> pc;
 	public:
 
 		SORSliceTask(typename Pheet::Place** owner_info, int id, SORParams& sp, int p, SORPerformanceCounters<Pheet>& pc):owner_info(owner_info),id(id),sp(sp),p(p),pc(pc) {}
