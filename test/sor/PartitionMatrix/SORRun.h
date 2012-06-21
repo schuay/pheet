@@ -16,6 +16,7 @@
 #include <boost/generator_iterator.hpp>
 #include <iostream>
 #include <fstream>
+#include "SORPerformanceCounters.h"
 
 namespace pheet {
 
@@ -43,6 +44,7 @@ private:
 	SORParams sp;
 	double* backend;
 	typename Pheet::Environment::PerformanceCounters pc;
+	SORPerformanceCounters<Pheet> ppc;
 };
 
 
@@ -102,17 +104,19 @@ template <class Pheet>
 void SORRun<Pheet>::run() {
 	// Start here
 	typename Pheet::Environment env(cpus,pc);
-	Pheet::template finish<SORStartTask<Pheet> >(sp, iterations);
+	Pheet::template finish<SORStartTask<Pheet> >(sp, iterations,ppc);
 }
 
 template <class Pheet>
 void SORRun<Pheet>::print_results() {
 	pc.print_values();
+	ppc.print_values();
 }
 
 template <class Pheet>
 void SORRun<Pheet>::print_headers() {
 	Pheet::Environment::PerformanceCounters::print_headers();
+	ppc.print_headers();
 }
 
 template <class Pheet>

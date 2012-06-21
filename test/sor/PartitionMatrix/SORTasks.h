@@ -18,6 +18,7 @@
 #include <iostream>
 #include <exception>
 
+#include "SORPerformanceCounters.h"
 #include "SORLocalityStrategy.h"
 
 using namespace std;
@@ -44,12 +45,14 @@ namespace pheet {
 	{
 		SORParams& sp;
 		int iterations;
+		SORPerformanceCounters<Pheet> pc;
+
 	public:
 
-		SORStartTask(SORParams& sp, int iterations):sp(sp),iterations(iterations) { }
+		SORStartTask(SORParams& sp, int iterations, SORPerformanceCounters<Pheet>& pc):sp(sp),iterations(iterations),pc(pc) { }
 		virtual ~SORStartTask() {}
 
-		void operator()() //typename Task::TEC& tec)
+		void operator()()
 		{
 			typename Pheet::Place** column_owners = new typename Pheet::Place*[sp.slices];
 
@@ -66,7 +69,7 @@ namespace pheet {
 				  if(!sp.prio)
 				    Pheet::template spawn<SORSliceTask<Pheet> >(column_owners+i,i,sp,p);
 				  else
-				    Pheet::template spawn_s<SORSliceTask<Pheet>>(SORLocalityStrategy<Pheet>(column_owners[i]),column_owners+i,i,sp,p);
+				    Pheet::template spawn_s<SORSliceTask<Pheet>>(SORLocalityStrategy<Pheet>(column_owners[i]),column_owners+i,i,sp,p,pc);
 				}
 			    }
 			}
@@ -91,18 +94,20 @@ namespace pheet {
 	template <class Pheet>
 	class SORSliceTask : public Pheet::Task
 	{
-		// TODO replace with new
+		SORPerformanceCounters<Pheet> pc;
 		typename Pheet::Place** owner_info;
 		int id;
 		SORParams sp;
 		int p;
 	public:
 
-		SORSliceTask(typename Pheet::Place** owner_info, int id, SORParams& sp, int p):owner_info(owner_info),id(id),sp(sp),p(p) {}
+		SORSliceTask(typename Pheet::Place** owner_info, int id, SORParams& sp, int p, SORPerformanceCounters<Pheet>& pc):owner_info(owner_info),id(id),sp(sp),p(p),pc(pc) {}
 		virtual ~SORSliceTask() {}
 
 		void operator()()
 		{
+			if(*owner_info==Pheet::get_place())
+				pc.slices_rescheduled_at_same_place.incr();
 
 		  	if(*owner_info == 0)
 			  (*owner_info) = Pheet::get_place();
