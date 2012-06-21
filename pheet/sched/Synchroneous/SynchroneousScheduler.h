@@ -14,6 +14,7 @@
 #include "../common/SchedulerFunctorTask.h"
 #include "../common/FinishRegion.h"
 #include "../common/PlaceBase.h"
+#include "../common/DummyBaseStrategy.h"
 #include "SynchroneousSchedulerPerformanceCounters.h"
 
 #include <vector>
@@ -31,6 +32,8 @@ public:
 	typedef Self Place;
 	typedef FinishRegion<SynchroneousScheduler> Finish;
 	typedef SynchroneousSchedulerPerformanceCounters<Pheet> PerformanceCounters;
+
+	typedef DummyBaseStrategy<Pheet> BaseStrategy;
 
 	template <class NP>
 	using BT = SynchroneousScheduler<NP>;
@@ -80,6 +83,12 @@ public:
 
 	template<class Strategy, typename F, typename ... TaskParams>
 		void spawn_prio(Strategy s, F&& f, TaskParams&& ... params);
+
+	template<class CallTaskType, class Strategy, typename ... TaskParams>
+		void spawn_s(Strategy s, TaskParams&& ... params);
+
+	template<class Strategy, typename F, typename ... TaskParams>
+		void spawn_s(Strategy s, F&& f, TaskParams&& ... params);
 
 	procs_t get_distance(Self* other) {
 		pheet_assert(other == this);
@@ -195,6 +204,19 @@ void SynchroneousScheduler<Pheet>::spawn_prio(Strategy s, TaskParams&& ... param
 template <class Pheet>
 template<class Strategy, typename F, typename ... TaskParams>
 void SynchroneousScheduler<Pheet>::spawn_prio(Strategy s, F&& f, TaskParams&& ... params) {
+	f(std::forward<TaskParams&&>(params) ...);
+}
+
+template <class Pheet>
+template<class CallTaskType, class Strategy, typename ... TaskParams>
+void SynchroneousScheduler<Pheet>::spawn_s(Strategy s, TaskParams&& ... params) {
+	CallTaskType task(std::forward<TaskParams&&>(params) ...);
+	task();
+}
+
+template <class Pheet>
+template<class Strategy, typename F, typename ... TaskParams>
+void SynchroneousScheduler<Pheet>::spawn_s(Strategy s, F&& f, TaskParams&& ... params) {
 	f(std::forward<TaskParams&&>(params) ...);
 }
 

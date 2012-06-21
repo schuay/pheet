@@ -129,6 +129,12 @@ public:
 	template<typename F, typename ... TaskParams>
 		void spawn(F&& f, TaskParams&& ... params);
 
+	template<class CallTaskType, class Strategy, typename ... TaskParams>
+		void spawn_s(Strategy&& s, TaskParams&& ... params);
+
+	template<class Strategy, typename F, typename ... TaskParams>
+		void spawn_s(Strategy&& s, F&& f, TaskParams&& ... params);
+
 	procs_t get_distance(Self* other);
 
 	void start_finish_region();
@@ -802,6 +808,20 @@ void BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::spawn(F&& f, Tas
 		stealing_deque.push(di);
 	}
 }
+
+
+template <class Pheet, template <class P, typename T> class StealingDequeT, uint8_t CallThreshold>
+template<class CallTaskType, class Strategy, typename ... TaskParams>
+inline void BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::spawn_s(Strategy&& s, TaskParams&& ... params) {
+	spawn<CallTaskType>(std::forward<TaskParams&&>(params) ...);
+}
+
+template <class Pheet, template <class P, typename T> class StealingDequeT, uint8_t CallThreshold>
+template<class Strategy, typename F, typename ... TaskParams>
+inline void BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::spawn_s(Strategy&& s, F&& f, TaskParams&& ... params) {
+	spawn(f, std::forward<TaskParams&&>(params) ...);
+}
+
 
 template <class Pheet, template <class P, typename T> class StealingDequeT, uint8_t CallThreshold>
 template<class CallTaskType, typename ... TaskParams>
