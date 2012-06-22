@@ -13,29 +13,11 @@
 
 #include "pheet/primitives/PerformanceCounter/Basic/BasicPerformanceCounter.h"
 #include "pheet/primitives/PerformanceCounter/Time/TimePerformanceCounter.h"
-#include "pheet/primitives/Reducer/List/ListReducer.h"
+#include "pheet/primitives/PerformanceCounter/Events/EventsList.h"
 #include <vector>
 
 
 namespace pheet {
-
-template <typename T>
-class Event
-{
-	struct timeval start;
-	T value;
-public:
-	Event(struct timeval start, T value):start(start),value(value)
-	{}
-	void print(struct timeval expstart)
-	{
-		double time = (start.tv_sec - expstart.tv_sec) + 1.0e-6 * start.tv_usec - 1.0e-6 * expstart.tv_usec;
-
-		std::cout << time << ": " << value << std::endl;
-	}
-
-};
-
 
 template <class Pheet>
 class ImprovedBranchBoundGraphBipartitioningSubproblemPerformanceCounters {
