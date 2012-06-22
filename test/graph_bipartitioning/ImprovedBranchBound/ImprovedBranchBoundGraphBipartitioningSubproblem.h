@@ -143,6 +143,12 @@ void ImprovedBranchBoundGraphBipartitioningSubproblem<Pheet, LogicT, MaxSize>::u
 	while(cut < old_ub) {
 		if(SIZET_CAS(upper_bound, old_ub, cut)) {
 			pc.num_upper_bound_changes.incr();
+
+			struct timeval start;
+			gettimeofday(&start,0);
+			Event e(start,upper_bound);
+			pc.events.add(e);
+
 			GraphBipartitioningSolution<MaxSize> my_best;
 			my_best.weight = cut;
 			my_best.sets[0] = this->sets[0];
