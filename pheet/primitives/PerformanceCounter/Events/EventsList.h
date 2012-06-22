@@ -10,13 +10,16 @@
 
 #include "../../Reducer/List/ListReducer.h"
 
+namespace pheet {
+
+
 template <typename E>
 class Event
 {
 	struct timeval start;
-	T value;
+	E value;
 public:
-	Event(struct timeval start, T value):start(start),value(value)
+	Event(struct timeval start, E value):start(start),value(value)
 	{}
 	void print(struct timeval expstart)
 	{
@@ -26,10 +29,12 @@ public:
 	}
 };
 
-template <class Pheet, typename E, bool> class EventsList;
+template <class Pheet, typename E, bool enabled>
+  class EventsList;
+
 
 template <class Pheet, typename E>
-class EventsList
+class EventsList<Pheet, E, true>
 {
 	ListReducer<Pheet, std::vector<Event<E> >, Event<E> > events;
 	struct timeval start;
@@ -39,7 +44,7 @@ public:
 	  gettimeofday(&start,0);
 	}
 
-	inline EventsList<Pheet, E, true>::EventsList(EventsList<Pheet, E, true> const& other):events(other.events)
+	inline EventsList(EventsList<Pheet, E, true> const& other):events(other.events)
 	{
 
 	}
@@ -49,7 +54,7 @@ public:
 		struct timeval currtime;
 		gettimeofday(&currtime,0);
 
-		Event e(currtime,value);
+		Event<E> e(currtime,value);
 		events.add(e);
 	}
 
@@ -62,5 +67,26 @@ public:
 
 };
 
+template <class Pheet, typename E>
+  class EventsList<Pheet, E, false>
+{
+  EventsList()
+    {
+    }
+
+  inline EventsList(EventsList<Pheet, E, false> const& other)
+  {
+
+  }
+
+  void add(E const& value)
+  {
+  }
+
+  void print() {}
+
+};
+
+}
 
 #endif /* EVENTSLIST_H_ */
