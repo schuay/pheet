@@ -114,6 +114,8 @@ public:
 
 	ptrdiff_t next_task_id() { return task_id++; }
 
+	TaskStorage& get_task_storage() { return task_storage; }
+
 private:
 	void initialize_levels();
 	void grow_levels_structure();

@@ -44,6 +44,7 @@ inline bool size_t_atomic_add_clang(size_t* p, size_t val) {
 #define LONG_ATOMIC_SUB(p, val)		(__sync_fetch_and_sub(p, val))
 #define ULONG_ATOMIC_SUB(p, val)	(__sync_fetch_and_sub(p, val))
 #define SIZET_ATOMIC_SUB(p, val)	(__sync_fetch_and_sub(p, val))
+#define PTRDIFFT_ATOMIC_SUB(p, val)	(__sync_fetch_and_sub(p, val))
 
 #define INT_FETCH_AND_SUB(p, val)		(__sync_fetch_and_sub(p, val))
 #define UINT_FETCH_AND_SUB(p, val)		(__sync_fetch_and_sub(p, val))
