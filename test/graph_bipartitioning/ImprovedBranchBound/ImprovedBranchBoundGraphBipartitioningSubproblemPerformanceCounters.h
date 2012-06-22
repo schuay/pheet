@@ -27,9 +27,11 @@ class Event
 public:
 	Event(struct timeval start, T value):start(start),value(value)
 	{}
-	void print()
+	void print(struct timeval expstart)
 	{
-		std::cout << start.tv_sec << "." << start.tv_usec << std::endl;
+		double time = (start.tv_sec - expstart.tv_sec) + 1.0e-6 * start.tv_usec - 1.0e-6 * expstart.tv_usec;
+
+		std::cout << time << ": " << value << std::endl;
 	}
 
 };
@@ -83,7 +85,7 @@ inline void ImprovedBranchBoundGraphBipartitioningSubproblemPerformanceCounters<
 }
 
 template <class Pheet>
-inline void ImprovedBranchBoundGraphBipartitioningSubproblemPerformanceCounters<Pheet>::print_values() {
+inline void ImprovedBranchBoundGraphBipartitioningSubproblemPerformanceCounters<Pheet>::print_values(struct timeval expstart) {
 	num_upper_bound_changes.print("%d\t");
 	num_allocated_subproblems.print("%d\t");
 	memory_allocation_time.print("%f\t");
