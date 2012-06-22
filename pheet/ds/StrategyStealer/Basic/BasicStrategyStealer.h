@@ -90,7 +90,7 @@ public:
 
 private:
 //	TaskStorage& local_task_storage;
-	unordered_map<typename Pheet::Scheduler::Place*, StealerPlace*> places;
+	std::unordered_map<typename Pheet::Scheduler::Place*, StealerPlace*> places;
 };
 
 } /* namespace pheet */

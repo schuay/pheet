@@ -22,7 +22,7 @@ namespace pheet {
 	public:
 		void run_test(bool usestrategy);
 	private:
-		template <class Scheduler>
+		template <class Pheet, template <class P1> class Kernel1, template <class P2> class Kernel2>
 		void test();
 	};
 

@@ -30,36 +30,36 @@ int main(int argc, char* argv[]) {
 	SORTests sors;
 
 	tests["SOR"] = &sors;
-
+	
 	if(argc==3)
-	{
-	  bool prio;
-	  if(std::string(argv[2])=="Strategy")
-	    prio = true;
-	  else
-	    if(std::string(argv[2])=="Basic")
-	      prio = false;
+	  {
+	    bool prio;
+	    if(std::string(argv[2])=="Strategy")
+	      prio = true;
 	    else
+	      if(std::string(argv[2])=="Basic")
+		prio = false;
+	      else
+		{
+		  std::cout << "No such scheduler" << std::endl;
+		  return 1;
+		}
+	    
+	    if(tests.find(argv[1])==tests.end())
 	      {
-		std::cout << "No such scheduler" << std::endl;
+		std::cout << "No such test" << std::endl;
 		return 1;
 	      }
-
-		if(tests.find(argv[1])==tests.end())
-		{
-			std::cout << "No such test" << std::endl;
-			return 1;
-		}
-		tests[argv[1]]->run_test(prio);
-		return 0;
-	}
-
-	SortingTests st;
-  	st.run_test();
+	    tests[argv[1]]->run_test(prio);
+	    return 0;
+	  }
+	
+	//	SortingTests st;
+  	//st.run_test();
 
   	GraphBipartitioningTests gpt;
   	gpt.run_test();
-
+	return 0;
 	InARowTests iarts;
 	iarts.run_test();
 
