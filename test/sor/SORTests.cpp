@@ -42,17 +42,17 @@ namespace pheet {
 #endif
 	}
   
-	void SORTests::run_test()
+	void SORTests::run_test(bool usestrategy)
 	{
 #ifdef SOR_TEST
 		if(sor_test) {
 
-			  for(size_t pp = 0; pp < sizeof(sor_prio)/sizeof(sor_prio[0]); pp++) {
-				 if(sor_prio[pp])
-					test<SORRun<Pheet::WithScheduler<StrategyScheduler> > >(sor_prio[pp]);
+		  //			  for(size_t pp = 0; pp < sizeof(sor_prio)/sizeof(sor_prio[0]); pp++) {
+				 if(usestrategy)
+					test<SORRun<Pheet::WithScheduler<StrategyScheduler> > >(usestrategy);
 				 else
-					 test<SORRun<Pheet::WithScheduler<BasicScheduler> > >(sor_prio[pp]);
-			  }
+					 test<SORRun<Pheet::WithScheduler<BasicScheduler> > >(usestrategy);
+				 //			  }
 		}
 #endif
 	}

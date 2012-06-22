@@ -12,6 +12,7 @@
 #include <pheet/pheet.h>
 #include "../../../pheet/misc/types.h"
 #include "../../../pheet/misc/atomics.h"
+#include "../../../pheet/primitives/Reducer/List/ListReducer.h"
 //#include "../../test_schedulers.h"
 #include <string.h>
 #include <stdlib.h>
@@ -25,7 +26,7 @@ using namespace std;
 
 namespace pheet {
 
-	class SORParams
+  class SORParams
 	{
 	public:
 		double** G;
@@ -55,6 +56,7 @@ namespace pheet {
 		void operator()()
 		{
 			typename Pheet::Place** column_owners = new typename Pheet::Place*[sp.slices];
+
 
 			for(int i=0;i<sp.slices;i++)
 				column_owners[i]=0;
@@ -106,6 +108,9 @@ namespace pheet {
 
 		void operator()()
 		{
+		  struct timeval start_time;
+		  gettimeofday(&start_time, NULL);
+
 			if(*owner_info==Pheet::get_place())
 				pc.slices_rescheduled_at_same_place.incr();
 
@@ -175,6 +180,13 @@ namespace pheet {
 				}
 
 			}
+
+
+			struct timeval stop_time;
+			gettimeofday(&stop_time, NULL);
+			TaskSched ts(start_time, stop_time,(size_t)Pheet::get_place());
+			pc.red.add(ts);
+
 
 		}
 

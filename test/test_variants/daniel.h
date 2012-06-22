@@ -101,9 +101,9 @@ const unsigned int uts_test_standardworkloads[] = {0,1,2,3,4,5,6,7,8};
 
 #define SOR_TEST	true
 const procs_t sor_test_cpus[] = {12};
-const int sor_test_maxtrissize[] = {4000};
+const int sor_test_maxtrissize[] = {3000};
 const int sor_test_iterations[] =  {100};
-const int sor_test_slices[] = {32};
+const int sor_test_slices[] = {256};
 const double sor_test_omega[] = {1.25};
 const bool sor_prio[] = {true,false};
 }

@@ -18,15 +18,15 @@
  */
 namespace pheet {
 
-template <class Pheet, typename T, template <typename S> class Op = ListOperation>
+  template <class Pheet, typename T, typename E, template <typename S> class Op = ListOperation>
 class ListReducer {
 public:
 	ListReducer();
-	ListReducer(ListReducer<Pheet, T, Op>& other);
-	ListReducer(ListReducer<Pheet, T, Op>&& other);
+ListReducer(ListReducer<Pheet, T, E, Op>& other);
+ListReducer(ListReducer<Pheet, T,E, Op>&& other);
 	~ListReducer();
 
-	void add(T const& value);
+	void add(E const& value);
 
 	T const& get_list();
 private:
@@ -34,36 +34,38 @@ private:
 	Reducer reducer;
 };
 
-template <class Pheet, typename T, template <typename S> class Op>
-ListReducer<Pheet, T, Op>::ListReducer() {
+  template <class Pheet, typename T, typename E, template <typename S> class Op>
+  ListReducer<Pheet, T,E, Op>::ListReducer() {
 
 }
 
-template <class Pheet, typename T, template <typename S> class Op>
-ListReducer<Pheet, T, Op>::ListReducer(ListReducer<Pheet, T, Op>& other)
+  template <class Pheet, typename T, typename E, template <typename S> class Op>
+    ListReducer<Pheet, T,E, Op>::ListReducer(ListReducer<Pheet, T,E, Op>& other)
 : reducer(other.reducer) {
 
 }
 
-template <class Pheet, typename T, template <typename S> class Op>
-ListReducer<Pheet, T, Op>::ListReducer(ListReducer<Pheet, T, Op>&& other)
+  template <class Pheet, typename T, typename E, template <typename S> class Op>
+    ListReducer<Pheet, T,E, Op>::ListReducer(ListReducer<Pheet, T,E, Op>&& other)
 : reducer(std::move(other.reducer)) {
 
 }
 
-template <class Pheet, typename T, template <typename S> class Op>
-ListReducer<Pheet, T, Op>::~ListReducer() {
+  template <class Pheet, typename T, typename E, template <typename S> class Op>
+  ListReducer<Pheet, T,E, Op>::~ListReducer() {
 
 }
 
-template <class Pheet, typename T, template <typename S> class Op>
-void ListReducer<Pheet, T, Op>::add(T const& value) {
-	reducer.add_data(value);
+  template <class Pheet, typename T, typename E, template <typename S> class Op>
+  void ListReducer<Pheet, T,E, Op>::add(E const& value) {
+  T t;
+  t.push_back(value);
+	reducer.add_data(t);
 }
 
 
-template <class Pheet, typename T, template <typename S> class Op>
-T const& ListReducer<Pheet, T, Op>::get_list() {
+  template <class Pheet, typename T, typename E, template <typename S> class Op>
+  T const& ListReducer<Pheet, T,E, Op>::get_list() {
 	return reducer.get_data();
 }
 }
