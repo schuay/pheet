@@ -14,8 +14,8 @@
 #include "StrategySchedulerTaskStorageItem.h"
 
 //#include "../../ds/StrategyTaskStorage/Local/LocalStrategyTaskStorage.h"
-#include "../../ds/StrategyTaskStorage/LinkedList/LinkedListStrategyTaskStorage.h"
-#include "../../ds/StrategyStealer/Dummy/DummyStrategyStealer.h"
+#include "../../ds/StrategyTaskStorage/BasicLinkedList/BasicLinkedListStrategyTaskStorage.h"
+#include "../../ds/StrategyStealer/Basic/BasicStrategyStealer.h"
 #include "base_strategies/LifoFifo/LifoFifoBaseStrategy.h"
 
 namespace pheet {
@@ -287,7 +287,7 @@ inline void StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>:
 
 
 template<class Pheet>
-using StrategyScheduler = StrategySchedulerImpl<Pheet, /*LocalStrategyTaskStorage*/ LinkedListStrategyTaskStorage, DummyStrategyStealer, LifoFifoBaseStrategy>;
+using StrategyScheduler = StrategySchedulerImpl<Pheet, /*LocalStrategyTaskStorage*/ BasicLinkedListStrategyTaskStorage, BasicStrategyStealer, LifoFifoBaseStrategy>;
 
 }
 
