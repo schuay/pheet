@@ -49,7 +49,7 @@ public:
 	BasicPerformanceCounter<Pheet, graph_bipartitioning_test_count_allocated_subproblems> num_allocated_subproblems;
 
 	TimePerformanceCounter<Pheet, graph_bipartitioning_test_measure_memory_allocation_time> memory_allocation_time;
-	ListReducer<std::vector<Event<float> >, Event<float> > events;
+	ListReducer<Pheet, std::vector<Event<size_t> >, Event<size_t> > events;
 
 };
 
@@ -88,7 +88,7 @@ inline void ImprovedBranchBoundGraphBipartitioningSubproblemPerformanceCounters<
 	num_allocated_subproblems.print("%d\t");
 	memory_allocation_time.print("%f\t");
 
-	std::vector<Event<float> > eventslist = events.get_list();
+	std::vector<Event<size_t> > eventslist = events.get_list();
 	for(size_t i=0;i<eventslist.size();i++)
 		eventslist[i].print();
 

@@ -146,7 +146,7 @@ void ImprovedBranchBoundGraphBipartitioningSubproblem<Pheet, LogicT, MaxSize>::u
 
 			struct timeval start;
 			gettimeofday(&start,0);
-			Event e(start,upper_bound);
+			Event<size_t> e(start,cut);
 			pc.events.add(e);
 
 			GraphBipartitioningSolution<MaxSize> my_best;
