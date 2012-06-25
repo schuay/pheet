@@ -33,15 +33,13 @@ public:
 	BasicPerformanceCounter<Pheet, graph_bipartitioning_test_count_allocated_subproblems> num_allocated_subproblems;
 
 	TimePerformanceCounter<Pheet, graph_bipartitioning_test_measure_memory_allocation_time> memory_allocation_time;
-	ListReducer<Pheet, std::vector<Event<size_t> >, Event<size_t> > events;
-	struct timeval expstart;
+	EventsList<Pheet, size_t, false> events;
 };
 
 
 template <class Pheet>
 inline ImprovedBranchBoundGraphBipartitioningSubproblemPerformanceCounters<Pheet>::ImprovedBranchBoundGraphBipartitioningSubproblemPerformanceCounters()
 {
-  gettimeofday(&expstart,0);
 
 }
 
@@ -73,10 +71,8 @@ inline void ImprovedBranchBoundGraphBipartitioningSubproblemPerformanceCounters<
 	num_allocated_subproblems.print("%d\t");
 	memory_allocation_time.print("%f\t");
 
-	std::vector<Event<size_t> > eventslist = events.get_list();
-	for(size_t i=0;i<eventslist.size();i++)
-		eventslist[i].print(expstart);
 
+	events.print();
 }
 
 }
