@@ -9,6 +9,8 @@
 #include "LUPivTests.h"
 #include "Simple/SimpleLUPiv.h"
 #include "LocalityStrategy/LocalityStrategyLUPiv.h"
+#include "PPoPPLocalityStrategy/PPoPPLocalityStrategyLUPiv.h"
+
 
 #include <pheet/pheet.h>
 #include <pheet/sched/Basic/BasicScheduler.h>
@@ -41,6 +43,8 @@ void LUPivTests::run_test() {
 						SimpleLUPiv>();
 	this->run_kernel<	Pheet::WithScheduler<FinisherScheduler>,
 						SimpleLUPiv>();
+	this->run_kernel< Pheet::WithScheduler<StrategyScheduler>,
+						PPoPPLocalityStrategyLUPiv >();
 #endif
 }
 
