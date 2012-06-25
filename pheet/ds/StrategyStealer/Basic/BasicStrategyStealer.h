@@ -35,17 +35,17 @@ public:
 
 	T steal(/*TaskStorage& target*/) {
 		T ret;
-		while(stream.has_next()) {
+/*		while(stream.has_next()) {
 			stream.next();
 			StreamRef ref = stream.get_ref();
 			if(ref.take(ret)) {
 				return ret;
 			}
-		}
-		return nullable_traits<T>::null_value;
-	/*	while(stream.has_next()) {
+		}*/
+		while(stream.has_next()) {
 			stream.next();
-			items.push(stream.get_ref());
+			stream.stealer_push_ref(*this);
+		//	items.push(stream.get_ref());
 		}
 		if(items.empty())
 			return nullable_traits<T>::null_value;
@@ -56,7 +56,12 @@ public:
 			}
 			top = items.pop();
 		}
-		return ret;*/
+		return ret;
+	}
+
+	template <class Strategy>
+	void push(StreamRef stream_ref) {
+		items.push<Strategy>(stream_ref);
 	}
 
 private:
@@ -70,6 +75,7 @@ class BasicStrategyStealer {
 public:
 	typedef BasicStrategyStealerPerformanceCounters PerformanceCounters;
 	typedef BasicStrategyStealerPlace<Pheet, TaskStorage> StealerPlace;
+	typedef StealerPlace StealerRef;
 
 	BasicStrategyStealer(/*TaskStorage& local_task_storage,*/ PerformanceCounters& pc)
 	/*:local_task_storage(local_task_storage)*/ {}
