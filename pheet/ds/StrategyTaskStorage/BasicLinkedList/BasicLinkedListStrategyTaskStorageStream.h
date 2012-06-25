@@ -17,6 +17,10 @@ public:
 	typename StreamRef::BaseStrategy* operator()(StreamRef& sr) {
 		return sr.get_strategy();
 	}
+
+	void drop_item(StreamRef&& sr) {
+
+	}
 };
 
 template <class Pheet, class DataBlock>

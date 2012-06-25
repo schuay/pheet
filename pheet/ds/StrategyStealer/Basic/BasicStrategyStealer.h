@@ -37,6 +37,7 @@ public:
 		// First try to take a single item
 		T ret;
 		StreamRef top;
+		size_t pre_weight;
 		do {
 			while(stream.has_next()) {
 				stream.next();
@@ -45,12 +46,14 @@ public:
 			if(items.empty()) {
 				return nullable_traits<T>::null_value;
 			}
+			pre_weight = items.transitive_weight();
 			top = items.pop();
 		} while(!top.take(ret));
 
 		// Now try to fill the own task storage with the rest
 		// Has a separate linearization point, so a task with higher priority than ret may be added
-		size_t total_stolen = 1;
+		size_t weight = pre_weight - items.transitive_weight();
+//		size_t total_stolen = 1;
 		do {
 			do {
 				while(stream.has_next()) {
@@ -60,11 +63,13 @@ public:
 				if(items.empty()) {
 					return ret;
 				}
+				pre_weight = items.transitive_weight();
 				top = items.pop();
 			} while(!stream.task_storage_push(target_task_storage, top));
 
-			++total_stolen;
-		}while(total_stolen < items.size());
+//			++total_stolen;
+			weight += pre_weight - items.transitive_weight();
+		}while(weight < items.transitive_weight());
 
 		return ret;
 	}
