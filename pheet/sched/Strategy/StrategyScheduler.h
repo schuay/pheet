@@ -36,7 +36,7 @@ StrategySchedulerState<Pheet>::StrategySchedulerState()
 }
 
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
+template <class Pheet, template <class P, typename T, template <class, class> class> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
 class StrategySchedulerImpl {
 public:
 	typedef typename Pheet::Backoff Backoff;
@@ -47,7 +47,7 @@ public:
 	template <typename F>
 	using FunctorTask = SchedulerFunctorTask<Pheet, F>;
 	typedef StrategySchedulerTaskStorageItem<Pheet, Task, StrategySchedulerPlaceStackElement> TaskStorageItem;
-	typedef TaskStorageT<Pheet, TaskStorageItem> TaskStorage;
+	typedef TaskStorageT<Pheet, TaskStorageItem, StealerT> TaskStorage;
 	typedef StealerT<Pheet, TaskStorage> Stealer;
 	typedef StrategySchedulerPlace<Pheet, 4> Place;
 	typedef StrategySchedulerState<Pheet> State;
@@ -61,10 +61,11 @@ public:
 	template <class NP>
 	using BT = StrategySchedulerImpl<NP, TaskStorageT, StealerT, BaseStrategyT>;
 	template <template <class, typename> class NewTS>
-		using WithTaskStorage = StrategySchedulerImpl<Pheet, NewTS, StealerT, BaseStrategyT>;
+		using WithTaskStorage = Self;
 	template <template <class, typename, typename> class NewTS>
 		using WithPriorityTaskStorage = Self;
-
+	template <template <class, typename, template <class, class> class> class NewTS>
+		using WithStrategyTaskStorage = StrategySchedulerImpl<Pheet, NewTS, StealerT, BaseStrategyT>;;
 
 	/*
 	 * Uses complete machine
@@ -134,13 +135,13 @@ private:
 };
 
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
+template <class Pheet, template <class P, typename T, template <class, class> class> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
 char const StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>::name[] = "StrategyScheduler";
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
+template <class Pheet, template <class P, typename T, template <class, class> class> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
 procs_t const StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>::max_cpus = std::numeric_limits<procs_t>::max() >> 1;
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
+template <class Pheet, template <class P, typename T, template <class, class> class> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
 StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>::StrategySchedulerImpl()
 : num_places(machine_model.get_num_leaves()) {
 
@@ -149,7 +150,7 @@ StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>::StrategySch
 	places[0]->prepare_root();
 }
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
+template <class Pheet, template <class P, typename T, template <class, class> class> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
 StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>::StrategySchedulerImpl(typename Place::PerformanceCounters& performance_counters)
 : num_places(machine_model.get_num_leaves()) {
 
@@ -158,7 +159,7 @@ StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>::StrategySch
 	places[0]->prepare_root();
 }
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
+template <class Pheet, template <class P, typename T, template <class, class> class> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
 StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>::StrategySchedulerImpl(procs_t num_places)
 : num_places(num_places) {
 
@@ -167,7 +168,7 @@ StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>::StrategySch
 	places[0]->prepare_root();
 }
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
+template <class Pheet, template <class P, typename T, template <class, class> class> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
 StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>::StrategySchedulerImpl(procs_t num_places, typename Place::PerformanceCounters& performance_counters)
 : num_places(num_places) {
 
@@ -176,36 +177,36 @@ StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>::StrategySch
 	places[0]->prepare_root();
 }
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
+template <class Pheet, template <class P, typename T, template <class, class> class> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
 StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>::~StrategySchedulerImpl() {
 	delete places[0];
 	delete[] places;
 }
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
+template <class Pheet, template <class P, typename T, template <class, class> class> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
 void StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>::print_name() {
 	std::cout << name << "<";
 	Place::TaskStorage::print_name();
 	std::cout /*<< ", " << (int)CallThreshold*/ << ">";
 }
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
+template <class Pheet, template <class P, typename T, template <class, class> class> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
 typename StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>::Place* StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>::get_place() {
 	return Place::get();
 }
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
+template <class Pheet, template <class P, typename T, template <class, class> class> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
 procs_t StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>::get_place_id() {
 	return Place::get()->get_id();
 }
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
+template <class Pheet, template <class P, typename T, template <class, class> class> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
 typename StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>::Place* StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>::get_place_at(procs_t place_id) {
 	pheet_assert(place_id < num_places);
 	return places[place_id];
 }
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
+template <class Pheet, template <class P, typename T, template <class, class> class> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
 template<class CallTaskType, typename ... TaskParams>
 inline void StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>::finish(TaskParams&& ... params) {
 	Place* p = get_place();
@@ -213,7 +214,7 @@ inline void StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>:
 	p->finish<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 }
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
+template <class Pheet, template <class P, typename T, template <class, class> class> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
 template<typename F, typename ... TaskParams>
 inline void StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>::finish(F&& f, TaskParams&& ... params) {
 	Place* p = get_place();
@@ -221,7 +222,7 @@ inline void StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>:
 	p->finish(f, std::forward<TaskParams&&>(params) ...);
 }
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
+template <class Pheet, template <class P, typename T, template <class, class> class> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
 template<class CallTaskType, typename ... TaskParams>
 inline void StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>::spawn(TaskParams&& ... params) {
 	Place* p = get_place();
@@ -229,7 +230,7 @@ inline void StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>:
 	p->spawn<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 }
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
+template <class Pheet, template <class P, typename T, template <class, class> class> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
 template<typename F, typename ... TaskParams>
 inline void StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>::spawn(F&& f, TaskParams&& ... params) {
 	Place* p = get_place();
@@ -237,7 +238,7 @@ inline void StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>:
 	p->spawn(f, std::forward<TaskParams&&>(params) ...);
 }
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
+template <class Pheet, template <class P, typename T, template <class, class> class> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
 template<class CallTaskType, class Strategy, typename ... TaskParams>
 inline void StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>::spawn_s(Strategy s, TaskParams&& ... params) {
 	Place* p = get_place();
@@ -245,7 +246,7 @@ inline void StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>:
 	p->spawn_s<CallTaskType>(std::move(s), std::forward<TaskParams&&>(params) ...);
 }
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
+template <class Pheet, template <class P, typename T, template <class, class> class> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
 template<class Strategy, typename F, typename ... TaskParams>
 inline void StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>::spawn_s(Strategy s, F&& f, TaskParams&& ... params) {
 	Place* p = get_place();
@@ -253,7 +254,7 @@ inline void StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>:
 	p->spawn_s(std::move(s), f, std::forward<TaskParams&&>(params) ...);
 }
 /*
-template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
+template <class Pheet, template <class P, typename T, template <class, class> class> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
 template<class CallTaskType, class Strategy, typename ... TaskParams>
 inline void StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>::spawn_s(Strategy&& s, TaskParams&& ... params) {
 	Place* p = get_place();
@@ -261,7 +262,7 @@ inline void StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>:
 	p->spawn_s<CallTaskType>(std::forward<Strategy&&>(s), std::forward<TaskParams&&>(params) ...);
 }
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
+template <class Pheet, template <class P, typename T, template <class, class> class> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
 template<class Strategy, typename F, typename ... TaskParams>
 inline void StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>::spawn_s(Strategy&& s, F&& f, TaskParams&& ... params) {
 	Place* p = get_place();
@@ -269,7 +270,7 @@ inline void StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>:
 	p->spawn_s(std::forward<Strategy&&>(s), f, std::forward<TaskParams&&>(params) ...);
 }*/
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
+template <class Pheet, template <class P, typename T, template <class, class> class> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
 template<class CallTaskType, typename ... TaskParams>
 inline void StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>::call(TaskParams&& ... params) {
 	Place* p = get_place();
@@ -277,7 +278,7 @@ inline void StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>:
 	p->call<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 }
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
+template <class Pheet, template <class P, typename T, template <class, class> class> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
 template<typename F, typename ... TaskParams>
 inline void StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>::call(F&& f, TaskParams&& ... params) {
 	Place* p = get_place();

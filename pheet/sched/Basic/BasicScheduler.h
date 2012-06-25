@@ -66,7 +66,8 @@ public:
 		using WithTaskStorage = BasicSchedulerImpl<Pheet, NewTS, CallThreshold>;
 	template <template <class, typename, typename> class NewTS>
 		using WithPriorityTaskStorage = Self;
-
+	template <template <class, typename, template <class, class> class> class NewTS>
+		using WithStrategyTaskStorage = Self;
 
 	/*
 	 * Uses complete machine

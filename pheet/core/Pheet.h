@@ -65,6 +65,9 @@ public:
 	template<template <class P, typename> class NewTS>
 	using WithTaskStorage = PheetEnv<Scheduler::template WithTaskStorage<NewTS>::template BT, SystemModelT, PrimitivesT, DataStructuresT, ConcurrentDataStructuresT>;
 
+	template<template <class P, typename, template <class, class> class> class NewTS>
+	using WithStrategyTaskStorage = PheetEnv<Scheduler::template WithStrategyTaskStorage<NewTS>::template BT, SystemModelT, PrimitivesT, DataStructuresT, ConcurrentDataStructuresT>;
+
 	template<template <class P, typename, typename> class NewTS>
 	using WithPriorityTaskStorage = PheetEnv<Scheduler::template WithPriorityTaskStorage<NewTS>::template BT, SystemModelT, PrimitivesT, DataStructuresT, ConcurrentDataStructuresT>;
 

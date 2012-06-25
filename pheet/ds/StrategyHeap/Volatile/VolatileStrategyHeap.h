@@ -15,7 +15,8 @@ namespace pheet {
 
 
 template <class BaseHeap, typename TT>
-struct VolatileStrategyHeapNode {
+class VolatileStrategyHeapNode {
+public:
 	typedef VolatileStrategyHeapNode<BaseHeap, TT> Self;
 
 	TT data;
@@ -233,8 +234,8 @@ public:
 
 		Strategy* parent_s = comp.deref(this->parent_node->data);
 		Strategy* node_s = comp.deref(node->data);
-		pheet_assert(node_s != nullptr);
-		if(parent_s != nullptr && comp(node_s, parent_s)) {
+	//	pheet_assert(node_s != nullptr);
+		if(parent_s != nullptr && (node_s == nullptr || comp(node_s, parent_s))) {
 			parent->swap_node(this->parent_node, node);
 			node = this->parent_node;
 			node_s = parent_s;
@@ -445,8 +446,8 @@ public:
 			Strategy* max_s = comp.deref(this->max->data);
 			if(max_s != nullptr) {
 				Strategy* node_s = comp.deref(node->data);
-				pheet_assert(node_s != nullptr);
-				if(comp(node_s, max_s)) {
+	//			pheet_assert(node_s != nullptr);
+				if(node_s == nullptr || comp(node_s, max_s)) {
 					this->max = node;
 				}
 			}
@@ -568,6 +569,9 @@ public:
 	T pop();
 	T& peek();
 
+	bool empty() {
+		return is_empty();
+	}
 	bool is_empty();
 	size_t size() { return total_size; }
 
