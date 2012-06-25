@@ -6,12 +6,12 @@
  *	   License: Boost Software License 1.0 (BSL1.0)
  */
 
-#ifndef LOCALITYSTRATEGYLUPIVCRITICALPATHTASK_H_
-#define LOCALITYSTRATEGYLUPIVCRITICALPATHTASK_H_
+#ifndef PPOPPLOCALITYSTRATEGYLUPIVCRITICALPATHTASK_H_
+#define PPOPPLOCALITYSTRATEGYLUPIVCRITICALPATHTASK_H_
 
 #include "../helpers/LUPivPivotTask.h"
-#include "LocalityStrategyLUPivMMTask.h"
-#include "LUPivLocalityStrategy.h"
+#include "../LocalityStrategy/LocalityStrategyLUPivMMTask.h"
+#include "PPoPPLUPivLocalityStrategy.h"
 
 #include <algorithm>
 
@@ -23,10 +23,10 @@ void dgetf2_(int *m, int *n, double *a, int *lda, int *piv, int *info);
 namespace pheet {
 
 template <class Pheet, int BLOCK_SIZE>
-class LocalityStrategyLUPivCriticalPathTask : public Pheet::Task {
+class PPoPPLocalityStrategyLUPivCriticalPathTask : public Pheet::Task {
 public:
-	LocalityStrategyLUPivCriticalPathTask(typename Pheet::Place** owner_info, typename Pheet::Place** block_owners, double* a, double* lu_col, int* pivot, int m, int lda, int n);
-	virtual ~LocalityStrategyLUPivCriticalPathTask();
+	PPoPPLocalityStrategyLUPivCriticalPathTask(typename Pheet::Place** owner_info, typename Pheet::Place** block_owners, double* a, double* lu_col, int* pivot, int m, int lda, int n);
+	virtual ~PPoPPLocalityStrategyLUPivCriticalPathTask();
 
 	virtual void operator()();
 
@@ -42,18 +42,18 @@ private:
 };
 
 template <class Pheet, int BLOCK_SIZE>
-LocalityStrategyLUPivCriticalPathTask<Pheet, BLOCK_SIZE>::LocalityStrategyLUPivCriticalPathTask(typename Pheet::Place** owner_info, typename Pheet::Place** block_owners, double* a, double* lu_col, int* pivot, int m, int lda, int n)
+PPoPPLocalityStrategyLUPivCriticalPathTask<Pheet, BLOCK_SIZE>::PPoPPLocalityStrategyLUPivCriticalPathTask(typename Pheet::Place** owner_info, typename Pheet::Place** block_owners, double* a, double* lu_col, int* pivot, int m, int lda, int n)
 : owner_info(owner_info), block_owners(block_owners), a(a), lu_col(lu_col), pivot(pivot), m(m), lda(lda), n(n) {
 
 }
 
 template <class Pheet, int BLOCK_SIZE>
-LocalityStrategyLUPivCriticalPathTask<Pheet, BLOCK_SIZE>::~LocalityStrategyLUPivCriticalPathTask() {
+PPoPPLocalityStrategyLUPivCriticalPathTask<Pheet, BLOCK_SIZE>::~PPoPPLocalityStrategyLUPivCriticalPathTask() {
 
 }
 
 template <class Pheet, int BLOCK_SIZE>
-void LocalityStrategyLUPivCriticalPathTask<Pheet, BLOCK_SIZE>::operator()() {
+void PPoPPLocalityStrategyLUPivCriticalPathTask<Pheet, BLOCK_SIZE>::operator()() {
 	(*owner_info) = Pheet::get_place();
 
 	pheet_assert(n <= BLOCK_SIZE);
@@ -80,8 +80,8 @@ void LocalityStrategyLUPivCriticalPathTask<Pheet, BLOCK_SIZE>::operator()() {
 		for(int i = 1; i < num_blocks; ++i) {
 			int pos = i * BLOCK_SIZE;
 			Pheet::template
-				spawn_prio<LocalityStrategyLUPivMMTask<Pheet> >(
-						LUPivLocalityStrategy<Pheet>(block_owners[i], 5, 3),
+				spawn_s<LocalityStrategyLUPivMMTask<Pheet> >(
+						PPoPPLUPivLocalityStrategy<Pheet>(block_owners[i], 5, 3),
 						block_owners + i,
 						lu_col + pos, a, a + pos, k, lda);
 		}
