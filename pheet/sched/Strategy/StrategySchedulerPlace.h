@@ -183,7 +183,7 @@ StrategySchedulerPlace<Pheet, CallThreshold>::StrategySchedulerPlace(InternalMac
   stack_filled_left(0), stack_filled_right(stack_size), stack_init_left(0),
   scheduler_state(scheduler_state),
   task_storage(performance_counters.task_storage_performance_counters),
-  stealer(performance_counters.stealer_performance_counters),
+  stealer(task_storage, performance_counters.stealer_performance_counters),
 //  spawn2call_counter(0),
   thread_executor(this),
   task_id(0),
@@ -214,7 +214,7 @@ StrategySchedulerPlace<Pheet, CallThreshold>::StrategySchedulerPlace(LevelDescri
   stack_filled_left(0), stack_filled_right(stack_size), stack_init_left(0),
   scheduler_state(scheduler_state),
   task_storage(performance_counters.task_storage_performance_counters),
-  stealer(performance_counters.stealer_performance_counters),
+  stealer(task_storage, performance_counters.stealer_performance_counters),
 //  spawn2call_counter(0),
   thread_executor(this),
   performance_counters(perf_count) {

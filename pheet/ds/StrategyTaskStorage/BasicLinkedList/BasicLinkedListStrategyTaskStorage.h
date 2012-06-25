@@ -23,7 +23,7 @@
 
 namespace pheet {
 
-template <class Pheet, typename TT, class Stream, class StealerRef>
+template <class Pheet, typename TT, class TaskStorage, class Stream, class StealerRef>
 struct BasicLinkedListStrategyTaskStorageItem {
 	typedef TT Item;
 
@@ -31,6 +31,7 @@ struct BasicLinkedListStrategyTaskStorageItem {
 	TT item;
 	size_t taken;
 	void (Stream::*stealer_push)(StealerRef& stealer);
+	void (Stream::*task_storage_push)(TaskStorage& task_storage, typename Pheet::Scheduler::BaseStrategy* strategy, TT const& stream_ref);
 };
 
 template <class Pheet, typename DataBlock>
@@ -80,7 +81,7 @@ public:
 	typedef StealerT<Pheet, Self> Stealer;
 	typedef typename Stealer::StealerRef StealerRef;
 	typedef BasicLinkedListStrategyTaskStorageStream<Pheet, Self, StealerRef> Stream;
-	typedef BasicLinkedListStrategyTaskStorageItem<Pheet, T, Stream, StealerRef> Item;
+	typedef BasicLinkedListStrategyTaskStorageItem<Pheet, T, Self, Stream, StealerRef> Item;
 	typedef BasicLinkedListStrategyTaskStorageView<Pheet, Item, BlockSize> View;
 	typedef BasicLinkedListStrategyTaskStorageDataBlock<Pheet, Item, View, BlockSize> DataBlock;
 
@@ -190,6 +191,7 @@ void BasicLinkedListStrategyTaskStorageImpl<Pheet, TT, StealerT, StrategyHeapT, 
 	it.item = item;
 	it.taken = back->get_taken_offset();
 	it.stealer_push = &Stream::template stealer_push_ref<Strategy>;
+	it.task_storage_push = &Stream::template task_storage_push<Strategy>;
 
 	LocalRef r;
 	r.block = back;

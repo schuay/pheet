@@ -35,6 +35,7 @@ public:
 
 	bool local_take(size_t index, typename T::Item& ret, View* current_view);
 	bool take(size_t index, size_t stored_taken_offset, typename T::Item& ret);
+	bool take(size_t index, size_t stored_taken_offset);
 	void mark_removed(size_t index, View* current_view);
 	T& peek(size_t index);
 
@@ -134,6 +135,18 @@ bool BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::ta
 	if(data[index].taken == stored_taken_offset) {
 		if(SIZET_CAS(&(data[index].taken), stored_taken_offset, stored_taken_offset + 1)) {
 			ret = data[index].item;
+			return true;
+		}
+	}
+	return false;
+}
+
+template <class Pheet, typename TT, class View, size_t BlockSize>
+bool BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::take(size_t index, size_t stored_taken_offset) {
+	pheet_assert(index < filled);
+
+	if(data[index].taken == stored_taken_offset) {
+		if(SIZET_CAS(&(data[index].taken), stored_taken_offset, stored_taken_offset + 1)) {
 			return true;
 		}
 	}

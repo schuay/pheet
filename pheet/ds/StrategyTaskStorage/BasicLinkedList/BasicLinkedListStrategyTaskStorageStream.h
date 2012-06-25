@@ -36,6 +36,9 @@ public:
 	bool take(Item& item) {
 		return block->take(index, taken_offset, item);
 	}
+	bool take() {
+		return block->take(index, taken_offset);
+	}
 
 	BaseStrategy* get_strategy() {
 		return block->get_strategy(index, taken_offset);
@@ -52,6 +55,7 @@ public:
 	typedef typename TaskStorage::Item Item;
 	typedef typename TaskStorage::View View;
 	typedef typename TaskStorage::DataBlock DataBlock;
+	typedef typename Pheet::Scheduler::BaseStrategy BaseStrategy;
 	typedef BasicLinkedListStrategyTaskStorageStreamRef<Pheet, DataBlock> StreamRef;
 
 	BasicLinkedListStrategyTaskStorageStream(TaskStorage& task_storage);
@@ -95,6 +99,22 @@ public:
 	template <class Strategy>
 	void stealer_push_ref(StealerRef& stealer) {
 		stealer.template push<Strategy>(get_ref());
+	}
+
+	bool task_storage_push(TaskStorage& task_storage, StreamRef& stream_ref) {
+		auto& data = stream_ref.block->get_data(stream_ref.index);
+		auto sp = data.task_storage_push;
+		if(stream_ref.take()) {
+			(this->*sp)(task_storage, data.strategy, data.item);
+			return true;
+		}
+		return false;
+	}
+
+	template <class Strategy>
+	void task_storage_push(TaskStorage& task_storage, BaseStrategy* strategy, typename TaskStorage::T const& data) {
+		Strategy s(*reinterpret_cast<Strategy*>(strategy));
+		task_storage.push(std::move(s), data);
 	}
 private:
 	void check_current_view();
