@@ -26,6 +26,7 @@
 
 #include <pheet/sched/Basic/BasicScheduler.h>
 #include <pheet/sched/Centralized/CentralizedScheduler.h>
+#include <pheet/sched/Strategy/StrategyScheduler.h>
 
 #include <pheet/ds/Queue/GlobalLock/GlobalLockQueue.h>
 #include <pheet/ds/MultiSet/GlobalLock/GlobalLockMultiSet.h>
@@ -44,6 +45,10 @@
 #include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningUpperLowerBoundStrategy.h"
 #include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy.h"
 #include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategy.h"
+
+#include "PPoPPImprovedStrategyBranchBound/PPoPPImprovedStrategyBranchBoundGraphBipartitioning.h"
+
+
 /*
 #include "../../sched/strategies/Fifo/FifoStrategy.h"
 #include "../../sched/strategies/Lifo/LifoStrategy.h"
@@ -129,6 +134,9 @@ void GraphBipartitioningTests::run_test() {
 							ImprovedBranchBoundGraphBipartitioning>();
 	this->run_partitioner<	Pheet::WithScheduler<BasicScheduler>,
 							ImprovedBranchBoundGraphBipartitioning>();
+
+	this->run_partitioner<	Pheet::WithScheduler<StrategyScheduler>,
+							PPoPPImprovedStrategyBranchBoundGraphBipartitioning<>::WithSchedulingStrategy<PPoPPImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategy>::T >();
 
 #endif
 

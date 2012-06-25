@@ -67,8 +67,8 @@ template <class Pheet>
   
   // TODO: port strategy
 
-  return true;
- }
+  return BaseStrategy::prioritize(other);
+}
 
 //template <class Pheet>
 //inline prio_t PPoPPLUPivLocalityStrategy<Pheet>::get_pop_priority(size_t task_id) {
