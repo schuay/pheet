@@ -22,8 +22,8 @@ using namespace std;
 
 namespace pheet {
 
-	template <class Task>
-	class InARowGameTask : public Task
+	template <class Pheet>
+	class InARowGameTask : public Pheet::Task
 	{
 		unsigned int boardWidth;
 		unsigned int boardHeight;
@@ -44,8 +44,7 @@ namespace pheet {
 		}
 		~InARowGameTask() {}
 
-		
-		void operator()(typename Task::TEC& tec)
+		virtual void operator()()
 		{
 			unsigned int turn = 0;
 			unsigned int scenarioPtr = 0;
@@ -101,7 +100,7 @@ namespace pheet {
 				}
 
 				unsigned int computerMove;
-				computerMove = findBestMove(tec);
+				computerMove = findBestMove();
 
 				won = move(computerMove, Computer);
 
@@ -142,7 +141,8 @@ namespace pheet {
 
 		unsigned int eval(char* board, unsigned int x, unsigned int y, bool& winner) 
 		{
-			unsigned int combos[4][2] = {{1,0},{0,1},{1,1},{1,-1}};
+			// TODO was unsigned and had a negative value. Check why
+			int combos[4][2] = {{1,0},{0,1},{1,1},{1,-1}};
 
 			unsigned int val = 0;
 
@@ -159,7 +159,7 @@ namespace pheet {
 			return val;
 		}
 
-		unsigned int connected(char* board, unsigned int x, unsigned int y, unsigned int modx, unsigned int mody)
+		unsigned int connected(char* board,  int x,  int y,  int modx,  int mody)
 		{
 			unsigned int ctr = 0;
 			pheet_assert(y < getBoardHeight());
@@ -219,16 +219,16 @@ namespace pheet {
 			return win;
 		}
 
-		unsigned int findBestMove(typename Task::TEC& tec)
+		unsigned int findBestMove() //typename Task::TEC& tec)
 		{
 			int* vals = new int[boardWidth];
 			memset(vals,0,boardWidth*sizeof(int));
 
 			{
-				typename Task::Finish f(tec);
+				typename Pheet::Finish f;
 				for(unsigned int i=0;i<boardWidth;i++)
 					if(currBoard[(getBoardHeight()-1)*getBoardWidth()+i]==0)
-						tec.template spawn<InARowTask<Task> >(lookAhead, currBoard, i, false, &vals[i], this, 0, i==0);
+						Pheet::template spawn<InARowTask<Pheet> >(lookAhead, currBoard, i, false, &vals[i], this, 0, i==0);
 			}
 
 			unsigned int choice = 0;

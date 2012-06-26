@@ -1,5 +1,5 @@
 /*
-* SORTests.h
+* GraphBiAndLupivTests.h
 *
 *  Created on: 5.12.2011
 *      Author: Daniel Cederman
@@ -7,8 +7,8 @@
 */
 
 
-#ifndef SORTESTS_H_
-#define SORTESTS_H_
+#ifndef GRAPHBIANDLUPIVTESTS_H_
+#define GRAPHBIANDLUPIVTESTS_H_
 
 #include "../Test.h"
 #include "../Tests.h"
@@ -17,15 +17,15 @@
 
 namespace pheet {
 
-	class SORTests : public Tests
+	class GraphBiAndLupivTests : public Tests
 	{
 	public:
 		void run_test(bool usestrategy);
 	private:
-		template <class Scheduler>
-		void test(bool prio);
+		template <class Pheet, template <class P1> class Kernel1, template <class P2> class Kernel2>
+		void test();
 	};
 
 }
 
-#endif /* SORTESTS_H_ */
+#endif /* GRAPHBIANDLUPIVTESTS_H_ */

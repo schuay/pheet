@@ -211,7 +211,7 @@ template<class CallTaskType, typename ... TaskParams>
 inline void StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>::finish(TaskParams&& ... params) {
 	Place* p = get_place();
 	pheet_assert(p != NULL);
-	p->finish<CallTaskType>(std::forward<TaskParams&&>(params) ...);
+	p->template finish<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, template <class P, typename T, template <class, class> class> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
@@ -227,7 +227,7 @@ template<class CallTaskType, typename ... TaskParams>
 inline void StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>::spawn(TaskParams&& ... params) {
 	Place* p = get_place();
 	pheet_assert(p != NULL);
-	p->spawn<CallTaskType>(std::forward<TaskParams&&>(params) ...);
+	p->template spawn<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, template <class P, typename T, template <class, class> class> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
@@ -243,7 +243,7 @@ template<class CallTaskType, class Strategy, typename ... TaskParams>
 inline void StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>::spawn_s(Strategy s, TaskParams&& ... params) {
 	Place* p = get_place();
 	pheet_assert(p != NULL);
-	p->spawn_s<CallTaskType>(std::move(s), std::forward<TaskParams&&>(params) ...);
+	p->template spawn_s<CallTaskType>(std::move(s), std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, template <class P, typename T, template <class, class> class> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>
@@ -275,7 +275,7 @@ template<class CallTaskType, typename ... TaskParams>
 inline void StrategySchedulerImpl<Pheet, TaskStorageT, StealerT, BaseStrategyT>::call(TaskParams&& ... params) {
 	Place* p = get_place();
 	pheet_assert(p != NULL);
-	p->call<CallTaskType>(std::forward<TaskParams&&>(params) ...);
+	p->template call<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, template <class P, typename T, template <class, class> class> class TaskStorageT, template <class P, class TS> class StealerT, template <class P> class BaseStrategyT>

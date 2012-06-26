@@ -9,10 +9,13 @@
 #include "LUPivTests.h"
 #include "Simple/SimpleLUPiv.h"
 #include "LocalityStrategy/LocalityStrategyLUPiv.h"
+#include "PPoPPLocalityStrategy/PPoPPLocalityStrategyLUPiv.h"
+
 
 #include <pheet/pheet.h>
 #include <pheet/sched/Basic/BasicScheduler.h>
 #include <pheet/sched/Finisher/FinisherScheduler.h>
+#include <pheet/sched/Strategy/StrategyScheduler.h>
 #include <pheet/models/MachineModel/HWLoc/HWLocSMTMachineModel.h>
 
 #include <iostream>
@@ -31,7 +34,7 @@ void LUPivTests::run_test() {
 #ifdef LUPIV_TEST
 	std::cout << "----" << std::endl;
 
-	this->run_kernel<	Pheet,
+       	this->run_kernel<	Pheet,
 						LocalityStrategyLUPiv>();
 	this->run_kernel<	Pheet::WithMachineModel<HWLocSMTMachineModel>,
 						LocalityStrategyLUPiv>();
@@ -40,7 +43,9 @@ void LUPivTests::run_test() {
 	this->run_kernel<	Pheet::WithScheduler<BasicScheduler>,
 						SimpleLUPiv>();
 	this->run_kernel<	Pheet::WithScheduler<FinisherScheduler>,
-						SimpleLUPiv>();
+	SimpleLUPiv>();
+        this->run_kernel<       Pheet::WithScheduler<StrategyScheduler>,
+						PPoPPLocalityStrategyLUPiv >();
 #endif
 }
 

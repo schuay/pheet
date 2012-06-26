@@ -16,7 +16,7 @@
 
 namespace pheet {
 
-template <class Scheduler>
+template <class Pheet>
 class UTSRun {
 public:
 	UTSRun(procs_t cpus);
@@ -30,57 +30,53 @@ public:
 	static void print_name();
 	static void print_scheduler_name();
 
-	static procs_t const max_cpus;
 	static char const name[];
 private:
-
-	typename Scheduler::CPUHierarchy cpu_hierarchy;
-	Scheduler scheduler;
+    procs_t cpus;
+	typename Pheet::Environment::PerformanceCounters pc;
 };
 
-template <class Scheduler>
-procs_t const UTSRun<Scheduler>::max_cpus = Scheduler::max_cpus;
+template <class Pheet>
+char const UTSRun<Pheet>::name[] = "UTSRecursiveSearch";
 
-template <class Scheduler>
-char const UTSRun<Scheduler>::name[] = "RecursiveSearch";
-
-template <class Scheduler>
-UTSRun<Scheduler>::UTSRun(procs_t cpus): cpu_hierarchy(cpus), scheduler(&cpu_hierarchy) {
+template <class Pheet>
+UTSRun<Pheet>::UTSRun(procs_t cpus): cpus(cpus) {
 
 }
 
-template <class Scheduler>
-UTSRun<Scheduler>::~UTSRun() {
+template <class Pheet>
+UTSRun<Pheet>::~UTSRun() {
 
 }
 
-template <class Scheduler>
-void UTSRun<Scheduler>::run() {
+template <class Pheet>
+void UTSRun<Pheet>::run() {
 	
 	Node root;
 	uts_initRoot(&root, type);
-	scheduler.template finish<UTSStartTask<typename Scheduler::Task> >(root);
+	typename Pheet::Environment env(cpus,pc);
+	Pheet::template finish<UTSStartTask<Pheet> >(root);
 }
 
-template <class Scheduler>
-void UTSRun<Scheduler>::print_results() {
-	scheduler.print_performance_counter_values();
+template <class Pheet>
+void UTSRun<Pheet>::print_results() {
+	pc.print_values();
 }
 
-template <class Scheduler>
-void UTSRun<Scheduler>::print_headers() {
-	scheduler.print_performance_counter_headers();
+template <class Pheet>
+void UTSRun<Pheet>::print_headers() {
+	Pheet::Environment::PerformanceCounters::print_headers();
 }
 
-template <class Scheduler>
-void UTSRun<Scheduler>::print_name() {
+template <class Pheet>
+void UTSRun<Pheet>::print_name() {
 	std::cout << name;
 }
 
-template <class Scheduler>
-void UTSRun<Scheduler>::print_scheduler_name() {
-	Scheduler::print_name();
+template <class Pheet>
+void UTSRun<Pheet>::print_scheduler_name() {
+	Pheet::Environment::print_name();
 }
 }
 
-#endif /* INAROWGAME_H_ */
+#endif /* UTSRUN_H_ */

@@ -16,7 +16,7 @@
 
 namespace pheet {
 
-template <class Scheduler>
+template <class Pheet>
 class InARowGame {
 public:
 	InARowGame(procs_t cpus, unsigned int width, unsigned int height, unsigned int rowlength, unsigned int lookahead, unsigned int* scenario);
@@ -30,58 +30,55 @@ public:
 	static void print_name();
 	static void print_scheduler_name();
 
-	static procs_t const max_cpus;
 	static char const name[];
 private:
+	unsigned int cpus;
 	unsigned int width;
 	unsigned int height;
 	unsigned int rowlength;
 	unsigned int lookahead;
 	unsigned int* scenario;
-	typename Scheduler::CPUHierarchy cpu_hierarchy;
-	Scheduler scheduler;
+	typename Pheet::Environment::PerformanceCounters pc;
 };
 
-template <class Scheduler>
-procs_t const InARowGame<Scheduler>::max_cpus = Scheduler::max_cpus;
+template <class Pheet>
+char const InARowGame<Pheet>::name[] = "InARowGame";
 
-template <class Scheduler>
-char const InARowGame<Scheduler>::name[] = "RecursiveSearch";
-
-template <class Scheduler>
-InARowGame<Scheduler>::InARowGame(procs_t cpus, unsigned int width, unsigned int height, unsigned int rowlength, unsigned int lookahead, unsigned int* scenario)
-: width(width), height(height), rowlength(rowlength), lookahead(lookahead), scenario(scenario), cpu_hierarchy(cpus), scheduler(&cpu_hierarchy) {
+template <class Pheet>
+InARowGame<Pheet>::InARowGame(procs_t cpus, unsigned int width, unsigned int height, unsigned int rowlength, unsigned int lookahead, unsigned int* scenario)
+:cpus(cpus), width(width), height(height), rowlength(rowlength), lookahead(lookahead), scenario(scenario) {
 
 }
 
-template <class Scheduler>
-InARowGame<Scheduler>::~InARowGame() {
+template <class Pheet>
+InARowGame<Pheet>::~InARowGame() {
 
 }
 
-template <class Scheduler>
-void InARowGame<Scheduler>::run() {
-	scheduler.template finish<InARowGameTask<typename Scheduler::Task> >(width, height, rowlength, lookahead, scenario);
+template <class Pheet>
+void InARowGame<Pheet>::run() {
+	typename Pheet::Environment env(cpus,pc);
+	Pheet::template finish<InARowGameTask<Pheet> >(width, height, rowlength, lookahead, scenario);
 }
 
-template <class Scheduler>
-void InARowGame<Scheduler>::print_results() {
-	scheduler.print_performance_counter_values();
+template <class Pheet>
+void InARowGame<Pheet>::print_results() {
+	pc.print_values();
+	}
+
+template <class Pheet>
+void InARowGame<Pheet>::print_headers() {
+	Pheet::Environment::PerformanceCounters::print_headers();
 }
 
-template <class Scheduler>
-void InARowGame<Scheduler>::print_headers() {
-	scheduler.print_performance_counter_headers();
-}
-
-template <class Scheduler>
-void InARowGame<Scheduler>::print_name() {
+template <class Pheet>
+void InARowGame<Pheet>::print_name() {
 	std::cout << name;
 }
 
-template <class Scheduler>
-void InARowGame<Scheduler>::print_scheduler_name() {
-	Scheduler::print_name();
+template <class Pheet>
+void InARowGame<Pheet>::print_scheduler_name() {
+	Pheet::Environment::print_name();
 }
 }
 

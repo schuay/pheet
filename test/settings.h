@@ -19,5 +19,6 @@ bool const graph_bipartitioning_test_count_upper_bound_changes = false;
 bool const graph_bipartitioning_test_count_allocated_subproblems = false;
 bool const graph_bipartitioning_test_measure_memory_allocation_time = false;
 
+bool const sor_slices_rescheduled_at_same_place = false;
 
 #endif /* PHEET_TEST_SETTINGS_H_ */

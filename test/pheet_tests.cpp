@@ -12,36 +12,66 @@
 #include "sorting/SortingTests.h"
 #include "graph_bipartitioning/GraphBipartitioningTests.h"
 #include "lupiv/LUPivTests.h"
-/*
 #include "inarow/InARowTests.h"
 #include "n-queens/NQueensTests.h"
 #include "lupiv/LUPivTests.h"
 #include "uts/UTSTests.h"
-#include "sor/SORTests.h"*/
+#include "sor/SORTests.h"
+
+#include <map>
+#include <string>
 
 using namespace pheet;
 
 int main(int argc, char* argv[]) {
-  	SortingTests st;
-  	st.run_test();
+
+	std::map<std::string, Tests*> tests;
+
+	SORTests sors;
+
+	tests["SOR"] = &sors;
+	
+	if(argc==3)
+	  {
+	    bool prio;
+	    if(std::string(argv[2])=="Strategy")
+	      prio = true;
+	    else
+	      if(std::string(argv[2])=="Basic")
+		prio = false;
+	      else
+		{
+		  std::cout << "No such scheduler" << std::endl;
+		  return 1;
+		}
+	    
+	    if(tests.find(argv[1])==tests.end())
+	      {
+		std::cout << "No such test" << std::endl;
+		return 1;
+	      }
+	    tests[argv[1]]->run_test(prio);
+	    return 0;
+	  }
+	
+	//	SortingTests st;
+  	//st.run_test();
 
   	GraphBipartitioningTests gpt;
   	gpt.run_test();
-/*
+	return 0;
 	InARowTests iarts;
 	iarts.run_test();
 
 	NQueensTests nqt;
 	nqt.run_test();
-*/
+
 	LUPivTests lpt;
 	lpt.run_test();
-/*
+
 	UTSTests utss;
 	utss.run_test();
 
-	SORTests sors;
-	sors.run_test();*/
 
 	return 0;
 }

@@ -76,7 +76,7 @@ public:
 
 	template <class Strategy>
 	void push(StreamRef stream_ref) {
-		items.push<Strategy>(stream_ref);
+		items.template push<Strategy>(stream_ref);
 	}
 
 private:

@@ -11,12 +11,12 @@
 
 #include <algorithm>
 
-#include "../../../misc/types.h"
+#include "../../../pheet/misc/types.h"
 #include "ParallelRecursiveNQueensTask.h"
 
 namespace pheet {
 
-template <class Scheduler>
+template <class Pheet>
 class ParallelRecursiveNQueens {
 public:
   ParallelRecursiveNQueens(procs_t cpus, size_t N);
@@ -30,26 +30,21 @@ public:
 
   static const procs_t max_cpus;
   static const char name[];
-  static const char * const scheduler_name;
 
 private:
+  size_t cpus;
   size_t N;
-  typename Scheduler::CPUHierarchy cpu_hierarchy;
-  Scheduler scheduler;
+  typename Pheet::Environment::PerformanceCounters pc;
+
 };
 
-template <class Scheduler>
-procs_t const ParallelRecursiveNQueens<Scheduler>::max_cpus = Scheduler::max_cpus;
 
-template <class Scheduler>
+template <class Pheet>
 char const ParallelRecursiveNQueens<Scheduler>::name[] = "Parallel Recursive N-Queens";
 
 template <class Scheduler>
-char const * const ParallelRecursiveNQueens<Scheduler>::scheduler_name = Scheduler::name;
-
-template <class Scheduler>
 ParallelRecursiveNQueens<Scheduler>::ParallelRecursiveNQueens(procs_t cpus, size_t n)
-  : N(n), cpu_hierarchy(cpus), scheduler(&cpu_hierarchy) {
+  : cpus(cpus), N(n) { //, cpu_hierarchy(cpus), scheduler(&cpu_hierarchy) {
 
 }
 
@@ -60,33 +55,34 @@ ParallelRecursiveNQueens<Scheduler>::~ParallelRecursiveNQueens() {
 
 template <class Scheduler>
 int* ParallelRecursiveNQueens<Scheduler>::solve() {
-  typename ParallelRecursiveNQueensTask<typename Scheduler::Task>::subproblem_t* problem;
+  typename ParallelRecursiveNQueensTask<typename Pheet::Task>::subproblem_t* problem;
   int* result = 0;
 
-  problem = (typename ParallelRecursiveNQueensTask<typename Scheduler::Task>::subproblem_t*)malloc(sizeof(typename ParallelRecursiveNQueensTask<typename Scheduler::Task>::subproblem_t));
+  problem = (typename ParallelRecursiveNQueensTask<typename Pheet::Task>::subproblem_t*)malloc(sizeof(typename ParallelRecursiveNQueensTask<typename Pheet::Task>::subproblem_t));
 
   problem->N        = N;
   problem->column   = 0;
   problem->solution = (int*)calloc(N, sizeof(int));
   problem->result   = &result;
-
-  scheduler.template finish<ParallelRecursiveNQueensTask<typename Scheduler::Task> >(problem);
+  {typename Pheet::Environment env(cpus,pc);
+  scheduler.template finish<ParallelRecursiveNQueensTask<typename Pheet::Task> >(problem);
+  }
   return result;
 }
 
 template <class Scheduler>
 void ParallelRecursiveNQueens<Scheduler>::print_results() {
-  scheduler.print_performance_counter_values();
+	pc.print_values();
 }
 
 template <class Scheduler>
 void ParallelRecursiveNQueens<Scheduler>::print_headers() {
-  scheduler.print_performance_counter_headers();
+	Pheet::Environment::PerformanceCounters::print_headers();
 }
 
 template <class Scheduler>
 void ParallelRecursiveNQueens<Scheduler>::print_scheduler_name() {
-  Scheduler::print_name();
+	Pheet::Environment::print_name();
 }
 
 }

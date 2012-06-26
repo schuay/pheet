@@ -188,7 +188,7 @@ void LinkedListStrategyTaskStorageImpl<Pheet, TT, StrategyHeapT, MergeablePriori
 	LocalRef r;
 	r.block = back;
 	r.index = back->push(std::move(it), current_view);
-	heap.push<Strategy>(std::move(r));
+	heap.template push<Strategy>(std::move(r));
 
 	if(back->get_next() != nullptr) {
 		back = back->get_next();

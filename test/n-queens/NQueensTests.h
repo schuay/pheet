@@ -10,7 +10,7 @@
 #define NQUEENSTESTS_H_
 
 #include "../Test.h"
-#include "../../init.h"
+#include "../init.h"
 #include "NQueensTest.h"
 
 namespace pheet {

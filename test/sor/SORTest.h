@@ -9,8 +9,8 @@
 #ifndef SORTEST_H_
 #define SORTEST_H_
 
-#include "../../settings.h"
-#include "../../misc/types.h"
+#include "../../pheet/settings.h"
+#include "../../pheet/misc/types.h"
 #include "../Test.h"
 
 #include <vector>

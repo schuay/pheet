@@ -10,7 +10,9 @@
 
 #ifdef NQUEENS_TEST
 #include "ParallelRecursive/ParallelRecursiveNQueens.h"
+#include <pheet/sched/Strategy/StrategyScheduler.h>
 
+//#include "../test_schedulers.h"
 #include <iostream>
 #endif
 
@@ -28,12 +30,13 @@ void NQueensTests::run_test() {
 #ifdef NQUEENS_TEST
 	std::cout << "----" << std::endl;
 
-	this->run_solver<ParallelRecursiveNQueens<DefaultSynchroneousScheduler> >();
-	this->run_solver<ParallelRecursiveNQueens<DefaultBasicScheduler> >();
-	this->run_solver<ParallelRecursiveNQueens<DefaultMixedModeScheduler> >();
-	this->run_solver<ParallelRecursiveNQueens<PrimitiveHeapPriorityScheduler> >();
-	this->run_solver<ParallelRecursiveNQueens<PrimitivePriorityScheduler> >();
-	this->run_solver<ParallelRecursiveNQueens<FallbackPriorityScheduler> >(); // Problems here?
+	//	this->run_solver<ParallelRecursiveNQueens<DefaultSynchroneousScheduler> >();
+		this->run_solver<ParallelRecursiveNQueens<Pheet::WithScheduler<StrategyScheduler>>>();
+     //           this->run_solver<ParallelRecursiveNQueens<DefaultBasicScheduler> >();
+      //          this->run_solver<ParallelRecursiveNQueens<DefaultMixedModeScheduler> >();
+       //         this->run_solver<ParallelRecursiveNQueens<PrimitiveHeapPriorityScheduler> >();
+        //        this->run_solver<ParallelRecursiveNQueens<PrimitivePriorityScheduler> >();
+         //       this->run_solver<ParallelRecursiveNQueens<FallbackPriorityScheduler> >(); // Problems here?
 #endif
 }
 

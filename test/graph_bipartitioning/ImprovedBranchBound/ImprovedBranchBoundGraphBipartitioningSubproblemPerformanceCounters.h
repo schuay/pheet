@@ -13,6 +13,9 @@
 
 #include "pheet/primitives/PerformanceCounter/Basic/BasicPerformanceCounter.h"
 #include "pheet/primitives/PerformanceCounter/Time/TimePerformanceCounter.h"
+#include "pheet/primitives/PerformanceCounter/Events/EventsList.h"
+#include <vector>
+
 
 namespace pheet {
 
@@ -30,6 +33,7 @@ public:
 	BasicPerformanceCounter<Pheet, graph_bipartitioning_test_count_allocated_subproblems> num_allocated_subproblems;
 
 	TimePerformanceCounter<Pheet, graph_bipartitioning_test_measure_memory_allocation_time> memory_allocation_time;
+	EventsList<Pheet, size_t, false> events;
 };
 
 
@@ -43,7 +47,8 @@ template <class Pheet>
 inline ImprovedBranchBoundGraphBipartitioningSubproblemPerformanceCounters<Pheet>::ImprovedBranchBoundGraphBipartitioningSubproblemPerformanceCounters(ImprovedBranchBoundGraphBipartitioningSubproblemPerformanceCounters<Pheet>& other)
 :num_upper_bound_changes(other.num_upper_bound_changes),
  num_allocated_subproblems(other.num_allocated_subproblems),
- memory_allocation_time(other.memory_allocation_time)
+ memory_allocation_time(other.memory_allocation_time),
+ events(other.events)
 {
 
 }
@@ -65,6 +70,9 @@ inline void ImprovedBranchBoundGraphBipartitioningSubproblemPerformanceCounters<
 	num_upper_bound_changes.print("%d\t");
 	num_allocated_subproblems.print("%d\t");
 	memory_allocation_time.print("%f\t");
+
+
+	events.print();
 }
 
 }

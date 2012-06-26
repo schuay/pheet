@@ -10,9 +10,9 @@
 #define UTSTASK_H_
 
 #include <pheet/pheet.h>
-#include "../../../misc/types.h"
-#include "../../../misc/atomics.h"
-#include "../../test_schedulers.h"
+#include "../../../pheet/misc/types.h"
+#include "../../../pheet/misc/atomics.h"
+//#include "../../test_schedulers.h"
 #include <string.h>
 #include <stdlib.h>
 #include <iostream>
@@ -24,8 +24,8 @@ using namespace std;
 
 namespace pheet {
 
-	template <class Task>
-	class UTSStartTask : public Task 
+	template <class Pheet>
+	class UTSStartTask : public Pheet::Task
 	{
 		Node parent;
 	public:
@@ -33,7 +33,7 @@ namespace pheet {
 		UTSStartTask(Node parent):parent(parent) { }
 		virtual ~UTSStartTask() {}
 
-		void operator()(typename Task::TEC& tec)
+		void operator()() //(typename Task::TEC& tec)
 		{
 			Node child;
 			int parentHeight = parent.height;
@@ -48,7 +48,7 @@ namespace pheet {
 			// construct children and push onto stack
 			if (numChildren > 0) 
 			{
-				typename Task::Finish f(tec);
+				typename Pheet::Finish f;
 				int i, j;
 				child.type = childType;
 				child.height = parentHeight + 1;
@@ -60,7 +60,7 @@ namespace pheet {
 						// TBD:  add parent height to spawn
 						// computeGranularity controls number of rng_spawn calls per node
 						rng_spawn(parent.state.state, child.state.state, i);
-						tec.template spawn<UTSStartTask<Task> >(child);
+						Pheet::template spawn<UTSStartTask<Pheet> >(child);
 						
 					}
 				}

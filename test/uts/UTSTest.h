@@ -9,10 +9,12 @@
 #ifndef UTSTEST_H_
 #define UTSTEST_H_
 
-#include "../../settings.h"
-#include "../../misc/types.h"
+#include "../settings.h"
+#include "../../pheet/misc/types.h"
 #include "../Test.h"
 #include "RecursiveSearch/uts.h"
+#undef max
+#undef min
 
 #include <vector>
 #include <sstream>
