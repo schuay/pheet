@@ -54,24 +54,24 @@ int main(int argc, char* argv[]) {
 	    return 0;
 	  }*/
 	
-	SortingTests st;
-  	st.run_test();
+/*	SortingTests st;
+   	st.run_test();
 
   	GraphBipartitioningTests gpt;
   	gpt.run_test();
-	return 0;
+
 	InARowTests iarts;
 	iarts.run_test();
 
 	NQueensTests nqt;
 	nqt.run_test();
-
+*/
 	LUPivTests lpt;
 	lpt.run_test();
-
+	/*
 	UTSTests utss;
 	utss.run_test();
-
+	*/
 
 	return 0;
 }
