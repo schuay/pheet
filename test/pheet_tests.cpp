@@ -54,7 +54,7 @@ int main(int argc, char* argv[]) {
 	    return 0;
 	  }*/
 	
-/*	SortingTests st;
+	SortingTests st;
    	st.run_test();
 
   	GraphBipartitioningTests gpt;
@@ -65,13 +65,13 @@ int main(int argc, char* argv[]) {
 
 	NQueensTests nqt;
 	nqt.run_test();
-*/
+
 	LUPivTests lpt;
 	lpt.run_test();
-	/*
+	
 	UTSTests utss;
 	utss.run_test();
-	*/
+	
 
 	return 0;
 }
