@@ -21,7 +21,7 @@ public:
 	FifoStrategy2()
 	:time(clock()) {}
 
-	FifoStrategy2(Self& other)
+	FifoStrategy2(Self const& other)
 	:time(other.time) {}
 
 	FifoStrategy2(Self&& other)

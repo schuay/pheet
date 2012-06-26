@@ -24,7 +24,7 @@
 using namespace pheet;
 
 int main(int argc, char* argv[]) {
-
+/*
 	std::map<std::string, Tests*> tests;
 
 	SORTests sors;
@@ -52,10 +52,10 @@ int main(int argc, char* argv[]) {
 	      }
 	    tests[argv[1]]->run_test(prio);
 	    return 0;
-	  }
+	  }*/
 	
-	//	SortingTests st;
-  	//st.run_test();
+	SortingTests st;
+  	st.run_test();
 
   	GraphBipartitioningTests gpt;
   	gpt.run_test();
