@@ -21,7 +21,7 @@ public:
 
 	StrategyQuicksortStrategy(size_t length)
 	: length(length) {
-		this->set_memory_footprint(length);
+	//	this->set_memory_footprint(length);
 		this->set_transitive_weight(length * find_last_bit_set(length));
 	}
 

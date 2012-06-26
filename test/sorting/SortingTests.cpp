@@ -93,14 +93,14 @@ void SortingTests::run_test() {
 						DagQuicksort>();
 #else
 	// default tests
-//	this->run_sorter<	Pheet,
-//						DagQuicksort>();
+	this->run_sorter<	Pheet,
+						DagQuicksort>();
 //	this->run_sorter<	typename Pheet::WithScheduler<StrategyScheduler>::template WithTaskStorage<Pheet::WithScheduler<StrategyScheduler>::Environment::TaskStorage::WithStrategyHeap<VolatileStrategyHeap>::template BT >,
 //						StrategyQuicksort>();
-//	this->run_sorter<	typename Pheet::WithScheduler<StrategyScheduler>,
-//						DagQuicksort>();
 	this->run_sorter<	typename Pheet::WithScheduler<StrategyScheduler>,
 						StrategyQuicksort>();
+	this->run_sorter<	typename Pheet::WithScheduler<StrategyScheduler>,
+						DagQuicksort>();
 	this->run_sorter<	Pheet::WithScheduler<BasicScheduler>,
 						DagQuicksort>();
 //	this->run_sorter<	Pheet::WithScheduler<BasicScheduler>::WithStealingDeque<CircularArrayStealingDeque11>,
