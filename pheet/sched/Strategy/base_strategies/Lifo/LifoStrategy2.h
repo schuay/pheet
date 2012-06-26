@@ -21,7 +21,7 @@ public:
 	LifoStrategy2()
 	:time(0/*clock()*/) {}
 
-	LifoStrategy2(Self& other)
+	LifoStrategy2(Self const& other)
 	:time(other.time) {}
 
 	LifoStrategy2(Self&& other)
