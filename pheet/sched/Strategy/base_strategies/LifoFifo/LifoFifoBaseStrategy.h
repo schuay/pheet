@@ -18,7 +18,7 @@ public:
 	typedef typename Pheet::Place Place;
 
 	LifoFifoBaseStrategy()
-	: place(Pheet::get_place()), task_id(place->next_task_id()), transitive_weight(1024)/*, memory_footprint(1024)*/ {}
+	: place(Pheet::get_place()), task_id(place->next_task_id()), transitive_weight(32)/*, memory_footprint(1024)*/ {}
 
 	LifoFifoBaseStrategy(Self const& other)
 	: place(other.place), task_id(other.task_id), transitive_weight(other.transitive_weight)/*, memory_footprint(other.memory_footprint)*/ {}
@@ -68,16 +68,16 @@ public:
 		transitive_weight = value;
 		return *this;
 	}
-
+/*
 	inline Self& set_memory_footprint(size_t value) {
 		memory_footprint = value;
 		return *this;
-	}
+	}*/
 private:
 	Place* place;
 	ptrdiff_t task_id;
 	size_t transitive_weight;
-	size_t memory_footprint;
+//	size_t memory_footprint;
 };
 
 }
