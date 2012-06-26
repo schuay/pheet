@@ -6,45 +6,45 @@
  *	   License: Boost Software License 1.0 (BSL1.0)
  */
 
-#ifndef IMPROVEDSTRATEGYBRANCHBOUNDGRAPHBIPARTITIONING_H_
-#define IMPROVEDSTRATEGYBRANCHBOUNDGRAPHBIPARTITIONING_H_
+#ifndef PPOPPIMPROVEDSTRATEGYBRANCHBOUNDGRAPHBIPARTITIONING_H_
+#define PPOPPIMPROVEDSTRATEGYBRANCHBOUNDGRAPHBIPARTITIONING_H_
 
 #include "../graph_helpers.h"
 #include "../ImprovedBranchBound/ImprovedBranchBoundGraphBipartitioningSubproblem.h"
 #include "../ImprovedBranchBound/ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic.h"
-#include "ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy.h"
-#include "ImprovedStrategyBranchBoundGraphBipartitioningPerformanceCounters.h"
-#include "ImprovedStrategyBranchBoundGraphBipartitioningTask.h"
+#include "PPoPPImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy.h"
+#include "../ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningPerformanceCounters.h"
+#include "PPoPPImprovedStrategyBranchBoundGraphBipartitioningTask.h"
 
 #include <iostream>
 
 namespace pheet {
 
 template <class Pheet, template <class P, class SP> class Logic, template <class P, class SubProblem> class SchedulingStrategy, size_t MaxSize = 64>
-class ImprovedStrategyBranchBoundGraphBipartitioningImpl {
+class PPoPPImprovedStrategyBranchBoundGraphBipartitioningImpl {
 public:
-	typedef ImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, Logic, SchedulingStrategy, MaxSize> Self;
+	typedef PPoPPImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, Logic, SchedulingStrategy, MaxSize> Self;
 	typedef GraphBipartitioningSolution<MaxSize> Solution;
 	typedef MaxReducer<Pheet, Solution> SolutionReducer;
 	typedef ImprovedStrategyBranchBoundGraphBipartitioningPerformanceCounters<Pheet> PerformanceCounters;
 	typedef ImprovedBranchBoundGraphBipartitioningSubproblem<Pheet, Logic, MaxSize> SubProblem;
-	typedef ImprovedStrategyBranchBoundGraphBipartitioningTask<Pheet, Logic, SchedulingStrategy, MaxSize> BBTask;
+	typedef PPoPPImprovedStrategyBranchBoundGraphBipartitioningTask<Pheet, Logic, SchedulingStrategy, MaxSize> BBTask;
 
 	template <template <class P, class SP> class NewLogic>
-		using WithLogic = ImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, NewLogic, SchedulingStrategy, MaxSize>;
+		using WithLogic = PPoPPImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, NewLogic, SchedulingStrategy, MaxSize>;
 
 	template <template <class P, class SP> class NewStrat>
-		using WithSchedulingStrategy = ImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, Logic, NewStrat, MaxSize>;
+		using WithSchedulingStrategy = PPoPPImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, Logic, NewStrat, MaxSize>;
 
 	template <size_t ms>
-		using WithMaxSize = ImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, Logic, SchedulingStrategy, ms>;
+		using WithMaxSize = PPoPPImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, Logic, SchedulingStrategy, ms>;
 
 	template <class P>
-		using T = ImprovedStrategyBranchBoundGraphBipartitioningImpl<P, Logic, SchedulingStrategy, MaxSize>;
+		using T = PPoPPImprovedStrategyBranchBoundGraphBipartitioningImpl<P, Logic, SchedulingStrategy, MaxSize>;
 
 
-	ImprovedStrategyBranchBoundGraphBipartitioningImpl(GraphVertex* data, size_t size, Solution& solution, PerformanceCounters& pc);
-	~ImprovedStrategyBranchBoundGraphBipartitioningImpl();
+	PPoPPImprovedStrategyBranchBoundGraphBipartitioningImpl(GraphVertex* data, size_t size, Solution& solution, PerformanceCounters& pc);
+	~PPoPPImprovedStrategyBranchBoundGraphBipartitioningImpl();
 
 	void operator()();
 
@@ -61,21 +61,21 @@ private:
 };
 
 template <class Pheet, template <class P, class SubProblem> class Logic, template <class P, class SubProblem> class SchedulingStrategy, size_t MaxSize>
-char const ImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, Logic, SchedulingStrategy, MaxSize>::name[] = "ImprovedStrategyBranchBoundGraphBipartitioning";
+char const PPoPPImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, Logic, SchedulingStrategy, MaxSize>::name[] = "ImprovedStrategyBranchBoundGraphBipartitioning";
 
 template <class Pheet, template <class P, class SubProblem> class Logic, template <class P, class SubProblem> class SchedulingStrategy, size_t MaxSize>
-ImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, Logic, SchedulingStrategy, MaxSize>::ImprovedStrategyBranchBoundGraphBipartitioningImpl(GraphVertex* data, size_t size, Solution& solution, PerformanceCounters& pc)
+PPoPPImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, Logic, SchedulingStrategy, MaxSize>::PPoPPImprovedStrategyBranchBoundGraphBipartitioningImpl(GraphVertex* data, size_t size, Solution& solution, PerformanceCounters& pc)
 : data(data), size(size), solution(solution), pc(pc) {
 
 }
 
 template <class Pheet, template <class P, class SubProblem> class Logic, template <class P, class SubProblem> class SchedulingStrategy, size_t MaxSize>
-ImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, Logic, SchedulingStrategy, MaxSize>::~ImprovedStrategyBranchBoundGraphBipartitioningImpl() {
+PPoPPImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, Logic, SchedulingStrategy, MaxSize>::~PPoPPImprovedStrategyBranchBoundGraphBipartitioningImpl() {
 
 }
 
 template <class Pheet, template <class P, class SubProblem> class Logic, template <class P, class SubProblem> class SchedulingStrategy, size_t MaxSize>
-void ImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, Logic, SchedulingStrategy, MaxSize>::operator()() {
+void PPoPPImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, Logic, SchedulingStrategy, MaxSize>::operator()() {
 	SolutionReducer best;
 
 	size_t ub = std::numeric_limits< size_t >::max();
@@ -94,7 +94,7 @@ void ImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, Logic, Scheduling
 }
 /*
 template <class Pheet, template <class P, class SubProblem> class Logic, template <class P, class SubProblem> class SchedulingStrategy, size_t MaxSize>
-void ImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, Logic, SchedulingStrategy, MaxSize>::partition(SubProblem* sub_problem, size_t* upper_bound, SolutionReducer& best, PerformanceCounters& pc) {
+void PPoPPImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, Logic, SchedulingStrategy, MaxSize>::partition(SubProblem* sub_problem, size_t* upper_bound, SolutionReducer& best, PerformanceCounters& pc) {
 	if(sub_problem->get_lower_bound() >= *upper_bound) {
 		delete sub_problem;
 		pc.num_irrelevant_tasks.incr();
@@ -133,7 +133,7 @@ void ImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, Logic, Scheduling
 }*/
 
 template <class Pheet, template <class P, class SubProblem> class Logic, template <class P, class SubProblem> class SchedulingStrategy, size_t MaxSize>
-void ImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, Logic, SchedulingStrategy, MaxSize>::print_configuration() {
+void PPoPPImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, Logic, SchedulingStrategy, MaxSize>::print_configuration() {
 	Logic<Pheet, SubProblem>::print_name();
 	std::cout << "\t";
 	SchedulingStrategy<Pheet, SubProblem>::print_name();
@@ -141,13 +141,13 @@ void ImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, Logic, Scheduling
 }
 
 template <class Pheet, template <class P, class SubProblem> class Logic, template <class P, class SubProblem> class SchedulingStrategy, size_t MaxSize>
-void ImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, Logic, SchedulingStrategy, MaxSize>::print_headers() {
+void PPoPPImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, Logic, SchedulingStrategy, MaxSize>::print_headers() {
 	std::cout << "logic\tstrategy\t";
 }
 
 template <class Pheet = Pheet>
-using ImprovedStrategyBranchBoundGraphBipartitioning = ImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic, ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy, 64>;
+using PPoPPImprovedStrategyBranchBoundGraphBipartitioning = PPoPPImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic, PPoPPImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy, 64>;
 
 }
 
-#endif /* IMPROVEDSTRATEGYBRANCHBOUNDGRAPHBIPARTITIONING_H_ */
+#endif /* PPOPPIMPROVEDSTRATEGYBRANCHBOUNDGRAPHBIPARTITIONING_H_ */

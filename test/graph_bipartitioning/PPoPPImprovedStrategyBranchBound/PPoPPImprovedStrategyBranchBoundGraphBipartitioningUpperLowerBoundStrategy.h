@@ -6,8 +6,8 @@
  *	   License: Boost Software License 1.0 (BSL1.0)
  */
 
-#ifndef IMPROVEDSTRATEGYBRANCHBOUNDGRAPHBIPARTITIONINGUPPERLOWERBOUNDSTRATEGY_H_
-#define IMPROVEDSTRATEGYBRANCHBOUNDGRAPHBIPARTITIONINGUPPERLOWERBOUNDSTRATEGY_H_
+#ifndef PPOPPIMPROVEDSTRATEGYBRANCHBOUNDGRAPHBIPARTITIONINGUPPERLOWERBOUNDSTRATEGY_H_
+#define PPOPPIMPROVEDSTRATEGYBRANCHBOUNDGRAPHBIPARTITIONINGUPPERLOWERBOUNDSTRATEGY_H_
 
 #include <pheet/pheet.h>
 #include <pheet/sched/strategies/UserDefinedPriority/UserDefinedPriority.h>
@@ -15,28 +15,41 @@
 namespace pheet {
 
 template <class Pheet, class SubProblem>
-class ImprovedStrategyBranchBoundGraphBipartitioningUpperLowerBoundStrategy {
+  class PPoPPImprovedStrategyBranchBoundGraphBipartitioningUpperLowerBoundStrategy : public Pheet::Environment::BaseStrategy {
 public:
-	ImprovedStrategyBranchBoundGraphBipartitioningUpperLowerBoundStrategy();
-	~ImprovedStrategyBranchBoundGraphBipartitioningUpperLowerBoundStrategy();
+    typedef PPoPPImprovedStrategyBranchBoundGraphBipartitioningUpperLowerBoundStrategy<Pheet,SubProblem> Self;
+    typedef typename Pheet::Environment::BaseStrategy BaseStrategy;
+    PPoPPImprovedStrategyBranchBoundGraphBipartitioningUpperLowerBoundStrategy();
+    ~PPoPPImprovedStrategyBranchBoundGraphBipartitioningUpperLowerBoundStrategy();
 
-	UserDefinedPriority<Pheet> operator()(SubProblem* sub_problem, size_t* upper_bound);
-
-	static void print_name();
-};
+    inline bool prioritize(Self& other);
+    
+    //	UserDefinedPriority<Pheet> operator()(SubProblem* sub_problem, size_t* upper_bound);
+    
+    static void print_name();
+  };
 
 template <class Pheet, class SubProblem>
-inline ImprovedStrategyBranchBoundGraphBipartitioningUpperLowerBoundStrategy<Pheet, SubProblem>::ImprovedStrategyBranchBoundGraphBipartitioningUpperLowerBoundStrategy() {
+inline PPoPPImprovedStrategyBranchBoundGraphBipartitioningUpperLowerBoundStrategy<Pheet, SubProblem>::PPoPPImprovedStrategyBranchBoundGraphBipartitioningUpperLowerBoundStrategy() {
 
 }
 
 template <class Pheet, class SubProblem>
-inline ImprovedStrategyBranchBoundGraphBipartitioningUpperLowerBoundStrategy<Pheet, SubProblem>::~ImprovedStrategyBranchBoundGraphBipartitioningUpperLowerBoundStrategy() {
+inline PPoPPImprovedStrategyBranchBoundGraphBipartitioningUpperLowerBoundStrategy<Pheet, SubProblem>::~PPoPPImprovedStrategyBranchBoundGraphBipartitioningUpperLowerBoundStrategy() {
 
 }
 
+
+ template <class Pheet, class SubProblem>
+   inline bool PPoPPImprovedStrategyBranchBoundGraphBipartitioningUpperLowerBoundStrategy<Pheet, SubProblem>::prioritize(Self& other)
+   {
+     // TODO port strategy
+     return BaseStrategy::prioritize(other);
+   }
+
+/*
 template <class Pheet, class SubProblem>
-UserDefinedPriority<Pheet> ImprovedStrategyBranchBoundGraphBipartitioningUpperLowerBoundStrategy<Pheet, SubProblem>::operator()(SubProblem* sub_problem, size_t* upper_bound) {
+UserDefinedPriority<Pheet> PPoPPImprovedStrategyBranchBoundGraphBipartitioningUpperLowerBoundStrategy<Pheet, SubProblem>::operator()(SubProblem* sub_problem, size_t* upper_bound) {
 	size_t lb = sub_problem->get_lower_bound();
 	size_t ub = sub_problem->get_upper_bound();
 
@@ -52,11 +65,12 @@ UserDefinedPriority<Pheet> ImprovedStrategyBranchBoundGraphBipartitioningUpperLo
 
 	return UserDefinedPriority<Pheet>(prio_pop, prio_steal);
 }
+*/
 
 template <class Pheet, class SubProblem>
-inline void ImprovedStrategyBranchBoundGraphBipartitioningUpperLowerBoundStrategy<Pheet, SubProblem>::print_name() {
+inline void PPoPPImprovedStrategyBranchBoundGraphBipartitioningUpperLowerBoundStrategy<Pheet, SubProblem>::print_name() {
 	std::cout << "UpperLowerBoundStrategy";
 }
 
 }
-#endif /* IMPROVEDSTRATEGYBRANCHBOUNDGRAPHBIPARTITIONINGUPPERLOWERBOUNDSTRATEGY_H_ */
+#endif /* PPOPPIMPROVEDSTRATEGYBRANCHBOUNDGRAPHBIPARTITIONINGUPPERLOWERBOUNDSTRATEGY_H_ */

@@ -6,25 +6,25 @@
  *	   License: Boost Software License 1.0 (BSL1.0)
  */
 
-#ifndef IMPROVEDSTRATEGYBRANCHBOUNDGRAPHBIPARTITIONINGTASK_H_
-#define IMPROVEDSTRATEGYBRANCHBOUNDGRAPHBIPARTITIONINGTASK_H_
+#ifndef PPOPPIMPROVEDSTRATEGYBRANCHBOUNDGRAPHBIPARTITIONINGTASK_H_
+#define PPOPPIMPROVEDSTRATEGYBRANCHBOUNDGRAPHBIPARTITIONINGTASK_H_
 
 #include "../ImprovedBranchBound/ImprovedBranchBoundGraphBipartitioningSubproblem.h"
-#include "ImprovedStrategyBranchBoundGraphBipartitioningPerformanceCounters.h"
+#include "../ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningPerformanceCounters.h"
 
 namespace pheet {
 
 template <class Pheet, template <class P, class SP> class Logic, template <class P, class SubProblem> class SchedulingStrategy, size_t MaxSize = 64>
-class ImprovedStrategyBranchBoundGraphBipartitioningTask : public Pheet::Task {
+class PPoPPImprovedStrategyBranchBoundGraphBipartitioningTask : public Pheet::Task {
 public:
-	typedef ImprovedStrategyBranchBoundGraphBipartitioningTask<Pheet, Logic, SchedulingStrategy, MaxSize> Self;
+	typedef PPoPPImprovedStrategyBranchBoundGraphBipartitioningTask<Pheet, Logic, SchedulingStrategy, MaxSize> Self;
 	typedef GraphBipartitioningSolution<MaxSize> Solution;
 	typedef MaxReducer<Pheet, Solution> SolutionReducer;
 	typedef ImprovedStrategyBranchBoundGraphBipartitioningPerformanceCounters<Pheet> PerformanceCounters;
 	typedef ImprovedBranchBoundGraphBipartitioningSubproblem<Pheet, Logic, MaxSize> SubProblem;
 
-	ImprovedStrategyBranchBoundGraphBipartitioningTask(SubProblem* sub_problem, size_t* upper_bound, SolutionReducer& best, PerformanceCounters& pc);
-	virtual ~ImprovedStrategyBranchBoundGraphBipartitioningTask();
+	PPoPPImprovedStrategyBranchBoundGraphBipartitioningTask(SubProblem* sub_problem, size_t* upper_bound, SolutionReducer& best, PerformanceCounters& pc);
+	virtual ~PPoPPImprovedStrategyBranchBoundGraphBipartitioningTask();
 
 	virtual void operator()();
 
@@ -32,25 +32,25 @@ private:
 	SubProblem* sub_problem;
 	size_t* upper_bound;
 	SolutionReducer best;
-	SchedulingStrategy<Pheet, SubProblem> strategy;
+typedef SchedulingStrategy<Pheet, SubProblem> Strategy; // strategy;
 	PerformanceCounters pc;
 };
 
 template <class Pheet, template <class P, class SubProblem> class Logic, template <class P, class SubProblem> class SchedulingStrategy, size_t MaxSize>
-ImprovedStrategyBranchBoundGraphBipartitioningTask<Pheet, Logic, SchedulingStrategy, MaxSize>::ImprovedStrategyBranchBoundGraphBipartitioningTask(SubProblem* sub_problem, size_t* upper_bound, SolutionReducer& best, PerformanceCounters& pc)
+PPoPPImprovedStrategyBranchBoundGraphBipartitioningTask<Pheet, Logic, SchedulingStrategy, MaxSize>::PPoPPImprovedStrategyBranchBoundGraphBipartitioningTask(SubProblem* sub_problem, size_t* upper_bound, SolutionReducer& best, PerformanceCounters& pc)
 : sub_problem(sub_problem), upper_bound(upper_bound), best(best), pc(pc) {
 
 }
 
 template <class Pheet, template <class P, class SubProblem> class Logic, template <class P, class SubProblem> class SchedulingStrategy, size_t MaxSize>
-ImprovedStrategyBranchBoundGraphBipartitioningTask<Pheet, Logic, SchedulingStrategy, MaxSize>::~ImprovedStrategyBranchBoundGraphBipartitioningTask() {
+PPoPPImprovedStrategyBranchBoundGraphBipartitioningTask<Pheet, Logic, SchedulingStrategy, MaxSize>::~PPoPPImprovedStrategyBranchBoundGraphBipartitioningTask() {
 	if(sub_problem != NULL) {
 		delete sub_problem;
 	}
 }
 
 template <class Pheet, template <class P, class SubProblem> class Logic, template <class P, class SubProblem> class SchedulingStrategy, size_t MaxSize>
-void ImprovedStrategyBranchBoundGraphBipartitioningTask<Pheet, Logic, SchedulingStrategy, MaxSize>::operator()() {
+void PPoPPImprovedStrategyBranchBoundGraphBipartitioningTask<Pheet, Logic, SchedulingStrategy, MaxSize>::operator()() {
 	if(sub_problem->get_lower_bound() >= *upper_bound) {
 		pc.num_irrelevant_tasks.incr();
 		return;
@@ -64,7 +64,7 @@ void ImprovedStrategyBranchBoundGraphBipartitioningTask<Pheet, Logic, Scheduling
 	}
 	else if(sub_problem->get_lower_bound() < *upper_bound) {
 		Pheet::template
-			spawn_prio<Self>(strategy(sub_problem, upper_bound),
+			spawn_s<Self>(Strategy(sub_problem, upper_bound),
 				sub_problem, upper_bound, best, pc);
 		// Make sure subproblem doesn't get deleted in destructor
 		sub_problem = NULL;
@@ -76,7 +76,7 @@ void ImprovedStrategyBranchBoundGraphBipartitioningTask<Pheet, Logic, Scheduling
 	}
 	else if(sub_problem2->get_lower_bound() < *upper_bound) {
 		Pheet::template
-			spawn_prio<Self>(strategy(sub_problem2, upper_bound),
+			spawn_s<Self>(Strategy(sub_problem2, upper_bound),
 				sub_problem2, upper_bound, best, pc);
 	}
 	else {
