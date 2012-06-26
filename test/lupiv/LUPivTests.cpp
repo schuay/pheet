@@ -7,9 +7,11 @@
  */
 
 #include "LUPivTests.h"
+#ifdef LUPIV_TEST
 #include "Simple/SimpleLUPiv.h"
 #include "LocalityStrategy/LocalityStrategyLUPiv.h"
 #include "PPoPPLocalityStrategy/PPoPPLocalityStrategyLUPiv.h"
+#endif
 
 
 #include <pheet/pheet.h>
@@ -34,17 +36,24 @@ void LUPivTests::run_test() {
 #ifdef LUPIV_TEST
 	std::cout << "----" << std::endl;
 
-       	this->run_kernel<	Pheet,
-						LocalityStrategyLUPiv>();
-	this->run_kernel<	Pheet::WithMachineModel<HWLocSMTMachineModel>,
-						LocalityStrategyLUPiv>();
-	this->run_kernel<	Pheet,
-						SimpleLUPiv>();
-	this->run_kernel<	Pheet::WithScheduler<BasicScheduler>,
-						SimpleLUPiv>();
-	this->run_kernel<	Pheet::WithScheduler<FinisherScheduler>,
-	SimpleLUPiv>();
-        this->run_kernel<       Pheet::WithScheduler<StrategyScheduler>,
+       	//this->run_kernel<	Pheet,
+	//					LocalityStrategyLUPiv>();
+	//this->run_kernel<	Pheet::WithMachineModel<HWLocSMTMachineModel>,
+	//					LocalityStrategyLUPiv>();
+	//this->run_kernel<	Pheet,
+	//					SimpleLUPiv>();
+	// this->run_kernel<	Pheet::WithScheduler<BasicScheduler>,
+	//					SimpleLUPiv>();
+  //this->run_kernel<       Pheet::WithScheduler<BasicScheduler>,
+	//			SimpleLUPiv>();
+
+	//	this->run_kernel<	Pheet::WithScheduler<FinisherScheduler>,
+	//SimpleLUPiv>();
+
+	//	this->run_kernel<       Pheet::WithScheduler<BasicScheduler>,
+	//                        PPoPPLocalityStrategyLUPiv>();
+
+	  this->run_kernel<       Pheet::WithScheduler<StrategyScheduler>,
 						PPoPPLocalityStrategyLUPiv >();
 #endif
 }
