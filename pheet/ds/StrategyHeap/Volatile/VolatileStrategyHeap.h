@@ -336,7 +336,9 @@ private:
 			return;
 		}
 
-		size_t init = 0;
+		// Since we compare with degree variable, let's use the same type
+		// Otherwise gcc 4.7 gives an signed/unsigned warning for whatever reason (even if both are unsigned types)
+		uint8_t init = 0;
 		Node* helper[65];
 		Strategy* helper_s[65];
 
