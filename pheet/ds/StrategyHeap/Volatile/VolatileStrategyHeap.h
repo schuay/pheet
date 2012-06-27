@@ -524,7 +524,7 @@ private:
 			return;
 		}
 
-		size_t init = 0;
+		uint8_t init = 0;
 		Node* helper[65];
 		Strategy* helper_s[65];
 

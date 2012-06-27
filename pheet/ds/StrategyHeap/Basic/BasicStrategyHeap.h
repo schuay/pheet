@@ -117,6 +117,7 @@ public:
 
 	T pop() {
 		pheet_assert(!heap.empty());
+		pheet_assert(heap.size() == 1 || !comp(heap[0]->peek(), heap[1]->peek()));
 		return heap[0]->pop();
 	}
 
@@ -230,6 +231,7 @@ public:
 
 	T pop() {
 		pheet_assert(!heap.empty());
+		pheet_assert(heap.size() == 1 || !comp(heap[0]->peek(), heap[1]->peek()));
 		return heap[0]->pop();
 	}
 
