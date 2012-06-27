@@ -827,9 +827,9 @@ inline void StrategySchedulerPlace<Pheet, CallThreshold>::spawn_s(Strategy&& s, 
 	}
 	else {
 		// TUNE: offsets and parameters
-		size_t weight = (s.get_transitive_weight() >> 9);
+		size_t weight = s.get_transitive_weight();
 		size_t current_tasks = task_storage.size();
-		size_t threshold = ((current_tasks * current_tasks /*<< 4*/) /** (1 + (s.get_memory_footprint() >> 4))*/);
+		size_t threshold = (current_tasks * current_tasks);
 		if(weight > threshold) {
 		//	spawn2call_counter = 0;
 
