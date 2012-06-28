@@ -124,6 +124,8 @@ public:
 	template <typename IntT> static IntT rand_int(IntT min, IntT max);
 	static Place* get_place();
 	static procs_t get_place_id();
+// TODO:	static procs_t get_num_places();
+// TODO:	static Place* get_place_at(procs_t place_id);
 	template <typename T> static T& place_singleton();
 
 private:
@@ -250,6 +252,20 @@ PheetEnv<SchedulerT, SystemModelT, PrimitivesT, DataStructuresT, ConcurrentDataS
 		return 0;
 	}
 	return place->get_id();
+}
+
+template <template <class Env> class SchedulerT, template <class Env> class SystemModelT, template <class Env> class PrimitivesT, template <class Env> class DataStructuresT, template <class Env> class ConcurrentDataStructuresT>
+inline
+procs_t
+PheetEnv<SchedulerT, SystemModelT, PrimitivesT, DataStructuresT, ConcurrentDataStructuresT>::get_num_places() {
+	return Scheduler::get_num_places();
+}
+
+template <template <class Env> class SchedulerT, template <class Env> class SystemModelT, template <class Env> class PrimitivesT, template <class Env> class DataStructuresT, template <class Env> class ConcurrentDataStructuresT>
+inline
+typename PheetEnv<SchedulerT, SystemModelT, PrimitivesT, DataStructuresT, ConcurrentDataStructuresT>::Place*
+PheetEnv<SchedulerT, SystemModelT, PrimitivesT, DataStructuresT, ConcurrentDataStructuresT>::get_place_at(procs_t place_id) {
+	return Scheduler::get_place_at(place_id);
 }
 
 template <template <class Env> class SchedulerT, template <class Env> class SystemModelT, template <class Env> class PrimitivesT, template <class Env> class DataStructuresT, template <class Env> class ConcurrentDataStructuresT>
