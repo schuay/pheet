@@ -68,6 +68,10 @@ public:
 		transitive_weight = value;
 		return *this;
 	}
+
+	inline bool forbid_call_conversion() {
+		return false;
+	}
 /*
 	inline Self& set_memory_footprint(size_t value) {
 		memory_footprint = value;
