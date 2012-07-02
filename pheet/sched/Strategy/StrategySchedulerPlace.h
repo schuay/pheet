@@ -169,7 +169,7 @@ private:
 };
 
 template <class Pheet, uint8_t CallThreshold>
-size_t const StrategySchedulerPlace<Pheet, CallThreshold>::stack_size = (8192 > (64 << CallThreshold))?8192:(64 << CallThreshold);
+size_t const StrategySchedulerPlace<Pheet, CallThreshold>::stack_size = (16384 > (64 << CallThreshold))?16384:(64 << CallThreshold);
 
 template <class Pheet, uint8_t CallThreshold>
 thread_local StrategySchedulerPlace<Pheet, CallThreshold>*
@@ -693,7 +693,7 @@ void StrategySchedulerPlace<Pheet, CallThreshold>::start_finish_region() {
 	// Not allowed any more. may only be called if freed_stack_elements is empty
 //	empty_stack();
 
-	if(stack_filled_right < stack_size && stack[stack_filled_right].num_spawned == 1) {
+	if(stack_filled_right < stack_size && current_task_parent == (&stack[stack_filled_right]) && stack[stack_filled_right].num_spawned == 1) {
 		++(stack[stack_filled_right].reused_finish_depth);
 	}
 	else {

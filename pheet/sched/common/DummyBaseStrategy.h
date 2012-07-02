@@ -19,7 +19,7 @@ public:
 	DummyBaseStrategy()
 	: transitive_weight(1024)/*, memory_footprint(1024)*/ {}
 
-	DummyBaseStrategy(Self& other)
+	DummyBaseStrategy(Self const& other)
 	: transitive_weight(other.transitive_weight) {}
 
 	DummyBaseStrategy(Self&& other)

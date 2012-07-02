@@ -88,17 +88,20 @@ private:
 template <class Pheet, typename TT, class View, size_t BlockSize>
 BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::BasicLinkedListStrategyTaskStorageDataBlock(size_t id, Self* prev)
 :id(id), prev(prev), next(nullptr), orig_prev(prev), orig_next(next), next_freed(nullptr), filled(0), active(BlockSize), taken_offset(0) {
-
+	if(orig_prev != nullptr) {
+		pheet_assert(orig_prev->orig_next == nullptr);
+		orig_prev->orig_next = this;
+	}
 }
 
 template <class Pheet, typename TT, class View, size_t BlockSize>
 BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::~BasicLinkedListStrategyTaskStorageDataBlock() {
 	reset_content();
 	if(orig_prev != nullptr) {
-		orig_prev->next = next;
+		orig_prev->orig_next = orig_next;
 	}
 	if(orig_next != nullptr) {
-		orig_next->prev = prev;
+		orig_next->orig_prev = orig_prev;
 	}
 }
 

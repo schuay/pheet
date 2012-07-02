@@ -17,6 +17,7 @@
 #include "lupiv/LUPivTests.h"
 #include "uts/UTSTests.h"
 #include "sor/SORTests.h"
+#include "prefix_sum/PrefixSumTests.h"
 
 #include <map>
 #include <string>
@@ -72,6 +73,9 @@ int main(int argc, char* argv[]) {
 	UTSTests utss;
 	utss.run_test();
 	*/
+
+	PrefixSumTests pst;
+	pst.run_test();
 
 	return 0;
 }

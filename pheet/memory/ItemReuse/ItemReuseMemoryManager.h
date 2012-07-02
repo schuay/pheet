@@ -24,10 +24,11 @@ public:
 	}
 
 	~ItemReuseMemoryManager() {
-		while(head != tail) {
-			Item* next = head->next;
-			delete head;
-			head = next;
+		Item* next = head->next;
+		while(next != head) {
+			Item* nnext = next->next;
+			delete next;
+			next = nnext;
 		}
 		delete head;
 	}

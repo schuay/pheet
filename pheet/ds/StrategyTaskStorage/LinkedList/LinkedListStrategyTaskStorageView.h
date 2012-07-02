@@ -41,7 +41,7 @@ public:
 	bool try_register();
 	void deregister();
 
-	bool needs_cleanup() { return active_blocks < freed_blocks.size(); }
+	bool needs_cleanup() { return false;/* active_blocks < freed_blocks.size();*/ }
 
 	bool try_reuse();
 

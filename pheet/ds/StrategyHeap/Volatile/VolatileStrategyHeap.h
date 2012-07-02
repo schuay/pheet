@@ -247,6 +247,7 @@ public:
 			return;
 		}
 		node->weight = node_s->get_transitive_weight();
+		pheet_assert(node->weight != 0);
 		this->total_weight += node->weight;
 
 		Strategy* parent_s = comp.deref(this->parent_node->data);
@@ -350,6 +351,7 @@ private:
 		do {
 			node = next;
 			next = node->next;
+			pheet_assert(node->weight != 0);
 			pheet_assert(node->d < 64);
 			for(; init <= node->d; ++init) {
 				helper[init] = nullptr;
@@ -366,7 +368,8 @@ private:
 			while(helper[tmp->d] != nullptr) {
 			//	pheet_assert(count_nodes(max) == _size);
 
-				if(helper[tmp->d] == this->max || (comp(helper_s[tmp->d], node_s))) {
+				if(helper[tmp->d] == this->max ||
+						(comp(helper_s[tmp->d], node_s))) {
 					pheet_assert(tmp != this->max);
 					this->combine_trees(tmp, helper[tmp->d]);
 					tmp = helper[tmp->d];
@@ -403,7 +406,7 @@ public:
 	typedef typename Base::Node Node;
 
 	VolatileStrategyHeapHeap(size_t& total_size, size_t& total_weight, StrategyRetriever& sr, std::map<std::type_index, Base*>& heap_heaps)
-	:Base(total_size, total_weight), comp(sr) {
+	:Base(total_size, total_weight), comp(sr), reconsolidate(false) {
 
 	}
 
@@ -458,6 +461,7 @@ public:
 			return;
 		}
 		node->weight = node_s->get_transitive_weight();
+		pheet_assert(node->weight);
 		this->total_weight += node->weight;
 
 		if(this->max == nullptr) {
@@ -534,6 +538,7 @@ private:
 		do {
 			node = next;
 			next = node->next;
+			pheet_assert(node->weight != 0);
 			pheet_assert(node->d < 64);
 			for(; init <= node->d; ++init) {
 				helper[init] = nullptr;
@@ -550,7 +555,9 @@ private:
 			while(helper[tmp->d] != nullptr) {
 			//	pheet_assert(count_nodes(max) == _size);
 
-				if(helper[tmp->d] == this->max || (tmp != this->max && comp(helper_s[tmp->d], node_s))) {
+				if(helper[tmp->d] == this->max ||
+						(tmp != this->max &&
+								comp(helper_s[tmp->d], node_s))) {
 			//		pheet_assert(tmp != this->max);
 					this->combine_trees(tmp, helper[tmp->d]);
 					node_s = helper_s[tmp->d];

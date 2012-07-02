@@ -253,7 +253,7 @@ PheetEnv<SchedulerT, SystemModelT, PrimitivesT, DataStructuresT, ConcurrentDataS
 	}
 	return place->get_id();
 }
-
+/*
 template <template <class Env> class SchedulerT, template <class Env> class SystemModelT, template <class Env> class PrimitivesT, template <class Env> class DataStructuresT, template <class Env> class ConcurrentDataStructuresT>
 inline
 procs_t
@@ -267,7 +267,7 @@ typename PheetEnv<SchedulerT, SystemModelT, PrimitivesT, DataStructuresT, Concur
 PheetEnv<SchedulerT, SystemModelT, PrimitivesT, DataStructuresT, ConcurrentDataStructuresT>::get_place_at(procs_t place_id) {
 	return Scheduler::get_place_at(place_id);
 }
-
+*/
 template <template <class Env> class SchedulerT, template <class Env> class SystemModelT, template <class Env> class PrimitivesT, template <class Env> class DataStructuresT, template <class Env> class ConcurrentDataStructuresT>
 template <typename IntT>
 inline
