@@ -11,6 +11,7 @@
 #ifdef PREFIX_SUM_TEST
 #include "Sequential/SequentialPrefixSum.h"
 #include "NaiveParallel/NaiveParallelPrefixSum.h"
+#include "RecursiveParallel/RecursiveParallelPrefixSum.h"
 #include "Parallel/ParallelPrefixSum.h"
 #include "Strategy/StrategyPrefixSum.h"
 
@@ -61,6 +62,9 @@ void PrefixSumTests::run_test() {
 
 	this->run_prefix_sum<	Pheet::WithScheduler<BasicScheduler>,
 						ParallelPrefixSum>();
+
+	this->run_prefix_sum<	Pheet::WithScheduler<BasicScheduler>,
+						RecursiveParallelPrefixSum>();
 
 	this->run_prefix_sum<	Pheet::WithScheduler<BasicScheduler>,
 						StrategyPrefixSum>();
