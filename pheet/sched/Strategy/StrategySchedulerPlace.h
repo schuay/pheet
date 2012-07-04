@@ -169,7 +169,7 @@ private:
 };
 
 template <class Pheet, uint8_t CallThreshold>
-size_t const StrategySchedulerPlace<Pheet, CallThreshold>::stack_size = (8192 > (64 << CallThreshold))?8192:(64 << CallThreshold);
+size_t const StrategySchedulerPlace<Pheet, CallThreshold>::stack_size = (16384 > (64 << CallThreshold))?16384:(64 << CallThreshold);
 
 template <class Pheet, uint8_t CallThreshold>
 thread_local StrategySchedulerPlace<Pheet, CallThreshold>*
@@ -693,7 +693,7 @@ void StrategySchedulerPlace<Pheet, CallThreshold>::start_finish_region() {
 	// Not allowed any more. may only be called if freed_stack_elements is empty
 //	empty_stack();
 
-	if(stack_filled_right < stack_size && stack[stack_filled_right].num_spawned == 1) {
+	if(stack_filled_right < stack_size && current_task_parent == (&stack[stack_filled_right]) && stack[stack_filled_right].num_spawned == 1) {
 		++(stack[stack_filled_right].reused_finish_depth);
 	}
 	else {
@@ -792,10 +792,10 @@ inline void StrategySchedulerPlace<Pheet, CallThreshold>::spawn_s(Strategy&& s, 
 	}
 	else {
 		// TUNE: offsets and parameters
-		size_t weight /*+*/= (s.get_transitive_weight() );
-		size_t current_tasks = task_storage.size() /*<< 2*/;
-		size_t threshold = ((current_tasks * current_tasks /*<< 4*/) /** (1 + (s.get_memory_footprint() >> 4))*/);
-		if(weight > threshold) {
+		size_t weight = (s.get_transitive_weight());
+		size_t current_tasks = task_storage.size();
+		size_t threshold = (current_tasks * current_tasks);
+		if(s.forbid_call_conversion() || weight > threshold) {
 		//	spawn2call_counter = 0;
 
 			performance_counters.num_actual_spawns.incr();
@@ -827,9 +827,9 @@ inline void StrategySchedulerPlace<Pheet, CallThreshold>::spawn_s(Strategy&& s, 
 	}
 	else {
 		// TUNE: offsets and parameters
-		size_t weight = (s.get_transitive_weight());
+		size_t weight = s.get_transitive_weight();
 		size_t current_tasks = task_storage.size();
-		size_t threshold = ((current_tasks * current_tasks /*<< 4*/) /** (1 + (s.get_memory_footprint() >> 4))*/);
+		size_t threshold = (current_tasks * current_tasks);
 		if(weight > threshold) {
 		//	spawn2call_counter = 0;
 
@@ -877,7 +877,6 @@ procs_t StrategySchedulerPlace<Pheet, CallThreshold>::get_distance(Self* other) 
 	}
 
 	procs_t offset = std::max(levels[num_levels - 1].memory_level, other->levels[other->num_levels - 1].memory_level);
-
 	procs_t i = std::min(num_levels - 1, other->num_levels - 1);
 	while(levels[i].global_id_offset != other->levels[i].global_id_offset) {
 		pheet_assert(i > 0);

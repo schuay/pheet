@@ -25,12 +25,12 @@ private:
 
 template <class Pheet>
 FinishRegion<Pheet>::FinishRegion() {
-	Pheet::Environment::get_place()->start_finish_region();
+	Pheet::get_place()->start_finish_region();
 }
 
 template <class Pheet>
 FinishRegion<Pheet>::~FinishRegion() {
-	Pheet::Environment::get_place()->end_finish_region();
+	Pheet::get_place()->end_finish_region();
 }
 
 }

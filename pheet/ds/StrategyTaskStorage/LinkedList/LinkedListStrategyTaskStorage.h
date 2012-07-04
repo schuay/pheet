@@ -26,6 +26,15 @@ template <class Pheet, typename TT>
 struct LinkedListStrategyTaskStorageItem {
 	typedef TT Item;
 
+	LinkedListStrategyTaskStorageItem()
+	:strategy(nullptr), taken(0) {
+
+	}
+	~LinkedListStrategyTaskStorageItem() {
+		if(strategy != nullptr) {
+			delete strategy;
+		}
+	}
 	typename Pheet::Scheduler::BaseStrategy* strategy;
 	TT item;
 	int taken;

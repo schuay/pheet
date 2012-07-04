@@ -7,9 +7,11 @@
  */
 
 #include "LUPivTests.h"
+#ifdef LUPIV_TEST
 #include "Simple/SimpleLUPiv.h"
 #include "LocalityStrategy/LocalityStrategyLUPiv.h"
 #include "PPoPPLocalityStrategy/PPoPPLocalityStrategyLUPiv.h"
+#endif
 
 
 #include <pheet/pheet.h>

@@ -116,6 +116,8 @@ public:
 	}*/
 
 	T pop() {
+		pheet_assert(!heap.empty());
+		pheet_assert(heap.size() == 1 || !comp(heap[0]->peek(), heap[1]->peek()));
 		return heap[0]->pop();
 	}
 
@@ -144,6 +146,7 @@ public:
 	}
 
 	void pop_index(size_t index) {
+		pheet_assert(index < heap.size());
 		if(index == heap.size() - 1) {
 			heap.pop_back();
 			if(index == 0) {
@@ -153,6 +156,7 @@ public:
 		else {
 			heap[index] = heap.back();
 			heap[index]->parent_index = index;
+			heap.pop_back();
 			size_t ni = bubble_up(index);
 			if(ni == index) {
 				bubble_down(index);
@@ -162,6 +166,11 @@ public:
 				parent->reorder_index(this->parent_index);
 			}
 		}
+	}
+
+	bool verify_parent_index(size_t index) {
+		pheet_assert(index < heap.size());
+		return heap[index]->parent_index == index;
 	}
 
 private:
@@ -221,6 +230,8 @@ public:
 	}
 
 	T pop() {
+		pheet_assert(!heap.empty());
+		pheet_assert(heap.size() == 1 || !comp(heap[0]->peek(), heap[1]->peek()));
 		return heap[0]->pop();
 	}
 
@@ -238,17 +249,24 @@ public:
 	}
 
 	void pop_index(size_t index) {
+		pheet_assert(index < heap.size());
 		if(index == heap.size() - 1) {
 			heap.pop_back();
 		}
 		else {
 			heap[index] = heap.back();
 			heap[index]->parent_index = index;
+			heap.pop_back();
 			size_t ni = bubble_up(index);
 			if(ni == index) {
 				bubble_down(index);
 			}
 		}
+	}
+
+	bool verify_parent_index(size_t index) {
+		pheet_assert(index < heap.size());
+		return heap[index]->parent_index == index;
 	}
 
 private:
@@ -296,6 +314,7 @@ public:
 	:comp(sr) {
 		Base*& base = heap_heaps[std::type_index(typeid(Strategy))];
 		if(base == nullptr) {
+			pheet_assert(std::type_index(typeid(Strategy)) != std::type_index(typeid(BaseStrategy)));
 			base = new BasicStrategyHeapHeap<Pheet, T, BaseStrategy, Strategy, StrategyRetriever>(sr, heap_heaps);
 		}
 		parent = static_cast<BasicStrategyHeapHeap<Pheet, T, BaseStrategy, Strategy, StrategyRetriever>*>(base);
@@ -323,6 +342,7 @@ public:
 			bubble_down(0);
 			this->top = heap[0];
 			parent->reorder_index(this->parent_index);
+			pheet_assert(parent->verify_parent_index(this->parent_index));
 		}
 		return ret;
 	}

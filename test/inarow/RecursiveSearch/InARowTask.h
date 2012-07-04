@@ -37,7 +37,7 @@ namespace pheet {
 
 			DepthStrategy(size_t depth)
 			: depth(depth) {
-				this->set_memory_footprint(1);
+//				this->set_memory_footprint(1);
 				this->set_transitive_weight(1000-depth);
 			}
 

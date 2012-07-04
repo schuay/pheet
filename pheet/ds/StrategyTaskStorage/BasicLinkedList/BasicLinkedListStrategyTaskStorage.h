@@ -43,11 +43,17 @@ struct BasicLinkedListStrategyTaskStorageLocalReference {
 template <class Pheet, class TaskStorage>
 class BasicLinkedListStrategyTaskStorageStrategyRetriever {
 public:
+	typedef BasicLinkedListStrategyTaskStorageStrategyRetriever<Pheet, TaskStorage> Self;
 	typedef typename TaskStorage::LocalRef Item;
 
 	BasicLinkedListStrategyTaskStorageStrategyRetriever(TaskStorage* task_storage)
 	:task_storage(task_storage) {}
 
+	BasicLinkedListStrategyTaskStorageStrategyRetriever(BasicLinkedListStrategyTaskStorageStrategyRetriever const& other)
+	:task_storage(other.task_storage) {}
+
+	BasicLinkedListStrategyTaskStorageStrategyRetriever(BasicLinkedListStrategyTaskStorageStrategyRetriever&& other)
+	:task_storage(other.task_storage) {}
 
 	typename Pheet::Scheduler::BaseStrategy* operator()(Item& item) {
 		return (item.block->get_data(item.index).strategy);

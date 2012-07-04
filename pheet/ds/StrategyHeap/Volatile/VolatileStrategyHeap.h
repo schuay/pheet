@@ -34,8 +34,8 @@ public:
 	typedef VolatileStrategyHeapBase<Pheet, T> Self;
 	typedef VolatileStrategyHeapNode<Self, T> Node;
 
-	VolatileStrategyHeapBase(size_t& total_weight)
-	:total_weight(total_weight), max(nullptr), parent_node(nullptr) {}
+	VolatileStrategyHeapBase(size_t& total_size, size_t& total_weight)
+	:total_size(total_size), total_weight(total_weight), max(nullptr), parent_node(nullptr) {}
 
 	virtual ~VolatileStrategyHeapBase() {
 		if(max != nullptr) {
@@ -98,6 +98,7 @@ protected:
 		++(larger->d);
 	}
 
+	size_t& total_size;
 	size_t& total_weight;
 	Node* max;
 public:
@@ -175,11 +176,11 @@ public:
 	typedef typename Base::Node Node;
 //	typedef typename Comp::Prep Prep;
 
-	VolatileStrategyHeapHeap(size_t& total_weight, StrategyRetriever& sr, std::map<std::type_index, Base*>& heap_heaps)
-	:Base(total_weight), comp(sr), reconsolidate(false) {
+	VolatileStrategyHeapHeap(size_t& total_size, size_t& total_weight, StrategyRetriever& sr, std::map<std::type_index, Base*>& heap_heaps)
+	:Base(total_size, total_weight), comp(sr), reconsolidate(false) {
 		Base*& base = heap_heaps[std::type_index(typeid(typename Strategy::BaseStrategy))];
 		if(base == nullptr) {
-			base = new Parent(total_weight, sr, heap_heaps);
+			base = new Parent(total_size, total_weight, sr, heap_heaps);
 		}
 		parent = static_cast<Parent*>(base);
 	}
@@ -241,10 +242,12 @@ public:
 		Strategy* node_s = comp.deref(node->data);
 		if(node_s == nullptr) {
 			comp.drop(std::move(node->data));
+			--(this->total_size);
 			delete node;
 			return;
 		}
 		node->weight = node_s->get_transitive_weight();
+		pheet_assert(node->weight != 0);
 		this->total_weight += node->weight;
 
 		Strategy* parent_s = comp.deref(this->parent_node->data);
@@ -348,6 +351,7 @@ private:
 		do {
 			node = next;
 			next = node->next;
+			pheet_assert(node->weight != 0);
 			pheet_assert(node->d < 64);
 			for(; init <= node->d; ++init) {
 				helper[init] = nullptr;
@@ -364,7 +368,8 @@ private:
 			while(helper[tmp->d] != nullptr) {
 			//	pheet_assert(count_nodes(max) == _size);
 
-				if(helper[tmp->d] == this->max || (comp(helper_s[tmp->d], node_s))) {
+				if(helper[tmp->d] == this->max ||
+						(comp(helper_s[tmp->d], node_s))) {
 					pheet_assert(tmp != this->max);
 					this->combine_trees(tmp, helper[tmp->d]);
 					tmp = helper[tmp->d];
@@ -400,8 +405,8 @@ public:
 	typedef VolatileStrategyHeapComparator<Pheet, T, Strategy, StrategyRetriever> Comp;
 	typedef typename Base::Node Node;
 
-	VolatileStrategyHeapHeap(size_t& total_weight, StrategyRetriever& sr, std::map<std::type_index, Base*>& heap_heaps)
-	:Base(total_weight), comp(sr) {
+	VolatileStrategyHeapHeap(size_t& total_size, size_t& total_weight, StrategyRetriever& sr, std::map<std::type_index, Base*>& heap_heaps)
+	:Base(total_size, total_weight), comp(sr), reconsolidate(false) {
 
 	}
 
@@ -451,10 +456,12 @@ public:
 		Strategy* node_s = comp.deref(node->data);
 		if(node_s == nullptr) {
 			comp.drop(std::move(node->data));
+			--(this->total_size);
 			delete node;
 			return;
 		}
 		node->weight = node_s->get_transitive_weight();
+		pheet_assert(node->weight);
 		this->total_weight += node->weight;
 
 		if(this->max == nullptr) {
@@ -521,7 +528,7 @@ private:
 			return;
 		}
 
-		size_t init = 0;
+		uint8_t init = 0;
 		Node* helper[65];
 		Strategy* helper_s[65];
 
@@ -531,6 +538,7 @@ private:
 		do {
 			node = next;
 			next = node->next;
+			pheet_assert(node->weight != 0);
 			pheet_assert(node->d < 64);
 			for(; init <= node->d; ++init) {
 				helper[init] = nullptr;
@@ -547,7 +555,9 @@ private:
 			while(helper[tmp->d] != nullptr) {
 			//	pheet_assert(count_nodes(max) == _size);
 
-				if(helper[tmp->d] == this->max || (tmp != this->max && comp(helper_s[tmp->d], node_s))) {
+				if(helper[tmp->d] == this->max ||
+						(tmp != this->max &&
+								comp(helper_s[tmp->d], node_s))) {
 			//		pheet_assert(tmp != this->max);
 					this->combine_trees(tmp, helper[tmp->d]);
 					node_s = helper_s[tmp->d];
@@ -614,7 +624,7 @@ private:
 
 template <class Pheet, typename TT, class StrategyRetriever>
 VolatileStrategyHeap<Pheet, TT, StrategyRetriever>::VolatileStrategyHeap(StrategyRetriever sr, PerformanceCounters& pc)
-:sr(std::move(sr)), total_weight(0), root_heap(total_weight, sr, heap_heaps), pc(pc), total_size(0) {
+:sr(std::move(sr)), total_weight(0), root_heap(total_size, total_weight, sr, heap_heaps), pc(pc), total_size(0) {
 	heap_heaps[std::type_index(typeid(BaseStrategy))] = &root_heap;
 }
 
@@ -632,7 +642,7 @@ template <class Strategy>
 void VolatileStrategyHeap<Pheet, TT, StrategyRetriever>::push(T const& item) {
 	HeapBase*& bheap = heap_heaps[std::type_index(typeid(Strategy))];
 	if(bheap == nullptr) {
-		bheap = new VolatileStrategyHeapHeap<Pheet, TT, BaseStrategy, Strategy, StrategyRetriever>(total_weight, sr, heap_heaps);
+		bheap = new VolatileStrategyHeapHeap<Pheet, TT, BaseStrategy, Strategy, StrategyRetriever>(total_size, total_weight, sr, heap_heaps);
 	}
 	VolatileStrategyHeapHeap<Pheet, TT, BaseStrategy, Strategy, StrategyRetriever>* heap = static_cast<VolatileStrategyHeapHeap<Pheet, TT, BaseStrategy, Strategy, StrategyRetriever>*>(bheap);
 	HeapNode* node = new HeapNode();

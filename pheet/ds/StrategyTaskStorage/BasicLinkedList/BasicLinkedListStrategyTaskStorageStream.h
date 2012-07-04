@@ -71,7 +71,7 @@ public:
 
 	bool has_next() {
 		int bin = block_index + 1;
-		return bin < block->get_size() || (bin == block->get_max_size() && block->get_next() != nullptr && block->get_next()->get_size() > 0);
+		return bin < (signed)block->get_size() || (bin == (signed)block->get_max_size() && block->get_next() != nullptr && block->get_next()->get_size() > 0);
 	/*	if(!hn && old_view != nullptr) {
 			// We can now safely deregister from the old view
 			old_view->deregister();

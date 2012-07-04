@@ -324,6 +324,30 @@ test/pheet_tests.cpp.s:
 	$(MAKE) -f CMakeFiles/pheet_test.dir/build.make CMakeFiles/pheet_test.dir/test/pheet_tests.cpp.s
 .PHONY : test/pheet_tests.cpp.s
 
+test/prefix_sum/PrefixSumTests.o: test/prefix_sum/PrefixSumTests.cpp.o
+.PHONY : test/prefix_sum/PrefixSumTests.o
+
+# target to build an object file
+test/prefix_sum/PrefixSumTests.cpp.o:
+	$(MAKE) -f CMakeFiles/pheet_test.dir/build.make CMakeFiles/pheet_test.dir/test/prefix_sum/PrefixSumTests.cpp.o
+.PHONY : test/prefix_sum/PrefixSumTests.cpp.o
+
+test/prefix_sum/PrefixSumTests.i: test/prefix_sum/PrefixSumTests.cpp.i
+.PHONY : test/prefix_sum/PrefixSumTests.i
+
+# target to preprocess a source file
+test/prefix_sum/PrefixSumTests.cpp.i:
+	$(MAKE) -f CMakeFiles/pheet_test.dir/build.make CMakeFiles/pheet_test.dir/test/prefix_sum/PrefixSumTests.cpp.i
+.PHONY : test/prefix_sum/PrefixSumTests.cpp.i
+
+test/prefix_sum/PrefixSumTests.s: test/prefix_sum/PrefixSumTests.cpp.s
+.PHONY : test/prefix_sum/PrefixSumTests.s
+
+# target to generate assembly for a file
+test/prefix_sum/PrefixSumTests.cpp.s:
+	$(MAKE) -f CMakeFiles/pheet_test.dir/build.make CMakeFiles/pheet_test.dir/test/prefix_sum/PrefixSumTests.cpp.s
+.PHONY : test/prefix_sum/PrefixSumTests.cpp.s
+
 test/sor/SORTests.o: test/sor/SORTests.cpp.o
 .PHONY : test/sor/SORTests.o
 
@@ -504,6 +528,9 @@ help:
 	@echo "... test/pheet_tests.o"
 	@echo "... test/pheet_tests.i"
 	@echo "... test/pheet_tests.s"
+	@echo "... test/prefix_sum/PrefixSumTests.o"
+	@echo "... test/prefix_sum/PrefixSumTests.i"
+	@echo "... test/prefix_sum/PrefixSumTests.s"
 	@echo "... test/sor/SORTests.o"
 	@echo "... test/sor/SORTests.i"
 	@echo "... test/sor/SORTests.s"

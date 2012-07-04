@@ -1,4 +1,4 @@
 
 
-TEST_OBJS += lib/test/n-queens/NQueensTests.o
+TEST_OBJS += lib/n-queens/NQueensTests.o
 

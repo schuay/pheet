@@ -21,8 +21,8 @@ public:
     typedef typename Pheet::Environment::BaseStrategy BaseStrategy;
 
     PPoPPImprovedStrategyBranchBoundGraphBipartitioningUpperBoundStrategy(SubProblem* sub_problem, size_t* upper_bound);
-    PPoPPImprovedStrategyBranchBoundGraphBipartitioningUpperBoundStrategy(Self const& other);
-    PPoPPImprovedStrategyBranchBoundGraphBipartitioningUpperBoundStrategy(Self && other);
+//    PPoPPImprovedStrategyBranchBoundGraphBipartitioningUpperBoundStrategy(Self const& other);
+//    PPoPPImprovedStrategyBranchBoundGraphBipartitioningUpperBoundStrategy(Self && other);
 
 
 	~PPoPPImprovedStrategyBranchBoundGraphBipartitioningUpperBoundStrategy();
@@ -35,16 +35,17 @@ public:
 
 
 	static void print_name();
-  private:
-	SubProblem* sub_problem;
-	size_t* upper_bound;
+private:
+    size_t upper_bound;
+    size_t uncertainty;
 };
 
 template <class Pheet, class SubProblem>
-  inline PPoPPImprovedStrategyBranchBoundGraphBipartitioningUpperBoundStrategy<Pheet, SubProblem>::PPoPPImprovedStrategyBranchBoundGraphBipartitioningUpperBoundStrategy(SubProblem* sub_problem, size_t* upper_bound):sub_problem(sub_problem), upper_bound(upper_bound) {
+inline PPoPPImprovedStrategyBranchBoundGraphBipartitioningUpperBoundStrategy<Pheet, SubProblem>::PPoPPImprovedStrategyBranchBoundGraphBipartitioningUpperBoundStrategy(SubProblem* sub_problem, size_t* upper_bound)
+:upper_bound(sub_problem->get_upper_bound()),uncertainty(this->upper_bound - sub_problem->get_lower_bound()) {
 
 }
-
+/*
 template <class Pheet, class SubProblem>
   inline PPoPPImprovedStrategyBranchBoundGraphBipartitioningUpperBoundStrategy<Pheet, SubProblem>::PPoPPImprovedStrategyBranchBoundGraphBipartitioningUpperBoundStrategy(Self const& other):BaseStrategy(other),sub_problem(other.sub_problem),upper_bound(other.upper_bound)
 {
@@ -56,19 +57,21 @@ template <class Pheet, class SubProblem>
    {
 
    }
-
+*/
 
 template <class Pheet, class SubProblem>
 inline PPoPPImprovedStrategyBranchBoundGraphBipartitioningUpperBoundStrategy<Pheet, SubProblem>::~PPoPPImprovedStrategyBranchBoundGraphBipartitioningUpperBoundStrategy() {
 
 }
 
- template <class Pheet, class SubProblem>
-   inline bool PPoPPImprovedStrategyBranchBoundGraphBipartitioningUpperBoundStrategy<Pheet, SubProblem>::prioritize(Self& other)
-   {
-     // TODO port strategy
-     return BaseStrategy::prioritize(other);
-   }
+template <class Pheet, class SubProblem>
+inline bool PPoPPImprovedStrategyBranchBoundGraphBipartitioningUpperBoundStrategy<Pheet, SubProblem>::prioritize(Self& other)
+{
+	if(this->get_place() == other.get_place() && this->get_place() == Pheet::get_place()) {
+		return upper_bound < other.upper_bound;
+	}
+	return uncertainty > other.uncertainty;
+}
 
 /*
 template <class Pheet, class SubProblem>

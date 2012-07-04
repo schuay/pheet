@@ -1,3 +1,3 @@
 
-TEST_OBJS += lib/test/inarow/InARowTests.o
+TEST_OBJS += lib/inarow/InARowTests.o
 
