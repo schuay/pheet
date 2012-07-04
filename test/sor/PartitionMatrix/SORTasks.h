@@ -56,10 +56,13 @@ namespace pheet {
 		void operator()()
 		{
 			typename Pheet::Place** column_owners = new typename Pheet::Place*[sp.slices];
-
+			ptrdiff_t* timestamps = new ptrdiff_t[sp.slices];
 
 			for(int i=0;i<sp.slices;i++)
-				column_owners[i]=0;
+			{
+				timestamps[i]=0;
+				column_owners[i]=Pheet::get_place();
+			}
 
 			for (int p=0; p<2*iterations; p++) 
 			  {
@@ -69,9 +72,9 @@ namespace pheet {
 			      for(int i = 0; i < sp.slices; i++)
 				{
 				  if(!sp.prio)
-				    Pheet::template spawn<SORSliceTask<Pheet> >(column_owners+i,i,sp,p,pc);
+				    Pheet::template spawn<SORSliceTask<Pheet> >(column_owners+i,timestamps+i,i,sp,p,pc);
 				  else
-				    Pheet::template spawn_s<SORSliceTask<Pheet>>(SORLocalityStrategy<Pheet>(column_owners[i]),column_owners+i,i,sp,p,pc);
+				    Pheet::template spawn_s<SORSliceTask<Pheet>>(SORLocalityStrategy<Pheet>(column_owners[i],timestamps[i]),column_owners+i,timestamps+i,i,sp,p,pc);
 				}
 			    }
 			}
@@ -97,25 +100,27 @@ namespace pheet {
 	class SORSliceTask : public Pheet::Task
 	{
 		typename Pheet::Place** owner_info;
+		ptrdiff_t* timestamp;
 		int id;
 		SORParams sp;
 		int p;
 		SORPerformanceCounters<Pheet> pc;
 	public:
 
-		SORSliceTask(typename Pheet::Place** owner_info, int id, SORParams& sp, int p, SORPerformanceCounters<Pheet>& pc):owner_info(owner_info),id(id),sp(sp),p(p),pc(pc) {}
+		SORSliceTask(typename Pheet::Place** owner_info, ptrdiff_t* timestamp, int id, SORParams& sp, int p, SORPerformanceCounters<Pheet>& pc):owner_info(owner_info),timestamp(timestamp),id(id),sp(sp),p(p),pc(pc) {}
 		virtual ~SORSliceTask() {}
 
 		void operator()()
 		{
-		  struct timeval start_time;
-		  gettimeofday(&start_time, NULL);
+//		  struct timeval start_time;
+//		  gettimeofday(&start_time, NULL);
 
 			if(*owner_info==Pheet::get_place())
 				pc.slices_rescheduled_at_same_place.incr();
 
-		  	if(*owner_info == 0)
-			  (*owner_info) = Pheet::get_place();
+//		  	if(*owner_info == 0)
+			(*owner_info) = Pheet::get_place();
+			(*timestamp) = Pheet::get_place()->next_task_id();
 			double omega_over_four = sp.omega * 0.25;
 			double one_minus_omega = 1.0 - sp.omega;
 
@@ -180,12 +185,14 @@ namespace pheet {
 				}
 
 			}
+volatile int xxx=0;
+			for(int i=0;i<100000;i++)
+				xxx++;
 
-
-			struct timeval stop_time;
-			gettimeofday(&stop_time, NULL);
-			TaskSched ts(start_time, stop_time,(size_t)Pheet::get_place());
-			pc.red.add(ts);
+	//		struct timeval stop_time;
+	//		gettimeofday(&stop_time, NULL);
+	//		TaskSched ts(start_time, stop_time,(size_t)Pheet::get_place());
+	//		pc.red.add(ts);
 
 
 		}

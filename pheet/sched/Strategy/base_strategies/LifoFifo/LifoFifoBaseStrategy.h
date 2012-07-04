@@ -18,17 +18,21 @@ public:
 	typedef typename Pheet::Place Place;
 
 	LifoFifoBaseStrategy()
-	: place(Pheet::get_place()), task_id(place->next_task_id()), transitive_weight(1024)/*, memory_footprint(1024)*/ {}
+	: place(Pheet::get_place()), task_id(place->next_task_id()), transitive_weight(1024)/*, memory_footprint(1024)*/ 
+	  {
+
+	  }
 
 	LifoFifoBaseStrategy(Self const& other)
-	: place(other.place), task_id(other.task_id), transitive_weight(other.transitive_weight)/*, memory_footprint(other.memory_footprint)*/ {}
+	  : place(other.place), task_id(other.task_id), transitive_weight(other.transitive_weight)/*, memory_footprint(other.memory_footprint)*/ { }
 
 	LifoFifoBaseStrategy(Self&& other)
-	: place(other.place), task_id(other.task_id), transitive_weight(other.transitive_weight)/*, memory_footprint(other.memory_footprint)*/ {}
+	  : place(other.place), task_id(other.task_id), transitive_weight(other.transitive_weight)/*, memory_footprint(other.memory_footprint)*/ { }
 
 	~LifoFifoBaseStrategy() {}
 
 	inline bool prioritize(Self& other) {
+
 		Place* cur_place = Pheet::get_place();
 		if(other.place == place) {
 			if(place == cur_place) {

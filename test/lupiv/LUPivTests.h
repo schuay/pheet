@@ -10,7 +10,7 @@
 #define LUPIVTESTS_H_
 
 #include "../init.h"
-#include "../Test.h"
+#include "../Tests.h"
 #ifdef LUPIV_TEST
 #include "LUPivTest.h"
 #endif
@@ -19,12 +19,12 @@
 
 namespace pheet {
 
-class LUPivTests : Test {
+class LUPivTests : public Tests {
 public:
 	LUPivTests();
 	virtual ~LUPivTests();
 
-	void run_test();
+	void run_test(bool usestrategy);
 
 private:
 	template<class Pheet, template <class P> class Kernel>

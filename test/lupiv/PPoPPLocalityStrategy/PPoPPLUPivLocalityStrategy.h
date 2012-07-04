@@ -23,7 +23,7 @@ public:
 	PPoPPLUPivLocalityStrategy(typename Pheet::Place* last_owner);
 	PPoPPLUPivLocalityStrategy(Self& other);
 	PPoPPLUPivLocalityStrategy(Self&& other);
-	virtual ~PPoPPLUPivLocalityStrategy();
+	~PPoPPLUPivLocalityStrategy();
 
 	inline bool prioritize(Self& other);
 
@@ -35,6 +35,7 @@ private:
 template <class Pheet>
 PPoPPLUPivLocalityStrategy<Pheet>::PPoPPLUPivLocalityStrategy(typename Pheet::Place* last_owner)
   : last_owner(last_owner) {
+	this->set_transitive_weight(1000000);
 
 }
 
@@ -59,11 +60,42 @@ PPoPPLUPivLocalityStrategy<Pheet>::~PPoPPLUPivLocalityStrategy() {
 template <class Pheet>
   inline bool PPoPPLUPivLocalityStrategy<Pheet>::prioritize(Self& other) {
   
-  /*  procs_t distancetothis = Pheet::get_place()->get_distance(last_owner);
+  procs_t distancetothis = Pheet::get_place()->get_distance(last_owner);
   procs_t distancetoother = Pheet::get_place()->get_distance(other.last_owner);
 
+
   if(distancetothis != distancetoother)
-  return distancetothis < distancetoother;*/
+    return distancetothis < distancetoother;
+
+/*		if(this->get_place() != other.get_place())
+	{
+		if(this->get_place() == Pheet::get_place())
+			return true;
+		if(other.get_place() == Pheet::get_place())
+			return false;
+	}*/
+
+/*  if(distancetothis == 0)
+  {
+  	// If local task, prioritize recently used
+  	return timestamp > other.timestamp;
+  }
+  else
+  {
+  	// If stealing, prioritize not recently used
+  	return timestamp < other.timestamp;
+  }
+*/
+
+  //if(last_owner!=Pheet::get_place())
+  //	printf("Should be 6: %d\n",distancetothis);
+  //if(last_owner==Pheet::get_place())
+  //	printf("Should be 0: %d\n",distancetothis);
+
+  //printf("Distance1: %d Distance2: %d\n",distancetothis,distancetoother);
+
+//  if(distancetothis != distancetoother)
+ //   return distancetothis < distancetoother;
   return BaseStrategy::prioritize(other);
 
 }

@@ -140,6 +140,9 @@ public:
 	void start_finish_region();
 	void end_finish_region();
 
+	ptrdiff_t next_task_id() { return task_id++; }
+
+
 private:
 	void initialize_levels();
 	void grow_levels_structure();
@@ -178,6 +181,8 @@ private:
 
 	CPUThreadExecutor<Self> thread_executor;
 
+	ptrdiff_t task_id;
+
 	static thread_local Self* local_place;
 
 	template <class T>
@@ -202,7 +207,8 @@ BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::BasicSchedulerPlace(I
   preferred_queue_length(find_last_bit_set(num_places) << CallThreshold),
   max_queue_length(preferred_queue_length << 1),
   call_mode(false), stealing_deque(max_queue_length, performance_counters.stealing_deque_performance_counters),
-  thread_executor(this) {
+  thread_executor(this),
+  task_id(0){
 
 	// This is the root task execution context. It differs from the others in that it reuses the existing thread instead of creating a new one
 
@@ -848,7 +854,7 @@ procs_t BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::get_distance(
 	}
 
 	procs_t offset = std::max(levels[num_levels - 1].memory_level, other->levels[other->num_levels - 1].memory_level);
-	procs_t i = min(num_levels - 1, other->num_levels - 1);
+	procs_t i = std::min(num_levels - 1, other->num_levels - 1);
 	while(levels[i].global_id_offset != other->levels[i].global_id_offset) {
 		pheet_assert(i > 0);
 		--i;

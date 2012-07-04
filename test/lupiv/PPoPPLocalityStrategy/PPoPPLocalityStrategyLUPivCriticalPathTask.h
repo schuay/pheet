@@ -12,6 +12,7 @@
 #include "../helpers/LUPivPivotTask.h"
 #include "../LocalityStrategy/LocalityStrategyLUPivMMTask.h"
 #include "PPoPPLUPivLocalityStrategy.h"
+#include "PPoPPLUPivPerformanceCounters.h"
 
 #include <algorithm>
 
@@ -25,7 +26,7 @@ namespace pheet {
 template <class Pheet, int BLOCK_SIZE>
 class PPoPPLocalityStrategyLUPivCriticalPathTask : public Pheet::Task {
 public:
-	PPoPPLocalityStrategyLUPivCriticalPathTask(typename Pheet::Place** owner_info, typename Pheet::Place** block_owners, double* a, double* lu_col, int* pivot, int m, int lda, int n);
+	PPoPPLocalityStrategyLUPivCriticalPathTask(typename Pheet::Place** owner_info, typename Pheet::Place** block_owners, double* a, double* lu_col, int* pivot, int m, int lda, int n, PPoPPLUPivPerformanceCounters<Pheet>& pc);
 	virtual ~PPoPPLocalityStrategyLUPivCriticalPathTask();
 
 	virtual void operator()();
@@ -39,11 +40,12 @@ private:
 	int m;
 	int lda;
 	int n;
+	PPoPPLUPivPerformanceCounters<Pheet> pc;
 };
 
 template <class Pheet, int BLOCK_SIZE>
-PPoPPLocalityStrategyLUPivCriticalPathTask<Pheet, BLOCK_SIZE>::PPoPPLocalityStrategyLUPivCriticalPathTask(typename Pheet::Place** owner_info, typename Pheet::Place** block_owners, double* a, double* lu_col, int* pivot, int m, int lda, int n)
-: owner_info(owner_info), block_owners(block_owners), a(a), lu_col(lu_col), pivot(pivot), m(m), lda(lda), n(n) {
+PPoPPLocalityStrategyLUPivCriticalPathTask<Pheet, BLOCK_SIZE>::PPoPPLocalityStrategyLUPivCriticalPathTask(typename Pheet::Place** owner_info, typename Pheet::Place** block_owners, double* a, double* lu_col, int* pivot, int m, int lda, int n, PPoPPLUPivPerformanceCounters<Pheet>& pc)
+: owner_info(owner_info), block_owners(block_owners), a(a), lu_col(lu_col), pivot(pivot), m(m), lda(lda), n(n),pc(pc) {
 
 }
 
@@ -54,13 +56,20 @@ PPoPPLocalityStrategyLUPivCriticalPathTask<Pheet, BLOCK_SIZE>::~PPoPPLocalityStr
 
 template <class Pheet, int BLOCK_SIZE>
 void PPoPPLocalityStrategyLUPivCriticalPathTask<Pheet, BLOCK_SIZE>::operator()() {
+
+	pc.total_tasks.incr();
+	pc.total_distance_to_last_location.add(Pheet::get_place()->get_distance(*owner_info));
+
+	if(*owner_info==Pheet::get_place())
+		pc.slices_rescheduled_at_same_place.incr();
+
 	(*owner_info) = Pheet::get_place();
 
 	pheet_assert(n <= BLOCK_SIZE);
 
 	// Apply pivot to column
 	Pheet::template
-		call<LUPivPivotTask<Pheet> >(a, pivot, std::min(m, BLOCK_SIZE), lda, n);
+		call<LUPivPivotTask<Pheet> >(a, pivot, std::min(m, BLOCK_SIZE), lda, n, pc);
 
 	int k = std::min(std::min(m, n), BLOCK_SIZE);
 
@@ -83,7 +92,7 @@ void PPoPPLocalityStrategyLUPivCriticalPathTask<Pheet, BLOCK_SIZE>::operator()()
 				spawn_s<LocalityStrategyLUPivMMTask<Pheet> >(
 									     PPoPPLUPivLocalityStrategy<Pheet>(block_owners[i]/*, 5, 3*/),
 						block_owners + i,
-						lu_col + pos, a, a + pos, k, lda);
+						lu_col + pos, a, a + pos, k, lda, pc);
 		}
 	}
 

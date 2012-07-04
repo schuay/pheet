@@ -30,7 +30,7 @@ LUPivTests::~LUPivTests() {
 
 }
 
-void LUPivTests::run_test() {
+void LUPivTests::run_test(bool usestrategy) {
 #ifdef LUPIV_TEST
 	std::cout << "----" << std::endl;
 
@@ -48,11 +48,13 @@ void LUPivTests::run_test() {
 	//	this->run_kernel<	Pheet::WithScheduler<FinisherScheduler>,
 	//SimpleLUPiv>();
 
-	//	this->run_kernel<       Pheet::WithScheduler<BasicScheduler>,
-	//                        PPoPPLocalityStrategyLUPiv>();
-
+	if(usestrategy)
 	  this->run_kernel<       Pheet::WithScheduler<StrategyScheduler>,
 						PPoPPLocalityStrategyLUPiv >();
+	else
+		this->run_kernel<       Pheet::WithScheduler<BasicScheduler>,
+	                        PPoPPLocalityStrategyLUPiv>();
+
 #endif
 }
 

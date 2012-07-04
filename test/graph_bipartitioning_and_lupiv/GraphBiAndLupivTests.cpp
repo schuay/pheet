@@ -69,9 +69,9 @@ namespace pheet {
 											graph_bipartitioning_test_problems[pr].max_w,
 											graph_bipartitioning_test_seeds[gs]);
 		  
-									LUPivTest<Pheet, Kernel2> st(lupiv_test_cpus[c], lupiv_test_types[t], lupiv_test_n[n], lupiv_test_seeds[s]);
+								//	LUPivTest<Pheet, Kernel2> st(lupiv_test_cpus[c], lupiv_test_types[t], lupiv_test_n[n], lupiv_test_seeds[s]);
 									gbt.run_test();
-									st.run_test();
+								//	st.run_test();
 								}
     					}
     				}

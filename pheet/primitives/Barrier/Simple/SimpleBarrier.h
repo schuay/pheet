@@ -31,7 +31,7 @@ public:
 private:
 	typedef typename Pheet::Backoff Backoff;
 
-	procs_t barriers[4];
+volatile	procs_t barriers[4];
 };
 
 template <class Pheet>

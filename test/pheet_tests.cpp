@@ -24,12 +24,14 @@
 using namespace pheet;
 
 int main(int argc, char* argv[]) {
-/*
+
 	std::map<std::string, Tests*> tests;
 
+        LUPivTests lpt;
 	SORTests sors;
 
 	tests["SOR"] = &sors;
+	tests["lupiv"] = &lpt;
 	
 	if(argc==3)
 	  {
@@ -52,7 +54,7 @@ int main(int argc, char* argv[]) {
 	      }
 	    tests[argv[1]]->run_test(prio);
 	    return 0;
-	  }*/
+	  }
 	
 	SortingTests st;
    	st.run_test();
@@ -66,9 +68,6 @@ int main(int argc, char* argv[]) {
 	NQueensTests nqt;
 	nqt.run_test();
 
-	LUPivTests lpt;
-	lpt.run_test();
-	
 	UTSTests utss;
 	utss.run_test();
 	

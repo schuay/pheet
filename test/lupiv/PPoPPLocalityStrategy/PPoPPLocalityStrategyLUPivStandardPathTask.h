@@ -24,7 +24,7 @@ namespace pheet {
 template <class Pheet, int BLOCK_SIZE>
 class PPoPPLocalityStrategyLUPivStandardPathTask : public Pheet::Task {
 public:
-	PPoPPLocalityStrategyLUPivStandardPathTask(typename Pheet::Place** owner_info, typename Pheet::Place** block_owners, double* a, double* lu_col, int* pivot, int m, int lda, int n);
+	PPoPPLocalityStrategyLUPivStandardPathTask(typename Pheet::Place** owner_info, typename Pheet::Place** block_owners, double* a, double* lu_col, int* pivot, int m, int lda, int n, PPoPPLUPivPerformanceCounters<Pheet>& pc);
 	virtual ~PPoPPLocalityStrategyLUPivStandardPathTask();
 
 	virtual void operator()();
@@ -38,11 +38,13 @@ private:
 	int m;
 	int lda;
 	int n;
+	PPoPPLUPivPerformanceCounters<Pheet> pc;
+
 };
 
 template <class Pheet, int BLOCK_SIZE>
-PPoPPLocalityStrategyLUPivStandardPathTask<Pheet, BLOCK_SIZE>::PPoPPLocalityStrategyLUPivStandardPathTask(typename Pheet::Place** owner_info, typename Pheet::Place** block_owners, double* a, double* lu_col, int* pivot, int m, int lda, int n)
-: owner_info(owner_info), block_owners(block_owners), a(a), lu_col(lu_col), pivot(pivot), m(m), lda(lda), n(n) {
+PPoPPLocalityStrategyLUPivStandardPathTask<Pheet, BLOCK_SIZE>::PPoPPLocalityStrategyLUPivStandardPathTask(typename Pheet::Place** owner_info, typename Pheet::Place** block_owners, double* a, double* lu_col, int* pivot, int m, int lda, int n, PPoPPLUPivPerformanceCounters<Pheet>& pc)
+: owner_info(owner_info), block_owners(block_owners), a(a), lu_col(lu_col), pivot(pivot), m(m), lda(lda), n(n), pc(pc) {
 
 }
 
@@ -57,7 +59,7 @@ void PPoPPLocalityStrategyLUPivStandardPathTask<Pheet, BLOCK_SIZE>::operator()()
 
 	// Apply pivot to column
 	Pheet::template
-		call<LUPivPivotTask<Pheet> >(a, pivot, std::min(m, BLOCK_SIZE), lda, n);
+		call<LUPivPivotTask<Pheet> >(a, pivot, std::min(m, BLOCK_SIZE), lda, n, pc);
 
 	int k = std::min(std::min(m, n), BLOCK_SIZE);
 
@@ -79,7 +81,7 @@ void PPoPPLocalityStrategyLUPivStandardPathTask<Pheet, BLOCK_SIZE>::operator()()
 			spawn_s<LocalityStrategyLUPivMMTask<Pheet> >(
 								     PPoPPLUPivLocalityStrategy<Pheet>(block_owners[i]/*, 4, 2*/),
 					block_owners + i,
-					lu_col + pos, a, a + pos, k, lda);
+					lu_col + pos, a, a + pos, k, lda, pc);
 	}
 }
 

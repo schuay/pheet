@@ -101,18 +101,18 @@ const procs_t uts_test_cpus[] = {4};
 // 8 # (T1XL) Geometric [fixed] ----- Tree size = 1635119272, tree depth = 15, num leaves = 1308100063 (80.00%)
 const unsigned int uts_test_standardworkloads[] = {0,1,2,3,4,5,6,7,8};
 
-//#define SOR_TEST	true
+#define SOR_TEST	true
 const procs_t sor_test_cpus[] = {12};
-const int sor_test_maxtrissize[] = {3000};
-const int sor_test_iterations[] =  {100};
-const int sor_test_slices[] = {256};
+const int sor_test_maxtrissize[] = {2048};//{8192};
+const int sor_test_iterations[] =  {1000};
+const int sor_test_slices[] = {512};
 const double sor_test_omega[] = {1.25};
 const bool sor_prio[] = {true,false};
 
 #define LUPIV_TEST      true
- const procs_t lupiv_test_cpus[] = {1, 2, 4, 6, 12};
+ const procs_t lupiv_test_cpus[] = { 2};
  const unsigned int lupiv_test_seeds[] = {0};
- const size_t lupiv_test_n[] = {1024, 2048};
+ const size_t lupiv_test_n[] = { 4096};
  const int lupiv_test_types[] = {0};
 
 

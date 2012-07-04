@@ -792,7 +792,7 @@ inline void StrategySchedulerPlace<Pheet, CallThreshold>::spawn_s(Strategy&& s, 
 	}
 	else {
 		// TUNE: offsets and parameters
-		size_t weight /*+*/= (s.get_transitive_weight() >> 9);
+		size_t weight /*+*/= (s.get_transitive_weight() );
 		size_t current_tasks = task_storage.size() /*<< 2*/;
 		size_t threshold = ((current_tasks * current_tasks /*<< 4*/) /** (1 + (s.get_memory_footprint() >> 4))*/);
 		if(weight > threshold) {
@@ -827,7 +827,7 @@ inline void StrategySchedulerPlace<Pheet, CallThreshold>::spawn_s(Strategy&& s, 
 	}
 	else {
 		// TUNE: offsets and parameters
-		size_t weight = (s.get_transitive_weight() >> 9);
+		size_t weight = (s.get_transitive_weight());
 		size_t current_tasks = task_storage.size();
 		size_t threshold = ((current_tasks * current_tasks /*<< 4*/) /** (1 + (s.get_memory_footprint() >> 4))*/);
 		if(weight > threshold) {
@@ -877,6 +877,7 @@ procs_t StrategySchedulerPlace<Pheet, CallThreshold>::get_distance(Self* other) 
 	}
 
 	procs_t offset = std::max(levels[num_levels - 1].memory_level, other->levels[other->num_levels - 1].memory_level);
+
 	procs_t i = std::min(num_levels - 1, other->num_levels - 1);
 	while(levels[i].global_id_offset != other->levels[i].global_id_offset) {
 		pheet_assert(i > 0);
