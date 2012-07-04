@@ -21,4 +21,7 @@ bool const graph_bipartitioning_test_measure_memory_allocation_time = false;
 
 bool const sor_slices_rescheduled_at_same_place = false;
 
+bool const prefix_sum_log_pf_tasks = false;
+bool const prefix_sum_log_schedule = false;
+
 #endif /* PHEET_TEST_SETTINGS_H_ */

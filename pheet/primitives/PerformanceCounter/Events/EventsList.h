@@ -87,7 +87,9 @@ namespace pheet {
       void print() {}
       
     };
-  
+
+  template <class Pheet, typename E, bool enabled>
+  using EventsListPerformanceCounter = EventsList<Pheet, E, enabled>;
 }
 
 #endif /* EVENTSLIST_H_ */

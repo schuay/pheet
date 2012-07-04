@@ -12,6 +12,7 @@
 #include "Sequential/SequentialPrefixSum.h"
 #include "NaiveParallel/NaiveParallelPrefixSum.h"
 #include "RecursiveParallel/RecursiveParallelPrefixSum.h"
+#include "StrategyRecursiveParallel/StrategyRecursiveParallelPrefixSum.h"
 #include "Parallel/ParallelPrefixSum.h"
 #include "Strategy/StrategyPrefixSum.h"
 
@@ -57,14 +58,26 @@ void PrefixSumTests::run_test() {
 	std::cout << "----" << std::endl;
 
 	// default tests
+	this->run_prefix_sum<	Pheet::WithScheduler<StrategyScheduler>,
+						StrategyRecursiveParallelPrefixSum>();
+
+	this->run_prefix_sum<	Pheet::WithScheduler<BasicScheduler>,
+						StrategyRecursiveParallelPrefixSum>();
+
+	this->run_prefix_sum<	Pheet::WithScheduler<SynchroneousScheduler>,
+						StrategyRecursiveParallelPrefixSum>();
+/*
+	this->run_prefix_sum<	Pheet::WithScheduler<BasicScheduler>,
+						RecursiveParallelPrefixSum>();
+
+	this->run_prefix_sum<	Pheet::WithScheduler<SynchroneousScheduler>,
+						SequentialPrefixSum>();
+
 	this->run_prefix_sum<	Pheet::WithScheduler<BasicScheduler>,
 						NaiveParallelPrefixSum>();
 
 	this->run_prefix_sum<	Pheet::WithScheduler<BasicScheduler>,
 						ParallelPrefixSum>();
-
-	this->run_prefix_sum<	Pheet::WithScheduler<BasicScheduler>,
-						RecursiveParallelPrefixSum>();
 
 	this->run_prefix_sum<	Pheet::WithScheduler<BasicScheduler>,
 						StrategyPrefixSum>();
@@ -73,11 +86,7 @@ void PrefixSumTests::run_test() {
 						StrategyPrefixSum>();
 
 	this->run_prefix_sum<	Pheet::WithScheduler<SynchroneousScheduler>,
-						StrategyPrefixSum>();
-
-	this->run_prefix_sum<	Pheet::WithScheduler<SynchroneousScheduler>,
-						SequentialPrefixSum>();
-
+						StrategyPrefixSum>();*/
 
 #endif
 }
