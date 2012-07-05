@@ -36,7 +36,7 @@ namespace pheet {
   template <class Pheet, typename E>
     class EventsList<Pheet, E, true>
     {
-      ListReducer<Pheet, std::vector<Event<E> >, Event<E> > events;
+      ListReducer<Pheet, Event<E> > events;
       struct timeval start;
     public:
       EventsList()

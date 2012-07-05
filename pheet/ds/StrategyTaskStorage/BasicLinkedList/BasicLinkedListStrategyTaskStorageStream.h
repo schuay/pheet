@@ -14,7 +14,7 @@ namespace pheet {
 template <class Pheet, class StreamRef>
 class BasicLinkedListStrategyTaskStorageStreamRefStrategyRetriever {
 public:
-	typename StreamRef::BaseStrategy* operator()(StreamRef& sr) {
+	typename StreamRef::BaseStrategy* operator()(StreamRef const& sr) {
 		return sr.get_strategy();
 	}
 
@@ -44,7 +44,7 @@ public:
 		return block->take(index, taken_offset);
 	}
 
-	BaseStrategy* get_strategy() {
+	BaseStrategy* get_strategy() const {
 		return block->get_strategy(index, taken_offset);
 	}
 

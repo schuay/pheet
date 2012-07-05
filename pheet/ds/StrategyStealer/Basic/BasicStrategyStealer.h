@@ -9,7 +9,7 @@
 #ifndef BASICSTRATEGYSTEALER_H_
 #define BASICSTRATEGYSTEALER_H_
 
-#include <pheet/ds/StrategyHeap/Volatile/VolatileStrategyHeap.h>
+#include <pheet/ds/StrategyHeap/Volatile2/VolatileStrategyHeap2.h>
 
 #include <unordered_map>
 
@@ -26,7 +26,7 @@ public:
 	typedef typename TaskStorage::Stream Stream;
 	typedef typename Stream::StreamRef StreamRef;
 	typedef typename StreamRef::StrategyRetriever StreamRefStrategyRetriever;
-	typedef VolatileStrategyHeap<Pheet, StreamRef, StreamRefStrategyRetriever> StrategyHeap;
+	typedef VolatileStrategyHeap2<Pheet, StreamRef, StreamRefStrategyRetriever> StrategyHeap;
 
 	typedef typename TaskStorage::T T;
 
