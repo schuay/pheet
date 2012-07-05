@@ -45,21 +45,24 @@ public:
 
 	StrategyRecursiveParallelPrefixSumPerformanceCounters() {}
 	StrategyRecursiveParallelPrefixSumPerformanceCounters(Self& other)
-	:prefix_sum_tasks(other.prefix_sum_tasks), schedule(other.schedule) {}
+	:prefix_sum_blocks(other.prefix_sum_blocks), prefix_sum_preprocessed_blocks(other.prefix_sum_preprocessed_blocks), schedule(other.schedule) {}
 	StrategyRecursiveParallelPrefixSumPerformanceCounters(Self&& other)
-	:prefix_sum_tasks(other.prefix_sum_tasks), schedule(std::move(other.schedule)) {}
+	:prefix_sum_blocks(other.prefix_sum_blocks), prefix_sum_preprocessed_blocks(other.prefix_sum_preprocessed_blocks), schedule(std::move(other.schedule)) {}
 	~StrategyRecursiveParallelPrefixSumPerformanceCounters() {}
 
 	static void print_headers() {
-		BasicPerformanceCounter<Pheet, prefix_sum_log_pf_tasks>::print_header("prefix_sum_tasks\t");
+		BasicPerformanceCounter<Pheet, prefix_sum_log_pf_blocks>::print_header("prefix_sum_blocks\t");
+		BasicPerformanceCounter<Pheet, prefix_sum_log_pf_preprocessed_blocks>::print_header("prefix_sum_preprocessed_blocks\t");
 		ListPerformanceCounter<Pheet, Event, prefix_sum_log_schedule>::print_header("schedule\t");
 	}
 	void print_values() {
-		prefix_sum_tasks.print("%lu\t");
+		prefix_sum_blocks.print("%lu\t");
+		prefix_sum_preprocessed_blocks.print("%lu\t");
 		schedule.print("", "\t");
 	}
 
-	BasicPerformanceCounter<Pheet, prefix_sum_log_pf_tasks> prefix_sum_tasks;
+	BasicPerformanceCounter<Pheet, prefix_sum_log_pf_blocks> prefix_sum_blocks;
+	BasicPerformanceCounter<Pheet, prefix_sum_log_pf_preprocessed_blocks> prefix_sum_preprocessed_blocks;
 	ListPerformanceCounter<Pheet, Event, prefix_sum_log_schedule> schedule;
 };
 

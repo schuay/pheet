@@ -38,11 +38,11 @@ public:
 	virtual ~StrategyRecursiveParallelPrefixSumTask() {}
 
 	virtual void operator()() {
-		pc.prefix_sum_tasks.incr();
 		pc.schedule.add(Event(Pheet::get_place_id(), length, ordering, preprocessed));
 		bool in_order = (ordering == preprocessed);
 		pheet_assert(preprocessed <= ordering);
 		if(length <= BlockSize) {
+			pc.prefix_sum_blocks.incr();
 			if(in_order && ordering != 0) {
 				data[0] += *(data - step);
 			}
@@ -50,7 +50,8 @@ public:
 				data[i*step] += data[(i - 1)*step];
 			}
 			if(in_order) {
-				MEMORY_FENCE();sleep(10000);
+				MEMORY_FENCE();//sleep(10000);
+				pc.prefix_sum_preprocessed_blocks.incr();
 				++preprocessed;
 			}
 		}
@@ -115,12 +116,13 @@ public:
 	virtual ~StrategyRecursiveParallelPrefixSumImpl() {}
 
 	virtual void operator()() {
-		pc.prefix_sum_tasks.incr();
 		pc.schedule.add(Event(Pheet::get_place_id(), length, 0, 0));
 		if(length <= BlockSize) {
+			pc.prefix_sum_blocks.incr();
 			for(size_t i = 1; i < length; ++i) {
 				data[i*step] += data[(i - 1)*step];
 			}
+			pc.prefix_sum_preprocessed_blocks.incr();
 		}
 		else {
 			size_t num_blocks = ((length - 1) / BlockSize) + 1;
@@ -140,7 +142,7 @@ public:
 			}
 //std::cout << data[1024] << std::endl;
 			if(pp != num_blocks) {
-				std::cout << "pp: " << pp << " nb: " << num_blocks << std::endl;
+	//			std::cout << "pp: " << pp << " nb: " << num_blocks << std::endl;
 				size_t valid = pp*BlockSize;
 				if((num_blocks - pp) > 1)
 					Pheet::template
@@ -166,7 +168,7 @@ template <class Pheet, size_t BlockSize>
 char const StrategyRecursiveParallelPrefixSumImpl<Pheet, BlockSize>::name[] = "StrategyRecursiveParallelPrefixSum";
 
 template <class Pheet>
-using StrategyRecursiveParallelPrefixSum = StrategyRecursiveParallelPrefixSumImpl<Pheet, 1024>;
+using StrategyRecursiveParallelPrefixSum = StrategyRecursiveParallelPrefixSumImpl<Pheet, 4096>;
 
 } /* namespace pheet */
 #endif /* STRATEGYRECURSIVEPARALLELPREFIXSUM_H_ */

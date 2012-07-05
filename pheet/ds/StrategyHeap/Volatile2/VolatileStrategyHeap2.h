@@ -28,7 +28,7 @@ public:
 	typedef VolatileStrategyHeap2Node<Pheet, TT, StrategyRetriever, typename Strategy::BaseStrategy, BaseStrategy> Base;
 
 	VolatileStrategyHeap2Node(TT const& data, size_t weight, VolatileStrategySubHeap2Base* base_heap)
-	:Base(data, weight, base_heap), state(0) {}
+	:Base(data, weight, base_heap), state(0), d(0) {}
 
 	Self* prev;
 	Self* next;
@@ -45,7 +45,7 @@ public:
 	typedef VolatileStrategyHeap2Node<Pheet, TT, StrategyRetriever, Strategy, Strategy> Self;
 
 	VolatileStrategyHeap2Node(TT const& data, size_t weight, VolatileStrategySubHeap2Base* base_heap)
-	:data(data), weight(weight), references(0), base_heap(base_heap), state(0) {}
+	:data(data), weight(weight), references(0), base_heap(base_heap), state(0), d(0) {}
 	~VolatileStrategyHeap2Node() {
 		pheet_assert(references == 0);
 	}
@@ -103,40 +103,46 @@ public:
 
 	void link_node(Node* node, Strategy* s) {
 //		pheet_assert(s != nullptr);
-		++(node->references);
+		if(node->state == 0) {
+			++(node->references);
 
-		if(max == nullptr) {
-			max = node;
-			node->prev = node;
-			node->next = node;
-			node->children = nullptr;
-			node->parent = nullptr;
-			node->state = 1;
+			if(max == nullptr) {
+				max = node;
+				node->prev = node;
+				node->next = node;
+				node->children = nullptr;
+				node->parent = nullptr;
+				node->state = 1;
 
-			parent->link_node(node, s);
-		}
-		else {
-			max->prev->next = node;
-			node->next = max;
-			node->prev = max->prev;
-			max->prev = node;
-			node->children = nullptr;
-			node->parent = nullptr;
-			node->state = 1;
+				parent->link_node(node, s);
+			}
+			else {
+				max->prev->next = node;
+				node->next = max;
+				node->prev = max->prev;
+				max->prev = node;
+				node->children = nullptr;
+				node->parent = nullptr;
+				node->state = 1;
 
-			Strategy* max_s = get_strategy(max);
-			if(max_s != nullptr) {
-				if(s == nullptr || s->prioritize(*max_s)) {
-					parent->link_node(node, s);
-					if(max->state == 2) {
-						sub_unconsolidated();
+				Strategy* max_s = get_strategy(max);
+				if(max_s != nullptr) {
+					if(s == nullptr || s->prioritize(*max_s)) {
+						parent->link_node(node, s);
+						if(max->state == 2) {
+							sub_unconsolidated();
+						}
+						else {
+							parent->deactivate_node(max);
+						}
+						max = node;
 					}
-					else {
-						parent->deactivate_node(max);
-					}
-					max = node;
 				}
 			}
+		}
+		else {
+			pheet_assert(node->state == 2);
+			node->state = 1;
 		}
 	}
 
@@ -176,8 +182,10 @@ public:
 			pheet_assert(node->parent->children == node);
 			if(node->next == node) {
 				node->parent->children = nullptr;
+				node->parent->d = 0;
 			}
 			else {
+				--(node->parent->d);
 				node->prev->next = node->next;
 				node->next->prev = node->prev;
 				node->parent->children = node->next;
@@ -269,6 +277,8 @@ public:
 					this->combine(start, node->children);
 					end = start->prev;
 				}
+				--(node->references);
+				pheet_assert(node->references > 0);
 				node->state = 0;
 				if(node->next == node) {
 					pheet_assert(this->max == nullptr);
@@ -299,17 +309,19 @@ public:
 
 				Node* tmp = node;
 				while(helper[tmp->d] != nullptr) {
-					if(node_s->prioritize(*helper_s[tmp->d])) {
-						pheet_assert(helper[tmp->d] != this->max);
-						this->combine_trees(tmp, helper[tmp->d]);
+					size_t old_d = tmp->d;
+					// Both tmp (from some other helper_s) and helper_s[old_d] can be max.
+					if(tmp == max || node_s->prioritize(*(helper_s[old_d]))) {
+						pheet_assert(helper[old_d] != this->max);
+						this->combine_trees(tmp, helper[old_d]);
 					}
 					else {
 						pheet_assert(tmp != this->max);
-						this->combine_trees(helper[tmp->d], tmp);
-						tmp = helper[tmp->d];
-						node_s = helper_s[tmp->d];
+						this->combine_trees(helper[old_d], tmp);
+						node_s = helper_s[old_d];
+						tmp = helper[old_d];
 					}
-					helper[tmp->d - 1] = nullptr;
+					helper[old_d] = nullptr;
 				}
 				pheet_assert(helper[tmp->d] == nullptr);
 				helper[tmp->d] = tmp;
@@ -393,34 +405,40 @@ public:
 
 
 	void link_node(Node* node, Strategy* s) {
-		++(node->references);
-	//	pheet_assert(s != nullptr);
-		if(max == nullptr) {
-			max = node;
-			node->prev = node;
-			node->next = node;
-			node->children = nullptr;
-			node->parent = nullptr;
-			node->state = 1;
-		}
-		else {
-			max->prev->next = node;
-			node->next = max;
-			node->prev = max->prev;
-			max->prev = node;
-			node->children = nullptr;
-			node->parent = nullptr;
-			node->state = 1;
+		if(node->state == 0) {
+			++(node->references);
+		//	pheet_assert(s != nullptr);
+			if(max == nullptr) {
+				max = node;
+				node->prev = node;
+				node->next = node;
+				node->children = nullptr;
+				node->parent = nullptr;
+				node->state = 1;
+			}
+			else {
+				max->prev->next = node;
+				node->next = max;
+				node->prev = max->prev;
+				max->prev = node;
+				node->children = nullptr;
+				node->parent = nullptr;
+				node->state = 1;
 
-			Strategy* max_s = get_strategy(max);
-			if(max_s != nullptr) {
-				if(s == nullptr || s->prioritize(*max_s)) {
-					if(max->state == 2) {
-						sub_unconsolidated();
+				Strategy* max_s = get_strategy(max);
+				if(max_s != nullptr) {
+					if(s == nullptr || s->prioritize(*max_s)) {
+						if(max->state == 2) {
+							sub_unconsolidated();
+						}
+						max = node;
 					}
-					max = node;
 				}
 			}
+		}
+		else {
+			pheet_assert(node->state == 2);
+			node->state = 1;
 		}
 	}
 
@@ -456,9 +474,11 @@ public:
 		if(node->parent != nullptr) {
 			pheet_assert(node->parent->children == node);
 			if(node->next == node) {
+				node->parent->d = 0;
 				node->parent->children = nullptr;
 			}
 			else {
+				--(node->parent->d);
 				node->prev->next = node->next;
 				node->next->prev = node->prev;
 				node->parent->children = node->next;
@@ -554,6 +574,8 @@ public:
 					this->combine(start, node->children);
 					end = start->prev;
 				}
+				--(node->references);
+				pheet_assert(node->references > 0);
 				node->state = 0;
 				if(node->next == node) {
 					pheet_assert(this->max == nullptr);
@@ -584,17 +606,18 @@ public:
 
 				Node* tmp = node;
 				while(helper[tmp->d] != nullptr) {
-					if(node_s->prioritize(*(helper_s[tmp->d]))) {
-						pheet_assert(helper[tmp->d] != this->max);
-						this->combine_trees(tmp, helper[tmp->d]);
+					size_t old_d = tmp->d;
+					// Both tmp (from some other helper_s) and helper_s[old_d] can be max.
+					if(tmp == max || node_s->prioritize(*(helper_s[old_d]))) {
+						pheet_assert(helper[old_d] != this->max);
+						this->combine_trees(tmp, helper[old_d]);
 					}
 					else {
 						pheet_assert(tmp != this->max);
-						this->combine_trees(helper[tmp->d], tmp);
-						tmp = helper[tmp->d];
-						node_s = helper_s[tmp->d];
+						this->combine_trees(helper[old_d], tmp);
+						node_s = helper_s[old_d];
+						tmp = helper[old_d];
 					}
-					helper[tmp->d - 1] = nullptr;
 				}
 				pheet_assert(helper[tmp->d] == nullptr);
 				helper[tmp->d] = tmp;
@@ -728,6 +751,7 @@ TT VolatileStrategyHeap2<Pheet, TT, StrategyRetriever>::pop() {
 	TT ret = root_heap.pop_max(weight);
 
 	total_weight -= weight;
+	--total_size;
 	return ret;
 }
 /*
