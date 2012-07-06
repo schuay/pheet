@@ -187,9 +187,9 @@ namespace pheet {
 				}
 
 			}
-volatile int xxx=0;
-			for(int i=0;i<10000;i++)
-				xxx++;
+			//volatile int xxx=0;
+			//for(int i=0;i<10000;i++)
+			//	xxx++;
 
 	//		struct timeval stop_time;
 	//		gettimeofday(&stop_time, NULL);

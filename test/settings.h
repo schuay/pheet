@@ -19,8 +19,8 @@ bool const graph_bipartitioning_test_count_upper_bound_changes = false;
 bool const graph_bipartitioning_test_count_allocated_subproblems = false;
 bool const graph_bipartitioning_test_measure_memory_allocation_time = false;
 
-bool const sor_slices_rescheduled_at_same_place = false;
-bool const sor_events = true;
+bool const sor_slices_rescheduled_at_same_place = true;
+bool const sor_events = false;
 bool const sor_average_distance = true;
 
 bool const lupiv_slices_rescheduled_at_same_place = true;
