@@ -87,7 +87,7 @@ public:
 		// since a new size may be available even though the value in the array is still in some cache
 		// TODO: Fix this with C++11 memory model
 		++block_index;
-		if(block_index == block->get_max_size()) {
+		if(block_index == (unsigned)block->get_max_size()) {
 			block = block->get_next();
 			block_index = 0;
 		}

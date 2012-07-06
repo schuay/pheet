@@ -45,6 +45,10 @@ public:
 		pheet_assert(index < filled);
 		return data[index];
 	}
+	inline T const& get_data(size_t index) const {
+		pheet_assert(index < filled);
+		return data[index];
+	}
 	inline typename Pheet::Scheduler::BaseStrategy* get_strategy(size_t index, size_t stored_taken_offset) {
 		if(data[index].taken != stored_taken_offset) {
 			return nullptr;

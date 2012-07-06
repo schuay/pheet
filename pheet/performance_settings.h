@@ -69,6 +69,9 @@ bool const task_storage_count_skipped_cleanups = pc_all | false;
 bool const task_storage_measure_max_control_block_items = pc_all | 		false;
 bool const task_storage_measure_max_heap_length = pc_all | 				false;
 
+bool const stealer_count_stream_tasks = pc_all | false;
+bool const stealer_count_stolen_tasks = pc_all | false;
+
 bool const scheduler_measure_finish_stack_nonblocking_max = pc_all | 	false;
 bool const scheduler_measure_finish_stack_blocking_min = pc_all | 		false;
 
