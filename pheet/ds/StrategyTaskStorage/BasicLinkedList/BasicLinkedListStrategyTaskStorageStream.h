@@ -66,28 +66,30 @@ public:
 	~BasicLinkedListStrategyTaskStorageStream();
 
 	inline StreamRef get_ref() {
-		return StreamRef(block, block_index);
+		return StreamRef(last_block, last_index);
 	}
 
 	bool has_next() {
-		int bin = block_index + 1;
-		return bin < (signed)block->get_size() || (bin == (signed)block->get_max_size() && block->get_next() != nullptr && block->get_next()->get_size() > 0);
-	/*	if(!hn && old_view != nullptr) {
-			// We can now safely deregister from the old view
-			old_view->deregister();
-		}
-		return hn;*/
+		int bin = block_index;
+		return bin < block->get_size() || (bin == block->get_max_size() && block->get_next() != nullptr && block->get_next()->get_size() > 0);
 	}
 
 	void next() {
 		pheet_assert(has_next());
 		check_current_view();
 
+		last_block = block;
+		last_index = block_index;
+
 		// Might lead to problems under some relaxed memory consistency models,
 		// since a new size may be available even though the value in the array is still in some cache
 		// TODO: Fix this with C++11 memory model
-		++block_index;
-		if(block_index == (unsigned)block->get_max_size()) {
+		size_t taken_offset = block->get_taken_offset();
+		do {
+			++block_index;
+		}while(block_index < block->get_size() && block->is_taken(block_index, taken_offset));
+
+		while(block_index == block->get_max_size() || (!block->is_active())) {
 			block = block->get_next();
 			block_index = 0;
 		}
@@ -96,7 +98,7 @@ public:
 	}
 
 	void stealer_push_ref(StealerRef& stealer) {
-		auto sp = block->get_data(block_index).stealer_push;
+		auto sp = last_block->get_data(last_index).stealer_push;
 		(this->*sp)(stealer);
 	}
 
@@ -127,8 +129,10 @@ private:
 
 	View* current_view;
 	View* old_view;
+	DataBlock* last_block;
+	size_t last_index;
 	DataBlock* block;
-	int block_index;
+	size_t block_index;
 };
 
 template <class Pheet, class TaskStorage, class StealerRef>
@@ -137,7 +141,7 @@ BasicLinkedListStrategyTaskStorageStream<Pheet, TaskStorage, StealerRef>::BasicL
   current_view(task_storage.acquire_current_view()),
   old_view(nullptr),
   block(current_view->get_front()),
-  block_index(-1) {
+  block_index(0) {
 
 }
 
