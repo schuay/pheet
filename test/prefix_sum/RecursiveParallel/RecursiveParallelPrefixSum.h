@@ -12,6 +12,7 @@
 #include <iostream>
 #include <pheet/pheet.h>
 #include "RecursiveParallelPrefixSumOffsetTask.h"
+#include "RecursiveParallelPrefixSumPerformanceCounters.h"
 
 namespace pheet {
 
@@ -20,6 +21,7 @@ class RecursiveParallelPrefixSumImpl : public Pheet::Task {
 public:
 	typedef RecursiveParallelPrefixSumImpl<Pheet, BlockSize> Self;
 	typedef RecursiveParallelPrefixSumOffsetTask<Pheet, BlockSize> OffsetTask;
+	typedef RecursiveParallelPrefixSumPerformanceCounters<Pheet> PerformanceCounters;
 
 	RecursiveParallelPrefixSumImpl(unsigned int* data, size_t length)
 	:data(data), length(length), step(1), root(true) {
@@ -28,6 +30,16 @@ public:
 
 	RecursiveParallelPrefixSumImpl(unsigned int* data, size_t length, size_t step, bool root)
 	:data(data), length(length), step(step), root(root) {
+
+	}
+
+	RecursiveParallelPrefixSumImpl(unsigned int* data, size_t length, PerformanceCounters& pc)
+	:data(data), length(length), step(1), root(true), pc(pc) {
+
+	}
+
+	RecursiveParallelPrefixSumImpl(unsigned int* data, size_t length, size_t step, bool root, PerformanceCounters& pc)
+	:data(data), length(length), step(step), root(root), pc(pc) {
 
 	}
 
@@ -46,14 +58,14 @@ public:
 			{
 				{typename Pheet::Finish f;
 					Pheet::template
-						spawn<Self>(data, half, step, false);
+						spawn<Self>(data, half, step, false, pc);
 					Pheet::template
-						spawn<Self>(data + half*step, length - half, step, false);
+						spawn<Self>(data + half*step, length - half, step, false, pc);
 				}
 //std::cout << data[1024] << std::endl;
 				if(num_blocks > 2)
 					Pheet::template
-						finish<Self>(data + (BlockSize - 1)*step, num_blocks - 1, BlockSize * step, true);
+						finish<Self>(data + (BlockSize - 1)*step, num_blocks - 1, BlockSize * step, true, pc);
 //				std::cout << data[1024] << std::endl;
 
 				Pheet::template
@@ -61,9 +73,9 @@ public:
 			}
 			else {
 				Pheet::template
-					spawn<Self>(data, half, step, false);
+					spawn<Self>(data, half, step, false, pc);
 				Pheet::template
-					spawn<Self>(data + half*step, length - half, step, false);
+					spawn<Self>(data + half*step, length - half, step, false, pc);
 			}
 		}
 	}
@@ -75,6 +87,7 @@ private:
 	size_t length;
 	size_t step;
 	bool root;
+	PerformanceCounters pc;
 };
 
 template <class Pheet, size_t BlockSize>
