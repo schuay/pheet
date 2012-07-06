@@ -70,7 +70,7 @@ public:
 	}
 
 	bool has_next() {
-		int bin = block_index;
+		size_t bin = block_index;
 		return bin < block->get_size() || (bin == block->get_max_size() && block->get_next() != nullptr && block->get_next()->get_size() > 0);
 	}
 
