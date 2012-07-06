@@ -147,7 +147,8 @@ void BasicLinkedListStrategyTaskStorageView<Pheet, TT, BlockSize>::free_blocks()
 		DataBlock* nextb;
 		while(cur != nullptr) {
 			nextb = cur->get_next_freed();
-			delete cur;
+			// Can't delete those blocks. wouldn't be correct
+		//	delete cur;
 			cur = nextb;
 		}
 		next->prev = nullptr;

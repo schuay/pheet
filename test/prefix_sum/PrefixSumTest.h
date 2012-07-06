@@ -61,13 +61,14 @@ void PrefixSumTest<Pheet, Algorithm>::run_test() {
 	unsigned int* data = generate_data();
 
 	typename Pheet::Environment::PerformanceCounters pc;
+	typename Algorithm<Pheet>::PerformanceCounters apc;
 
 	Time start, end;
 
 	{typename Pheet::Environment env(cpus, pc);
 		check_time(start);
 		Pheet::template
-			finish<Algorithm<Pheet> >(data, size);
+			finish<Algorithm<Pheet> >(data, size, apc);
 		check_time(end);
 	}
 
@@ -75,11 +76,13 @@ void PrefixSumTest<Pheet, Algorithm>::run_test() {
 	double seconds = calculate_seconds(start, end);
 	std::cout << "test\talgorithm\tscheduler\ttype\tsize\tseed\tcpus\ttotal_time\tcorrectness\t";
 	Pheet::Environment::PerformanceCounters::print_headers();
+	Algorithm<Pheet>::PerformanceCounters::print_headers();
 	std::cout << std::endl;
 	cout << "prefix_sum\t" << Algorithm<Pheet>::name << "\t";
 	Pheet::Environment::print_name();
 	std::cout << "\t" << types[type] << "\t" << size << "\t" << seed << "\t" << cpus << "\t" << seconds << "\t" << correctness << "\t";
 	pc.print_values();
+	apc.print_values();
 	cout << endl;
 	delete[] data;
 }
@@ -113,7 +116,7 @@ template <class Pheet, template <class P> class Algorithm>
 bool PrefixSumTest<Pheet, Algorithm>::is_correct(unsigned int* data) {
 	for(size_t i = 0; i < size; i++) {
 		if(data[i] != i + 1) {
-	//		std::cout << ">>" << i << ": " << data[i] << std::endl;
+			std::cout << ">>" << i << ": " << data[i] << std::endl;
 			return false;
 		}
 	}

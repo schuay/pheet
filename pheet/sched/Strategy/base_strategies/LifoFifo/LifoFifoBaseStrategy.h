@@ -71,6 +71,7 @@ public:
 	}*/
 
 	inline Self& set_transitive_weight(size_t value) {
+		pheet_assert(value != 0);
 		transitive_weight = value;
 		return *this;
 	}
