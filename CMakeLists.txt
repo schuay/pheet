@@ -8,5 +8,5 @@ FILE(GLOB_RECURSE Nonworking_Tests test/inarow/*.cpp test/uts/*.cpp  test/sor/*.
 include_directories( . )
 add_executable (pheet_test ${ALL_CPP_SRCS})
 target_link_libraries(pheet_test hwloc pthread blas lapack)
-set(CMAKE_CXX_FLAGS "-std=c++0x -Wall -fmessage-length=0")
+set(CMAKE_CXX_FLAGS "-std=c++0x -Wall -fmessage-length=0 -fno-omit-frame-pointer")
 SET_TARGET_PROPERTIES(pheet_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "bin")
