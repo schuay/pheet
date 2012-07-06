@@ -14,6 +14,7 @@
 #include "BasicLinkedListStrategyTaskStorageView.h"
 #include "BasicLinkedListStrategyTaskStorageStream.h"
 #include "../../StrategyHeap/Basic/BasicStrategyHeap.h"
+//#include "../../StrategyHeap/Volatile2/VolatileStrategyHeap2.h"
 #include "../../../misc/type_traits.h"
 #include <pheet/memory/ItemReuse/ItemReuseMemoryManager.h>
 #include <pheet/ds/PriorityQueue/FibonacciSame/FibonacciSameHeap.h>
@@ -55,7 +56,7 @@ public:
 	BasicLinkedListStrategyTaskStorageStrategyRetriever(BasicLinkedListStrategyTaskStorageStrategyRetriever&& other)
 	:task_storage(other.task_storage) {}
 
-	typename Pheet::Scheduler::BaseStrategy* operator()(Item& item) {
+	typename Pheet::Scheduler::BaseStrategy* operator()(Item const& item) {
 		return (item.block->get_data(item.index).strategy);
 	}
 

@@ -148,6 +148,8 @@ private:
 
 	typename Pheet::Scheduler::State* scheduler_state;
 
+	PerformanceCounters performance_counters;
+
 //	PlaceDesc place_desc;
 	TaskStorage task_storage;
 	Stealer stealer;
@@ -157,8 +159,6 @@ private:
 	CPUThreadExecutor<Self> thread_executor;
 
 	ptrdiff_t task_id;
-
-	PerformanceCounters performance_counters;
 
 	static thread_local Self* local_place;
 
@@ -182,12 +182,12 @@ StrategySchedulerPlace<Pheet, CallThreshold>::StrategySchedulerPlace(InternalMac
   current_task_parent(nullptr),
   stack_filled_left(0), stack_filled_right(stack_size), stack_init_left(0),
   scheduler_state(scheduler_state),
+  performance_counters(perf_count),
   task_storage(performance_counters.task_storage_performance_counters),
   stealer(task_storage, performance_counters.stealer_performance_counters),
 //  spawn2call_counter(0),
   thread_executor(this),
-  task_id(0),
-  performance_counters(perf_count) {
+  task_id(0) {
 
 	// This is the root task execution context. It differs from the others in that it reuses the existing thread instead of creating a new one
 
@@ -213,11 +213,11 @@ StrategySchedulerPlace<Pheet, CallThreshold>::StrategySchedulerPlace(LevelDescri
   current_task_parent(nullptr),
   stack_filled_left(0), stack_filled_right(stack_size), stack_init_left(0),
   scheduler_state(scheduler_state),
+  performance_counters(perf_count),
   task_storage(performance_counters.task_storage_performance_counters),
   stealer(task_storage, performance_counters.stealer_performance_counters),
 //  spawn2call_counter(0),
-  thread_executor(this),
-  performance_counters(perf_count) {
+  thread_executor(this) {
 
 	memcpy(this->levels, levels, sizeof(LevelDescription) * num_initialized_levels);
 	// We have to initialize this now, as the value is already used by performance counters during initialization

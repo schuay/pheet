@@ -45,6 +45,10 @@ public:
 		pheet_assert(index < filled);
 		return data[index];
 	}
+	inline T const& get_data(size_t index) const {
+		pheet_assert(index < filled);
+		return data[index];
+	}
 	inline typename Pheet::Scheduler::BaseStrategy* get_strategy(size_t index, size_t stored_taken_offset) {
 		if(data[index].taken != stored_taken_offset) {
 			return nullptr;
@@ -52,7 +56,13 @@ public:
 		return data[index].strategy;
 	}
 	inline Self* get_next() { return next; }
-	inline bool is_active() { return active != 0; }
+	inline bool is_active() {
+		pheet_assert(active != 0 || next != nullptr);
+		return active != 0;
+	}
+	inline bool is_taken(size_t index, size_t stored_taken_offset) {
+		return data[index].taken == stored_taken_offset;
+	}
 	inline size_t get_size() { return filled; }
 	inline size_t get_max_size() { return BlockSize; }
 
