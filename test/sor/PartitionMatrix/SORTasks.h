@@ -118,6 +118,8 @@ namespace pheet {
 			if(*owner_info==Pheet::get_place())
 				pc.slices_rescheduled_at_same_place.incr();
 
+			pc.average_distance.add(Pheet::get_place()->get_distance(*owner_info));
+
 //		  	if(*owner_info == 0)
 			(*owner_info) = Pheet::get_place();
 			(*timestamp) = Pheet::get_place()->next_task_id();
@@ -186,7 +188,7 @@ namespace pheet {
 
 			}
 volatile int xxx=0;
-			for(int i=0;i<100000;i++)
+			for(int i=0;i<10000;i++)
 				xxx++;
 
 	//		struct timeval stop_time;

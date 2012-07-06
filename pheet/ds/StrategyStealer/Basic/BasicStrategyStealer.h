@@ -53,7 +53,7 @@ public:
 		// Now try to fill the own task storage with the rest
 		// Has a separate linearization point, so a task with higher priority than ret may be added
 		size_t weight = pre_weight - items.transitive_weight();
-//		size_t total_stolen = 1;
+		size_t total_stolen = 1;
 		do {
 			do {
 				while(stream.has_next()) {
@@ -67,9 +67,11 @@ public:
 				top = items.pop();
 			} while(!stream.task_storage_push(target_task_storage, top));
 
-//			++total_stolen;
+			++total_stolen;
 			weight += pre_weight - items.transitive_weight();
 		}while(weight < items.transitive_weight());
+
+	//	printf("Total stolen: %d\n",total_stolen);
 
 		return ret;
 	}

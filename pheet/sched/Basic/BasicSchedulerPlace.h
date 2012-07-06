@@ -213,7 +213,6 @@ BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::BasicSchedulerPlace(I
 	// This is the root task execution context. It differs from the others in that it reuses the existing thread instead of creating a new one
 
 	performance_counters.total_time.start_timer();
-
 	pheet_assert(num_places <= model.get_num_leaves());
 	levels[0].global_id_offset = 0;
 	levels[0].memory_level = model.get_memory_level();
