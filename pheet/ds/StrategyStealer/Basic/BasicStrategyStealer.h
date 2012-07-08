@@ -107,6 +107,10 @@ public:
 	}
 
 	typename TaskStorage::T steal_from(typename Pheet::Scheduler::Place* place) {
+		if(Pheet::get_place_id() < place->get_id()) {
+			return nullable_traits<typename TaskStorage::T>::null_value;
+		}
+
 		StealerPlace*& p = places[place];
 		if(p == nullptr) {
 			p = new StealerPlace(place->get_task_storage(), local_task_storage, pc);

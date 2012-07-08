@@ -61,7 +61,7 @@ public:
 		return active != 0;
 	}
 	inline bool is_taken(size_t index, size_t stored_taken_offset) {
-		return data[index].taken == stored_taken_offset;
+		return data[index].taken != stored_taken_offset;
 	}
 	inline size_t get_size() { return filled; }
 	inline size_t get_max_size() { return BlockSize; }
