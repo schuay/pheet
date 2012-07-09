@@ -62,7 +62,7 @@ public:
 	}
 
 	inline bool forbid_call_conversion() {
-		return true; //no_call;
+		return no_call;
 	}
 
 private:
