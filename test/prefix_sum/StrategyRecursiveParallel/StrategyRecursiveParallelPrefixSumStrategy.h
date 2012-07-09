@@ -43,7 +43,7 @@ public:
 					return false;
 				}
 //				last_decision = 4;
-				return length > other.length;
+				return length < other.length;
 			}
 //			last_decision = 5;
 			return true;

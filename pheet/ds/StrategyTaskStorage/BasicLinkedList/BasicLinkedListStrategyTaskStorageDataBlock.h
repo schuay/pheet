@@ -128,6 +128,7 @@ template <class Pheet, typename TT, class View, size_t BlockSize>
 bool BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::local_take(size_t index, typename T::Item& ret, View* current_view) {
 	pheet_assert(active > 0);
 	pheet_assert(index < filled);
+	pheet_assert(taken_offset == 0);
 	--active;
 
 	if(data[index].taken == taken_offset) {
@@ -144,6 +145,7 @@ bool BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::lo
 template <class Pheet, typename TT, class View, size_t BlockSize>
 bool BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::take(size_t index, size_t stored_taken_offset, typename T::Item& ret) {
 	pheet_assert(index < filled);
+	pheet_assert(stored_taken_offset == 0);
 
 	if(data[index].taken == stored_taken_offset) {
 		if(SIZET_CAS(&(data[index].taken), stored_taken_offset, stored_taken_offset + 1)) {
@@ -157,6 +159,7 @@ bool BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::ta
 template <class Pheet, typename TT, class View, size_t BlockSize>
 bool BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::take(size_t index, size_t stored_taken_offset) {
 	pheet_assert(index < filled);
+	pheet_assert(stored_taken_offset == 0);
 
 	if(data[index].taken == stored_taken_offset) {
 		if(SIZET_CAS(&(data[index].taken), stored_taken_offset, stored_taken_offset + 1)) {
