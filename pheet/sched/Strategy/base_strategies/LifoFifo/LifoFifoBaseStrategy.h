@@ -18,18 +18,18 @@ public:
 	typedef typename Pheet::Place Place;
 
 	LifoFifoBaseStrategy()
-	: place(Pheet::get_place()), task_id(place->next_task_id()), transitive_weight(32)/*, memory_footprint(1024)*/ {
+	: place(Pheet::get_place()), task_id(place->next_task_id()), transitive_weight(64)/*, memory_footprint(1024)*/ {
 		pheet_assert(transitive_weight != 0);
 	}
 
 	LifoFifoBaseStrategy(Self const& other)
 	: place(other.place), task_id(other.task_id), transitive_weight(other.transitive_weight)/*, memory_footprint(other.memory_footprint)*/ {
-		pheet_assert(transitive_weight != 0);
+		pheet_assert(transitive_weight != 0 || !other.forbid_call_conversion());
 	}
 
 	LifoFifoBaseStrategy(Self&& other)
 	: place(other.place), task_id(other.task_id), transitive_weight(other.transitive_weight)/*, memory_footprint(other.memory_footprint)*/ {
-		pheet_assert(transitive_weight != 0);
+		pheet_assert(transitive_weight != 0 || !other.forbid_call_conversion());
 	}
 
 	virtual ~LifoFifoBaseStrategy() {}
@@ -71,7 +71,7 @@ public:
 	}*/
 
 	inline Self& set_transitive_weight(size_t value) {
-		pheet_assert(value != 0);
+		pheet_assert(value != 0 || !forbid_call_conversion());
 		transitive_weight = value;
 		return *this;
 	}

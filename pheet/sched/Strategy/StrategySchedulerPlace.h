@@ -800,6 +800,7 @@ inline void StrategySchedulerPlace<Pheet, CallThreshold>::spawn_s(Strategy&& s, 
 		size_t threshold = (current_tasks * current_tasks);
 		if(s.forbid_call_conversion() || weight > threshold) {
 		//	spawn2call_counter = 0;
+			pheet_assert(weight > 0);
 
 			performance_counters.num_actual_spawns.incr();
 			CallTaskType* task = new CallTaskType(params ...);
@@ -835,6 +836,7 @@ inline void StrategySchedulerPlace<Pheet, CallThreshold>::spawn_s(Strategy&& s, 
 		size_t threshold = (current_tasks * current_tasks);
 		if(weight > threshold) {
 		//	spawn2call_counter = 0;
+			pheet_assert(weight > 0);
 
 			performance_counters.num_actual_spawns.incr();
 			auto bound = std::bind(f, params ...);
