@@ -230,6 +230,9 @@ template <class Pheet, uint8_t CallThreshold>
 StrategySchedulerPlace<Pheet, CallThreshold>::~StrategySchedulerPlace() {
 	if(get_id() == 0) {
 		end_finish_region();
+
+		task_storage.make_empty();
+
 		// we can shut down the scheduler
 		scheduler_state->current_state = 2;
 

@@ -618,8 +618,10 @@ public:
 						node_s = helper_s[old_d];
 						tmp = helper[old_d];
 					}
+					helper[old_d] = nullptr;
 				}
 				pheet_assert(helper[tmp->d] == nullptr);
+				pheet_assert(tmp->parent == nullptr);
 				helper[tmp->d] = tmp;
 				helper_s[tmp->d] = node_s;
 				if(init <= tmp->d + 1) {

@@ -19,6 +19,7 @@
 #include <pheet/memory/ItemReuse/ItemReuseMemoryManager.h>
 #include <pheet/ds/PriorityQueue/FibonacciSame/FibonacciSameHeap.h>
 
+#include <vector>
 #include <queue>
 #include <iostream>
 
@@ -114,6 +115,7 @@ public:
 	template <class Strategy>
 	void push(Strategy&& s, T item);
 	T pop();
+	void make_empty();
 	T& peek();
 
 	inline size_t size() {
@@ -143,24 +145,23 @@ public:
 private:
 
 	void check_view();
-//	void check_blocked_freed_views();
 
 	ViewMemoryManager views;
 	View* current_view;
 
-//	DataBlock* front;
 	DataBlock* back;
 	size_t back_index;
 
 	PerformanceCounters pc;
 	StrategyHeap heap;
+	std::vector<DataBlock*> data_block_reuse;
 };
 
 template <class Pheet, typename TT, template <class, class> class StealerT, template <class SP, typename ST, class SR> class StrategyHeapT, size_t BlockSize>
 BasicLinkedListStrategyTaskStorageImpl<Pheet, TT, StealerT, StrategyHeapT, BlockSize>::BasicLinkedListStrategyTaskStorageImpl()
 :heap(StrategyRetriever(this), pc.strategy_heap_performance_counters){
 	current_view = &(views.acquire_item());
-	current_view->init_first(new DataBlock(0, nullptr));
+	current_view->init_first(new DataBlock(0, nullptr), &data_block_reuse);
 	back = current_view->get_front();
 }
 
@@ -168,15 +169,24 @@ template <class Pheet, typename TT, template <class, class> class StealerT, temp
 BasicLinkedListStrategyTaskStorageImpl<Pheet, TT, StealerT, StrategyHeapT, BlockSize>::BasicLinkedListStrategyTaskStorageImpl(PerformanceCounters& pc)
 :pc(pc), heap(StrategyRetriever(this), this->pc.strategy_heap_performance_counters){
 	current_view = &(views.acquire_item());
-	current_view->init_first(new DataBlock(0, nullptr));
+	current_view->init_first(new DataBlock(0, nullptr), &data_block_reuse);
 	back = current_view->get_front();
 }
 
 template <class Pheet, typename TT, template <class, class> class StealerT, template <class SP, typename ST, class SR> class StrategyHeapT, size_t BlockSize>
 BasicLinkedListStrategyTaskStorageImpl<Pheet, TT, StealerT, StrategyHeapT, BlockSize>::~BasicLinkedListStrategyTaskStorageImpl() {
-	// Presumably on shutdown only a single data-block (back) will not be in data-blocks as a freed view
-	// Delete it
+	pheet_assert(heap.is_empty());
+
+//	pheet_assert(current_view->get_front() == back);
+//	pheet_assert(back->is_first());
+
+	// Back may have up to log n predecessors
+	back->delete_predecessors();
 	delete back;
+
+	for(auto i = data_block_reuse.begin(); i != data_block_reuse.end(); ++i) {
+		delete *i;
+	}
 
 	// Views are automatically deleted by the memory manager
 
@@ -202,7 +212,7 @@ void BasicLinkedListStrategyTaskStorageImpl<Pheet, TT, StealerT, StrategyHeapT, 
 
 	LocalRef r;
 	r.block = back;
-	r.index = back->push(std::move(it), current_view);
+	r.index = back->push(std::move(it), &data_block_reuse);
 	heap.template push<Strategy>(std::move(r));
 
 	if(back->get_next() != nullptr) {
@@ -226,6 +236,16 @@ TT BasicLinkedListStrategyTaskStorageImpl<Pheet, TT, StealerT, StrategyHeapT, Bl
 }
 
 template <class Pheet, typename TT, template <class, class> class StealerT, template <class SP, typename ST, class SR> class StrategyHeapT, size_t BlockSize>
+void BasicLinkedListStrategyTaskStorageImpl<Pheet, TT, StealerT, StrategyHeapT, BlockSize>::make_empty() {
+	while(!heap.is_empty()) {
+		LocalRef r = heap.pop();
+
+		pheet_assert(r.block->is_taken(r.index));
+		r.block->mark_removed(r.index, current_view);
+	}
+}
+
+template <class Pheet, typename TT, template <class, class> class StealerT, template <class SP, typename ST, class SR> class StrategyHeapT, size_t BlockSize>
 TT& BasicLinkedListStrategyTaskStorageImpl<Pheet, TT, StealerT, StrategyHeapT, BlockSize>::peek() {
 	auto r = heap.peek();
 	return r.block->peek(r.index);
@@ -241,39 +261,8 @@ void BasicLinkedListStrategyTaskStorageImpl<Pheet, TT, StealerT, StrategyHeapT, 
 		next_view->reset(current_view);
 
 		current_view = next_view;
-/*
-		if(!view_reuse.empty()) {
-			next_view = view_reuse.back();
-			view_reuse.pop_back();
-			// Has a fence inside
-			next_view->reset(current_view);
-		}
-		else {
-			next_view = new View(front, current_view);
-			MEMORY_FENCE();
-		}
-
-		blocked_freed_views.push_back(current_view);
-		// We should only update current_view after the fence to ensure consistency
-		current_view = next_view;*/
 	}
 }
-/*
-template <class Pheet, typename TT, template <class, class> class StealerT, template <class SP, typename ST, class SR> class StrategyHeapT, size_t BlockSize>
-void BasicLinkedListStrategyTaskStorageImpl<Pheet, TT, StealerT, StrategyHeapT, BlockSize>::check_blocked_freed_views() {
-	for(size_t i = blocked_freed_views.size(); view_reuse.empty() && i > 0;) {
-		--i;
-		View* tmp = blocked_freed_views[i];
-		if(tmp->try_lock()) {
-			if(i < blocked_freed_views.size() - 1) {
-				blocked_freed_views[i] = blocked_freed_views[blocked_freed_views.size() - 1];
-			}
-			blocked_freed_views.pop_back();
-
-			tmp->clean(view_reuse);
-		}
-	}
-}*/
 
 template <class Pheet, typename T, template <class, class> class StealerT>
 using BasicLinkedListStrategyTaskStorage = BasicLinkedListStrategyTaskStorageImpl<Pheet, T, StealerT, BasicStrategyHeap, 256>;
