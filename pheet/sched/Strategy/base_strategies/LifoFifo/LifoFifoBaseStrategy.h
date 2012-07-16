@@ -34,7 +34,7 @@ public:
 
 	virtual ~LifoFifoBaseStrategy() {}
 
-	inline bool prioritize(Self& other) {
+	inline bool prioritize(Self& other) const {
 		Place* cur_place = Pheet::get_place();
 		if(other.place == place) {
 			if(place == cur_place) {
@@ -58,11 +58,23 @@ public:
 		}
 	}
 
-	inline Place* get_place() {
+	inline size_t get_task_id() const {
+		return task_id;
+	}
+
+	inline size_t new_task_id() {
+		return task_id = Pheet::get_place()->next_task_id();
+	}
+
+	inline void set_place(Place* place) {
+		this->place = place;
+	}
+
+	inline Place* get_place() const {
 		return place;
 	}
 
-	inline size_t get_transitive_weight() {
+	inline size_t get_transitive_weight() const {
 		return transitive_weight;
 	}
 /*
@@ -76,9 +88,17 @@ public:
 		return *this;
 	}
 
-	inline bool forbid_call_conversion() {
+	inline bool forbid_call_conversion() const {
 		return false;
 	}
+
+	inline void rebase() {}
+
+	inline void reset() {
+		set_place(Pheet::get_place());
+		new_task_id();
+	}
+
 /*
 	inline Self& set_memory_footprint(size_t value) {
 		memory_footprint = value;

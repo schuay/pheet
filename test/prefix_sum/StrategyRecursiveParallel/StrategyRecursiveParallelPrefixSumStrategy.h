@@ -24,7 +24,7 @@ public:
 	}
 	~StrategyRecursiveParallelPrefixSumStrategy() {}
 
-	inline bool prioritize(Self& other) {
+	inline bool prioritize(Self& other) const {
 		if(this->get_place() == Pheet::get_place()) {
 			if(this->get_place() == other.get_place()) {
 				// Both locally spawned.
@@ -61,7 +61,7 @@ public:
 		return data > other.data;
 	}
 
-	inline bool forbid_call_conversion() {
+	inline bool forbid_call_conversion() const {
 		return no_call;
 	}
 
