@@ -30,8 +30,7 @@ public:
 	LastTimePerformanceCounter(LastTimePerformanceCounter<Pheet, false> const& other);
 	~LastTimePerformanceCounter();
 
-	void start_timer();
-	void stop_timer();
+	inline void take_time() {}
 	void print(char const* const formatting_string);
 	static void print_header(char const* const string);
 };
