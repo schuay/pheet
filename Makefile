@@ -8,7 +8,7 @@ default_target: all
 #=============================================================================
 # Special targets provided by cmake.
 
-# Disable implicit rules so canoncical targets will work.
+# Disable implicit rules so canonical targets will work.
 .SUFFIXES:
 
 # Remove some rules from gmake that .SUFFIXES does not remove.
@@ -36,10 +36,10 @@ CMAKE_COMMAND = /usr/bin/cmake
 RM = /usr/bin/cmake -E remove -f
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/cederman/martin/pheet
+CMAKE_SOURCE_DIR = /home/cederman/workspace/pheet
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/cederman/martin/pheet
+CMAKE_BINARY_DIR = /home/cederman/workspace/pheet
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -66,9 +66,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/cederman/martin/pheet/CMakeFiles /home/cederman/martin/pheet/CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/cederman/workspace/pheet/CMakeFiles /home/cederman/workspace/pheet/CMakeFiles/progress.marks
 	$(MAKE) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/cederman/martin/pheet/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/cederman/workspace/pheet/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -396,6 +396,30 @@ test/sorting/SortingTests.cpp.s:
 	$(MAKE) -f CMakeFiles/pheet_test.dir/build.make CMakeFiles/pheet_test.dir/test/sorting/SortingTests.cpp.s
 .PHONY : test/sorting/SortingTests.cpp.s
 
+test/tristrip/TriStripTests.o: test/tristrip/TriStripTests.cpp.o
+.PHONY : test/tristrip/TriStripTests.o
+
+# target to build an object file
+test/tristrip/TriStripTests.cpp.o:
+	$(MAKE) -f CMakeFiles/pheet_test.dir/build.make CMakeFiles/pheet_test.dir/test/tristrip/TriStripTests.cpp.o
+.PHONY : test/tristrip/TriStripTests.cpp.o
+
+test/tristrip/TriStripTests.i: test/tristrip/TriStripTests.cpp.i
+.PHONY : test/tristrip/TriStripTests.i
+
+# target to preprocess a source file
+test/tristrip/TriStripTests.cpp.i:
+	$(MAKE) -f CMakeFiles/pheet_test.dir/build.make CMakeFiles/pheet_test.dir/test/tristrip/TriStripTests.cpp.i
+.PHONY : test/tristrip/TriStripTests.cpp.i
+
+test/tristrip/TriStripTests.s: test/tristrip/TriStripTests.cpp.s
+.PHONY : test/tristrip/TriStripTests.s
+
+# target to generate assembly for a file
+test/tristrip/TriStripTests.cpp.s:
+	$(MAKE) -f CMakeFiles/pheet_test.dir/build.make CMakeFiles/pheet_test.dir/test/tristrip/TriStripTests.cpp.s
+.PHONY : test/tristrip/TriStripTests.cpp.s
+
 test/uts/RecursiveSearch/rng/brg_sha1.o: test/uts/RecursiveSearch/rng/brg_sha1.cpp.o
 .PHONY : test/uts/RecursiveSearch/rng/brg_sha1.o
 
@@ -537,6 +561,9 @@ help:
 	@echo "... test/sorting/SortingTests.o"
 	@echo "... test/sorting/SortingTests.i"
 	@echo "... test/sorting/SortingTests.s"
+	@echo "... test/tristrip/TriStripTests.o"
+	@echo "... test/tristrip/TriStripTests.i"
+	@echo "... test/tristrip/TriStripTests.s"
 	@echo "... test/uts/RecursiveSearch/rng/brg_sha1.o"
 	@echo "... test/uts/RecursiveSearch/rng/brg_sha1.i"
 	@echo "... test/uts/RecursiveSearch/rng/brg_sha1.s"

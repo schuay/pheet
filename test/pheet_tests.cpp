@@ -17,6 +17,7 @@
 #include "lupiv/LUPivTests.h"
 #include "uts/UTSTests.h"
 #include "sor/SORTests.h"
+#include "tristrip/TriStripTests.h"
 
 #include <map>
 #include <string>
@@ -27,11 +28,13 @@ int main(int argc, char* argv[]) {
 
 	std::map<std::string, Tests*> tests;
 
-        LUPivTests lpt;
+    LUPivTests lpt;
 	SORTests sors;
+	TriStripTests tristrip;
 
 	tests["SOR"] = &sors;
 	tests["lupiv"] = &lpt;
+	tests["tristrip"] = &tristrip;
 	
 	if(argc==3)
 	  {
@@ -49,8 +52,8 @@ int main(int argc, char* argv[]) {
 	    
 	    if(tests.find(argv[1])==tests.end())
 	      {
-		std::cout << "No such test" << std::endl;
 		return 1;
+		std::cout << "No such test" << std::endl;
 	      }
 	    tests[argv[1]]->run_test(prio);
 	    return 0;

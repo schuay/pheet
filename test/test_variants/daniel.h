@@ -101,6 +101,10 @@ const procs_t uts_test_cpus[] = {4};
 // 8 # (T1XL) Geometric [fixed] ----- Tree size = 1635119272, tree depth = 15, num leaves = 1308100063 (80.00%)
 const unsigned int uts_test_standardworkloads[] = {0,1,2,3,4,5,6,7,8};
 
+#define TriStrip_TEST true
+const procs_t tristrip_test_cpus[] = {4};
+const procs_t tristrip_test_nodecount[] = {512};
+
 #define SOR_TEST	true
  const procs_t sor_test_cpus[] = {12};
 const int sor_test_maxtrissize[] = {1536};
