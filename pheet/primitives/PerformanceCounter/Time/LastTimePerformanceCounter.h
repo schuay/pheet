@@ -55,18 +55,6 @@ LastTimePerformanceCounter<Pheet, false>::~LastTimePerformanceCounter() {
 
 template <class Pheet>
 inline
-void LastTimePerformanceCounter<Pheet, false>::start_timer() {
-
-}
-
-template <class Pheet>
-inline
-void LastTimePerformanceCounter<Pheet, false>::stop_timer() {
-
-}
-
-template <class Pheet>
-inline
 void LastTimePerformanceCounter<Pheet, false>::print(char const* const formatting_string) {
 
 }
