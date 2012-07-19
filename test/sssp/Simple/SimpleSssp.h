@@ -9,6 +9,8 @@
 #ifndef SIMPLESSSP_H_
 #define SIMPLESSSP_H_
 
+#include "../sssp_graph_helpers.h"
+
 namespace pheet {
 
 template <class Pheet>

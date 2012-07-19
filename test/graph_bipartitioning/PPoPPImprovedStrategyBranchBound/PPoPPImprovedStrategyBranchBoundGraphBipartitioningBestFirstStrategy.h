@@ -15,7 +15,7 @@
 namespace pheet {
 
 template <class Pheet, class SubProblem>
-  class PPoPPImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy : public Pheet::Environment::BaseStrategy {
+class PPoPPImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy : public Pheet::Environment::BaseStrategy {
 public:
     typedef PPoPPImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy<Pheet,SubProblem> Self;
     typedef typename Pheet::Environment::BaseStrategy BaseStrategy;
@@ -28,30 +28,53 @@ public:
 
 	inline bool prioritize(Self& other);
 
+	inline void rebase() {
+		this->reset();
+	}
+
 	//	UserDefinedPriority<Pheet> operator()(SubProblem* sub_problem, size_t* upper_bound);
 
 	static void print_name();
-  private:
-        SubProblem* sub_problem;
-        size_t* upper_bound;
+private:
+	size_t depth;
+	size_t lower_bound;
+	size_t diff;
 };
 
 template <class Pheet, class SubProblem>
-  inline PPoPPImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy<Pheet, SubProblem>::PPoPPImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy(SubProblem* sub_problem, size_t* upper_bound): sub_problem(sub_problem),upper_bound(upper_bound) {
+inline PPoPPImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy<Pheet, SubProblem>::PPoPPImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy(SubProblem* sub_problem, size_t* upper_bound)
+:depth(std::max(sub_problem->sets[0].count(), sub_problem->sets[1].count())),
+ lower_bound(sub_problem->get_lower_bound()),
+	// Difference to upper bound - larger is better
+	// One maybe good, maybe bad decision: Always use the value relative to the current upper bound
+	// Why: gives older elements a slight advantage. They will be rechecked and maybe dropped altogether
+	// Also problematic if upper bound is near the limits of size_t as we may have an overflow (shouldn't be a problem in our case)
+ diff(*upper_bound - lower_bound) {
+	size_t ub = *upper_bound;
+	size_t w = (ub)/(sub_problem->get_lower_bound());
+	size_t w2 = sub_problem->size - sub_problem->sets[0].count() - sub_problem->sets[1].count();
+	this->set_transitive_weight(1 << (std::min(w, w2) + 2));
+}
+
+template <class Pheet, class SubProblem>
+inline PPoPPImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy<Pheet, SubProblem>::PPoPPImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy(Self const& other)
+:BaseStrategy(other),
+ depth(other.depth),
+ lower_bound(other.lower_bound),
+ diff(other.diff)
+{
 
 }
 
- template <class Pheet, class SubProblem>
-   inline PPoPPImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy<Pheet, SubProblem>::PPoPPImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy(Self const& other):BaseStrategy(other),sub_problem(other.sub_problem),upper_bound(other.upper_bound)
-   {
+template <class Pheet, class SubProblem>
+inline PPoPPImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy<Pheet, SubProblem>::PPoPPImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy(Self&& other)
+:BaseStrategy(other),
+ depth(other.depth),
+ lower_bound(other.lower_bound),
+ diff(other.diff)
+{
 
-   }
-
- template <class Pheet, class SubProblem>
-   inline PPoPPImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy<Pheet, SubProblem>::PPoPPImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy(Self&& other):BaseStrategy(other),sub_problem(other.sub_problem),upper_bound(other.upper_bound)
-   {
-
-   }
+}
 
 
 template <class Pheet, class SubProblem>
@@ -59,12 +82,17 @@ inline PPoPPImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy<Phee
 
 }
 
- template <class Pheet, class SubProblem>
-   inline bool PPoPPImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy<Pheet, SubProblem>::prioritize(Self& other)
-   {
-     // TODO port strategy
-     return BaseStrategy::prioritize(other);
-   }
+template <class Pheet, class SubProblem>
+inline bool PPoPPImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy<Pheet, SubProblem>::prioritize(Self& other)
+{
+	if(this->get_place() == other.get_place() && this->get_place() == Pheet::get_place()) {
+		if(depth == other.depth) {
+			return diff > other.diff;
+		}
+		return depth > other.depth;
+	}
+	return lower_bound * depth < other.lower_bound * other.depth;
+}
 
 /*
 template <class Pheet, class SubProblem>

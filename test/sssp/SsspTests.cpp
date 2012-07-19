@@ -7,6 +7,7 @@
  */
 
 #include "SsspTests.h"
+#ifdef SSSP_TEST
 #include "Simple/SimpleSssp.h"
 #include "Strategy/StrategySssp.h"
 #include "Reference/ReferenceSssp.h"
@@ -14,6 +15,7 @@
 #include <pheet/sched/Basic/BasicScheduler.h>
 #include <pheet/sched/Strategy/StrategyScheduler.h>
 #include <pheet/sched/Synchroneous/SynchroneousScheduler.h>
+#endif
 
 namespace pheet {
 

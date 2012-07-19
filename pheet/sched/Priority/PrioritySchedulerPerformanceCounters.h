@@ -10,7 +10,7 @@
 
 #include "../../settings.h"
 
-#include "../../primitives/PerformanceCounter/Basic/BasicPerformanceCounter.h"
+#include <pheet/primitives/PerformanceCounter/Basic/BasicPerformanceCounter.h>
 #include "../../primitives/PerformanceCounter/Max/MaxPerformanceCounter.h"
 #include "../../primitives/PerformanceCounter/Min/MinPerformanceCounter.h"
 #include "../../primitives/PerformanceCounter/Time/TimePerformanceCounter.h"

@@ -44,6 +44,9 @@ public:
 	~MaxReducer();
 
 	void add_value(T const& value);
+	void add(T const& value) {
+		add_value(value);
+	}
 	T const& get_max();
 private:
 	typedef OrderedReducer<Pheet, ScalarMonoid<T, M> > Reducer;

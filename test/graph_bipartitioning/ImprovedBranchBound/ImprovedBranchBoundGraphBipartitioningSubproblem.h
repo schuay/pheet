@@ -142,6 +142,7 @@ void ImprovedBranchBoundGraphBipartitioningSubproblem<Pheet, LogicT, MaxSize>::u
 
 	while(cut < old_ub) {
 		if(SIZET_CAS(upper_bound, old_ub, cut)) {
+			pc.last_update_time.take_time();
 			pc.num_upper_bound_changes.incr();
 
 			pc.events.add(cut);
