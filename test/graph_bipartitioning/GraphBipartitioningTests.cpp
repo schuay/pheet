@@ -49,11 +49,8 @@
 
 #include "PPoPPImprovedStrategyBranchBound/PPoPPImprovedStrategyBranchBoundGraphBipartitioning.h"
 #include "PPoPPImprovedStrategyBranchBound/PPoPPImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy.h"
-#include "PPoPPImprovedStrategyBranchBound/PPoPPImprovedStrategyBranchBoundGraphBipartitioningDepthFirstStrategy.h"
-#include "PPoPPImprovedStrategyBranchBound/PPoPPImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy.h"
 #include "PPoPPImprovedStrategyBranchBound/PPoPPImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy.h"
-#include "PPoPPImprovedStrategyBranchBound/PPoPPImprovedStrategyBranchBoundGraphBipartitioningUpperBoundStrategy.h"
-#include "PPoPPImprovedStrategyBranchBound/PPoPPImprovedStrategyBranchBoundGraphBipartitioningUpperBoundFifoStrategy.h"
+#include "PPoPPImprovedStrategyBranchBound/PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy.h"
 #include "PPoPPImprovedStrategyBranchBound/PPoPPImprovedStrategyBranchBoundGraphBipartitioningUpperLowerBoundStrategy.h"
 
 
@@ -149,10 +146,10 @@ void GraphBipartitioningTests::run_test() {
 	this->run_partitioner<  Pheet::WithScheduler<StrategyScheduler>,
 							PPoPPImprovedStrategyBranchBoundGraphBipartitioning<>::WithSchedulingStrategy<PPoPPImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy>::T >();
 	this->run_partitioner<  Pheet::WithScheduler<StrategyScheduler>,
-							PPoPPImprovedStrategyBranchBoundGraphBipartitioning<>::WithSchedulingStrategy<PPoPPImprovedStrategyBranchBoundGraphBipartitioningUpperBoundStrategy>::T >();
+							PPoPPImprovedStrategyBranchBoundGraphBipartitioning<>::WithSchedulingStrategy<PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy>::T >();
 	this->run_partitioner<  Pheet::WithScheduler<StrategyScheduler>,
 							PPoPPImprovedStrategyBranchBoundGraphBipartitioning<>
-								::WithSchedulingStrategy<PPoPPImprovedStrategyBranchBoundGraphBipartitioningUpperBoundStrategy>
+								::WithSchedulingStrategy<PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy>
 								::WithLogic<ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic>
 								::T >();
 //	this->run_partitioner<  Pheet::WithScheduler<StrategyScheduler>,

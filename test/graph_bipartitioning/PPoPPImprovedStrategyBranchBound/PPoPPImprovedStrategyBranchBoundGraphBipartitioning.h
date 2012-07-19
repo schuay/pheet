@@ -12,7 +12,7 @@
 #include "../graph_helpers.h"
 #include "../ImprovedBranchBound/ImprovedBranchBoundGraphBipartitioningSubproblem.h"
 #include "../ImprovedBranchBound/ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic.h"
-#include "PPoPPImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy.h"
+#include "PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy.h"
 #include "../ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningPerformanceCounters.h"
 #include "PPoPPImprovedStrategyBranchBoundGraphBipartitioningTask.h"
 
@@ -146,7 +146,7 @@ void PPoPPImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, Logic, Sched
 }
 
 template <class Pheet = Pheet>
-using PPoPPImprovedStrategyBranchBoundGraphBipartitioning = PPoPPImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic, PPoPPImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy, 64>;
+using PPoPPImprovedStrategyBranchBoundGraphBipartitioning = PPoPPImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic, PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy, 64>;
 /*
 template <class Pheet = Pheet>
 using OldPPoPPImprovedStrategyBranchBoundGraphBipartitioning = PPoPPImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic, PPoPPImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy, 64>;

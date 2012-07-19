@@ -125,6 +125,7 @@ size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubP
 
 template <class Pheet, class SubProblem>
 size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubProblem>::get_estimate() {
+	pheet_assert(est + contrib_sum >= lb);
 	return get_cut() + est + contrib_sum;
 }
 
