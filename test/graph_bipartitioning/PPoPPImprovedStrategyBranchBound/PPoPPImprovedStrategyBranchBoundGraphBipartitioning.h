@@ -147,7 +147,10 @@ void PPoPPImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, Logic, Sched
 
 template <class Pheet = Pheet>
 using PPoPPImprovedStrategyBranchBoundGraphBipartitioning = PPoPPImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic, PPoPPImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy, 64>;
-
+/*
+template <class Pheet = Pheet>
+using OldPPoPPImprovedStrategyBranchBoundGraphBipartitioning = PPoPPImprovedStrategyBranchBoundGraphBipartitioningImpl<Pheet, ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic, PPoPPImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy, 64>;
+*/
 }
 
 #endif /* PPOPPIMPROVEDSTRATEGYBRANCHBOUNDGRAPHBIPARTITIONING_H_ */
