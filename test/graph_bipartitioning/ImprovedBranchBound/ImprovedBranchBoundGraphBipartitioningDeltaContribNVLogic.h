@@ -31,6 +31,7 @@ public:
 	size_t get_next_vertex();
 	size_t get_cut();
 	size_t get_lower_bound();
+	size_t get_estimate();
 	size_t get_upper_bound();
 	void update(uint8_t set, size_t pos);
 	void bulk_update(uint8_t set, Set positions);
@@ -112,6 +113,12 @@ size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProbl
 template <class Pheet, class SubProblem>
 size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::get_lower_bound() {
 	return get_cut() + lb;
+}
+
+template <class Pheet, class SubProblem>
+size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::get_estimate() {
+//	return get_cut() + ((lb + ub + contrib_sum) >> 1);
+	return get_cut() + lb + contrib_sum;
 }
 
 template <class Pheet, class SubProblem>

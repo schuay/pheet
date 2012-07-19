@@ -15,8 +15,8 @@
 namespace pheet {
 
 template <class Pheet, class SubProblem>
-  class PPoPPImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy : public Pheet::Environment::BaseStrategy {
-  public:
+class PPoPPImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy : public Pheet::Environment::BaseStrategy {
+public:
     typedef PPoPPImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy<Pheet,SubProblem> Self;
     typedef typename Pheet::Environment::BaseStrategy BaseStrategy;
     
@@ -31,30 +31,34 @@ template <class Pheet, class SubProblem>
 	//	UserDefinedPriority<Pheet> operator()(SubProblem* sub_problem, size_t* upper_bound);
 
 	static void print_name();
-  private:
-        SubProblem* sub_problem;
-        size_t* upper_bound;
-
+private:
+	size_t lower_bound;
 };
 
 template <class Pheet, class SubProblem>
-inline PPoPPImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy<Pheet, SubProblem>::PPoPPImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy(SubProblem* sub_problem, size_t* upper_bound): sub_problem(sub_problem),upper_bound(upper_bound) {
-
+inline PPoPPImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy<Pheet, SubProblem>::PPoPPImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy(SubProblem* sub_problem, size_t* upper_bound)
+:lower_bound(sub_problem->get_lower_bound()) {
+	size_t ub = *upper_bound;
+	size_t w = (ub)/(sub_problem->get_lower_bound() + 1);
+	size_t w2 = sub_problem->size - sub_problem->sets[0].count() - sub_problem->sets[1].count();
+	this->set_transitive_weight(1 << (std::min(w, w2) + 2));
 }
 
 template <class Pheet, class SubProblem>
-inline PPoPPImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy<Pheet, SubProblem>::PPoPPImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy(Self const& other):BaseStrategy(other),sub_problem(other.sub_problem),upper_bound(other.upper_bound)
+inline PPoPPImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy<Pheet, SubProblem>::PPoPPImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy(Self const& other)
+:BaseStrategy(other),
+ lower_bound(other.lower_bound)
 {
 
 }
 
 template <class Pheet, class SubProblem>
-inline PPoPPImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy<Pheet, SubProblem>::PPoPPImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy(Self&& other):BaseStrategy(other),sub_problem(other.sub_problem),upper_bound(other.upper_bound)
+inline PPoPPImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy<Pheet, SubProblem>::PPoPPImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy(Self&& other)
+:BaseStrategy(other),
+ lower_bound(other.lower_bound)
 {
 
 }
-
-
 
 template <class Pheet, class SubProblem>
 inline PPoPPImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy<Pheet, SubProblem>::~PPoPPImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy() {
@@ -64,8 +68,7 @@ inline PPoPPImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy<Phe
 template <class Pheet, class SubProblem>
 inline bool PPoPPImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy<Pheet, SubProblem>::prioritize(Self& other)
 {
-     // TODO port strategy
-     return BaseStrategy::prioritize(other);
+	return lower_bound < other.lower_bound;
 }
 
 /*
