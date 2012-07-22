@@ -33,13 +33,13 @@ namespace pheet {
 	template <class Pheet>
 	class TriStripStartTask : public Pheet::Task
 	{
-		GraphDualGenerator::Graph& graph;
+		GraphDual& graph;
 		TriStripResult<Pheet> result;
 		TriStripPerformanceCounters<Pheet> pc;
 
 	public:
 
-		TriStripStartTask(GraphDualGenerator::Graph& graph, TriStripResult<Pheet>& result, TriStripPerformanceCounters<Pheet>& pc):graph(graph),result(result),pc(pc) { }
+		TriStripStartTask(GraphDual& graph, TriStripResult<Pheet>& result, TriStripPerformanceCounters<Pheet>& pc):graph(graph),result(result),pc(pc) { }
 		virtual ~TriStripStartTask() {}
 
 		void operator()()
@@ -52,9 +52,9 @@ namespace pheet {
 				typename Pheet::Finish f;
 				for(size_t r = 0; r < spawnsetcount; r++)
 				{
-					if(!graph[i+r].taken && !graph[i+r].spawned_hint)
+					if(!graph[i+r]->taken && !graph[i+r]->spawned_hint)
 					{
-						graph[i+r].spawned_hint = true;
+						graph[i+r]->spawned_hint = true;
 					    Pheet::template spawn_s<TriStripSliceTask<Pheet>>(LowDegreeStrategy<Pheet>(graph,graph[i+r]),graph,graph[i+r],result,pc);
 
 					}
@@ -66,9 +66,10 @@ namespace pheet {
 
 	class NodeWithDegree
 	{
-	public:
-		const GraphNode* n;
+		GraphNode* n;
 		size_t degree;
+
+	public:
 
 		NodeWithDegree(GraphNode* n, size_t degree):n(n),degree(degree)
 		{
@@ -76,14 +77,14 @@ namespace pheet {
 
 		}
 
-		const GraphNode* getNode()
+		GraphNode* getNode() const
 		{
 			return n;
 		}
 
-		bool operator < (NodeWithDegree* n)
+		bool operator < (const NodeWithDegree& n) const
 		{
-			return degree > n->degree;
+			return degree > n.degree;
 		}
 
 	};
@@ -92,23 +93,23 @@ namespace pheet {
 	class TriStripSliceTask : public Pheet::Task
 	{
 
-		GraphDualGenerator::Graph& graph;
-		GraphNode& startnode;
+		GraphDual& graph;
+		GraphNode* startnode;
 		TriStripResult<Pheet> result;
 		TriStripPerformanceCounters<Pheet> pc;
 	public:
 
-		TriStripSliceTask(GraphDualGenerator::Graph& graph, GraphNode& startnode, TriStripResult<Pheet>& result, TriStripPerformanceCounters<Pheet>& pc):graph(graph), startnode(startnode),result(result),pc(pc) {}
+		TriStripSliceTask(GraphDual& graph, GraphNode* startnode, TriStripResult<Pheet>& result, TriStripPerformanceCounters<Pheet>& pc):graph(graph), startnode(startnode),result(result),pc(pc) {}
 		virtual ~TriStripSliceTask() {}
 
 		void operator()()
 		{
-			GraphDualGenerator::Graph strip;
+			std::vector<GraphNode*> strip;
 
 			std::priority_queue<NodeWithDegree> possiblenextnodes;
 
-			GraphNode& currnode = startnode;
-			if(!currnode.take())
+			GraphNode* currnode = startnode;
+			if(!currnode->take())
 				return;
 
 			strip.push_back(currnode);
@@ -116,13 +117,13 @@ namespace pheet {
 			while(true)
 			{
 
-				for(int d=0;d<currnode.num_edges;d++)
+				for(int d=0;d<currnode->num_edges;d++)
 				{
-					GraphNode& possnode = currnode.edges[d];
+					GraphNode* possnode = currnode->edges[d];
 
-					if(!possnode.isTaken())
+					if(!possnode->isTaken())
 					{
-						possiblenextnodes.push(NodeWithDegree(&possnode,possnode.getDegree()));
+						possiblenextnodes.push(NodeWithDegree(possnode,possnode->getDegree()));
 					}
 				}
 
@@ -132,8 +133,8 @@ namespace pheet {
 
 				while(!possiblenextnodes.empty())
 				{
-					GraphNode& g = *(possiblenextnodes.top().getNode());
-					if(g.take())
+					GraphNode* g = (possiblenextnodes.top().getNode());
+					if(g->take())
 					{
 						found = true;
 						currnode = g;
@@ -148,11 +149,11 @@ namespace pheet {
 
 				while(!possiblenextnodes.empty())
 				{
-					GraphNode& n = possiblenextnodes.top().n;
+					GraphNode* n = possiblenextnodes.top().getNode();
 
-					if(!n.spawned_hint)
+					if(!n->spawned_hint)
 					{
-						n.spawned_hint = true;
+						n->spawned_hint = true;
 						Pheet::template spawn_s<TriStripSliceTask<Pheet>>(LowDegreeStrategy<Pheet>(graph,n),graph,n,result,pc);
 					}
 

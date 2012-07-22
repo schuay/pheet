@@ -27,7 +27,7 @@ namespace pheet {
 template <class Pheet>
 class TriStripRun {
 public:
-  TriStripRun(procs_t cpus, GraphDualGenerator::Graph& graph);
+  TriStripRun(procs_t cpus, GraphDual& graph);
 	~TriStripRun();
 
 	void run();
@@ -46,7 +46,7 @@ public:
 
 private:
 	unsigned int cpus;
-	GraphDualGenerator::Graph& graph;
+	GraphDual& graph;
 	TriStripResult<Pheet> result;
 	typename Pheet::Environment::PerformanceCounters pc;
 	TriStripPerformanceCounters<Pheet> ppc;
@@ -63,7 +63,7 @@ size_t TriStripRun<Pheet>::getTriStripCount()
 }
 
 template <class Pheet>
-  TriStripRun<Pheet>::TriStripRun(procs_t cpus, GraphDualGenerator::Graph& graph):
+  TriStripRun<Pheet>::TriStripRun(procs_t cpus, GraphDual& graph):
 cpus(cpus), graph(graph) {
 	
 }

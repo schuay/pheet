@@ -15,8 +15,8 @@ namespace pheet {
 
 template <class Pheet>
 class LowDegreeStrategy :  public Pheet::Environment::BaseStrategy {
-	GraphDualGenerator::Graph& graph;
-	GraphNode& node;
+	GraphDual graph;
+	GraphNode* node;
 
 public:
 
@@ -24,7 +24,7 @@ public:
 	typedef typename Pheet::Environment::BaseStrategy BaseStrategy;
 
 
-	LowDegreeStrategy(GraphDualGenerator::Graph& graph, GraphNode& node):graph(graph),node(node)
+	LowDegreeStrategy(GraphDual graph, GraphNode* node):graph(graph),node(node)
 	{
 //		this->set_memory_footprint(1);
 		this->set_transitive_weight(1000000);
@@ -41,8 +41,8 @@ public:
 	~LowDegreeStrategy() {}
 
 	inline bool prioritize(Self& other) {
-		size_t thisd = node.getDegree();
-		size_t otherd = other.node.getDegree();
+		size_t thisd = node->getDegree();
+		size_t otherd = other.node->getDegree();
 
 		if(thisd==otherd)
 			return BaseStrategy::prioritize(other);

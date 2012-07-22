@@ -49,10 +49,7 @@ TriStripTest<Impl>::~TriStripTest() {
 template <class Impl>
 void TriStripTest<Impl>::run_test() {
 
-	GraphDualGenerator gdg;
-	GraphDualGenerator::Graph graph;
-
-	graph = gdg.generate_uniform(nodecount, 123, 0.5);
+	GraphDual graph(nodecount,123,0.5);
 
 	Impl iar(cpus, graph);
 

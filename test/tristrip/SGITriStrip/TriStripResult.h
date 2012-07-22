@@ -24,7 +24,7 @@ public:
 	TriStripResult(TriStripResult<Pheet>& other):tristripcount(other.tristripcount) {}
 	TriStripResult(TriStripResult<Pheet>&& other):tristripcount(other.tristripcount) {};
 
-	void addstrip(std::vector<GraphNode> strip)
+	void addstrip(std::vector<GraphNode*> strip)
 	{
 		// Should store the strip, but for now only count it
 		tristripcount.incr();

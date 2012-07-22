@@ -62,31 +62,11 @@ public:
 
 class GraphDual
 {
-	friend class GraphDualGenerator;
 	std::vector<GraphNode> nodes;
 
-public:
-	GraphDual(size_t size)
+	void generate_uniform(size_t size, size_t seed, float p)
 	{
 		nodes = std::vector<GraphNode>(size);
-	}
-
-	GraphNode* operator[](size_t index)
-	{
-		return &nodes[index];
-	}
-
-};
-
-class GraphDualGenerator
-{
-
-
-public:
-
-	GraphDual& generate_uniform(size_t size, size_t seed, float p)
-	{
-		GraphDual data(size);
 		boost::mt19937 rng;
 		rng.seed(seed);
 	    boost::uniform_real<float> rnd_f(0.0, 1.0);
@@ -95,27 +75,43 @@ public:
 		for(size_t i = 0; i < size; ++i) {
 			for(size_t j = i + 1; j < size; ++j) {
 				if(rnd_f(rng) < p) {
-					edges[i].push_back(data[j]);
-					edges[j].push_back(data[i]);
+					edges[i].push_back(&nodes[j]);
+					edges[j].push_back(&nodes[i]);
 				}
 			}
 
-			data[i]->num_edges = edges[i].size();
-			data[i]->taken = 0;
-			data[i]->spawned_hint = false;
+			nodes[i].num_edges = edges[i].size();
+			nodes[i].taken = 0;
+			nodes[i].spawned_hint = false;
 			if(edges[i].size() > 0) {
-				data[i]->edges = new GraphNode*[edges[i].size()];
+				nodes[i].edges = new GraphNode*[edges[i].size()];
 				for(size_t j = 0; j < edges[i].size(); ++j) {
-					data[i]->edges[j] = edges[i][j];
+					nodes[i].edges[j] = edges[i][j];
 				}
 			}
 			else {
-				data[i]->edges = 0;
+				nodes[i].edges = 0;
 			}
 		}
 		delete[] edges;
 
-		return data;
+	}
+
+public:
+
+	GraphDual(size_t size, size_t seed, float p)
+	{
+		generate_uniform(size,seed,p);
+	}
+
+	size_t size()
+	{
+		return nodes.size();
+	}
+
+	GraphNode* operator[](size_t index)
+	{
+		return &nodes[index];
 	}
 
 
