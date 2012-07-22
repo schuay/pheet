@@ -18,36 +18,29 @@
 
 namespace pheet {
 
-class GraphNodeContent
-{
+class GraphNode {
 public:
-	GraphNode* edges;
+	GraphNode** edges;
 	size_t num_edges;
 	bool spawned_hint;
 	size_t taken;
-};
 
-class GraphNode {
-public:
-	const GraphNodeContent* gnc;
-
-	GraphNode(GraphNode* edges, size_t num_edges)
+	GraphNode()
 	{
-		GraphNodeContent* gnc = new GraphNodeContent();
-		gnc->edges = new GraphNode[num_edges];
-		for(size_t i=0;i<num_edges;i++)
-			gnc->edges[i]=edges[i];
-		gnc->num_edges = num_edges;
-		gnc->spawned_hint = false;
-		gnc->taken = 0;
 
 	}
+
+/*	GraphNode(GraphNode* edges, size_t num_edges):edges(edges),num_edges(num_edges)
+	{
+		spawned_hint = false;
+		taken = 0;
+	}*/
 
 	size_t getDegree()
 	{
 		size_t degree = 0;
 		for(int i=0;i<num_edges;i++)
-			if(!edges[i].isTaken())
+			if(!edges[i]->isTaken())
 				degree++;
 		return degree;
 	}
@@ -66,22 +59,39 @@ public:
 
 };
 
+
+class GraphDual
+{
+	friend class GraphDualGenerator;
+	std::vector<GraphNode> nodes;
+
+public:
+	GraphDual(size_t size)
+	{
+		nodes = std::vector<GraphNode>(size);
+	}
+
+	GraphNode* operator[](size_t index)
+	{
+		return &nodes[index];
+	}
+
+};
+
 class GraphDualGenerator
 {
 
 
 public:
 
-	typedef std::vector<GraphNode*> Graph;
-
-	std::vector<GraphNode*> generate_uniform(size_t size, size_t seed, float p)
+	GraphDual& generate_uniform(size_t size, size_t seed, float p)
 	{
-		std::vector<GraphNode> data(size);
+		GraphDual data(size);
 		boost::mt19937 rng;
 		rng.seed(seed);
 	    boost::uniform_real<float> rnd_f(0.0, 1.0);
 
-		std::vector<GraphNode>* edges = new std::vector<GraphNode>[size];
+		std::vector<GraphNode*>* edges = new std::vector<GraphNode*>[size];
 		for(size_t i = 0; i < size; ++i) {
 			for(size_t j = i + 1; j < size; ++j) {
 				if(rnd_f(rng) < p) {
@@ -89,17 +99,18 @@ public:
 					edges[j].push_back(data[i]);
 				}
 			}
-			data[i].num_edges = edges[i].size();
-			data[i].taken = 0;
-			data[i].spawned_hint = false;
+
+			data[i]->num_edges = edges[i].size();
+			data[i]->taken = 0;
+			data[i]->spawned_hint = false;
 			if(edges[i].size() > 0) {
-				data[i].edges = new GraphNode[edges[i].size()];
+				data[i]->edges = new GraphNode*[edges[i].size()];
 				for(size_t j = 0; j < edges[i].size(); ++j) {
-					data[i].edges[j] = edges[i][j];
+					data[i]->edges[j] = edges[i][j];
 				}
 			}
 			else {
-				data[i].edges = 0;
+				data[i]->edges = 0;
 			}
 		}
 		delete[] edges;
