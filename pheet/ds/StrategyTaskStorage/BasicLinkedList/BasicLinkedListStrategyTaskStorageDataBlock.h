@@ -33,13 +33,15 @@ public:
 	BasicLinkedListStrategyTaskStorageDataBlock(size_t id, Self* prev);
 	~BasicLinkedListStrategyTaskStorageDataBlock();
 
+	void delete_predecessors();
+
 	bool local_take(size_t index, typename T::Item& ret, View* current_view);
 	bool take(size_t index, size_t stored_taken_offset, typename T::Item& ret);
 	bool take(size_t index, size_t stored_taken_offset);
 	void mark_removed(size_t index, View* current_view);
 	T& peek(size_t index);
 
-	size_t push(T&& item, View* current_view);
+	size_t push(T&& item, std::vector<Self*>* block_reuse);
 
 	inline T& get_data(size_t index) {
 		pheet_assert(index < filled);
@@ -60,8 +62,14 @@ public:
 		pheet_assert(active != 0 || next != nullptr);
 		return active != 0;
 	}
+	inline bool is_taken(size_t index) {
+		return data[index].taken != taken_offset;
+	}
 	inline bool is_taken(size_t index, size_t stored_taken_offset) {
 		return data[index].taken != stored_taken_offset;
+	}
+	inline bool is_first() {
+		return prev == nullptr;
 	}
 	inline size_t get_size() { return filled; }
 	inline size_t get_max_size() { return BlockSize; }
@@ -106,19 +114,27 @@ BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::BasicLi
 
 template <class Pheet, typename TT, class View, size_t BlockSize>
 BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::~BasicLinkedListStrategyTaskStorageDataBlock() {
-	reset_content();
-	if(orig_prev != nullptr) {
-		orig_prev->orig_next = orig_next;
+	// Delete remaining strategies
+	for(size_t i = 0; i < filled; ++i) {
+		pheet_assert(data[i].taken == taken_offset + 1);
+		delete data[i].strategy;
 	}
-	if(orig_next != nullptr) {
-		orig_next->orig_prev = orig_prev;
+}
+
+template <class Pheet, typename TT, class View, size_t BlockSize>
+void BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::delete_predecessors() {
+	Self* p1 = prev;
+	while(p1 != nullptr) {
+		Self* p2 = p1->prev;
+		delete p1;
+		p1 = p2;
 	}
 }
 
 template <class Pheet, typename TT, class View, size_t BlockSize>
 void BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::mark_removed(size_t index, View* current_view) {
 	pheet_assert(active > 0);
-	pheet_assert(data[index].taken == 1);
+	pheet_assert((data[index].taken & 1) == 1);
 
 	--active;
 	clean(current_view);
@@ -200,6 +216,7 @@ void BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::cl
 		 // Only free blocks if they have a successor (I believe as it may only be inactive if there is a successor)
 		pheet_assert(next != nullptr);
 		next->prev = prev;
+		pheet_assert(next_freed == nullptr);
 		current_view->mark_empty(this);
 		if(prev != nullptr) {
 			prev->next = next;
@@ -211,13 +228,21 @@ void BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::cl
 }
 
 template <class Pheet, typename TT, class View, size_t BlockSize>
-size_t BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::push(T&& item, View* current_view) {
+size_t BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::push(T&& item, std::vector<Self*>* block_reuse) {
 	pheet_assert(filled < BlockSize);
 
 	data[filled] = item;
 
 	if(filled == BlockSize - 1) {
-		Self* tmp = new Self(id + 1, this);
+		Self* tmp;
+		if(block_reuse->empty()) {
+			tmp = new Self(id + 1, this);
+		}
+		else {
+			tmp = block_reuse->back();
+			tmp->reuse(id + 1, this);
+			block_reuse->pop_back();
+		}
 		MEMORY_FENCE();
 		next = tmp;
 	}
@@ -231,10 +256,21 @@ size_t BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::
 
 template <class Pheet, typename TT, class View, size_t BlockSize>
 void BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::reset_content() {
+	pheet_assert(filled == BlockSize);
 	for(size_t i = 0; i < filled; ++i) {
+		pheet_assert(data[i].taken == taken_offset + 1);
+		++(data[i].taken);
 		delete data[i].strategy;
 	}
 	filled = 0;
+	next_freed = nullptr;
+
+	if(orig_prev != nullptr) {
+		orig_prev->orig_next = orig_next;
+	}
+	if(orig_next != nullptr) {
+		orig_next->orig_prev = orig_prev;
+	}
 }
 
 

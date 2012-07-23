@@ -31,6 +31,7 @@ public:
 	size_t get_next_vertex();
 	size_t get_cut();
 	size_t get_lower_bound();
+	size_t get_estimate();
 	size_t get_upper_bound();
 	void update(uint8_t set, size_t pos);
 	void bulk_update(uint8_t set, Set positions);
@@ -42,6 +43,7 @@ private:
 	size_t cut;
 	size_t lb;
 	size_t nv;
+	size_t ub;
 	size_t contrib_sum;
 
 	size_t* weights[2];
@@ -50,7 +52,7 @@ private:
 
 template <class Pheet, class SubProblem>
 ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic(SubProblem* sub_problem)
-: sub_problem(sub_problem), cut(0), lb(0), nv(0), contrib_sum(0) {
+: sub_problem(sub_problem), cut(0), lb(0), nv(0), ub(0), contrib_sum(0) {
 	weights[0] = new size_t[sub_problem->size];
 	weights[1] = new size_t[sub_problem->size];
 	memset(weights[0], 0, sizeof(size_t)*sub_problem->size);
@@ -76,7 +78,7 @@ ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::Im
 
 template <class Pheet, class SubProblem>
 ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic(SubProblem* sub_problem, Self const& other)
-: sub_problem(sub_problem), cut(other.cut), lb(other.lb), nv(other.nv), contrib_sum(other.contrib_sum) {
+: sub_problem(sub_problem), cut(other.cut), lb(other.lb), nv(other.nv), ub(other.ub), contrib_sum(other.contrib_sum) {
 	weights[0] = new size_t[sub_problem->size];
 	weights[1] = new size_t[sub_problem->size];
 	memcpy(weights[0], other.weights[0], sizeof(size_t)*sub_problem->size);
@@ -114,8 +116,14 @@ size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProbl
 }
 
 template <class Pheet, class SubProblem>
-size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::get_upper_bound() {
+size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::get_estimate() {
+//	return get_cut() + ((lb + ub + contrib_sum) >> 1);
 	return get_cut() + lb + contrib_sum;
+}
+
+template <class Pheet, class SubProblem>
+size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::get_upper_bound() {
+	return get_cut() + ub + contrib_sum;
 }
 
 template <class Pheet, class SubProblem>
@@ -135,6 +143,7 @@ void ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem
 
 	size_t di = 0;
 	lb = 0;
+	ub = 0;
 	size_t current_bit = sub_problem->sets[2]._Find_first();
 	nv = current_bit;
 	size_t best_contrib = 0;
@@ -146,6 +155,7 @@ void ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem
 		}
 		delta[di++] = d;
 		lb += std::min(weights[0][current_bit], weights[1][current_bit]);
+		ub += std::max(weights[0][current_bit], weights[1][current_bit]);
 		current_bit = sub_problem->sets[2]._Find_next(current_bit);
 	}
 	std::sort(delta, delta + di);
@@ -154,6 +164,7 @@ void ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem
 	if(pivot < di && delta[pivot] < 0) {
 		do {
 			lb += -delta[pivot];
+			ub -= -delta[pivot];
 			++pivot;
 		} while(pivot < di && delta[pivot] < 0);
 	}
@@ -161,6 +172,7 @@ void ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem
 		do {
 			--pivot;
 			lb += delta[pivot];
+			ub -= delta[pivot];
 		} while(pivot > 0 && delta[pivot - 1] > 0);
 	}
 

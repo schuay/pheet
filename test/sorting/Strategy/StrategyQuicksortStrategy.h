@@ -34,7 +34,7 @@ public:
 
 	~StrategyQuicksortStrategy() {}
 
-	inline bool prioritize(Self& other) {
+	inline bool prioritize(Self& other) const {
 		if(this->get_place() == other.get_place() && this->get_place() == Pheet::get_place()) {
 			return length < other.length;
 		}

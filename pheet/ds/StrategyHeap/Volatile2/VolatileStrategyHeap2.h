@@ -10,6 +10,7 @@
 #define VOLATILESTRATEGYHEAP2_H_
 
 #include "VolatileStrategyHeap2PerformanceCounters.h"
+#include <limits>
 
 namespace pheet {
 
@@ -48,6 +49,8 @@ public:
 	:data(data), weight(weight), references(0), base_heap(base_heap), state(0), d(0) {}
 	~VolatileStrategyHeap2Node() {
 		pheet_assert(references == 0);
+		pheet_assert(weight != 0);
+		pheet_assert(weight < ((std::numeric_limits<size_t>::max() >> 3)));
 	}
 
 	TT data;
@@ -96,6 +99,7 @@ public:
 			return false;
 		}
 		weight = s->get_transitive_weight();
+		pheet_assert(weight < ((std::numeric_limits<size_t>::max() >> 3)));
 		Node* new_node = new Node(data, weight, this);
 		this->link_node(new_node, s);
 		return true;
@@ -398,6 +402,7 @@ public:
 			return false;
 		}
 		weight = s->get_transitive_weight();
+		pheet_assert(weight < ((std::numeric_limits<size_t>::max() >> 3)));
 		Node* new_node = new Node(data, weight, this);
 		this->link_node(new_node, s);
 		return true;
@@ -618,8 +623,10 @@ public:
 						node_s = helper_s[old_d];
 						tmp = helper[old_d];
 					}
+					helper[old_d] = nullptr;
 				}
 				pheet_assert(helper[tmp->d] == nullptr);
+				pheet_assert(tmp->parent == nullptr);
 				helper[tmp->d] = tmp;
 				helper_s[tmp->d] = node_s;
 				if(init <= tmp->d + 1) {
@@ -738,6 +745,8 @@ void VolatileStrategyHeap2<Pheet, TT, StrategyRetriever>::push(T const& item) {
 	size_t weight;
 	if(heap->create_node(item, weight)) {
 		++total_size;
+		pheet_assert(weight != 0);
+		pheet_assert(weight < ((std::numeric_limits<size_t>::max() >> 3)));
 		total_weight += weight;
 	}
 }
@@ -750,6 +759,7 @@ TT VolatileStrategyHeap2<Pheet, TT, StrategyRetriever>::pop() {
 	size_t weight;
 	TT ret = root_heap.pop_max(weight);
 
+	pheet_assert(weight < ((std::numeric_limits<size_t>::max() >> 3)));
 	total_weight -= weight;
 	--total_size;
 	return ret;

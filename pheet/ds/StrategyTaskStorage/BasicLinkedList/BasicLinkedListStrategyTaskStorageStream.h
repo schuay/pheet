@@ -124,6 +124,7 @@ public:
 	template <class Strategy>
 	void task_storage_push(TaskStorage& task_storage, BaseStrategy* strategy, typename TaskStorage::T const& data) {
 		Strategy s(*reinterpret_cast<Strategy*>(strategy));
+		s.rebase();
 		task_storage.push(std::move(s), data);
 	}
 private:

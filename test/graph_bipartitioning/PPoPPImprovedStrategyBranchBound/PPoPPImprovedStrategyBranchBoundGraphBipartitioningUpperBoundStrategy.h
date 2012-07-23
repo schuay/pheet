@@ -32,7 +32,14 @@ public:
 	//	UserDefinedPriority<Pheet> operator()(SubProblem* sub_problem, size_t* upper_bound);
 
 	inline bool prioritize(Self& other);
+/*
+	inline bool forbid_call_conversion() const {
+		return !last;
+	}*/
 
+	inline void rebase() {
+		this->reset();
+	}
 
 	static void print_name();
 private:
@@ -42,8 +49,13 @@ private:
 
 template <class Pheet, class SubProblem>
 inline PPoPPImprovedStrategyBranchBoundGraphBipartitioningUpperBoundStrategy<Pheet, SubProblem>::PPoPPImprovedStrategyBranchBoundGraphBipartitioningUpperBoundStrategy(SubProblem* sub_problem, size_t* upper_bound)
-:upper_bound(sub_problem->get_upper_bound()),uncertainty(this->upper_bound - sub_problem->get_lower_bound()) {
-
+:upper_bound(sub_problem->get_estimate()),
+ uncertainty(sub_problem->get_upper_bound() - sub_problem->get_lower_bound()) {
+//	size_t depth = sub_problem->sets[0].count() - sub_problem->sets[1].count();
+	size_t ub = *upper_bound;
+	size_t w = (ub)/(sub_problem->get_lower_bound() + 1);
+	size_t w2 = sub_problem->size - sub_problem->sets[0].count() - sub_problem->sets[1].count();
+	this->set_transitive_weight(1 << (std::min(w, w2) + 2));
 }
 /*
 template <class Pheet, class SubProblem>

@@ -79,7 +79,7 @@ void PPoPPLocalityStrategyLUPivStandardPathTask<Pheet, BLOCK_SIZE>::operator()()
 		int pos = i * BLOCK_SIZE;
 		Pheet::template
 			spawn_s<LocalityStrategyLUPivMMTask<Pheet> >(
-								     PPoPPLUPivLocalityStrategy<Pheet>(block_owners[i]/*, 4, 2*/),
+					PPoPPLUPivLocalityStrategy<Pheet>(block_owners[i], 1, false),
 					block_owners + i,
 					lu_col + pos, a, a + pos, k, lda, pc);
 	}

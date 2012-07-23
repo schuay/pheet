@@ -94,7 +94,7 @@ template <class Pheet, size_t BlockSize>
 char const RecursiveParallelPrefixSumImpl<Pheet, BlockSize>::name[] = "RecursiveParallelPrefixSum";
 
 template <class Pheet>
-using RecursiveParallelPrefixSum = RecursiveParallelPrefixSumImpl<Pheet, 1024>;
+using RecursiveParallelPrefixSum = RecursiveParallelPrefixSumImpl<Pheet, 4096>;
 
 } /* namespace pheet */
 #endif /* RECURSIVEPARALLELPREFIXSUM_H_ */

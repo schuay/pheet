@@ -55,6 +55,7 @@ public:
 	bool is_solution();
 	void update_solution(size_t* upper_bound, SolutionReducer& best, PerformanceCounters& pc);
 	size_t get_lower_bound();
+	size_t get_estimate();
 	size_t get_upper_bound();
 private:
 	void update(uint8_t set, size_t pos);
@@ -142,6 +143,7 @@ void ImprovedBranchBoundGraphBipartitioningSubproblem<Pheet, LogicT, MaxSize>::u
 
 	while(cut < old_ub) {
 		if(SIZET_CAS(upper_bound, old_ub, cut)) {
+			pc.last_update_time.take_time();
 			pc.num_upper_bound_changes.incr();
 
 			pc.events.add(cut);
@@ -161,6 +163,11 @@ void ImprovedBranchBoundGraphBipartitioningSubproblem<Pheet, LogicT, MaxSize>::u
 template <class Pheet, template <class P, class SP> class LogicT, size_t MaxSize>
 size_t ImprovedBranchBoundGraphBipartitioningSubproblem<Pheet, LogicT, MaxSize>::get_lower_bound() {
 	return logic.get_lower_bound();
+}
+
+template <class Pheet, template <class P, class SP> class LogicT, size_t MaxSize>
+size_t ImprovedBranchBoundGraphBipartitioningSubproblem<Pheet, LogicT, MaxSize>::get_estimate() {
+	return logic.get_estimate();
 }
 
 template <class Pheet, template <class P, class SP> class LogicT, size_t MaxSize>

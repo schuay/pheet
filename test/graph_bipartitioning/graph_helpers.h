@@ -20,11 +20,20 @@ namespace pheet {
 struct GraphEdge {
 	size_t target;
 	size_t weight;
+  size_t reverse;
 };
 
 struct GraphVertex {
 	GraphEdge* edges;
 	size_t num_edges;
+};
+
+class edgeweight_compare {
+public:
+int operator()(const GraphEdge &e1, const GraphEdge &e2) const
+{ 
+  return (e1.weight<e2.weight);
+}
 };
 
 template <size_t MAX_SIZE = 64>

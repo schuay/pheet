@@ -67,6 +67,9 @@ void PrefixSumTests::run_test() {
 	this->run_prefix_sum<	Pheet::WithScheduler<SynchroneousScheduler>,
 						StrategyRecursiveParallelPrefixSum>();
 
+	this->run_prefix_sum<	Pheet::WithScheduler<StrategyScheduler>,
+						RecursiveParallelPrefixSum>();
+
 	this->run_prefix_sum<	Pheet,
 						RecursiveParallelPrefixSum>();
 

@@ -97,6 +97,7 @@ void GraphBipartitioningTest<Pheet, Partitioner>::run_test() {
 	delete_data(data);
 }
 
+// JLT: would like to have more generators - template?
 template <class Pheet, template <class P> class Partitioner>
 GraphVertex* GraphBipartitioningTest<Pheet, Partitioner>::generate_data() {
 	GraphVertex* data = new GraphVertex[size];
@@ -124,12 +125,37 @@ GraphVertex* GraphBipartitioningTest<Pheet, Partitioner>::generate_data() {
 			for(size_t j = 0; j < edges[i].size(); ++j) {
 				data[i].edges[j] = edges[i][j];
 			}
+			std::sort(&data[i].edges[0],&data[i].edges[data[i].num_edges],edgeweight_compare());
+			/*
+			for (size_t j=0;  j < data[i].num_edges; j++) {
+			  std::cout << data[i].edges[j].weight << ' ';
+			}
+			std::cout << '\n' << '\n';
+			*/
 		}
 		else {
 			data[i].edges = NULL;
 		}
 	}
 	delete[] edges;
+
+	// create reverse edges, O(n+m), space O(n^2)
+	// should be factored out
+	size_t eix[size][size];
+	for (size_t i = 0; i < size; i++) {
+	  for (size_t j = 0; j < data[i].num_edges; j++) {
+	    eix[i][data[i].edges[j].target] = j;
+	  }
+	}
+	for (size_t i = 0; i < size; i++) {
+	  for (size_t j = 0; j < data[i].num_edges; j++) {
+	    data[i].edges[j].reverse = eix[data[i].edges[j].target][i];
+
+	    //std::cout << '(' << i << ',' << data[i].edges[j].target << "):" << data[i].edges[j].reverse << ' ';
+	
+	  }
+	  //std::cout << '\n' << '\n';
+	}
 
 	return data;
 }

@@ -19,12 +19,12 @@ public:
 
 	StrategyRecursiveParallelPrefixSumStrategy(unsigned int* data, size_t length, bool in_order, bool no_call)
 	:data(data), length(length), in_order(in_order), no_call(no_call) {
-		this->set_transitive_weight((length >> 9) + 1);
+		this->set_transitive_weight((length >> 11) + 1);
 //		place_id = this->get_place()->get_id();
 	}
 	~StrategyRecursiveParallelPrefixSumStrategy() {}
 
-	inline bool prioritize(Self& other) {
+	inline bool prioritize(Self& other) const {
 		if(this->get_place() == Pheet::get_place()) {
 			if(this->get_place() == other.get_place()) {
 				// Both locally spawned.
@@ -61,7 +61,7 @@ public:
 		return data > other.data;
 	}
 
-	inline bool forbid_call_conversion() {
+	inline bool forbid_call_conversion() const {
 		return no_call;
 	}
 
