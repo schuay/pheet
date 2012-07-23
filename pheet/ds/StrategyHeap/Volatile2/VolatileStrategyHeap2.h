@@ -48,6 +48,7 @@ public:
 	:data(data), weight(weight), references(0), base_heap(base_heap), state(0), d(0) {}
 	~VolatileStrategyHeap2Node() {
 		pheet_assert(references == 0);
+		pheet_assert(weight != 0);
 	}
 
 	TT data;
@@ -740,6 +741,7 @@ void VolatileStrategyHeap2<Pheet, TT, StrategyRetriever>::push(T const& item) {
 	size_t weight;
 	if(heap->create_node(item, weight)) {
 		++total_size;
+		pheet_assert(weight != 0);
 		total_weight += weight;
 	}
 }
