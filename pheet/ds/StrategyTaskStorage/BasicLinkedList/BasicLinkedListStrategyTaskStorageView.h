@@ -44,7 +44,7 @@ public:
 
 	bool try_reuse();
 
-	void init_first(DataBlock* front);
+	void init_first(DataBlock* front, std::vector<DataBlock*>* block_reuse);
 	void reset(Self* prev);
 	void update_front();
 private:
@@ -62,6 +62,8 @@ private:
 	size_t num_freed_blocks;
 
 	ptrdiff_t reg;
+
+	std::vector<DataBlock*>* block_reuse;
 };
 
 template <class Pheet, typename TT, size_t BlockSize>
@@ -147,8 +149,8 @@ void BasicLinkedListStrategyTaskStorageView<Pheet, TT, BlockSize>::free_blocks()
 		DataBlock* nextb;
 		while(cur != nullptr) {
 			nextb = cur->get_next_freed();
-			// Can't delete those blocks. wouldn't be correct
-		//	delete cur;
+			cur->reset_content();
+			block_reuse->push_back(cur);
 			cur = nextb;
 		}
 		next->prev = nullptr;
@@ -196,7 +198,7 @@ void BasicLinkedListStrategyTaskStorageView<Pheet, TT, BlockSize>::clean(std::ve
 
 
 template <class Pheet, typename TT, size_t BlockSize>
-void BasicLinkedListStrategyTaskStorageView<Pheet, TT, BlockSize>::init_first(DataBlock* front) {
+void BasicLinkedListStrategyTaskStorageView<Pheet, TT, BlockSize>::init_first(DataBlock* front, std::vector<DataBlock*>* block_reuse) {
 	pheet_assert(reg == -1);
 	pheet_assert(prev == nullptr);
 	pheet_assert(id == 0);
@@ -204,6 +206,7 @@ void BasicLinkedListStrategyTaskStorageView<Pheet, TT, BlockSize>::init_first(Da
 	pheet_assert(first_freed_block == nullptr);
 
 	this->front = front;
+	this->block_reuse = block_reuse;
 //	this->prev = prev;
 //	this->id = prev->id + 1;
 	next = nullptr;
@@ -221,6 +224,7 @@ void BasicLinkedListStrategyTaskStorageView<Pheet, TT, BlockSize>::reset(Self* p
 	pheet_assert(first_freed_block == nullptr);
 
 	this->front = prev->front;
+	this->block_reuse = prev->block_reuse;
 	this->prev = prev;
 	this->id = prev->id + 1;
 	next = nullptr;

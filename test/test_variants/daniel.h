@@ -107,9 +107,9 @@ const procs_t tristrip_test_nodecount[] = {1024*12};
 
 #define SOR_TEST	true
  const procs_t sor_test_cpus[] = {12};
-const int sor_test_maxtrissize[] = {1536};
-const int sor_test_iterations[] =  {5000};
-const int sor_test_slices[] = {512};
+ const int sor_test_maxtrissize[] = {1536,4096};
+const int sor_test_iterations[] =  {100};
+const int sor_test_slices[] = {36};
 const double sor_test_omega[] = {1.25};
 const bool sor_prio[] = {true,false};
 

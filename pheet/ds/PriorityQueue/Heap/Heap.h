@@ -36,6 +36,9 @@ public:
 
 	size_t get_length();
 	bool is_empty();
+	inline bool empty() {
+		return is_empty();
+	}
 
 	static void print_name();
 

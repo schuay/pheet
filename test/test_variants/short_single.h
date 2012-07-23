@@ -45,8 +45,18 @@ const int lupiv_test_types[] = {0};
 #define PREFIX_SUM_TEST	true
 const procs_t prefix_sum_test_cpus[] = {1, 2, 4, 8};
 const unsigned int prefix_sum_test_seeds[] = {0};
+const size_t prefix_sum_num_problems[] = {1, 2, 4};
 const size_t prefix_sum_test_n[] = {100000000};
 const int prefix_sum_test_types[] = {0};
+
+#define SSSP_TEST true
+const procs_t sssp_test_cpus[] = {1, 2, 4, 8};
+const unsigned int sssp_test_seeds[] = {0};
+const GraphBipartitioningProblem sssp_test_problems[] = {
+		// n, p, max_w
+		{3000, 0.5, 1000}
+};
+const int sssp_test_types[] = {0};
 
 }
 

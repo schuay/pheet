@@ -25,7 +25,7 @@ namespace pheet {
 template <class Pheet, template <class P> class Algorithm>
 class PrefixSumTest : Test {
 public:
-	PrefixSumTest(procs_t cpus, int type, size_t size, unsigned int seed);
+	PrefixSumTest(procs_t cpus, size_t num_problems, int type, size_t size, unsigned int seed);
 	virtual ~PrefixSumTest();
 
 	void run_test();
@@ -35,6 +35,7 @@ private:
 	bool is_correct(unsigned int* data);
 
 	procs_t cpus;
+	size_t num_problems;
 	int type;
 	size_t size;
 	unsigned int seed;
@@ -46,8 +47,8 @@ template <class Pheet, template <class P> class Algorithm>
 char const* const PrefixSumTest<Pheet, Algorithm>::types[] = {"random", "gauss", "equal", "bucket", "staggered"};
 
 template <class Pheet, template <class P> class Algorithm>
-PrefixSumTest<Pheet, Algorithm>::PrefixSumTest(procs_t cpus, int type, size_t size, unsigned int seed)
-: cpus(cpus), type(type), size(size), seed(seed) {
+PrefixSumTest<Pheet, Algorithm>::PrefixSumTest(procs_t cpus, size_t num_problems, int type, size_t size, unsigned int seed)
+: cpus(cpus), num_problems(num_problems), type(type), size(size), seed(seed) {
 
 }
 
@@ -58,7 +59,10 @@ PrefixSumTest<Pheet, Algorithm>::~PrefixSumTest() {
 
 template <class Pheet, template <class P> class Algorithm>
 void PrefixSumTest<Pheet, Algorithm>::run_test() {
-	unsigned int* data = generate_data();
+	unsigned int** data = new unsigned int*[num_problems];
+	for(size_t i = 0; i < num_problems; ++i) {
+		data[i] = generate_data();
+	}
 
 	typename Pheet::Environment::PerformanceCounters pc;
 	typename Algorithm<Pheet>::PerformanceCounters apc;
@@ -67,23 +71,34 @@ void PrefixSumTest<Pheet, Algorithm>::run_test() {
 
 	{typename Pheet::Environment env(cpus, pc);
 		check_time(start);
-		Pheet::template
-			finish<Algorithm<Pheet> >(data, size, apc);
+		{typename Pheet::Finish f;
+			for(size_t i = 0; i < num_problems; ++i) {
+				Pheet::template
+					spawn<Algorithm<Pheet> >(data[i], size, apc);
+			}
+		}
+
 		check_time(end);
 	}
 
-	bool correctness = is_correct(data);
+	bool correctness = true;
+	for(size_t i = 0; i < num_problems; ++i) {
+		correctness &= is_correct(data[i]);
+	}
 	double seconds = calculate_seconds(start, end);
-	std::cout << "test\talgorithm\tscheduler\ttype\tsize\tseed\tcpus\ttotal_time\tcorrectness\t";
+	std::cout << "test\talgorithm\tscheduler\tnum_problems\ttype\tsize\tseed\tcpus\ttotal_time\tcorrectness\t";
 	Pheet::Environment::PerformanceCounters::print_headers();
 	Algorithm<Pheet>::PerformanceCounters::print_headers();
 	std::cout << std::endl;
 	cout << "prefix_sum\t" << Algorithm<Pheet>::name << "\t";
 	Pheet::Environment::print_name();
-	std::cout << "\t" << types[type] << "\t" << size << "\t" << seed << "\t" << cpus << "\t" << seconds << "\t" << correctness << "\t";
+	std::cout << "\t" << num_problems << "\t" << types[type] << "\t" << size << "\t" << seed << "\t" << cpus << "\t" << seconds << "\t" << correctness << "\t";
 	pc.print_values();
 	apc.print_values();
 	cout << endl;
+	for(size_t i = 0; i < num_problems; ++i) {
+		delete[] data[i];
+	}
 	delete[] data;
 }
 

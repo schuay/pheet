@@ -9,6 +9,8 @@
 #ifndef LIFOFIFOBASESTRATEGY_H_
 #define LIFOFIFOBASESTRATEGY_H_
 
+#include <limits>
+
 namespace pheet {
 
 template <class Pheet>
@@ -18,23 +20,25 @@ public:
 	typedef typename Pheet::Place Place;
 
 	LifoFifoBaseStrategy()
-	: place(Pheet::get_place()), task_id(place->next_task_id()), transitive_weight(32)/*, memory_footprint(1024)*/ {
+	: place(Pheet::get_place()), task_id(place->next_task_id()), transitive_weight(64)/*, memory_footprint(1024)*/ {
 		pheet_assert(transitive_weight != 0);
+		pheet_assert(transitive_weight < ((std::numeric_limits<size_t>::max() >> 3)));
 	}
 
 	LifoFifoBaseStrategy(Self const& other)
 	: place(other.place), task_id(other.task_id), transitive_weight(other.transitive_weight)/*, memory_footprint(other.memory_footprint)*/ {
-		pheet_assert(transitive_weight != 0);
+		pheet_assert(transitive_weight != 0 || !other.forbid_call_conversion());
 	}
 
 	LifoFifoBaseStrategy(Self&& other)
 	: place(other.place), task_id(other.task_id), transitive_weight(other.transitive_weight)/*, memory_footprint(other.memory_footprint)*/ {
-		pheet_assert(transitive_weight != 0);
+		pheet_assert(transitive_weight != 0 || !other.forbid_call_conversion());
+		pheet_assert(transitive_weight < ((std::numeric_limits<size_t>::max() >> 5)));
 	}
 
 	virtual ~LifoFifoBaseStrategy() {}
 
-	inline bool prioritize(Self& other) {
+	inline bool prioritize(Self& other) const {
 		Place* cur_place = Pheet::get_place();
 		if(other.place == place) {
 			if(place == cur_place) {
@@ -58,11 +62,23 @@ public:
 		}
 	}
 
-	inline Place* get_place() {
+	inline size_t get_task_id() const {
+		return task_id;
+	}
+
+	inline size_t new_task_id() {
+		return task_id = Pheet::get_place()->next_task_id();
+	}
+
+	inline void set_place(Place* place) {
+		this->place = place;
+	}
+
+	inline Place* get_place() const {
 		return place;
 	}
 
-	inline size_t get_transitive_weight() {
+	inline size_t get_transitive_weight() const {
 		return transitive_weight;
 	}
 /*
@@ -71,14 +87,23 @@ public:
 	}*/
 
 	inline Self& set_transitive_weight(size_t value) {
-		pheet_assert(value != 0);
+		pheet_assert(value != 0 || !forbid_call_conversion());
+		pheet_assert(value < ((std::numeric_limits<size_t>::max() >> 3)));
 		transitive_weight = value;
 		return *this;
 	}
 
-	inline bool forbid_call_conversion() {
+	inline bool forbid_call_conversion() const {
 		return false;
 	}
+
+	inline void rebase() {}
+
+	inline void reset() {
+		set_place(Pheet::get_place());
+		new_task_id();
+	}
+
 /*
 	inline Self& set_memory_footprint(size_t value) {
 		memory_footprint = value;

@@ -18,7 +18,8 @@
 #include "uts/UTSTests.h"
 #include "sor/SORTests.h"
 #include "tristrip/TriStripTests.h"
-
+#include "prefix_sum/PrefixSumTests.h"
+#include "sssp/SsspTests.h"
 #include <map>
 #include <string>
 
@@ -28,7 +29,7 @@ int main(int argc, char* argv[]) {
 
 	std::map<std::string, Tests*> tests;
 
-    LUPivTests lpt;
+	LUPivTests lpt;
 	SORTests sors;
 	TriStripTests tristrip;
 
@@ -74,6 +75,9 @@ int main(int argc, char* argv[]) {
 	UTSTests utss;
 	utss.run_test();
 	
+
+	SsspTests sssp;
+	sssp.run_test();
 
 	return 0;
 }

@@ -109,7 +109,7 @@ void PPoPPLocalityStrategyLUPivImpl<Pheet, BLOCK_SIZE>::operator()() {
 				// Critical path
 				Pheet::template
 					spawn_s<PPoPPLocalityStrategyLUPivCriticalPathTask<Pheet, BLOCK_SIZE> >(
-														PPoPPLUPivLocalityStrategy<Pheet>(column_owners[i]/*, 3, 5*/),
+							PPoPPLUPivLocalityStrategy<Pheet>(column_owners[i], num_blocks - i, true),
 							column_owners + i, block_owners + (i-1) + (i*num_blocks),
 							cur_a + i*BLOCK_SIZE*lda, cur_a + (i-1)*BLOCK_SIZE*lda, cur_piv, cur_m, lda, (i == num_blocks - 1)?(n - BLOCK_SIZE*i):(BLOCK_SIZE), ppc);
 
@@ -117,7 +117,7 @@ void PPoPPLocalityStrategyLUPivImpl<Pheet, BLOCK_SIZE>::operator()() {
 				for(int j = i + 1; j < num_blocks; ++j) {
 					Pheet::template
 						spawn_s<PPoPPLocalityStrategyLUPivStandardPathTask<Pheet, BLOCK_SIZE> >(
-															PPoPPLUPivLocalityStrategy<Pheet>(column_owners[j]/*, 2, 4*/),
+								PPoPPLUPivLocalityStrategy<Pheet>(column_owners[j], num_blocks - i, false),
 								column_owners + j, block_owners + (i-1) + (j*num_blocks),
 								cur_a + j*BLOCK_SIZE*lda, cur_a + (i-1)*BLOCK_SIZE*lda, cur_piv, cur_m, lda, (j == num_blocks - 1)?(n - BLOCK_SIZE*j):(BLOCK_SIZE),ppc);
 				}
@@ -126,7 +126,7 @@ void PPoPPLocalityStrategyLUPivImpl<Pheet, BLOCK_SIZE>::operator()() {
 				for(int j = 0; j < (i-1); ++j) {
 					Pheet::template
 						spawn_s<LocalityStrategyLUPivPivotTask<Pheet> >(
-												PPoPPLUPivLocalityStrategy<Pheet>(column_owners[j]/*, 1, 1*/),
+								PPoPPLUPivLocalityStrategy<Pheet>(column_owners[j], 1, false),
 								column_owners + j,
 								cur_a + j*BLOCK_SIZE*lda, cur_piv, std::min(cur_m, BLOCK_SIZE), lda, BLOCK_SIZE,ppc);
 				}
@@ -141,7 +141,7 @@ void PPoPPLocalityStrategyLUPivImpl<Pheet, BLOCK_SIZE>::operator()() {
 			for(int j = 0; j < (num_blocks-1); ++j) {
 				Pheet::template
 					spawn_s<LocalityStrategyLUPivPivotTask<Pheet> >(
-											PPoPPLUPivLocalityStrategy<Pheet>(column_owners[j]/*, 1, 1*/),
+							PPoPPLUPivLocalityStrategy<Pheet>(column_owners[j], 1, false),
 							column_owners + j,
 							cur_a + j*BLOCK_SIZE*lda, cur_piv, std::min(cur_m, BLOCK_SIZE), lda, BLOCK_SIZE,ppc);
 			}
