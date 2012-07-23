@@ -50,11 +50,17 @@ void LUPivTests::run_test() {
 	//	this->run_kernel<	Pheet::WithScheduler<FinisherScheduler>,
 	//SimpleLUPiv>();
 
-	//	this->run_kernel<       Pheet::WithScheduler<BasicScheduler>,
-	//                        PPoPPLocalityStrategyLUPiv>();
-
-	  this->run_kernel<       Pheet::WithScheduler<StrategyScheduler>,
+	this->run_kernel<	Pheet::WithScheduler<StrategyScheduler>,
 						PPoPPLocalityStrategyLUPiv >();
+
+	this->run_kernel<	Pheet::WithScheduler<BasicScheduler>,
+						PPoPPLocalityStrategyLUPiv>();
+
+	this->run_kernel<	Pheet::WithScheduler<StrategyScheduler>,
+						SimpleLUPiv >();
+
+	this->run_kernel<	Pheet::WithScheduler<BasicScheduler>,
+						SimpleLUPiv>();
 #endif
 }
 

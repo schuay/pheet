@@ -40,8 +40,8 @@ inline PPoPPImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy<Phe
 :lower_bound(sub_problem->get_lower_bound()) {
 	size_t ub = *upper_bound;
 	size_t w = (ub)/(sub_problem->get_lower_bound() + 1);
-	size_t w2 = sub_problem->size - sub_problem->sets[0].count() - sub_problem->sets[1].count();
-	this->set_transitive_weight(1 << (std::min(w, w2) + 2));
+	size_t w2 = std::min(28, sub_problem->size - sub_problem->sets[0].count() - sub_problem->sets[1].count());
+	this->set_transitive_weight((size_t)1 << (std::min(w, w2) + 2));
 }
 
 template <class Pheet, class SubProblem>

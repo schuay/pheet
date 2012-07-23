@@ -20,33 +20,38 @@ public:
 	typedef PPoPPLUPivLocalityStrategy<Pheet> Self;
 	typedef typename Pheet::Environment::BaseStrategy BaseStrategy;
 
-	PPoPPLUPivLocalityStrategy(typename Pheet::Place* last_owner);
+	PPoPPLUPivLocalityStrategy(typename Pheet::Place* last_owner, size_t blocks, bool critical_path);
 	PPoPPLUPivLocalityStrategy(Self& other);
 	PPoPPLUPivLocalityStrategy(Self&& other);
 	~PPoPPLUPivLocalityStrategy();
 
 	inline bool prioritize(Self& other);
 
+	inline bool forbid_call_conversion() const {
+		return true;
+	}
 
 private:
 	typename Pheet::Place* last_owner;
+	size_t blocks;
+	bool critical_path;
 };
 
 template <class Pheet>
-PPoPPLUPivLocalityStrategy<Pheet>::PPoPPLUPivLocalityStrategy(typename Pheet::Place* last_owner)
-  : last_owner(last_owner) {
+PPoPPLUPivLocalityStrategy<Pheet>::PPoPPLUPivLocalityStrategy(typename Pheet::Place* last_owner, size_t blocks, bool critical_path)
+  : last_owner(last_owner), blocks(blocks), critical_path(critical_path) {
 
 }
 
 template <class Pheet>
 PPoPPLUPivLocalityStrategy<Pheet>::PPoPPLUPivLocalityStrategy(Self& other)
-  : BaseStrategy(other),last_owner(other.last_owner) {
+  : BaseStrategy(other),last_owner(other.last_owner), blocks(other.blocks), critical_path(other.critical_path) {
 
 }
 
 template <class Pheet>
 PPoPPLUPivLocalityStrategy<Pheet>::PPoPPLUPivLocalityStrategy(Self&& other)
-  : BaseStrategy(other),last_owner(other.last_owner) {
+  : BaseStrategy(other),last_owner(other.last_owner), blocks(other.blocks), critical_path(other.critical_path) {
 
 }
 
@@ -57,37 +62,31 @@ PPoPPLUPivLocalityStrategy<Pheet>::~PPoPPLUPivLocalityStrategy() {
 
 
 template <class Pheet>
-  inline bool PPoPPLUPivLocalityStrategy<Pheet>::prioritize(Self& other) {
-  
-  /*  procs_t distancetothis = Pheet::get_place()->get_distance(last_owner);
-  procs_t distancetoother = Pheet::get_place()->get_distance(other.last_owner);
+inline bool PPoPPLUPivLocalityStrategy<Pheet>::prioritize(Self& other) {
+	typename Pheet::Place* p = Pheet::get_place();
+	procs_t d = p->get_distance(last_owner);
+	procs_t d_o = p->get_distance(other.last_owner);
 
-  if(distancetothis != distancetoother)
-  return distancetothis < distancetoother;*/
-  return BaseStrategy::prioritize(other);
-
+	if(d != d_o) {
+		return d > d_o;
+	}
+	if(this->get_place() == p) {
+		if(other.get_place() == p) {
+			if(blocks != other.blocks) {
+				return blocks < other.blocks;
+			}
+			return critical_path && (!other.critical_path);
+		}
+		return true;
+	}
+	else if(other.get_place() == p) {
+		return true;
+	}
+	if(blocks != other.blocks) {
+		return blocks > other.blocks;
+	}
+	return critical_path && (!other.critical_path);
 }
-
-//template <class Pheet>
-//inline prio_t PPoPPLUPivLocalityStrategy<Pheet>::get_pop_priority(size_t task_id) {
-  /*	typename Pheet::TaskExecutionContext* owner = Pheet::get_context();
-	procs_t max_d = owner->get_max_distance();
-	procs_t d = owner->get_distance(last_owner);
-	return ((max_d - d) << 4) + base_pop_priority;*/
-//	return (base_pop_priority << 6) + task_id;
-//}
-
-//template <class Pheet>
-//inline prio_t PPoPPLUPivLocalityStrategy<Pheet>::get_steal_priority(size_t task_id, typename Pheet::Scheduler::StealerDescriptor& desc) {
-//	procs_t max_d = desc.get_max_distance();
-//	procs_t d = desc.get_distance_to(last_owner);
-//	return ((((max_d - d) << 4) + base_steal_priority) << 16) - (task_id % (1 << 16));
-//}
-
-/*template <class Pheet>
-inline BaseStrategy<Pheet>* PPoPPLUPivLocalityStrategy<Pheet>::clone() {
-	return new Self(*this);
-	}*/
 
 }
 
