@@ -17,17 +17,24 @@ namespace pheet
 template <class Pheet>
 class TriStripResult
 {
-	SumReducer<Pheet, size_t> tristripcount;
+	SumReducer<Pheet, size_t, SumOperation> tristripcount;
+	SumReducer<Pheet, size_t> nodecount;
 
 public:
 	TriStripResult() {};
-	TriStripResult(TriStripResult<Pheet>& other):tristripcount(other.tristripcount) {}
-	TriStripResult(TriStripResult<Pheet>&& other):tristripcount(other.tristripcount) {};
+	TriStripResult(TriStripResult<Pheet>& other):tristripcount(other.tristripcount),nodecount(other.nodecount) {}
+	TriStripResult(TriStripResult<Pheet>&& other):tristripcount(other.tristripcount),nodecount(other.nodecount) {};
 
 	void addstrip(std::vector<GraphNode*> strip)
 	{
+		nodecount.add(strip.size());
 		// Should store the strip, but for now only count it
 		tristripcount.incr();
+	}
+
+	size_t getNodeCount()
+	{
+		return nodecount.get_sum();
 	}
 
 	size_t getCount()

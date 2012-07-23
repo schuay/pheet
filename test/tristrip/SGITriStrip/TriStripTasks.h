@@ -45,17 +45,20 @@ namespace pheet {
 		void operator()()
 		{
 
-			size_t spawnsetcount = 128;
+			size_t spawnsetcount = 1024;
 
 			for(size_t i=0; i<graph.size(); i+=spawnsetcount)
 			{
+				if(i+spawnsetcount>= graph.size())
+					spawnsetcount = graph.size()-i;
+
 				typename Pheet::Finish f;
 				for(size_t r = 0; r < spawnsetcount; r++)
 				{
 					if(!graph[i+r]->taken && !graph[i+r]->spawned_hint)
 					{
 						graph[i+r]->spawned_hint = true;
-					    Pheet::template spawn_s<TriStripSliceTask<Pheet>>(LowDegreeStrategy<Pheet>(graph,graph[i+r]),graph,graph[i+r],result,pc);
+					    Pheet::template spawn_s<TriStripSliceTask<Pheet>>(LowDegreeStrategy<Pheet>(/*graph,*/graph[i+r]),/*graph,*/graph[i+r],result,pc);
 
 					}
 				}
@@ -84,7 +87,7 @@ namespace pheet {
 
 		bool operator < (const NodeWithDegree& n) const
 		{
-			return degree > n.degree;
+			return degree < n.degree;
 		}
 
 	};
@@ -93,13 +96,13 @@ namespace pheet {
 	class TriStripSliceTask : public Pheet::Task
 	{
 
-		GraphDual& graph;
+	//	GraphDual& graph;
 		GraphNode* startnode;
 		TriStripResult<Pheet> result;
 		TriStripPerformanceCounters<Pheet> pc;
 	public:
 
-		TriStripSliceTask(GraphDual& graph, GraphNode* startnode, TriStripResult<Pheet>& result, TriStripPerformanceCounters<Pheet>& pc):graph(graph), startnode(startnode),result(result),pc(pc) {}
+		TriStripSliceTask(/*GraphDual& graph,*/ GraphNode* startnode, TriStripResult<Pheet>& result, TriStripPerformanceCounters<Pheet>& pc):/*graph(graph),*/ startnode(startnode),result(result),pc(pc) {}
 		virtual ~TriStripSliceTask() {}
 
 		void operator()()
@@ -123,25 +126,27 @@ namespace pheet {
 
 					if(!possnode->isTaken())
 					{
-						possiblenextnodes.push(NodeWithDegree(possnode,possnode->getDegree()));
+						possiblenextnodes.push(NodeWithDegree(possnode,possnode->getExtendedDegree()));
 					}
 				}
 
-				// TODO SGI has a check on next level of degree of the node
 
 				bool found = false;
 
 				while(!possiblenextnodes.empty())
 				{
 					GraphNode* g = (possiblenextnodes.top().getNode());
+					possiblenextnodes.pop();
 					if(g->take())
 					{
+					//	printf(".");
+
 						found = true;
 						currnode = g;
 						strip.push_back(g);
 						break;
 					}
-					possiblenextnodes.pop();
+
 				}
 
 				if(!found)
@@ -150,14 +155,14 @@ namespace pheet {
 				while(!possiblenextnodes.empty())
 				{
 					GraphNode* n = possiblenextnodes.top().getNode();
+					possiblenextnodes.pop();
 
 					if(!n->spawned_hint)
 					{
 						n->spawned_hint = true;
-						Pheet::template spawn_s<TriStripSliceTask<Pheet>>(LowDegreeStrategy<Pheet>(graph,n),graph,n,result,pc);
+						Pheet::template spawn_s<TriStripSliceTask<Pheet>>(LowDegreeStrategy<Pheet>(/*graph,*/n),/*graph,*/n,result,pc);
 					}
 
-					possiblenextnodes.pop();
 				}
 
 			}

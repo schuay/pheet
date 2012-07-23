@@ -15,7 +15,7 @@ namespace pheet {
 
 template <class Pheet>
 class LowDegreeStrategy :  public Pheet::Environment::BaseStrategy {
-	GraphDual graph;
+//	GraphDual& graph;
 	GraphNode* node;
 
 public:
@@ -24,30 +24,30 @@ public:
 	typedef typename Pheet::Environment::BaseStrategy BaseStrategy;
 
 
-	LowDegreeStrategy(GraphDual graph, GraphNode* node):graph(graph),node(node)
+	LowDegreeStrategy(/*GraphDual& graph,*/ GraphNode* node):/*graph(graph),*/node(node)
 	{
 //		this->set_memory_footprint(1);
 		this->set_transitive_weight(1000000);
 	}
 
 	LowDegreeStrategy(Self& other)
-	: BaseStrategy(other), graph(other.graph),node(other.node)
+	: BaseStrategy(other), /*graph(other.graph),*/node(other.node)
 	{}
 
 	LowDegreeStrategy(Self&& other)
-	: BaseStrategy(other), graph(other.graph),node(other.node)
+	: BaseStrategy(other), /*graph(other.graph),*/node(other.node)
 	{}
 
 	~LowDegreeStrategy() {}
 
 	inline bool prioritize(Self& other) {
-		size_t thisd = node->getDegree();
-		size_t otherd = other.node->getDegree();
+		size_t thisd = node->getExtendedDegree();
+		size_t otherd = other.node->getExtendedDegree();
 
 		if(thisd==otherd)
 			return BaseStrategy::prioritize(other);
 		else
-			return thisd > otherd;
+			return thisd < otherd;
 
 //	  procs_t distancetothis = Pheet::get_place()->get_distance(last_place);
 //	  procs_t distancetoother = Pheet::get_place()->get_distance(other.last_place);

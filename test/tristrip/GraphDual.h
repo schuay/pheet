@@ -18,12 +18,24 @@
 
 namespace pheet {
 
+struct GNode
+{
+  size_t connected[3];
+  size_t count;
+  bool spawnhint;
+  size_t taken;
+};
+
+
+
 class GraphNode {
+
+
 public:
-	GraphNode** edges;
+	GraphNode* edges[3];
 	size_t num_edges;
-	bool spawned_hint;
-	size_t taken;
+	volatile bool spawned_hint;
+	volatile size_t taken;
 
 	GraphNode()
 	{
@@ -45,16 +57,25 @@ public:
 		return degree;
 	}
 
+	size_t getExtendedDegree()
+	{
+		size_t degree = 0;
+		for(int i=0;i<num_edges;i++)
+			if(!edges[i]->isTaken())
+				degree+=edges[i]->getDegree();
+		return degree;
+	}
+
 	bool take()
 	{
 		if(taken)
-			return true;
-		return SIZET_CAS(&taken,0,1);
+			return false;
+		return SIZET_CAS((size_t*)&taken,0,1);
 	}
 
 	bool isTaken()
 	{
-		return taken;
+		return taken==1;
 	}
 
 };
@@ -62,11 +83,56 @@ public:
 
 class GraphDual
 {
-	std::vector<GraphNode> nodes;
+	std::vector<GraphNode*> nodes;
+
+	GraphDual(GraphDual& g)
+	{
+
+	}
+
+	void load_from_file(std::string filename)
+	{
+		size_t size;
+		FILE * pFile;
+		pFile = fopen ( "model.bin" , "rb" );
+		fread(&size,1,sizeof(int),pFile);
+		GNode* graphdata = new GNode[size];
+
+		fread (graphdata,size , sizeof(GNode) , pFile );
+		fclose (pFile);
+
+		nodes = std::vector<GraphNode*>(size);
+		for(size_t i=0;i<size;i++)
+		{
+			nodes[i] = new GraphNode();
+		}
+		for(size_t i=0;i<size;i++)
+		{
+			for(size_t q=0;q<graphdata[i].count;q++)
+			{
+				nodes[i]->edges[q]=nodes[graphdata[i].connected[q]];
+				if(graphdata[i].connected[q]>=size)
+					printf("err");
+			}
+			nodes[i]->num_edges = graphdata[i].count;
+			nodes[i]->spawned_hint = false;
+			nodes[i]->taken = 0;
+		}
+
+		delete[] graphdata;
+
+	}
+
 
 	void generate_uniform(size_t size, size_t seed, float p)
 	{
-		nodes = std::vector<GraphNode>(size);
+		// TODO not updated
+
+		nodes = std::vector<GraphNode*>(size);
+
+		for(size_t i=0;i<size;i++)
+			nodes[i] = new GraphNode();
+
 		boost::mt19937 rng;
 		rng.seed(seed);
 	    boost::uniform_real<float> rnd_f(0.0, 1.0);
@@ -75,22 +141,22 @@ class GraphDual
 		for(size_t i = 0; i < size; ++i) {
 			for(size_t j = i + 1; j < size; ++j) {
 				if(rnd_f(rng) < p) {
-					edges[i].push_back(&nodes[j]);
-					edges[j].push_back(&nodes[i]);
+					edges[i].push_back(nodes[j]);
+					edges[j].push_back(nodes[i]);
 				}
 			}
 
-			nodes[i].num_edges = edges[i].size();
-			nodes[i].taken = 0;
-			nodes[i].spawned_hint = false;
+			nodes[i]->num_edges = edges[i].size();
+			nodes[i]->taken = 0;
+			nodes[i]->spawned_hint = false;
 			if(edges[i].size() > 0) {
-				nodes[i].edges = new GraphNode*[edges[i].size()];
+	//			nodes[i]->edges = new GraphNode*[edges[i].size()];
 				for(size_t j = 0; j < edges[i].size(); ++j) {
-					nodes[i].edges[j] = edges[i][j];
+					nodes[i]->edges[j] = edges[i][j];
 				}
 			}
 			else {
-				nodes[i].edges = 0;
+//				nodes[i]->edges = 0;
 			}
 		}
 		delete[] edges;
@@ -101,7 +167,14 @@ public:
 
 	GraphDual(size_t size, size_t seed, float p)
 	{
-		generate_uniform(size,seed,p);
+		load_from_file("model.bin");
+		//generate_uniform(size,seed,p);
+	}
+
+	~GraphDual()
+	{
+		for(size_t i=0;i<nodes.size();i++)
+			delete nodes[i];
 	}
 
 	size_t size()
@@ -111,7 +184,7 @@ public:
 
 	GraphNode* operator[](size_t index)
 	{
-		return &nodes[index];
+		return nodes[index];
 	}
 
 

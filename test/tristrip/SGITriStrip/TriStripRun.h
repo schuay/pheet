@@ -42,6 +42,7 @@ public:
 
 
 	size_t getTriStripCount();
+	size_t getNodeTriStripCount();
 
 
 private:
@@ -55,6 +56,15 @@ private:
 
 template <class Scheduler>
 char const TriStripRun<Scheduler>::name[] = "TriStrip";
+
+template <class Pheet>
+size_t TriStripRun<Pheet>::getNodeTriStripCount()
+{
+	return result.getNodeCount();
+}
+
+
+
 
 template <class Pheet>
 size_t TriStripRun<Pheet>::getTriStripCount()
