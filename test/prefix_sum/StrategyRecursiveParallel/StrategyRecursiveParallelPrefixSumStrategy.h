@@ -43,7 +43,7 @@ public:
 					return false;
 				}
 //				last_decision = 4;
-				return length > other.length;
+				return length < other.length;
 			}
 //			last_decision = 5;
 			return true;
@@ -62,7 +62,7 @@ public:
 	}
 
 	inline bool forbid_call_conversion() {
-		return true; //no_call;
+		return no_call;
 	}
 
 private:

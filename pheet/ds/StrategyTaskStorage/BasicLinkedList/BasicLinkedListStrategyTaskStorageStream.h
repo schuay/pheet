@@ -86,20 +86,24 @@ public:
 		// TODO: Fix this with C++11 memory model
 		size_t taken_offset = block->get_taken_offset();
 		do {
-			++block_index;
-		}while(block_index < block->get_size() && block->is_taken(block_index, taken_offset));
+			do {
+				++block_index;
+			}while(block_index < block->get_size() && block->is_taken(block_index, taken_offset));
 
-		while(block_index == block->get_max_size() || (!block->is_active())) {
-			block = block->get_next();
-			block_index = 0;
-		}
+			while(block_index == block->get_max_size() || (!block->is_active())) {
+				block = block->get_next();
+				block_index = 0;
+			}
+		}while(block_index < block->get_size() && block->is_taken(block_index, taken_offset));
 		pheet_assert(block_index < block->get_max_size());
 		pheet_assert(block != nullptr);
 	}
 
 	void stealer_push_ref(StealerRef& stealer) {
-		auto sp = last_block->get_data(last_index).stealer_push;
-		(this->*sp)(stealer);
+		if(!last_block->is_taken(last_index, last_block->get_taken_offset())) {
+			auto sp = last_block->get_data(last_index).stealer_push;
+			(this->*sp)(stealer);
+		}
 	}
 
 	template <class Strategy>
