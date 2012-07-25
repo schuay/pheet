@@ -74,7 +74,8 @@ void ImprovedBranchBoundGraphBipartitioningTask<Pheet, Logic, MaxSize>::operator
 	}
 	else if(sub_problem2->get_lower_bound() < *upper_bound) {
 		Pheet::template
-			call<Self>(sub_problem2, upper_bound, best, pc);
+		  //call<Self>(sub_problem2, upper_bound, best, pc);
+			spawn<Self>(sub_problem2, upper_bound, best, pc);
 	}
 	else {
 		delete sub_problem2;

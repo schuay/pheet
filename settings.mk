@@ -1,10 +1,10 @@
 
 OPTIMIZATION = -O3
 CXXFLAGS = $(OPTIMIZATION) -Wall -fmessage-length=0 -std=c++0x 
-CXX = clang++
+CXX = g++
 
-LIB_PATH =
-INCLUDE_PATH = -I.
+LIB_PATH = -L/opt/gcc-4.7/lib/ -L/opt/gcc-4.7/lib64/ -L/opt/hwloc-1.4/lib/
+INCLUDE_PATH = -I. -I/opt/hwloc-1.4/include/
 
 TEST_LIBS = 
 # Needed for lupiv test
