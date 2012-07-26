@@ -113,7 +113,7 @@ const int sor_test_slices[] = {36};
 const double sor_test_omega[] = {1.25};
 const bool sor_prio[] = {true,false};
 
-#define LUPIV_TEST      true
+#define LUPIV_TEST      false
  const procs_t lupiv_test_cpus[] = { 2};
  const unsigned int lupiv_test_seeds[] = {0};
  const size_t lupiv_test_n[] = { 4096};

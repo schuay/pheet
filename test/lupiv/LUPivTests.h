@@ -24,7 +24,7 @@ public:
 	LUPivTests();
 	virtual ~LUPivTests();
 
-	void run_test(bool usestrategy);
+	void run_test(bool usesstrategy);
 
 private:
 	template<class Pheet, template <class P> class Kernel>

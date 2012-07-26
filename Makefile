@@ -396,6 +396,30 @@ test/sorting/SortingTests.cpp.s:
 	$(MAKE) -f CMakeFiles/pheet_test.dir/build.make CMakeFiles/pheet_test.dir/test/sorting/SortingTests.cpp.s
 .PHONY : test/sorting/SortingTests.cpp.s
 
+test/sssp/SsspTests.o: test/sssp/SsspTests.cpp.o
+.PHONY : test/sssp/SsspTests.o
+
+# target to build an object file
+test/sssp/SsspTests.cpp.o:
+	$(MAKE) -f CMakeFiles/pheet_test.dir/build.make CMakeFiles/pheet_test.dir/test/sssp/SsspTests.cpp.o
+.PHONY : test/sssp/SsspTests.cpp.o
+
+test/sssp/SsspTests.i: test/sssp/SsspTests.cpp.i
+.PHONY : test/sssp/SsspTests.i
+
+# target to preprocess a source file
+test/sssp/SsspTests.cpp.i:
+	$(MAKE) -f CMakeFiles/pheet_test.dir/build.make CMakeFiles/pheet_test.dir/test/sssp/SsspTests.cpp.i
+.PHONY : test/sssp/SsspTests.cpp.i
+
+test/sssp/SsspTests.s: test/sssp/SsspTests.cpp.s
+.PHONY : test/sssp/SsspTests.s
+
+# target to generate assembly for a file
+test/sssp/SsspTests.cpp.s:
+	$(MAKE) -f CMakeFiles/pheet_test.dir/build.make CMakeFiles/pheet_test.dir/test/sssp/SsspTests.cpp.s
+.PHONY : test/sssp/SsspTests.cpp.s
+
 test/tristrip/TriStripTests.o: test/tristrip/TriStripTests.cpp.o
 .PHONY : test/tristrip/TriStripTests.o
 
@@ -561,6 +585,9 @@ help:
 	@echo "... test/sorting/SortingTests.o"
 	@echo "... test/sorting/SortingTests.i"
 	@echo "... test/sorting/SortingTests.s"
+	@echo "... test/sssp/SsspTests.o"
+	@echo "... test/sssp/SsspTests.i"
+	@echo "... test/sssp/SsspTests.s"
 	@echo "... test/tristrip/TriStripTests.o"
 	@echo "... test/tristrip/TriStripTests.i"
 	@echo "... test/tristrip/TriStripTests.s"

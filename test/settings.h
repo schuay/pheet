@@ -9,7 +9,7 @@
 #ifndef PHEET_TEST_SETTINGS_H_
 #define PHEET_TEST_SETTINGS_H_
 
-//#define PHEET_DEBUG_MODE
+#define PHEET_DEBUG_MODE
 // #define PHEET_ALL_PERFORMANCE_COUNTERS
 #define ACTIVE_TEST 	"test_variants/daniel.h"
 
