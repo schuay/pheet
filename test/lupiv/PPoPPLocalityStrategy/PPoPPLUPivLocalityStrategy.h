@@ -28,7 +28,7 @@ public:
 	inline bool prioritize(Self& other);
 
 	inline bool forbid_call_conversion() const {
-		return true;
+		return false;
 	}
 
 private:
@@ -40,7 +40,7 @@ private:
 template <class Pheet>
 PPoPPLUPivLocalityStrategy<Pheet>::PPoPPLUPivLocalityStrategy(typename Pheet::Place* last_owner, size_t blocks, bool critical_path)
   : last_owner(last_owner), blocks(blocks), critical_path(critical_path) {
-
+	this->set_transitive_weight(blocks << 8);
 }
 
 template <class Pheet>

@@ -41,6 +41,10 @@ public:
 		return length > other.length;
 	}
 
+	inline bool forbid_call_conversion() const {
+		return false;
+	}
+
 private:
 	size_t length;
 };

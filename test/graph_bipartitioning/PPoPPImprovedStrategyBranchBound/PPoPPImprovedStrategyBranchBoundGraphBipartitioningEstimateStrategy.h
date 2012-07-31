@@ -37,6 +37,10 @@ public:
 		return !last;
 	}*/
 
+	inline bool forbid_call_conversion() const {
+		return false;
+	}
+
 	inline void rebase() {
 		this->reset();
 	}
