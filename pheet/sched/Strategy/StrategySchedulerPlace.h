@@ -848,7 +848,7 @@ inline void StrategySchedulerPlace<Pheet, CallThreshold>::spawn_s(Strategy&& s, 
 			TaskStorageItem di;
 			di.task = task;
 			di.stack_element = current_task_parent;
-			task_storage.push(std::forward<Strategy&&>(s), di, performance_counters.task_storage_performance_counters);
+			task_storage.push(std::forward<Strategy&&>(s), di);
 		}
 		else {
 			performance_counters.num_spawns_to_call.incr();

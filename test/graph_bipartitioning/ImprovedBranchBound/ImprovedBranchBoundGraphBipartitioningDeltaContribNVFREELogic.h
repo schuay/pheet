@@ -187,6 +187,8 @@ void ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubPro
   size_t di = 0;
   size_t si = 0;
   lb = 0;
+  est = 0;
+  ub = 0;
   lb_ub_contrib = 0;
   size_t v = sub_problem->sets[2]._Find_first();
   nv = v;
@@ -211,6 +213,8 @@ void ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubPro
 
     delta[di++] = d;
     lb += std::min(weights[0][v], weights[1][v]);
+    est += std::min(weights[0][v], weights[1][v]);
+    ub += std::max(weights[0][v], weights[1][v]);
     
     pheet_assert(free_edges[v]<sub_problem->sets[2].count());
 
@@ -244,6 +248,8 @@ void ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubPro
   if(pivot < di && delta[pivot] < 0) {
     do {
       lb += -delta[pivot];
+      est += -delta[pivot];
+      ub -= -delta[pivot];
       ++pivot;
     } while(pivot < di && delta[pivot] < 0);
   }
@@ -251,6 +257,8 @@ void ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubPro
     do {
       --pivot;
       lb += delta[pivot];
+      est += delta[pivot];
+      ub -= delta[pivot];
     } while(pivot > 0 && delta[pivot - 1] > 0);
   }
   
@@ -275,6 +283,9 @@ void ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubPro
   //if (fw>0) std::cout<<'+'<<' '<<fw<<' '<<sub_problem->sets[2].count()<<'\n';
     
   lb += fw;
+  est += fw;
+  // Is this correct
+  ub -= fw;
 
   delete [] smallest;
 }
