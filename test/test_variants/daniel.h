@@ -102,7 +102,7 @@ const procs_t uts_test_cpus[] = {4};
 const unsigned int uts_test_standardworkloads[] = {0,1,2,3,4,5,6,7,8};
 
 #define TriStrip_TEST true
-const procs_t tristrip_test_cpus[] = {12};
+ const procs_t tristrip_test_cpus[] = {2,4,6,8,10,12};
 const procs_t tristrip_test_nodecount[] = {1024*12};
 
 #define SOR_TEST	true

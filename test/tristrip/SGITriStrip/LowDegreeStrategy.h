@@ -12,35 +12,77 @@
 #include <pheet/sched/strategies/BaseStrategy.h>
 
 namespace pheet {
+  
+  template <class Pheet>
+    class RunLastStrategy :  public Pheet::Environment::BaseStrategy {
+  public:
+    typedef RunLastStrategy<Pheet> Self;
+    typedef typename Pheet::Environment::BaseStrategy BaseStrategy;
+  protected:
+    bool runlast;
 
-template <class Pheet>
-class LowDegreeStrategy :  public Pheet::Environment::BaseStrategy {
-//	GraphDual& graph;
-	GraphNode* node;
-	size_t degree;
-	size_t taken;
-public:
+  public:
+  RunLastStrategy(bool runlast):runlast(runlast)
+    {
+    }
+  RunLastStrategy():runlast(false)
+    {
+    }
+    RunLastStrategy	(Self& other)
+      : BaseStrategy(other),runlast(other.runlast)
+      {
+      }
+    
+  RunLastStrategy(Self&& other)
+    : BaseStrategy(other), runlast(other.runlast)
+      {
+      }
+    
+    ~RunLastStrategy() {}
+    
+    inline bool prioritize(Self& other) {
+      if(runlast != other.runlast)
+	return !runlast;
 
-	typedef LowDegreeStrategy<Pheet> Self;
-	typedef typename Pheet::Environment::BaseStrategy BaseStrategy;
+      //  if(runlast == other.runlast)
+	return BaseStrategy::prioritize(other);
+    }
+    
+    inline bool forbid_call_conversion() const {
+      return true;
+    }
+  };
+  
+  template <class Pheet>
+    class LowDegreeStrategy : public  RunLastStrategy<Pheet> {
+    //	GraphDual& graph;
+    GraphNode* node;
+    size_t degree;
+    size_t taken;
+  public:
+    
+    typedef LowDegreeStrategy<Pheet> Self;
+    typedef RunLastStrategy<Pheet> Strategy;
+   
 
 
   LowDegreeStrategy(/*GraphDual& graph,*/ GraphNode* node, size_t degree,size_t taken):/*graph(graph),*/node(node),degree(degree),taken(taken)
 	{
+	  Strategy::runlast = false;
 //		this->set_memory_footprint(1);
 	  degree = node->getExtendedDegree();
-		this->set_transitive_weight(1000);
+	  this->set_transitive_weight(100);
 	}
 
 	LowDegreeStrategy(Self& other)
-	  : BaseStrategy(other), /*graph(other.graph),*/node(other.node),degree(other.degree),taken(other.taken)
+	  : Strategy(other), /*graph(other.graph),*/node(other.node),degree(other.degree),taken(other.taken)
 	{
 	  degree = node->getExtendedDegree();
 	  
 }
 
 	LowDegreeStrategy(Self&& other)
-	  : BaseStrategy(other), /*graph(other.graph),*/node(other.node),degree(other.degree),taken(other.taken)
+	  : Strategy(other), /*graph(other.graph),*/node(other.node),degree(other.degree),taken(other.taken)
 	{
 	  degree = node->getExtendedDegree();
 }
@@ -54,7 +96,7 @@ public:
 	  //	  printf("Degree %d vs %d\n",thisd,otherd);
 
 	  if(thisd==otherd)
-			return BaseStrategy::prioritize(other);
+			return Strategy::prioritize(other);
 			     		else
 			return thisd < otherd;
 //	  procs_t distancetothis = Pheet::get_place()->get_distance(last_place);
@@ -92,7 +134,8 @@ public:
 	}
 
 	inline bool forbid_call_conversion() const {
-	  return true;
+	  //  return true;
+	  return false;
         }
 
 };

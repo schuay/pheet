@@ -31,6 +31,9 @@ namespace pheet {
 	class TriStripSliceTask;
 
 	template <class Pheet>
+	  class TriStripSpawner;
+
+	template <class Pheet>
 	class TriStripStartTask : public Pheet::Task
 	{
 		GraphDual& graph;
@@ -49,7 +52,7 @@ namespace pheet {
 		  rng.seed(65432);
 		  boost::uniform_int<size_t> rnd_st(0, graph.size());
 		  
-		  size_t startrand =128;
+		  size_t startrand =512;
 		  for(size_t i = 0; i < startrand; i++)
 		    { 
 		      size_t n = rnd_st(rng);
@@ -63,28 +66,48 @@ namespace pheet {
 			}
 		    }
 		  
-		  size_t spawnsetcount = 64;
+		  size_t spawnsetcount = 1024;
 		  
 		  for(size_t i=0; i<graph.size(); i+=spawnsetcount)
 		    {
-		      if(i+spawnsetcount>= graph.size())
-			spawnsetcount = graph.size()-i;
+		      size_t start = i;
+		      size_t end = min((i+spawnsetcount),graph.size());
+
+		      Pheet::template spawn_s<TriStripSpawner<Pheet>>(RunLastStrategy<Pheet>(true),graph,start,end,result,pc);
 		      
-		      typename Pheet::Finish f;
-		      for(size_t r = 0; r < spawnsetcount; r++)
-			{
-			  if(!graph[i+r]->taken && !graph[i+r]->spawned_hint)
-			    {
-			      graph[i+r]->spawned_hint = true;
-			      Pheet::template spawn_s<TriStripSliceTask<Pheet>>(LowDegreeStrategy<Pheet>(/*graph,*/graph[i+r],graph[i+r]->getExtendedDegree(),graph[i+r]->getExtendedNeighbourTaken()),/*graph,*/graph[i+r],result,pc);
-			      
-			    }
-			}
 		    }
 		  
 		}
 	};
 	
+	template <class Pheet>
+	class TriStripSpawner : public Pheet::Task
+	{
+		GraphDual& graph;
+		size_t start, stop;
+		TriStripResult<Pheet> result;
+		TriStripPerformanceCounters<Pheet> pc;
+	public:
+
+	TriStripSpawner(GraphDual& graph, size_t start, size_t stop, TriStripResult<Pheet>& result, TriStripPerformanceCounters<Pheet>& pc):graph(graph), start(start),stop(stop),result(result),pc(pc) {}
+		virtual ~TriStripSpawner() {}
+
+		void operator()()
+		{
+		  
+		  for(size_t i=start; i<stop; i++)
+		    {
+		      if(!graph[i]->taken && !graph[i]->spawned_hint)
+			{
+			  graph[i]->spawned_hint = true;
+			  Pheet::template spawn_s<TriStripSliceTask<Pheet>>(LowDegreeStrategy<Pheet>(/*graph,*/graph[i],graph[i]->getExtendedDegree(),graph[i]->getExtendedNeighbourTaken()),/*graph,*/graph[i],result,pc);
+			  
+			}
+		    }
+		}
+	};
+
+
 	class NodeWithDegree
 	{
 		GraphNode* n;
@@ -190,8 +213,8 @@ namespace pheet {
 			       		if(!(n->spawned_hint || n->isTaken()))
 					{
 					  //printf(".");
-							  //	  	n->spawned_hint = true;
-							  //Pheet::template spawn_s<TriStripSliceTask<Pheet>>(LowDegreeStrategy<Pheet>(/*graph,*/n,n->getExtendedDegree(),n->getExtendedNeighbourTaken()),/*graph,*/n,result,pc);
+							  	  	n->spawned_hint = true;
+							  Pheet::template spawn_s<TriStripSliceTask<Pheet>>(LowDegreeStrategy<Pheet>(/*graph,*/n,n->getExtendedDegree(),n->getExtendedNeighbourTaken()),/*graph,*/n,result,pc);
 					}
 
 				}
