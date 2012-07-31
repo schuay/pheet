@@ -18,8 +18,9 @@
 
 namespace pheet {
 
-struct GNode
+class GNode
 {
+ public:
   size_t connected[3];
   size_t count;
   bool spawnhint;
@@ -66,6 +67,31 @@ public:
 		return degree;
 	}
 
+	size_t getNeighbourTaken()
+	{
+	  size_t nt = 0;
+	  for(int i=0;i<num_edges;i++)
+	    {
+	      if(edges[i]->isTaken())
+		nt++;
+	    }
+	  return nt;
+	}
+	
+
+	size_t getExtendedNeighbourTaken()
+	{
+	  size_t nt = 0;
+	  for(int i=0;i<num_edges;i++)
+	    {
+	    if(edges[i]->isTaken())
+	      nt++;
+
+	      nt+=edges[i]->getNeighbourTaken();
+	    }
+	  return nt;
+	}
+
 	bool take()
 	{
 		if(taken)
@@ -92,12 +118,12 @@ class GraphDual
 
 	void load_from_file(std::string filename)
 	{
-		size_t size;
+		int size = 0;
 		FILE * pFile;
 		pFile = fopen ( "model.bin" , "rb" );
 		fread(&size,1,sizeof(int),pFile);
-		GNode* graphdata = new GNode[size];
-
+		
+		GNode* graphdata = new GNode[size];	       
 		fread (graphdata,size , sizeof(GNode) , pFile );
 		fclose (pFile);
 

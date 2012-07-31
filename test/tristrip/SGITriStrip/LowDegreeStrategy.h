@@ -17,37 +17,40 @@ template <class Pheet>
 class LowDegreeStrategy :  public Pheet::Environment::BaseStrategy {
 //	GraphDual& graph;
 	GraphNode* node;
-
+	size_t degree;
+	size_t taken;
 public:
 
 	typedef LowDegreeStrategy<Pheet> Self;
 	typedef typename Pheet::Environment::BaseStrategy BaseStrategy;
 
 
-	LowDegreeStrategy(/*GraphDual& graph,*/ GraphNode* node):/*graph(graph),*/node(node)
+  LowDegreeStrategy(/*GraphDual& graph,*/ GraphNode* node, size_t degree,size_t taken):/*graph(graph),*/node(node),degree(degree),taken(taken)
 	{
 //		this->set_memory_footprint(1);
 		this->set_transitive_weight(1000000);
 	}
 
 	LowDegreeStrategy(Self& other)
-	: BaseStrategy(other), /*graph(other.graph),*/node(other.node)
+	  : BaseStrategy(other), /*graph(other.graph),*/node(other.node),degree(other.degree),taken(other.taken)
 	{}
 
 	LowDegreeStrategy(Self&& other)
-	: BaseStrategy(other), /*graph(other.graph),*/node(other.node)
+	  : BaseStrategy(other), /*graph(other.graph),*/node(other.node),degree(other.degree),taken(other.taken)
 	{}
 
 	~LowDegreeStrategy() {}
 
 	inline bool prioritize(Self& other) {
-		size_t thisd = node->getExtendedDegree();
-		size_t otherd = other.node->getExtendedDegree();
+	  size_t thisd = taken;// node->getExtendedDegree();
+	  size_t otherd = other.taken; //other.node->getExtendedDegree();
 
-		if(thisd==otherd)
+	  //	  printf("Degree %d vs %d\n",thisd,otherd);
+
+	  //	if(thisd==otherd)
 			return BaseStrategy::prioritize(other);
-		else
-			return thisd < otherd;
+			//			else
+			//return thisd > otherd;
 
 //	  procs_t distancetothis = Pheet::get_place()->get_distance(last_place);
 //	  procs_t distancetoother = Pheet::get_place()->get_distance(other.last_place);

@@ -37,6 +37,9 @@ public:
 	~SORLocalityStrategy() {}
 
 	inline bool prioritize(Self& other) {
+
+	  //  return BaseStrategy::prioritize(other);
+
 	  procs_t distancetothis = Pheet::get_place()->get_distance(last_place);
 	  procs_t distancetoother = Pheet::get_place()->get_distance(other.last_place);
 

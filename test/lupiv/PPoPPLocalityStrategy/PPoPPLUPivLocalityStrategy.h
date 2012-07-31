@@ -63,6 +63,9 @@ PPoPPLUPivLocalityStrategy<Pheet>::~PPoPPLUPivLocalityStrategy() {
 
 template <class Pheet>
 inline bool PPoPPLUPivLocalityStrategy<Pheet>::prioritize(Self& other) {
+
+  //  return Pheet::Environment::BaseStrategy::prioritize(other);
+
 	typename Pheet::Place* p = Pheet::get_place();
 	procs_t d = p->get_distance(last_owner);
 	procs_t d_o = p->get_distance(other.last_owner);
