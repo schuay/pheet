@@ -50,6 +50,19 @@ const size_t prefix_sum_num_problems[] = {1, 2, 6, 12};
 const size_t prefix_sum_test_n[] = {200000000};
 const int prefix_sum_test_types[] = {0};
 
+#define SSSP_TEST true
+const procs_t sssp_test_cpus[] = {1, 2, 3, 6, 12, 24, 48};
+const unsigned int sssp_test_seeds[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+const GraphBipartitioningProblem sssp_test_problems[] = {
+		// n, p, max_w
+        {15000, 0.5, 1},
+        {15000, 0.9, 1},
+        {15000, 0.5, 1000},
+        {15000, 0.9, 1000},
+        {20000, 0.1, 1}
+};
+const int sssp_test_types[] = {0};
+
 }
 
 

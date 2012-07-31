@@ -23,7 +23,7 @@ void dgetf2_(int *m, int *n, double *a, int *lda, int *piv, int *info);
 
 namespace pheet {
 
-template <class Pheet, int BLOCK_SIZE = 128>
+template <class Pheet, int BLOCK_SIZE, bool s2c>
 class PPoPPLocalityStrategyLUPivImpl : public Pheet::Task {
 public:
 	PPoPPLocalityStrategyLUPivImpl(double* a, int* pivot, int m, int lda, int n);
@@ -46,11 +46,11 @@ private:
 	int n;
 };
 
-template <class Pheet, int BLOCK_SIZE>
-char const PPoPPLocalityStrategyLUPivImpl<Pheet, BLOCK_SIZE>::name[] = "PPoPPLocalityStrategyLUPiv";
+template <class Pheet, int BLOCK_SIZE, bool s2c>
+char const PPoPPLocalityStrategyLUPivImpl<Pheet, BLOCK_SIZE, s2c>::name[] = "PPoPPLocalityStrategyLUPiv";
 
-template <class Pheet, int BLOCK_SIZE>
-PPoPPLocalityStrategyLUPivImpl<Pheet, BLOCK_SIZE>::PPoPPLocalityStrategyLUPivImpl(double* a, int* pivot, int m, int lda, int n)
+template <class Pheet, int BLOCK_SIZE, bool s2c>
+PPoPPLocalityStrategyLUPivImpl<Pheet, BLOCK_SIZE, s2c>::PPoPPLocalityStrategyLUPivImpl(double* a, int* pivot, int m, int lda, int n)
 : a(a), pivot(pivot), m(m), lda(lda), n(n) {
 	pheet_assert(m > 0);
 	pheet_assert(n > 0);
@@ -59,21 +59,21 @@ PPoPPLocalityStrategyLUPivImpl<Pheet, BLOCK_SIZE>::PPoPPLocalityStrategyLUPivImp
 	pheet_assert(m == n);
 }
 
-template <class Pheet, int BLOCK_SIZE>
-PPoPPLocalityStrategyLUPivImpl<Pheet, BLOCK_SIZE>::PPoPPLocalityStrategyLUPivImpl(double* a, int* pivot, int size)
+template <class Pheet, int BLOCK_SIZE, bool s2c>
+PPoPPLocalityStrategyLUPivImpl<Pheet, BLOCK_SIZE, s2c>::PPoPPLocalityStrategyLUPivImpl(double* a, int* pivot, int size)
 : a(a), pivot(pivot), m(size), lda(size), n(size) {
 	pheet_assert(m > 0);
 	pheet_assert(n > 0);
 	pheet_assert(lda >= m);
 }
 
-template <class Pheet, int BLOCK_SIZE>
-PPoPPLocalityStrategyLUPivImpl<Pheet, BLOCK_SIZE>::~PPoPPLocalityStrategyLUPivImpl() {
+template <class Pheet, int BLOCK_SIZE, bool s2c>
+PPoPPLocalityStrategyLUPivImpl<Pheet, BLOCK_SIZE, s2c>::~PPoPPLocalityStrategyLUPivImpl() {
 
 }
 
-template <class Pheet, int BLOCK_SIZE>
-void PPoPPLocalityStrategyLUPivImpl<Pheet, BLOCK_SIZE>::operator()() {
+template <class Pheet, int BLOCK_SIZE, bool s2c>
+void PPoPPLocalityStrategyLUPivImpl<Pheet, BLOCK_SIZE, s2c>::operator()() {
 	int num_blocks = std::min(n, m) / BLOCK_SIZE;
 
 	// Run sequential algorithm on first column
@@ -105,16 +105,16 @@ void PPoPPLocalityStrategyLUPivImpl<Pheet, BLOCK_SIZE>::operator()() {
 			{typename Pheet::Finish f;
 				// Critical path
 				Pheet::template
-					spawn_s<PPoPPLocalityStrategyLUPivCriticalPathTask<Pheet, BLOCK_SIZE> >(
-							PPoPPLUPivLocalityStrategy<Pheet>(column_owners[i], num_blocks - i, true),
+					spawn_s<PPoPPLocalityStrategyLUPivCriticalPathTask<Pheet, BLOCK_SIZE, s2c> >(
+							PPoPPLUPivLocalityStrategy<Pheet, s2c>(column_owners[i], num_blocks - i, true),
 							column_owners + i, block_owners + (i-1) + (i*num_blocks),
 							cur_a + i*BLOCK_SIZE*lda, cur_a + (i-1)*BLOCK_SIZE*lda, cur_piv, cur_m, lda, (i == num_blocks - 1)?(n - BLOCK_SIZE*i):(BLOCK_SIZE));
 
 				// Workflow for other unfinished columns
 				for(int j = i + 1; j < num_blocks; ++j) {
 					Pheet::template
-						spawn_s<PPoPPLocalityStrategyLUPivStandardPathTask<Pheet, BLOCK_SIZE> >(
-								PPoPPLUPivLocalityStrategy<Pheet>(column_owners[j], num_blocks - i, false),
+						spawn_s<PPoPPLocalityStrategyLUPivStandardPathTask<Pheet, BLOCK_SIZE, s2c> >(
+								PPoPPLUPivLocalityStrategy<Pheet, s2c>(column_owners[j], num_blocks - i, false),
 								column_owners + j, block_owners + (i-1) + (j*num_blocks),
 								cur_a + j*BLOCK_SIZE*lda, cur_a + (i-1)*BLOCK_SIZE*lda, cur_piv, cur_m, lda, (j == num_blocks - 1)?(n - BLOCK_SIZE*j):(BLOCK_SIZE));
 				}
@@ -123,7 +123,7 @@ void PPoPPLocalityStrategyLUPivImpl<Pheet, BLOCK_SIZE>::operator()() {
 				for(int j = 0; j < (i-1); ++j) {
 					Pheet::template
 						spawn_s<LocalityStrategyLUPivPivotTask<Pheet> >(
-								PPoPPLUPivLocalityStrategy<Pheet>(column_owners[j], 1, false),
+								PPoPPLUPivLocalityStrategy<Pheet, s2c>(column_owners[j], 1, false),
 								column_owners + j,
 								cur_a + j*BLOCK_SIZE*lda, cur_piv, std::min(cur_m, BLOCK_SIZE), lda, BLOCK_SIZE);
 				}
@@ -138,7 +138,7 @@ void PPoPPLocalityStrategyLUPivImpl<Pheet, BLOCK_SIZE>::operator()() {
 			for(int j = 0; j < (num_blocks-1); ++j) {
 				Pheet::template
 					spawn_s<LocalityStrategyLUPivPivotTask<Pheet> >(
-							PPoPPLUPivLocalityStrategy<Pheet>(column_owners[j], 1, false),
+							PPoPPLUPivLocalityStrategy<Pheet, s2c>(column_owners[j], 1, false),
 							column_owners + j,
 							cur_a + j*BLOCK_SIZE*lda, cur_piv, std::min(cur_m, BLOCK_SIZE), lda, BLOCK_SIZE);
 			}
@@ -160,7 +160,9 @@ void PPoPPLocalityStrategyLUPivImpl<Pheet, BLOCK_SIZE>::operator()() {
 }
 
 template <class Pheet>
-using PPoPPLocalityStrategyLUPiv = PPoPPLocalityStrategyLUPivImpl<Pheet, 128>;
+using PPoPPLocalityStrategyLUPiv = PPoPPLocalityStrategyLUPivImpl<Pheet, 128, true>;
+template <class Pheet>
+using PPoPPLocalityStrategyLUPivNoS2C = PPoPPLocalityStrategyLUPivImpl<Pheet, 128, false>;
 
 }
 
