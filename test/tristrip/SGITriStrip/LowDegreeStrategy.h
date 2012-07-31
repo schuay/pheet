@@ -28,30 +28,35 @@ public:
   LowDegreeStrategy(/*GraphDual& graph,*/ GraphNode* node, size_t degree,size_t taken):/*graph(graph),*/node(node),degree(degree),taken(taken)
 	{
 //		this->set_memory_footprint(1);
-		this->set_transitive_weight(1000000);
+	  degree = node->getExtendedDegree();
+		this->set_transitive_weight(1000);
 	}
 
 	LowDegreeStrategy(Self& other)
 	  : BaseStrategy(other), /*graph(other.graph),*/node(other.node),degree(other.degree),taken(other.taken)
-	{}
+	{
+	  degree = node->getExtendedDegree();
+	  
+}
 
 	LowDegreeStrategy(Self&& other)
 	  : BaseStrategy(other), /*graph(other.graph),*/node(other.node),degree(other.degree),taken(other.taken)
-	{}
+	{
+	  degree = node->getExtendedDegree();
+}
 
 	~LowDegreeStrategy() {}
 
 	inline bool prioritize(Self& other) {
-	  size_t thisd = taken;// node->getExtendedDegree();
-	  size_t otherd = other.taken; //other.node->getExtendedDegree();
+	  size_t thisd = degree;// node->getExtendedDegree();
+	  size_t otherd = other.degree; //other.node->getExtendedDegree();
 
 	  //	  printf("Degree %d vs %d\n",thisd,otherd);
 
-	  //	if(thisd==otherd)
+	  if(thisd==otherd)
 			return BaseStrategy::prioritize(other);
-			//			else
-			//return thisd > otherd;
-
+			     		else
+			return thisd < otherd;
 //	  procs_t distancetothis = Pheet::get_place()->get_distance(last_place);
 //	  procs_t distancetoother = Pheet::get_place()->get_distance(other.last_place);
 
@@ -85,6 +90,10 @@ public:
 	  }*/
 	//	return BaseStrategy::prioritize(other);
 	}
+
+	inline bool forbid_call_conversion() const {
+	  return true;
+        }
 
 };
 

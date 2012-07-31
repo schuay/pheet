@@ -60,6 +60,7 @@ public:
 
 	size_t getExtendedDegree()
 	{
+	  //	  return getDegree();
 		size_t degree = 0;
 		for(int i=0;i<num_edges;i++)
 			if(!edges[i]->isTaken())

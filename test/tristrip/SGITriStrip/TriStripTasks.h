@@ -49,7 +49,7 @@ namespace pheet {
 		  rng.seed(65432);
 		  boost::uniform_int<size_t> rnd_st(0, graph.size());
 		  
-		  size_t startrand =2048;
+		  size_t startrand =128;
 		  for(size_t i = 0; i < startrand; i++)
 		    { 
 		      size_t n = rnd_st(rng);
@@ -57,6 +57,7 @@ namespace pheet {
 		      if(!graph[n]->taken && !graph[n]->spawned_hint)
 			{
 			  graph[n]->spawned_hint = true;
+			  //	  printf("Spawn: %d\n",graph[n]->getExtendedDegree());
 			  Pheet::template spawn_s<TriStripSliceTask<Pheet>>(LowDegreeStrategy<Pheet>(/*graph,*/graph[n],graph[n]->getExtendedDegree(),graph[n]->getExtendedNeighbourTaken()),/*graph,*/graph[n],result,pc);
 			  
 			}
@@ -104,7 +105,7 @@ namespace pheet {
 
 		bool operator < (const NodeWithDegree& n) const
 		{
-			return degree < n.degree;
+			return degree > n.degree;
 		}
 
 	};
@@ -124,6 +125,8 @@ namespace pheet {
 
 		void operator()()
 		{
+		  //		  printf("Perform: %d\n",startnode->getExtendedDegree());
+
 			std::vector<GraphNode*> strip;
 
 			std::priority_queue<NodeWithDegree> possiblenextnodes;
@@ -134,19 +137,27 @@ namespace pheet {
 
 			strip.push_back(currnode);
 
+
+			for(int i=0;i<2;i++)
+			  {
+			    currnode=startnode;
+
 			while(true)
 			{
-
-				for(int d=0;d<currnode->num_edges;d++)
+			  //		  if(strip.size()>20)
+			  // break;
+			  //	  printf("Edges %d\n",currnode->num_edges);
+				for(size_t d=0;d<currnode->num_edges;d++)
 				{
 					GraphNode* possnode = currnode->edges[d];
 
 					if(!possnode->isTaken())
 					{
 						possiblenextnodes.push(NodeWithDegree(possnode,possnode->getExtendedDegree()));
+						//	printf("Poss: %d\n",possnode->getExtendedDegree());
 					}
 				}
-
+				//printf("Size: %d\n",possiblenextnodes.size());
 
 				bool found = false;
 
@@ -154,6 +165,8 @@ namespace pheet {
 				{
 					GraphNode* g = (possiblenextnodes.top().getNode());
 					possiblenextnodes.pop();
+
+					//		printf("Taken: %d\n",g->getExtendedDegree());
 					if(g->take())
 					{
 					//	printf(".");
@@ -174,16 +187,17 @@ namespace pheet {
 					GraphNode* n = possiblenextnodes.top().getNode();
 					possiblenextnodes.pop();
 
-					if(!n->spawned_hint)
+			       		if(!(n->spawned_hint || n->isTaken()))
 					{
-						n->spawned_hint = true;
-						Pheet::template spawn_s<TriStripSliceTask<Pheet>>(LowDegreeStrategy<Pheet>(/*graph,*/n,n->getExtendedDegree(),n->getExtendedNeighbourTaken()),/*graph,*/n,result,pc);
+					  //printf(".");
+							  //	  	n->spawned_hint = true;
+							  //Pheet::template spawn_s<TriStripSliceTask<Pheet>>(LowDegreeStrategy<Pheet>(/*graph,*/n,n->getExtendedDegree(),n->getExtendedNeighbourTaken()),/*graph,*/n,result,pc);
 					}
 
 				}
 
 			}
-
+			  }
 			result.addstrip(strip);
 
 

@@ -28,6 +28,7 @@ public:
 	void addstrip(std::vector<GraphNode*> strip)
 	{
 		nodecount.add(strip.size());
+		//		printf("%d\n",strip.size());
 		// Should store the strip, but for now only count it
 		tristripcount.incr();
 	}

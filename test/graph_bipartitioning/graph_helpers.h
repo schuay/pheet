@@ -17,10 +17,15 @@
 
 namespace pheet {
 
+struct VertexWeight {
+  size_t source;
+  size_t weight;
+};
+
 struct GraphEdge {
 	size_t target;
 	size_t weight;
-  size_t reverse;
+        size_t reverse;
 };
 
 struct GraphVertex {
@@ -28,14 +33,22 @@ struct GraphVertex {
 	size_t num_edges;
 };
 
-class edgeweight_compare {
-public:
-int operator()(const GraphEdge &e1, const GraphEdge &e2) const
-{ 
-  return (e1.weight<e2.weight);
-}
+class weight_compare {
+ public:
+  int operator()(const VertexWeight &vw1, const VertexWeight &vw2) const
+  { 
+    return (vw1.weight<vw2.weight);
+  }
 };
 
+class edgeweight_compare {
+ public:
+  int operator()(const GraphEdge &e1, const GraphEdge &e2) const
+  { 
+    return (e1.weight<e2.weight);
+  }
+};
+ 
 template <size_t MAX_SIZE = 64>
 struct GraphBipartitioningSolution {
 	GraphBipartitioningSolution();

@@ -94,7 +94,7 @@ public:
 	}
 
 	inline bool forbid_call_conversion() const {
-		return false;
+		return true;
 	}
 
 	inline void rebase() {}
