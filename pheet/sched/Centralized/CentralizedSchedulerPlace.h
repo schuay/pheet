@@ -284,7 +284,6 @@ CentralizedSchedulerPlace<Pheet, TaskStorageT, CallThreshold>::~CentralizedSched
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, uint8_t CallThreshold>
 void CentralizedSchedulerPlace<Pheet, TaskStorageT, CallThreshold>::prepare_root() {
-	machine_model.bind();
 	stack = new StackElement[stack_size];
 
 	scheduler_state->state_barrier.signal(0);
@@ -351,6 +350,8 @@ void CentralizedSchedulerPlace<Pheet, TaskStorageT, CallThreshold>::initialize_l
 		levels[i].local_id = global_id - levels[i].global_id_offset;
 	}
 	num_levels = num_initialized_levels;
+
+	machine_model.bind();
 }
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, uint8_t CallThreshold>

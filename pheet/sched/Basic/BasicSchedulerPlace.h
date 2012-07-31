@@ -289,7 +289,6 @@ BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::~BasicSchedulerPlace(
 
 template <class Pheet, template <class P, typename T> class StealingDequeT, uint8_t CallThreshold>
 void BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::prepare_root() {
-	machine_model.bind();
 	stack = new StackElement[stack_size];
 
 	scheduler_state->state_barrier.signal(0);
@@ -356,6 +355,7 @@ void BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::initialize_level
 		levels[i].local_id = global_id - levels[i].global_id_offset;
 	}
 	num_levels = num_initialized_levels;
+	machine_model.bind();
 }
 
 template <class Pheet, template <class P, typename T> class StealingDequeT, uint8_t CallThreshold>
