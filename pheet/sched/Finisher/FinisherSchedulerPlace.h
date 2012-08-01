@@ -258,8 +258,6 @@ FinisherSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::~FinisherScheduler
 
 template <class Pheet, template <class P, typename T> class StealingDequeT, uint8_t CallThreshold>
 void FinisherSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::prepare_root() {
-	machine_model.bind();
-
 	scheduler_state->state_barrier.signal(0);
 
 	pheet_assert(local_place == NULL);
@@ -320,6 +318,7 @@ void FinisherSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::initialize_le
 		levels[i].local_id = global_id - levels[i].global_id_offset;
 	}
 	num_levels = num_initialized_levels;
+	machine_model.bind();
 }
 
 template <class Pheet, template <class P, typename T> class StealingDequeT, uint8_t CallThreshold>

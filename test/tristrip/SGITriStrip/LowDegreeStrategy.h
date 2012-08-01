@@ -14,38 +14,44 @@
 namespace pheet {
   
   template <class Pheet>
-    class RunLastStrategy :  public Pheet::Environment::BaseStrategy {
+    class RunLastStealFirstStrategy :  public Pheet::Environment::BaseStrategy {
   public:
-    typedef RunLastStrategy<Pheet> Self;
+    typedef RunLastStealFirstStrategy<Pheet> Self;
     typedef typename Pheet::Environment::BaseStrategy BaseStrategy;
   protected:
     bool runlast;
+    typename Pheet::Place* localplace;
 
   public:
-  RunLastStrategy(bool runlast):runlast(runlast)
+  RunLastStealFirstStrategy(bool runlast, size_t weight):runlast(runlast),localplace(Pheet::get_place())
+    {
+      this->set_transitive_weight(weight);
+    }
+  RunLastStealFirstStrategy():runlast(false),localplace(Pheet::get_place())
     {
     }
-  RunLastStrategy():runlast(false)
-    {
-    }
-    RunLastStrategy	(Self& other)
-      : BaseStrategy(other),runlast(other.runlast)
+    RunLastStealFirstStrategy(Self& other)
+      : BaseStrategy(other),runlast(other.runlast),localplace(other.localplace)
       {
       }
     
-  RunLastStrategy(Self&& other)
-    : BaseStrategy(other), runlast(other.runlast)
+  RunLastStealFirstStrategy(Self&& other)
+    : BaseStrategy(other), runlast(other.runlast),localplace(other.localplace)
       {
       }
     
-    ~RunLastStrategy() {}
+    ~RunLastStealFirstStrategy() {}
     
     inline bool prioritize(Self& other) {
       if(runlast != other.runlast)
-	return !runlast;
+	{
+	  if(runlast && localplace!=Pheet::get_place())
+	    return true;
+	  return !runlast;
+	}
 
-      //  if(runlast == other.runlast)
-	return BaseStrategy::prioritize(other);
+
+      return BaseStrategy::prioritize(other);
     }
     
     inline bool forbid_call_conversion() const {
@@ -54,24 +60,22 @@ namespace pheet {
   };
   
   template <class Pheet>
-    class LowDegreeStrategy : public  RunLastStrategy<Pheet> {
-    //	GraphDual& graph;
+    class LowDegreeStrategy : public  RunLastStealFirstStrategy<Pheet> {
     GraphNode* node;
     size_t degree;
     size_t taken;
   public:
     
     typedef LowDegreeStrategy<Pheet> Self;
-    typedef RunLastStrategy<Pheet> Strategy;
+    typedef RunLastStealFirstStrategy<Pheet> Strategy;
    
 
 
   LowDegreeStrategy(/*GraphDual& graph,*/ GraphNode* node, size_t degree,size_t taken):/*graph(graph),*/node(node),degree(degree),taken(taken)
 	{
 	  Strategy::runlast = false;
-//		this->set_memory_footprint(1);
 	  degree = node->getExtendedDegree();
-	  this->set_transitive_weight(100);
+	  this->set_transitive_weight(1);
 	}
 
 	LowDegreeStrategy(Self& other)
@@ -93,48 +97,13 @@ namespace pheet {
 	  size_t thisd = degree;// node->getExtendedDegree();
 	  size_t otherd = other.degree; //other.node->getExtendedDegree();
 
-	  //	  printf("Degree %d vs %d\n",thisd,otherd);
-
 	  if(thisd==otherd)
-			return Strategy::prioritize(other);
-			     		else
-			return thisd < otherd;
-//	  procs_t distancetothis = Pheet::get_place()->get_distance(last_place);
-//	  procs_t distancetoother = Pheet::get_place()->get_distance(other.last_place);
-
-	  //if(last_owner!=Pheet::get_place())
-	  //	printf("Should be 6: %d\n",distancetothis);
-	  //if(last_owner==Pheet::get_place())
-	  //	printf("Should be 0: %d\n",distancetothis);
-
-	  //printf("Distance1: %d Distance2: %d\n",distancetothis,distancetoother);
-
-	//  if(distancetothis != distancetoother)
-	  //  return distancetothis < distancetoother;
-
-/*		if(this->get_place() != other.get_place())
-		{
-			if(this->get_place() == Pheet::get_place())
-				return true;
-			if(other.get_place() == Pheet::get_place())
-				return false;
-		}*/
-
-/*	  if(distancetothis == 0)
-	  {
-	  	// If local task, prioritize recently used
-	  	return timestamp > other.timestamp;
-	  }
+	    return Strategy::prioritize(other);
 	  else
-	  {
-	  	// If stealing, prioritize not recently used
-	  	return timestamp < other.timestamp;
-	  }*/
-	//	return BaseStrategy::prioritize(other);
+	    return thisd < otherd;
 	}
 
 	inline bool forbid_call_conversion() const {
-	  //  return true;
 	  return false;
         }
 

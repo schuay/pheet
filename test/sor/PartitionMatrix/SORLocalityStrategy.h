@@ -23,7 +23,7 @@ public:
 	SORLocalityStrategy(typename Pheet::Place* last_place, ptrdiff_t timestamp):last_place(last_place),timestamp(timestamp)
 	{
 //		this->set_memory_footprint(1);
-		this->set_transitive_weight(1000000);
+		this->set_transitive_weight(1);
 	}
 
 	SORLocalityStrategy(Self& other)
@@ -35,6 +35,10 @@ public:
 	{}
 
 	~SORLocalityStrategy() {}
+
+	inline bool forbid_call_conversion() const {
+	  return true;
+	}
 
 	inline bool prioritize(Self& other) {
 

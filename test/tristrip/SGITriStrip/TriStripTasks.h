@@ -65,7 +65,9 @@ namespace pheet {
 			  
 			}
 		    }
-		  
+		  //typename Pheet::Finish f;
+
+		  //	  return;		  
 		  size_t spawnsetcount = 1024;
 		  
 		  for(size_t i=0; i<graph.size(); i+=spawnsetcount)
@@ -73,27 +75,29 @@ namespace pheet {
 		      size_t start = i;
 		      size_t end = min((i+spawnsetcount),graph.size());
 
-		      Pheet::template spawn_s<TriStripSpawner<Pheet>>(RunLastStrategy<Pheet>(true),graph,start,end,result,pc);
+		      Pheet::template spawn_s<TriStripSpawner<Pheet>>(RunLastStealFirstStrategy<Pheet>(true,spawnsetcount),&graph,start,end,result,pc);
 		      
 		    }
-		  
+		  typename Pheet::Finish f;
+
 		}
 	};
 	
 	template <class Pheet>
 	class TriStripSpawner : public Pheet::Task
 	{
-		GraphDual& graph;
+		GraphDual* graph;
 		size_t start, stop;
 		TriStripResult<Pheet> result;
 		TriStripPerformanceCounters<Pheet> pc;
 	public:
 
-	TriStripSpawner(GraphDual& graph, size_t start, size_t stop, TriStripResult<Pheet>& result, TriStripPerformanceCounters<Pheet>& pc):graph(graph), start(start),stop(stop),result(result),pc(pc) {}
+	TriStripSpawner(GraphDual* graph, size_t start, size_t stop, TriStripResult<Pheet>& result, TriStripPerformanceCounters<Pheet>& pc):graph(graph), start(start),stop(stop),result(result),pc(pc) {}
 		virtual ~TriStripSpawner() {}
 
 		void operator()()
 		{
+		  GraphDual& graph = *this->graph;
 		  
 		  for(size_t i=start; i<stop; i++)
 		    {
@@ -213,8 +217,8 @@ namespace pheet {
 			       		if(!(n->spawned_hint || n->isTaken()))
 					{
 					  //printf(".");
-							  	  	n->spawned_hint = true;
-							  Pheet::template spawn_s<TriStripSliceTask<Pheet>>(LowDegreeStrategy<Pheet>(/*graph,*/n,n->getExtendedDegree(),n->getExtendedNeighbourTaken()),/*graph,*/n,result,pc);
+					  //	  	  	n->spawned_hint = true;
+									//  Pheet::template spawn_s<TriStripSliceTask<Pheet>>(LowDegreeStrategy<Pheet>(/*graph,*/n,n->getExtendedDegree(),n->getExtendedNeighbourTaken()),/*graph,*/n,result,pc);
 					}
 
 				}

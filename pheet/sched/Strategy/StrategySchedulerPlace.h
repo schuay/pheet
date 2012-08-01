@@ -255,7 +255,6 @@ StrategySchedulerPlace<Pheet, CallThreshold>::~StrategySchedulerPlace() {
 
 template <class Pheet, uint8_t CallThreshold>
 void StrategySchedulerPlace<Pheet, CallThreshold>::prepare_root() {
-	machine_model.bind();
 	stack = new StackElement[stack_size];
 
 	scheduler_state->state_barrier.signal(0);
@@ -322,6 +321,7 @@ void StrategySchedulerPlace<Pheet, CallThreshold>::initialize_levels() {
 		levels[i].local_id = global_id - levels[i].global_id_offset;
 	}
 	num_levels = num_initialized_levels;
+	machine_model.bind();
 }
 
 template <class Pheet, uint8_t CallThreshold>
@@ -848,7 +848,7 @@ inline void StrategySchedulerPlace<Pheet, CallThreshold>::spawn_s(Strategy&& s, 
 			TaskStorageItem di;
 			di.task = task;
 			di.stack_element = current_task_parent;
-			task_storage.push(std::forward<Strategy&&>(s), di, performance_counters.task_storage_performance_counters);
+			task_storage.push(std::forward<Strategy&&>(s), di);
 		}
 		else {
 			performance_counters.num_spawns_to_call.incr();

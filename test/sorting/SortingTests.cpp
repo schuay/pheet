@@ -93,8 +93,8 @@ void SortingTests::run_test() {
 						DagQuicksort>();
 #else
 	// default tests
-	this->run_sorter<	Pheet,
-						DagQuicksort>();
+//	this->run_sorter<	Pheet,
+//						DagQuicksort>();
 //	this->run_sorter<	typename Pheet::WithScheduler<StrategyScheduler>::template WithTaskStorage<Pheet::WithScheduler<StrategyScheduler>::Environment::TaskStorage::WithStrategyHeap<VolatileStrategyHeap>::template BT >,
 //						StrategyQuicksort>();
 	this->run_sorter<	Pheet::WithScheduler<StrategyScheduler>,
@@ -117,12 +117,12 @@ void SortingTests::run_test() {
 //						ReferenceHeapSort<Pheet>::WithPriorityQueue<FibolikeHeap>::template BT >();
 //	this->run_sorter<	Pheet::WithScheduler<SynchroneousScheduler>,
 //						ReferenceHeapSort<Pheet>::WithPriorityQueue<FibonacciHeap>::template BT >();
-	this->run_sorter<	Pheet::WithScheduler<SynchroneousScheduler>,
-						ReferenceHeapSort>();
+//	this->run_sorter<	Pheet::WithScheduler<SynchroneousScheduler>,
+//						ReferenceHeapSort>();
 	this->run_sorter<	Pheet::WithScheduler<MixedModeScheduler>,
 						MixedModeQuicksort>();
-	this->run_sorter<	Pheet::WithScheduler<FinisherScheduler>,
-						DagQuicksort>();
+//	this->run_sorter<	Pheet::WithScheduler<FinisherScheduler>,
+//						DagQuicksort>();
 #endif
 
 #endif

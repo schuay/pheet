@@ -14,10 +14,10 @@
 
 namespace pheet {
 
-template <class Pheet>
+template <class Pheet, bool s2c>
   class PPoPPLUPivLocalityStrategy : public Pheet::Environment::BaseStrategy {
 public:
-	typedef PPoPPLUPivLocalityStrategy<Pheet> Self;
+	typedef PPoPPLUPivLocalityStrategy<Pheet, s2c> Self;
 	typedef typename Pheet::Environment::BaseStrategy BaseStrategy;
 
 	PPoPPLUPivLocalityStrategy(typename Pheet::Place* last_owner, size_t blocks, bool critical_path);
@@ -28,7 +28,7 @@ public:
 	inline bool prioritize(Self& other);
 
 	inline bool forbid_call_conversion() const {
-		return false;
+		return !s2c;
 	}
 
 private:
@@ -37,35 +37,32 @@ private:
 	bool critical_path;
 };
 
-template <class Pheet>
-PPoPPLUPivLocalityStrategy<Pheet>::PPoPPLUPivLocalityStrategy(typename Pheet::Place* last_owner, size_t blocks, bool critical_path)
+template <class Pheet, bool s2c>
+PPoPPLUPivLocalityStrategy<Pheet, s2c>::PPoPPLUPivLocalityStrategy(typename Pheet::Place* last_owner, size_t blocks, bool critical_path)
   : last_owner(last_owner), blocks(blocks), critical_path(critical_path) {
 	this->set_transitive_weight(blocks << 8);
 }
 
-template <class Pheet>
-PPoPPLUPivLocalityStrategy<Pheet>::PPoPPLUPivLocalityStrategy(Self& other)
+template <class Pheet, bool s2c>
+PPoPPLUPivLocalityStrategy<Pheet, s2c>::PPoPPLUPivLocalityStrategy(Self& other)
   : BaseStrategy(other),last_owner(other.last_owner), blocks(other.blocks), critical_path(other.critical_path) {
 
 }
 
-template <class Pheet>
-PPoPPLUPivLocalityStrategy<Pheet>::PPoPPLUPivLocalityStrategy(Self&& other)
+template <class Pheet, bool s2c>
+PPoPPLUPivLocalityStrategy<Pheet, s2c>::PPoPPLUPivLocalityStrategy(Self&& other)
   : BaseStrategy(other),last_owner(other.last_owner), blocks(other.blocks), critical_path(other.critical_path) {
 
 }
 
-template <class Pheet>
-PPoPPLUPivLocalityStrategy<Pheet>::~PPoPPLUPivLocalityStrategy() {
+template <class Pheet, bool s2c>
+PPoPPLUPivLocalityStrategy<Pheet, s2c>::~PPoPPLUPivLocalityStrategy() {
 
 }
 
 
-template <class Pheet>
-inline bool PPoPPLUPivLocalityStrategy<Pheet>::prioritize(Self& other) {
-
-  //  return Pheet::Environment::BaseStrategy::prioritize(other);
-
+template <class Pheet, bool s2c>
+inline bool PPoPPLUPivLocalityStrategy<Pheet, s2c>::prioritize(Self& other) {
 	typename Pheet::Place* p = Pheet::get_place();
 	procs_t d = p->get_distance(last_owner);
 	procs_t d_o = p->get_distance(other.last_owner);

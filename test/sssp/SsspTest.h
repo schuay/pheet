@@ -36,6 +36,7 @@ private:
 	SsspGraphVertex* generate_data();
 	void delete_data(SsspGraphVertex* data);
 	bool check_solution(SsspGraphVertex* data);
+	static void check_vertex(SsspGraphVertex* data, size_t i, bool& correct);
 
 	procs_t cpus;
 	int type;
@@ -145,15 +146,24 @@ void SsspTest<Pheet, Algorithm>::delete_data(SsspGraphVertex* data) {
 
 template <class Pheet, template <class P> class Algorithm>
 bool SsspTest<Pheet, Algorithm>::check_solution(SsspGraphVertex* data) {
-	for(size_t i = 0; i < size; ++i) {
-		for(size_t j = 0; j < data[i].num_edges; ++j) {
-			if(data[data[i].edges[j].target].distance > data[i].distance + data[i].edges[j].weight) {
-				return false;
-			}
+	bool correct = true;
+	{pheet::Pheet::Environment p;
+		for(size_t i = 0; i < size; ++i) {
+			pheet::Pheet::spawn(SsspTest<Pheet, Algorithm>::check_vertex, data, i, correct);
 		}
 	}
 
-	return true;
+	return correct;
+}
+
+template <class Pheet, template <class P> class Algorithm>
+void SsspTest<Pheet, Algorithm>::check_vertex(SsspGraphVertex* data, size_t i, bool& correct) {
+	for(size_t j = 0; j < data[i].num_edges; ++j) {
+		if(data[data[i].edges[j].target].distance > data[i].distance + data[i].edges[j].weight) {
+			correct = false;
+			return;
+		}
+	}
 }
 
 } /* namespace pheet */

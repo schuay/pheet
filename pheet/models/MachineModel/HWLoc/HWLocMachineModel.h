@@ -12,6 +12,7 @@
 #include "../../../settings.h"
 
 #include <hwloc.h>
+#include <iostream>
 
 
 namespace pheet {
@@ -84,7 +85,21 @@ hwloc_cpuset_t HWLocTopologyInfo<Pheet>::get_binding() {
 
 template <class Pheet>
 void HWLocTopologyInfo<Pheet>::bind(hwloc_cpuset_t cpus) {
+/*	int x = hwloc_bitmap_first(cpus);
+	while(x != -1) {
+		if(hwloc_bitmap_isset(cpus, x))
+			std::cout << x << " ";
+		x = hwloc_bitmap_next(cpus, x);
+	}*/
 	hwloc_set_cpubind(topology, cpus, HWLOC_CPUBIND_THREAD);
+/*	x = hwloc_bitmap_first(cpus);
+	while(x != -1) {
+		if(hwloc_bitmap_isset(cpus, x))
+			std::cout << x << " ";
+		x = hwloc_bitmap_next(cpus, x);
+	}
+	std::cout << std::endl;*/
+//	std::cout << ret << " " << hwloc_bitmap_first(cpus) << " " << hwloc_bitmap_next(cpus, hwloc_bitmap_first(cpus)) << std::endl;
 }
 
 template <class Pheet>

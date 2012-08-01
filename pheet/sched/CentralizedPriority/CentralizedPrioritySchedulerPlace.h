@@ -252,7 +252,6 @@ CentralizedPrioritySchedulerPlace<Pheet, CallThreshold>::~CentralizedPrioritySch
 
 template <class Pheet, uint8_t CallThreshold>
 void CentralizedPrioritySchedulerPlace<Pheet, CallThreshold>::prepare_root() {
-	machine_model.bind();
 	stack = new StackElement[stack_size];
 
 	scheduler_state->state_barrier.signal(0);
@@ -319,6 +318,7 @@ void CentralizedPrioritySchedulerPlace<Pheet, CallThreshold>::initialize_levels(
 		levels[i].local_id = global_id - levels[i].global_id_offset;
 	}
 	num_levels = num_initialized_levels;
+	machine_model.bind();
 }
 
 template <class Pheet, uint8_t CallThreshold>
