@@ -31,7 +31,7 @@ void TriStripTests::test(bool prio) {
 //			for(size_t o = 0; o < sizeof(sor_test_omega)/sizeof(sor_test_omega[0]); o++) {
 //				for(size_t ms = 0; ms < sizeof(sor_test_maxtrissize)/sizeof(sor_test_maxtrissize[0]); ms++) {
 		for (size_t c = 0;c < sizeof(tristrip_test_cpus) / sizeof(tristrip_test_cpus[0]);c++) {
-			TriStripTest<Test> iart(tristrip_test_cpus[c], tristrip_test_nodecount[nc]);
+		  TriStripTest<Test> iart(tristrip_test_cpus[c], tristrip_test_nodecount[nc], prio);
 			printf("Run\n");
 			iart.run_test();
 		}
@@ -48,9 +48,9 @@ void TriStripTests::run_test(bool usestrategy) {
 
 		//			  for(size_t pp = 0; pp < sizeof(sor_prio)/sizeof(sor_prio[0]); pp++) {
 		if (usestrategy)
-			test<TriStripRun<Pheet::WithScheduler<StrategyScheduler> > >(usestrategy);
+			test<TriStripRun<Pheet::WithScheduler<StrategyScheduler> > >(false);
 		else
-			test<TriStripRun<Pheet::WithScheduler<BasicScheduler> > >(usestrategy);
+			test<TriStripRun<Pheet::WithScheduler<BasicScheduler> > >(true);
 		//			  }
 	}
 #endif

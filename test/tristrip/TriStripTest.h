@@ -25,7 +25,7 @@ namespace pheet {
 template <class Impl>
 class TriStripTest : Test {
 public:
-    TriStripTest(procs_t cpus, size_t nodecount);
+    TriStripTest(procs_t cpus, size_t nodecount, bool withstrat);
 	~TriStripTest();
 
 	void run_test();
@@ -33,11 +33,12 @@ public:
 private:
 	procs_t cpus;
 	size_t nodecount;
+	bool withstrat;
 };
 
 template <class Impl>
-  TriStripTest<Impl>::TriStripTest(procs_t cpus, size_t nodecount)
-  : cpus(cpus),nodecount(nodecount){
+  TriStripTest<Impl>::TriStripTest(procs_t cpus, size_t nodecount, bool withstrat)
+  : cpus(cpus),nodecount(nodecount),withstrat(withstrat){
 
 }
 
@@ -53,7 +54,7 @@ void TriStripTest<Impl>::run_test() {
 
 	printf("Start\n");
 
-	Impl iar(cpus, graph);
+	Impl iar(cpus, graph, withstrat);
 
 	Time start, end;
 	check_time(start);

@@ -27,27 +27,28 @@ namespace pheet {
 template <class Pheet>
 class TriStripRun {
 public:
-  TriStripRun(procs_t cpus, GraphDual& graph);
-	~TriStripRun();
-
-	void run();
-
-	void print_results();
-	void print_headers();
-
-	static void print_name();
-	static void print_scheduler_name();
-
-	static char const name[];
-
-
-	size_t getTriStripCount();
-	size_t getNodeTriStripCount();
-
+  TriStripRun(procs_t cpus, GraphDual& graph, bool withstrat);
+  ~TriStripRun();
+  
+  void run();
+  
+  void print_results();
+  void print_headers();
+  
+  static void print_name();
+  static void print_scheduler_name();
+  
+  static char const name[];
+  
+  
+  size_t getTriStripCount();
+  size_t getNodeTriStripCount();
+  
 
 private:
 	unsigned int cpus;
 	GraphDual& graph;
+	bool withstrat;
 	TriStripResult<Pheet> result;
 	typename Pheet::Environment::PerformanceCounters pc;
 	TriStripPerformanceCounters<Pheet> ppc;
@@ -73,8 +74,8 @@ size_t TriStripRun<Pheet>::getTriStripCount()
 }
 
 template <class Pheet>
-  TriStripRun<Pheet>::TriStripRun(procs_t cpus, GraphDual& graph):
-cpus(cpus), graph(graph) {
+  TriStripRun<Pheet>::TriStripRun(procs_t cpus, GraphDual& graph, bool withstrat):
+ cpus(cpus), graph(graph),withstrat(withstrat) {
 	
 }
 
@@ -87,8 +88,12 @@ template <class Pheet>
 void TriStripRun<Pheet>::run() {
 	// Start here
 	typename Pheet::Environment env(cpus,pc);
-	Pheet::template finish<TriStripStartTask<Pheet> >(graph, result, ppc);
+	if(withstrat)
+	  Pheet::template finish<TriStripStartTask<Pheet,true> >(graph, result, ppc);
+	else
+	  Pheet::template finish<TriStripStartTask<Pheet,false> >(graph, result, ppc);
 }
+
 
 template <class Pheet>
 void TriStripRun<Pheet>::print_results() {
