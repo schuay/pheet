@@ -848,7 +848,7 @@ procs_t BasicSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::get_distance(
 	}
 
 	procs_t offset = std::max(levels[num_levels - 1].memory_level, other->levels[other->num_levels - 1].memory_level);
-	procs_t i = min(num_levels - 1, other->num_levels - 1);
+	procs_t i = std::min(num_levels - 1, other->num_levels - 1);
 	while(levels[i].global_id_offset != other->levels[i].global_id_offset) {
 		pheet_assert(i > 0);
 		--i;

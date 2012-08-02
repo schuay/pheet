@@ -103,9 +103,9 @@ public:
 	template<class Strategy, typename F, typename ... TaskParams>
 		void spawn_s(Strategy&& s, F&& f, TaskParams&& ... params);
 
-	procs_t get_distance(Self* other);
+	procs_t get_distance(Self* other) const;
 //	procs_t get_distance(Self* other, procs_t max_granularity_level);
-	procs_t get_max_distance();
+//	procs_t get_max_distance() const;
 //	procs_t get_max_distance(procs_t max_granularity_level);
 	size_t get_current_finish_stack_depth();
 
@@ -876,7 +876,7 @@ void StrategySchedulerPlace<Pheet, CallThreshold>::call(F&& f, TaskParams&& ... 
 }
 
 template <class Pheet, uint8_t CallThreshold>
-procs_t StrategySchedulerPlace<Pheet, CallThreshold>::get_distance(Self* other) {
+procs_t StrategySchedulerPlace<Pheet, CallThreshold>::get_distance(Self* other) const {
 	if(other == this) {
 		return 0;
 	}
