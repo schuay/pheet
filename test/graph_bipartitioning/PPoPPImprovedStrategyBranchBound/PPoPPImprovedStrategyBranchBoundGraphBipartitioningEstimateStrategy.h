@@ -83,7 +83,9 @@ inline PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy<Pheet
 template <class Pheet, class SubProblem>
 inline bool PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy<Pheet, SubProblem>::prioritize(Self& other)
 {
-	if(this->get_place() == other.get_place() && this->get_place() == Pheet::get_place()) {
+	// Since we rebase all tasks should be from the same place
+	pheet_assert(this->get_place() == other.get_place());
+	if(this->get_place() == Pheet::get_place()) {
 		return estimate < other.estimate;
 	}
 	return uncertainty > other.uncertainty;
