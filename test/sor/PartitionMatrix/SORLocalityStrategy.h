@@ -24,7 +24,7 @@ template <class Pheet>
 
   NormalOrHighPrioStrategy(bool highprio):highprio(highprio)
     {
-      printf("U");
+  //    printf("U");
       this->set_transitive_weight(1);
     }
 
@@ -45,13 +45,13 @@ template <class Pheet>
     }
 
     inline bool prioritize(Self& other) {
-      printf("x\n");
+   //   printf("x\n");
       if(highprio!=other.highprio)
 	return highprio;
 
-      printf("k\n");
+   //   printf("k\n");
       bool res =  BaseStrategy::prioritize(other);
-      printf("KalleC\n");
+      //printf("KalleC\n");
       return res;
     }
   };
@@ -87,7 +87,7 @@ public:
 
 	inline bool prioritize(Self& other) {
 
-	  printf("y\n");
+//	  printf("y\n");
 
 	  procs_t distancetothis = Pheet::get_place()->get_distance(last_place);
 	  procs_t distancetoother = Pheet::get_place()->get_distance(other.last_place);
