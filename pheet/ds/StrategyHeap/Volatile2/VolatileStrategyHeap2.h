@@ -20,6 +20,13 @@ public:
 
 	virtual void delete_node(void* node) = 0;
 	virtual void consolidate_recursive() = 0;
+
+	void add_child(VolatileStrategySubHeap2Base* child) {
+		children.push_back(child);
+	}
+
+protected:
+	std::vector<VolatileStrategySubHeap2Base*> children;
 };
 
 template <class Pheet, typename TT, class StrategyRetriever, class Strategy, class BaseStrategy>
@@ -82,6 +89,7 @@ public:
 			base = new Base(sr, heap_heaps);
 		}
 		parent = static_cast<Base*>(base);
+		parent->add_child(this);
 	}
 	~VolatileStrategySubHeap2() {}
 
@@ -244,9 +252,12 @@ public:
 			}
 			if(unconsolidated_count > 0) {
 				pheet_assert(unconsolidated_count == 1);
-				consolidate();
+				Strategy* max_s = consolidate();
+				if(max_s != nullptr) {
+					parent->link_node(max, max_s);
+				}
+				sub_unconsolidated();
 			}
-			sub_unconsolidated();
 			pheet_assert(unconsolidated_count == 0);
 		}
 	}
@@ -374,7 +385,6 @@ private:
 	StrategyRetriever& sr;
 	Base* parent;
 	size_t unconsolidated_count;
-	std::vector<VolatileStrategySubHeap2Base*> children;
 };
 
 template <class Pheet, typename TT, class StrategyRetriever, class Strategy>
@@ -517,6 +527,7 @@ public:
 		if(unconsolidated_count > 0) {
 			consolidate_recursive();
 		}
+		pheet_assert(max != nullptr);
 
 		TT ret = max->data;
 		weight = max->weight;
@@ -543,8 +554,11 @@ public:
 			for(auto i = children.begin(); i != children.end(); ++i) {
 				(*i)->consolidate_recursive();
 			}
-			consolidate();
-			sub_unconsolidated();
+			if(unconsolidated_count > 0) {
+				pheet_assert(unconsolidated_count == 1);
+				consolidate();
+				sub_unconsolidated();
+			}
 			pheet_assert(unconsolidated_count == 0);
 		}
 	}
@@ -671,7 +685,6 @@ private:
 	Node* max;
 	StrategyRetriever& sr;
 	size_t unconsolidated_count;
-	std::vector<VolatileStrategySubHeap2Base*> children;
 };
 
 

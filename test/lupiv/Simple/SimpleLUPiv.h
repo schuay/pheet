@@ -12,6 +12,7 @@
 #include "../helpers/LUPivPivotTask.h"
 #include "SimpleLUPivStandardPathTask.h"
 #include "SimpleLUPivCriticalPathTask.h"
+#include "SimpleLUPivPerformanceCounters.h"
 
 #include <algorithm>
 
@@ -25,8 +26,10 @@ namespace pheet {
 template <class Pheet, int BLOCK_SIZE = 128>
 class SimpleLUPivImpl : public Pheet::Task {
 public:
+	typedef SimpleLUPivPerformanceCounters<Pheet> PerformanceCounters;
+
 	SimpleLUPivImpl(double* a, int* pivot, int m, int lda, int n);
-	SimpleLUPivImpl(double* a, int* pivot, int size);
+	SimpleLUPivImpl(double* a, int* pivot, int size, PerformanceCounters& pc);
 	~SimpleLUPivImpl();
 
 	virtual void operator()();
@@ -59,7 +62,7 @@ SimpleLUPivImpl<Pheet, BLOCK_SIZE>::SimpleLUPivImpl(double* a, int* pivot, int m
 }
 
 template <class Pheet, int BLOCK_SIZE>
-SimpleLUPivImpl<Pheet, BLOCK_SIZE>::SimpleLUPivImpl(double* a, int* pivot, int size)
+SimpleLUPivImpl<Pheet, BLOCK_SIZE>::SimpleLUPivImpl(double* a, int* pivot, int size, PerformanceCounters& pc)
 : a(a), pivot(pivot), m(size), lda(size), n(size) {
 	pheet_assert(m > 0);
 	pheet_assert(n > 0);

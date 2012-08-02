@@ -10,6 +10,7 @@
 #define PPOPPLOCALITYSTRATEGYLUPIV_H_
 
 #include "../LocalityStrategy/LocalityStrategyLUPivPivotTask.h"
+#include "PPoPPLocalityStrategyLUPivPerformanceCounters.h"
 #include "PPoPPLocalityStrategyLUPivStandardPathTask.h"
 #include "PPoPPLocalityStrategyLUPivCriticalPathTask.h"
 #include "PPoPPLUPivLocalityStrategy.h"
@@ -26,8 +27,10 @@ namespace pheet {
 template <class Pheet, int BLOCK_SIZE, bool s2c>
 class PPoPPLocalityStrategyLUPivImpl : public Pheet::Task {
 public:
+	typedef PPoPPLocalityStrategyLUPivPerformanceCounters<Pheet> PerformanceCounters;
+
 	PPoPPLocalityStrategyLUPivImpl(double* a, int* pivot, int m, int lda, int n);
-	PPoPPLocalityStrategyLUPivImpl(double* a, int* pivot, int size);
+	PPoPPLocalityStrategyLUPivImpl(double* a, int* pivot, int size, PerformanceCounters& pc);
 	~PPoPPLocalityStrategyLUPivImpl();
 
 	virtual void operator()();
@@ -44,6 +47,8 @@ private:
 	int lda;
 	// Number of columns in a
 	int n;
+
+	PerformanceCounters pc;
 };
 
 template <class Pheet, int BLOCK_SIZE, bool s2c>
@@ -60,8 +65,8 @@ PPoPPLocalityStrategyLUPivImpl<Pheet, BLOCK_SIZE, s2c>::PPoPPLocalityStrategyLUP
 }
 
 template <class Pheet, int BLOCK_SIZE, bool s2c>
-PPoPPLocalityStrategyLUPivImpl<Pheet, BLOCK_SIZE, s2c>::PPoPPLocalityStrategyLUPivImpl(double* a, int* pivot, int size)
-: a(a), pivot(pivot), m(size), lda(size), n(size) {
+PPoPPLocalityStrategyLUPivImpl<Pheet, BLOCK_SIZE, s2c>::PPoPPLocalityStrategyLUPivImpl(double* a, int* pivot, int size, PerformanceCounters& pc)
+: a(a), pivot(pivot), m(size), lda(size), n(size), pc(pc) {
 	pheet_assert(m > 0);
 	pheet_assert(n > 0);
 	pheet_assert(lda >= m);
@@ -108,7 +113,7 @@ void PPoPPLocalityStrategyLUPivImpl<Pheet, BLOCK_SIZE, s2c>::operator()() {
 					spawn_s<PPoPPLocalityStrategyLUPivCriticalPathTask<Pheet, BLOCK_SIZE, s2c> >(
 							PPoPPLUPivLocalityStrategy<Pheet, s2c>(column_owners[i], num_blocks - i, true),
 							column_owners + i, block_owners + (i-1) + (i*num_blocks),
-							cur_a + i*BLOCK_SIZE*lda, cur_a + (i-1)*BLOCK_SIZE*lda, cur_piv, cur_m, lda, (i == num_blocks - 1)?(n - BLOCK_SIZE*i):(BLOCK_SIZE));
+							cur_a + i*BLOCK_SIZE*lda, cur_a + (i-1)*BLOCK_SIZE*lda, cur_piv, cur_m, lda, (i == num_blocks - 1)?(n - BLOCK_SIZE*i):(BLOCK_SIZE), pc);
 
 				// Workflow for other unfinished columns
 				for(int j = i + 1; j < num_blocks; ++j) {
@@ -116,7 +121,7 @@ void PPoPPLocalityStrategyLUPivImpl<Pheet, BLOCK_SIZE, s2c>::operator()() {
 						spawn_s<PPoPPLocalityStrategyLUPivStandardPathTask<Pheet, BLOCK_SIZE, s2c> >(
 								PPoPPLUPivLocalityStrategy<Pheet, s2c>(column_owners[j], num_blocks - i, false),
 								column_owners + j, block_owners + (i-1) + (j*num_blocks),
-								cur_a + j*BLOCK_SIZE*lda, cur_a + (i-1)*BLOCK_SIZE*lda, cur_piv, cur_m, lda, (j == num_blocks - 1)?(n - BLOCK_SIZE*j):(BLOCK_SIZE));
+								cur_a + j*BLOCK_SIZE*lda, cur_a + (i-1)*BLOCK_SIZE*lda, cur_piv, cur_m, lda, (j == num_blocks - 1)?(n - BLOCK_SIZE*j):(BLOCK_SIZE), pc);
 				}
 
 				// Pivoting for all other columns

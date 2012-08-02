@@ -58,6 +58,9 @@ const GraphBipartitioningProblem sssp_test_problems[] = {
 };
 const int sssp_test_types[] = {0};
 
+#define SORANDUTS
+
+
 }
 
 #endif /* SHORT_SINGLE_H_ */

@@ -20,7 +20,7 @@ namespace pheet {
 template <class Pheet>
 class LUPivPivotTask : public Pheet::Task {
 public:
-	LUPivPivotTask(double* a, int* pivot, int m, int lda, int n, PPoPPLUPivPerformanceCounters<Pheet>& pc);
+	LUPivPivotTask(double* a, int* pivot, int m, int lda, int n/*, PPoPPLUPivPerformanceCounters<Pheet>& pc*/);
 	virtual ~LUPivPivotTask();
 
 	virtual void operator()();
@@ -34,7 +34,7 @@ private:
 };
 
 template <class Pheet>
-LUPivPivotTask<Pheet>::LUPivPivotTask(double* a, int* pivot, int m, int lda, int n,PPoPPLUPivPerformanceCounters<Pheet>& pc)
+LUPivPivotTask<Pheet>::LUPivPivotTask(double* a, int* pivot, int m, int lda, int n/*,PPoPPLUPivPerformanceCounters<Pheet>& pc*/)
 : a(a), pivot(pivot), m(m), lda(lda), n(n) {
 
 }

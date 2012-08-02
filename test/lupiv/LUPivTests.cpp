@@ -9,7 +9,7 @@
 #include "LUPivTests.h"
 #ifdef LUPIV_TEST
 #include "Simple/SimpleLUPiv.h"
-#include "LocalityStrategy/LocalityStrategyLUPiv.h"
+//#include "LocalityStrategy/LocalityStrategyLUPiv.h"
 #include "PPoPPLocalityStrategy/PPoPPLocalityStrategyLUPiv.h"
 #endif
 

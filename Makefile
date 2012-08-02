@@ -204,30 +204,6 @@ test/graph_bipartitioning/GraphBipartitioningTests.cpp.s:
 	$(MAKE) -f CMakeFiles/pheet_test.dir/build.make CMakeFiles/pheet_test.dir/test/graph_bipartitioning/GraphBipartitioningTests.cpp.s
 .PHONY : test/graph_bipartitioning/GraphBipartitioningTests.cpp.s
 
-test/graph_bipartitioning_and_lupiv/GraphBiAndLupivTests.o: test/graph_bipartitioning_and_lupiv/GraphBiAndLupivTests.cpp.o
-.PHONY : test/graph_bipartitioning_and_lupiv/GraphBiAndLupivTests.o
-
-# target to build an object file
-test/graph_bipartitioning_and_lupiv/GraphBiAndLupivTests.cpp.o:
-	$(MAKE) -f CMakeFiles/pheet_test.dir/build.make CMakeFiles/pheet_test.dir/test/graph_bipartitioning_and_lupiv/GraphBiAndLupivTests.cpp.o
-.PHONY : test/graph_bipartitioning_and_lupiv/GraphBiAndLupivTests.cpp.o
-
-test/graph_bipartitioning_and_lupiv/GraphBiAndLupivTests.i: test/graph_bipartitioning_and_lupiv/GraphBiAndLupivTests.cpp.i
-.PHONY : test/graph_bipartitioning_and_lupiv/GraphBiAndLupivTests.i
-
-# target to preprocess a source file
-test/graph_bipartitioning_and_lupiv/GraphBiAndLupivTests.cpp.i:
-	$(MAKE) -f CMakeFiles/pheet_test.dir/build.make CMakeFiles/pheet_test.dir/test/graph_bipartitioning_and_lupiv/GraphBiAndLupivTests.cpp.i
-.PHONY : test/graph_bipartitioning_and_lupiv/GraphBiAndLupivTests.cpp.i
-
-test/graph_bipartitioning_and_lupiv/GraphBiAndLupivTests.s: test/graph_bipartitioning_and_lupiv/GraphBiAndLupivTests.cpp.s
-.PHONY : test/graph_bipartitioning_and_lupiv/GraphBiAndLupivTests.s
-
-# target to generate assembly for a file
-test/graph_bipartitioning_and_lupiv/GraphBiAndLupivTests.cpp.s:
-	$(MAKE) -f CMakeFiles/pheet_test.dir/build.make CMakeFiles/pheet_test.dir/test/graph_bipartitioning_and_lupiv/GraphBiAndLupivTests.cpp.s
-.PHONY : test/graph_bipartitioning_and_lupiv/GraphBiAndLupivTests.cpp.s
-
 test/inarow/InARowTests.o: test/inarow/InARowTests.cpp.o
 .PHONY : test/inarow/InARowTests.o
 
@@ -561,9 +537,6 @@ help:
 	@echo "... test/graph_bipartitioning/GraphBipartitioningTests.o"
 	@echo "... test/graph_bipartitioning/GraphBipartitioningTests.i"
 	@echo "... test/graph_bipartitioning/GraphBipartitioningTests.s"
-	@echo "... test/graph_bipartitioning_and_lupiv/GraphBiAndLupivTests.o"
-	@echo "... test/graph_bipartitioning_and_lupiv/GraphBiAndLupivTests.i"
-	@echo "... test/graph_bipartitioning_and_lupiv/GraphBiAndLupivTests.s"
 	@echo "... test/inarow/InARowTests.o"
 	@echo "... test/inarow/InARowTests.i"
 	@echo "... test/inarow/InARowTests.s"

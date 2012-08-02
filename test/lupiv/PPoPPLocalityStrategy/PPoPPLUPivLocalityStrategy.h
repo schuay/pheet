@@ -68,7 +68,7 @@ inline bool PPoPPLUPivLocalityStrategy<Pheet, s2c>::prioritize(Self& other) {
 	procs_t d_o = p->get_distance(other.last_owner);
 
 	if(d != d_o) {
-		return d > d_o;
+		return d < d_o;
 	}
 	if(this->get_place() == p) {
 		if(other.get_place() == p) {

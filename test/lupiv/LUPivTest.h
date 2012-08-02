@@ -16,8 +16,6 @@
 
 #include "../Test.h"
 
-#include "PPoPPLocalityStrategy/PPoPPLUPivPerformanceCounters.h"
-
 #include <math.h>
 
 extern "C" {
@@ -67,14 +65,14 @@ void LUPivTest<Pheet, Kernel>::run_test() {
 	int* pivot = new int[size];
 
 	typename Pheet::Environment::PerformanceCounters pc;
-	PPoPPLUPivPerformanceCounters<Pheet> ppc;
+	typename Kernel<Pheet>::PerformanceCounters kpc;
 
 	Time start, end;
 
 	{typename Pheet::Environment env(cpus, pc);
 		check_time(start);
 		Pheet::template
-			finish<Kernel<Pheet> >(data, pivot, size, ppc);
+			finish<Kernel<Pheet> >(data, pivot, size, kpc);
 		check_time(end);
 	}
 
@@ -82,13 +80,13 @@ void LUPivTest<Pheet, Kernel>::run_test() {
 	double seconds = calculate_seconds(start, end);
 	std::cout << "test\tkernel\tscheduler\ttype\tsize\tseed\tcpus\ttotal_time\teps\t";
 	Pheet::Environment::PerformanceCounters::print_headers();
-	ppc.print_headers();
+	Kernel<Pheet>::PerformanceCounters::print_headers();
 	std::cout << std::endl;
 	std::cout << "lu_piv\t" << Kernel<Pheet>::name << "\t";
 	Pheet::Environment::print_name();
 	std::cout << "\t" << types[type] << "\t" << size << "\t" << seed << "\t" << cpus << "\t" << seconds << "\t" << eps << "\t";
 	pc.print_values();
-	ppc.print_values();
+	kpc.print_values();
 	std::cout << std::endl;
 
 	delete[] pivot;
