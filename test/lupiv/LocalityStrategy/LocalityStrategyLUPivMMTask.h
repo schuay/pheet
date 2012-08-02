@@ -20,7 +20,7 @@ namespace pheet {
 template <class Pheet>
 class LocalityStrategyLUPivMMTask : public Pheet::Task {
 public:
-	LocalityStrategyLUPivMMTask(typename Pheet::Place** owner_info, double* a, double* b, double* c, int k, int lda, PPoPPLUPivPerformanceCounters<Pheet>& pc);
+	LocalityStrategyLUPivMMTask(typename Pheet::Place** owner_info, double* a, double* b, double* c, int k, int lda/*, PPoPPLUPivPerformanceCounters<Pheet>& pc*/);
 	virtual ~LocalityStrategyLUPivMMTask();
 
 	virtual void operator()();
@@ -32,13 +32,13 @@ private:
 	double* c;
 	int k;
 	int lda;
-	PPoPPLUPivPerformanceCounters<Pheet> pc;
+//	PPoPPLUPivPerformanceCounters<Pheet> pc;
 
 };
 
 template <class Pheet>
-LocalityStrategyLUPivMMTask<Pheet>::LocalityStrategyLUPivMMTask(typename Pheet::Place** owner_info, double* a, double* b, double* c, int k, int lda, PPoPPLUPivPerformanceCounters<Pheet>& pc)
-: owner_info(owner_info), a(a), b(b), c(c), k(k), lda(lda), pc(pc) {
+LocalityStrategyLUPivMMTask<Pheet>::LocalityStrategyLUPivMMTask(typename Pheet::Place** owner_info, double* a, double* b, double* c, int k, int lda/*, PPoPPLUPivPerformanceCounters<Pheet>& pc*/)
+: owner_info(owner_info), a(a), b(b), c(c), k(k), lda(lda)/*, pc(pc)*/ {
 
 }
 
@@ -49,12 +49,12 @@ LocalityStrategyLUPivMMTask<Pheet>::~LocalityStrategyLUPivMMTask() {
 
 template <class Pheet>
 void LocalityStrategyLUPivMMTask<Pheet>::operator()() {
-	pc.total_tasks.incr();
+/*	pc.total_tasks.incr();
 	pc.total_distance_to_last_location.add(Pheet::get_place()->get_distance(*owner_info));
 
 	if(*owner_info==Pheet::get_place())
 		pc.slices_rescheduled_at_same_place.incr();
-
+*/
 	(*owner_info) = Pheet::get_place();
 
 	char trans_a = 'n';
