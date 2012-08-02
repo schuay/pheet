@@ -67,26 +67,26 @@ namespace pheet {
   public:
     
     typedef LowDegreeStrategy<Pheet> Self;
-    typedef RunLastStealFirstStrategy<Pheet> Strategy;
+    typedef RunLastStealFirstStrategy<Pheet> BaseStrategy;
    
 
 
   LowDegreeStrategy(/*GraphDual& graph,*/ GraphNode* node, size_t degree,size_t taken):/*graph(graph),*/node(node),degree(degree),taken(taken)
 	{
-	  Strategy::runlast = false;
+	  BaseStrategy::runlast = false;
 	  degree = node->getExtendedDegree();
 	  this->set_transitive_weight(1);
 	}
 
 	LowDegreeStrategy(Self& other)
-	  : Strategy(other), /*graph(other.graph),*/node(other.node),degree(other.degree),taken(other.taken)
+	  : BaseStrategy(other), /*graph(other.graph),*/node(other.node),degree(other.degree),taken(other.taken)
 	{
 	  degree = node->getExtendedDegree();
 	  
 }
 
 	LowDegreeStrategy(Self&& other)
-	  : Strategy(other), /*graph(other.graph),*/node(other.node),degree(other.degree),taken(other.taken)
+	  : BaseStrategy(other), /*graph(other.graph),*/node(other.node),degree(other.degree),taken(other.taken)
 	{
 	  degree = node->getExtendedDegree();
 }
@@ -98,7 +98,7 @@ namespace pheet {
 	  size_t otherd = other.degree; //other.node->getExtendedDegree();
 
 	  if(thisd==otherd)
-	    return Strategy::prioritize(other);
+	    return BaseStrategy::prioritize(other);
 	  else
 	    return thisd < otherd;
 	}
