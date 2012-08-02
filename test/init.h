@@ -62,6 +62,13 @@ const bool    sor_test        = SOR_TEST;
 const bool    sor_test        = false;
 #endif
 
+#ifdef TriStrip_TEST
+const bool    tristrip_test        = TriStrip_TEST;
+#else
+const bool    tristrip_test        = false;
+#endif
+
+
 #ifdef UTS_TEST
 const bool    uts_test        = UTS_TEST;
 #else

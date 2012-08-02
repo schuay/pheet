@@ -60,6 +60,7 @@ PPoPPLocalityStrategyLUPivCriticalPathTask<Pheet, BLOCK_SIZE, s2c>::~PPoPPLocali
 template <class Pheet, int BLOCK_SIZE, bool s2c>
 void PPoPPLocalityStrategyLUPivCriticalPathTask<Pheet, BLOCK_SIZE, s2c>::operator()() {
 	auto place = Pheet::get_place();
+	pc.total_tasks.incr();
 	pc.locality.add(typename PerformanceCounters::LocalityInfo(true, (*owner_info)->get_id(), place->get_id()));
 	if(*owner_info != place) {
 		pc.locality_misses.incr();

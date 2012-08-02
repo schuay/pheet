@@ -14,6 +14,8 @@
 #include <boost/random/uniform_real.hpp>
 #include <boost/random/mersenne_twister.hpp>
 
+#include "../Test.h"
+
 #include <math.h>
 
 extern "C" {

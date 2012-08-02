@@ -17,21 +17,25 @@
 #include "lupiv/LUPivTests.h"
 #include "uts/UTSTests.h"
 #include "sor/SORTests.h"
+#include "tristrip/TriStripTests.h"
 #include "prefix_sum/PrefixSumTests.h"
 #include "sssp/SsspTests.h"
-
 #include <map>
 #include <string>
 
 using namespace pheet;
 
 int main(int argc, char* argv[]) {
-/*
+
 	std::map<std::string, Tests*> tests;
 
+	LUPivTests lpt;
 	SORTests sors;
+	TriStripTests tristrip;
 
 	tests["SOR"] = &sors;
+	tests["lupiv"] = &lpt;
+	tests["tristrip"] = &tristrip;
 	
 	if(argc==3)
 	  {
@@ -49,12 +53,12 @@ int main(int argc, char* argv[]) {
 	    
 	    if(tests.find(argv[1])==tests.end())
 	      {
-		std::cout << "No such test" << std::endl;
 		return 1;
+		std::cout << "No such test" << std::endl;
 	      }
 	    tests[argv[1]]->run_test(prio);
 	    return 0;
-	  }*/
+	  }
 	
 	SortingTests st;
    	st.run_test();
@@ -68,15 +72,9 @@ int main(int argc, char* argv[]) {
 	NQueensTests nqt;
 	nqt.run_test();
 
-	LUPivTests lpt;
-	lpt.run_test();
-	/*
 	UTSTests utss;
 	utss.run_test();
-	*/
-
-	PrefixSumTests pst;
-	pst.run_test();
+	
 
 	SsspTests sssp;
 	sssp.run_test();

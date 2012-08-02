@@ -13,6 +13,7 @@
 // #define PHEET_ALL_PERFORMANCE_COUNTERS
 #define ACTIVE_TEST 	"test_variants/short_single.h"
 
+#define SORANDUTS
 
 bool const graph_bipartitioning_test_count_irrelevant_tasks = false;
 bool const graph_bipartitioning_test_count_upper_bound_changes = false;
@@ -23,7 +24,13 @@ bool const graph_bipartitioning_test_measure_last_update_time = false;
 bool const lupiv_track_locality = false;
 bool const lupiv_count_locality_misses = false;
 bool const lupiv_count_total_distance = false;
+//bool const lupiv_slices_rescheduled_at_same_place = true;
+//bool const lupiv_total_distance_to_last_location = true;
+bool const lupiv_total_tasks = false;
 
+bool const sor_slices_rescheduled_at_same_place = true;
+bool const sor_events = false;
+bool const sor_average_distance = true;
 bool const sor_slices_rescheduled_at_same_place = false;
 
 bool const prefix_sum_log_pf_blocks = false;

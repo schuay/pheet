@@ -54,6 +54,7 @@ PPoPPLocalityStrategyLUPivMMTask<Pheet>::~PPoPPLocalityStrategyLUPivMMTask() {
 template <class Pheet>
 void PPoPPLocalityStrategyLUPivMMTask<Pheet>::operator()() {
 	auto place = Pheet::get_place();
+	pc.total_tasks.incr();
 	pc.locality.add(typename PerformanceCounters::LocalityInfo(false, (*owner_info)->get_id(), place->get_id()));
 	if(*owner_info != place) {
 		pc.locality_misses.incr();

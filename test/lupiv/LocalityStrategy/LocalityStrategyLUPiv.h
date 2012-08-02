@@ -26,8 +26,8 @@ namespace pheet {
 template <class Pheet, int BLOCK_SIZE = 128>
 class LocalityStrategyLUPivImpl : public Pheet::Task {
 public:
-	LocalityStrategyLUPivImpl(double* a, int* pivot, int m, int lda, int n);
-	LocalityStrategyLUPivImpl(double* a, int* pivot, int size);
+	LocalityStrategyLUPivImpl(double* a, int* pivot, int m, int lda, int n, PPoPPLUPivPerformanceCounters<Pheet>& ppc);
+	LocalityStrategyLUPivImpl(double* a, int* pivot, int size, PPoPPLUPivPerformanceCounters<Pheet>& ppc);
 	~LocalityStrategyLUPivImpl();
 
 	virtual void operator()();
@@ -44,14 +44,15 @@ private:
 	int lda;
 	// Number of columns in a
 	int n;
+	PPoPPLUPivPerformanceCounters<Pheet> ppc;
 };
 
 template <class Pheet, int BLOCK_SIZE>
 char const LocalityStrategyLUPivImpl<Pheet, BLOCK_SIZE>::name[] = "LocalityStrategyLUPiv";
 
 template <class Pheet, int BLOCK_SIZE>
-LocalityStrategyLUPivImpl<Pheet, BLOCK_SIZE>::LocalityStrategyLUPivImpl(double* a, int* pivot, int m, int lda, int n)
-: a(a), pivot(pivot), m(m), lda(lda), n(n) {
+LocalityStrategyLUPivImpl<Pheet, BLOCK_SIZE>::LocalityStrategyLUPivImpl(double* a, int* pivot, int m, int lda, int n, PPoPPLUPivPerformanceCounters<Pheet>& ppc)
+: a(a), pivot(pivot), m(m), lda(lda), n(n),ppc(ppc) {
 	pheet_assert(m > 0);
 	pheet_assert(n > 0);
 	pheet_assert(lda >= m);
@@ -60,8 +61,8 @@ LocalityStrategyLUPivImpl<Pheet, BLOCK_SIZE>::LocalityStrategyLUPivImpl(double* 
 }
 
 template <class Pheet, int BLOCK_SIZE>
-LocalityStrategyLUPivImpl<Pheet, BLOCK_SIZE>::LocalityStrategyLUPivImpl(double* a, int* pivot, int size)
-: a(a), pivot(pivot), m(size), lda(size), n(size) {
+LocalityStrategyLUPivImpl<Pheet, BLOCK_SIZE>::LocalityStrategyLUPivImpl(double* a, int* pivot, int size, PPoPPLUPivPerformanceCounters<Pheet>& ppc)
+: a(a), pivot(pivot), m(size), lda(size), n(size),ppc(ppc) {
 	pheet_assert(m > 0);
 	pheet_assert(n > 0);
 	pheet_assert(lda >= m);

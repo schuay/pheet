@@ -12,6 +12,9 @@
 #include "../../pheet/settings.h"
 #include "../../pheet/misc/types.h"
 #include "../Test.h"
+#include "PartitionMatrix/uts.h"
+#undef max
+#undef min
 
 #include <vector>
 #include <sstream>
@@ -52,6 +55,23 @@ SORTest<Impl>::~SORTest() {
 
 template <class Impl>
 void SORTest<Impl>::run_test() {
+
+#ifdef SORANDUTS
+  std::string command = "T5 -t 1 -a 0 -d 15 -b 4 -r 34";
+  std::istringstream ss(command);
+  std::string arg;
+  std::vector<std::string> v1;
+  std::vector<char*> v2;
+  while (ss >> arg)
+    {
+      v1.push_back(arg);
+      v2.push_back(const_cast<char*>(v1.back().c_str()));
+    }
+  v2.push_back(0);
+
+  uts_parseParams(v2.size()-1,&v2[0]);
+#endif
+
 
   Impl iar(cpus, M, N, slices, omega, iterations, prio);
 

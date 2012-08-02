@@ -49,9 +49,9 @@ namespace pheet {
 
 		  //			  for(size_t pp = 0; pp < sizeof(sor_prio)/sizeof(sor_prio[0]); pp++) {
 				 if(usestrategy)
-					test<SORRun<Pheet::WithScheduler<StrategyScheduler> > >(usestrategy);
+					test<SORRun<Pheet::WithScheduler<StrategyScheduler> > >(true);
 				 else
-					 test<SORRun<Pheet::WithScheduler<BasicScheduler> > >(usestrategy);
+					 test<SORRun<Pheet::WithScheduler<BasicScheduler> > >(true);
 				 //			  }
 		}
 #endif
