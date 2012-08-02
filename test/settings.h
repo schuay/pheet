@@ -13,7 +13,7 @@
 // #define PHEET_ALL_PERFORMANCE_COUNTERS
 #define ACTIVE_TEST 	"test_variants/daniel.h"
 
-#define SORANDUTS
+//#define SORANDUTS
 
 bool const graph_bipartitioning_test_count_irrelevant_tasks = false;
 bool const graph_bipartitioning_test_count_upper_bound_changes = false;
