@@ -17,6 +17,7 @@
 #include <iostream>
 #include <fstream>
 #include "SORPerformanceCounters.h"
+#include "SORAndUTSRun.h"
 
 namespace pheet {
 
@@ -104,9 +105,13 @@ SORRun<Pheet>::~SORRun() {
 
 template <class Pheet>
 void SORRun<Pheet>::run() {
-	// Start here
-	typename Pheet::Environment env(cpus,pc);
+  typename Pheet::Environment env(cpus,pc);
+#ifndef SORANDUTS
 	Pheet::template finish<SORStartTask<Pheet> >(sp, iterations,ppc);
+#else
+	Pheet::template finish<SORAndUTSTask<Pheet> >(sp, iterations,ppc);
+#endif
+
 }
 
 template <class Pheet>

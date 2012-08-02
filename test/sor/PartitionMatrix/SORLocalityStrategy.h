@@ -14,11 +14,56 @@
 namespace pheet {
 
 template <class Pheet>
-class SORLocalityStrategy :  public Pheet::Environment::BaseStrategy {
+  class NormalOrHighPrioStrategy :  public Pheet::Environment::BaseStrategy {
+
+    bool highprio;
+  public:
+
+    typedef NormalOrHighPrioStrategy<Pheet> Self;
+    typedef typename Pheet::Environment::BaseStrategy BaseStrategy;
+
+  NormalOrHighPrioStrategy(bool highprio):highprio(highprio)
+    {
+      printf("U");
+      this->set_transitive_weight(1);
+    }
+
+  NormalOrHighPrioStrategy():highprio(true) {}
+
+    NormalOrHighPrioStrategy(Self& other)
+      : BaseStrategy(other), highprio(other.highprio)
+      {}
+
+    NormalOrHighPrioStrategy(Self&& other)
+      : BaseStrategy(other), highprio(other.highprio)
+      {}
+
+    ~NormalOrHighPrioStrategy() {}
+
+    inline bool forbid_call_conversion() const {
+      return false;
+    }
+
+    inline bool prioritize(Self& other) {
+      printf("x\n");
+      if(highprio!=other.highprio)
+	return highprio;
+
+      printf("k\n");
+      bool res =  BaseStrategy::prioritize(other);
+      printf("KalleC\n");
+      return res;
+    }
+  };
+
+
+template <class Pheet>
+class SORLocalityStrategy :  public NormalOrHighPrioStrategy<Pheet>
+  {
 public:
 
 	typedef SORLocalityStrategy<Pheet> Self;
-	typedef typename Pheet::Environment::BaseStrategy BaseStrategy;
+	typedef NormalOrHighPrioStrategy<Pheet> BaseStrategy;
 
 	SORLocalityStrategy(typename Pheet::Place* last_place, ptrdiff_t timestamp):last_place(last_place),timestamp(timestamp)
 	{
@@ -42,28 +87,13 @@ public:
 
 	inline bool prioritize(Self& other) {
 
-	  //  return BaseStrategy::prioritize(other);
+	  printf("y\n");
 
 	  procs_t distancetothis = Pheet::get_place()->get_distance(last_place);
 	  procs_t distancetoother = Pheet::get_place()->get_distance(other.last_place);
 
-	  //if(last_owner!=Pheet::get_place())
-	  //	printf("Should be 6: %d\n",distancetothis);
-	  //if(last_owner==Pheet::get_place())
-	  //	printf("Should be 0: %d\n",distancetothis);
-
-	  //printf("Distance1: %d Distance2: %d\n",distancetothis,distancetoother);
-
 	  if(distancetothis != distancetoother)
 	    return distancetothis < distancetoother;
-
-/*		if(this->get_place() != other.get_place())
-		{
-			if(this->get_place() == Pheet::get_place())
-				return true;
-			if(other.get_place() == Pheet::get_place())
-				return false;
-		}*/
 
 	  if(distancetothis == 0)
 	  {
@@ -75,7 +105,6 @@ public:
 	  	// If stealing, prioritize not recently used
 	  	return timestamp < other.timestamp;
 	  }
-		//return BaseStrategy::prioritize(other);
 	}
 
 private:
