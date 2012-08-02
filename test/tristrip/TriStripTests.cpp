@@ -48,7 +48,7 @@ void TriStripTests::run_test(bool usestrategy) {
 
 		//			  for(size_t pp = 0; pp < sizeof(sor_prio)/sizeof(sor_prio[0]); pp++) {
 		if (usestrategy)
-			test<TriStripRun<Pheet::WithScheduler<StrategyScheduler> > >(false);
+			test<TriStripRun<Pheet::WithScheduler<StrategyScheduler> > >(true);
 		else
 			test<TriStripRun<Pheet::WithScheduler<BasicScheduler> > >(true);
 		//			  }
