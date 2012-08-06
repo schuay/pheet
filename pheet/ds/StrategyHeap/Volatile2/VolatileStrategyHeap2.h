@@ -91,7 +91,11 @@ public:
 		parent = static_cast<Base*>(base);
 		parent->add_child(this);
 	}
-	~VolatileStrategySubHeap2() {}
+	~VolatileStrategySubHeap2() {
+		if(max != nullptr) {
+			cleanup_nodes(max);
+		}
+	}
 
 	Strategy* get_strategy(TT const& data) {
 		return reinterpret_cast<Strategy*>(sr(data));
@@ -388,6 +392,26 @@ public:
 		++(larger->d);
 	}
 private:
+	void cleanup_nodes(Node* n) {
+		pheet_assert(n != nullptr);
+		Node* tmp;
+		Node* next = n;
+
+		do{
+			tmp = next;
+			next = tmp->next;
+
+			if(tmp->children != nullptr) {
+				cleanup_nodes(tmp->children);
+			}
+			pheet_assert(tmp->references >= 1);
+			--(tmp->references);
+			if(tmp->references == 0) {
+				delete tmp;
+			}
+		}while(next != n);
+	}
+
 	Node* max;
 	StrategyRetriever& sr;
 	Base* parent;
@@ -403,7 +427,11 @@ public:
 	VolatileStrategySubHeap2(StrategyRetriever& sr, std::map<std::type_index, VolatileStrategySubHeap2Base*>& heap_heaps)
 	:max(nullptr), sr(sr), unconsolidated_count(0) {
 	}
-	~VolatileStrategySubHeap2() {}
+	~VolatileStrategySubHeap2() {
+		if(max != nullptr) {
+			cleanup_nodes(max);
+		}
+	}
 
 	Strategy* get_strategy(TT const& data) {
 		return reinterpret_cast<Strategy*>(sr(data));
@@ -696,6 +724,27 @@ public:
 		++(larger->d);
 	}
 private:
+	void cleanup_nodes(Node* n) {
+		pheet_assert(n != nullptr);
+
+		Node* tmp;
+		Node* next = n;
+
+		do{
+			tmp = next;
+			next = tmp->next;
+
+			if(tmp->children != nullptr) {
+				cleanup_nodes(tmp->children);
+			}
+			pheet_assert(tmp->references >= 1);
+			--(tmp->references);
+			if(tmp->references == 0) {
+				delete tmp;
+			}
+		}while(next != n);
+	}
+
 	Node* max;
 	StrategyRetriever& sr;
 	size_t unconsolidated_count;
