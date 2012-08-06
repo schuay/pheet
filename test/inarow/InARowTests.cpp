@@ -29,7 +29,7 @@ namespace pheet {
 		procs_t max_cpus = mm.get_num_leaves();
 				//std::min(mm.get_num_leaves(), Test::max_cpus);
 
-			printf("Maxcpus: %d\n",max_cpus);
+			printf("Maxcpus: %lu\n",max_cpus);
 
 		for(size_t la = 0; la < sizeof(inarow_test_lookaheads)/sizeof(inarow_test_lookaheads[0]); la++) {
 			bool max_processed = false;
