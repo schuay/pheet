@@ -57,7 +57,7 @@ template <class Impl>
 void SORTest<Impl>::run_test() {
 
 #ifdef SORANDUTS
-  std::string command = "T5 -t 1 -a 0 -d 20 -b 4 -r 34";
+  std::string command = "T5 -t 1 -a 0 -d 15 -b 4 -r 34";
   std::istringstream ss(command);
   std::string arg;
   std::vector<std::string> v1;
