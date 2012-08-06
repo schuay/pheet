@@ -154,6 +154,9 @@ public:
 		}
 		else {
 			pheet_assert(node->state == 2);
+			if(node == max) {
+				sub_unconsolidated();
+			}
 			node->state = 1;
 		}
 	}
@@ -183,7 +186,8 @@ public:
 	}
 
 	void unlink_node(Node* node) {
-		pheet_assert(node->state > 0);
+		pheet_assert(node->state == 1);
+		pheet_assert(unconsolidated_count == 0);
 		if(node->children != nullptr) {
 			pheet_assert(node->children->parent == node);
 			node->children->parent = nullptr;
@@ -252,8 +256,9 @@ public:
 			}
 			if(unconsolidated_count > 0) {
 				pheet_assert(unconsolidated_count == 1);
+				pheet_assert(max->state == 2);
 				Strategy* max_s = consolidate();
-				if(max_s != nullptr) {
+				if(max != nullptr) {
 					parent->link_node(max, max_s);
 				}
 				sub_unconsolidated();
@@ -453,6 +458,9 @@ public:
 		}
 		else {
 			pheet_assert(node->state == 2);
+			if(node == max) {
+				sub_unconsolidated();
+			}
 			node->state = 1;
 		}
 	}
@@ -479,7 +487,8 @@ public:
 	}
 
 	void unlink_node(Node* node) {
-		pheet_assert(node->state > 0);
+		pheet_assert(node->state == 1);
+		pheet_assert(unconsolidated_count == 0);
 		if(node->children != nullptr) {
 			pheet_assert(node->children->parent == node);
 			node->children->parent = nullptr;
@@ -556,6 +565,7 @@ public:
 			}
 			if(unconsolidated_count > 0) {
 				pheet_assert(unconsolidated_count == 1);
+				pheet_assert(max->state == 2);
 				consolidate();
 				sub_unconsolidated();
 			}
