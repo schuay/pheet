@@ -187,7 +187,6 @@ public:
 
 	void unlink_node(Node* node) {
 		pheet_assert(node->state > 0);
-		pheet_assert(unconsolidated_count == 0);
 		if(node->children != nullptr) {
 			pheet_assert(node->children->parent == node);
 			node->children->parent = nullptr;
@@ -210,7 +209,9 @@ public:
 		}
 		else if(max == node) {
 			pheet_assert(node->parent == nullptr);
-			pheet_assert(node->state == 1);
+			if(node->state == 2) {
+				sub_unconsolidated();
+			}
 			if(max->next == max) {
 				max = nullptr;
 			}
@@ -489,7 +490,6 @@ public:
 
 	void unlink_node(Node* node) {
 		pheet_assert(node->state > 0);
-		pheet_assert(unconsolidated_count == 0);
 		if(node->children != nullptr) {
 			pheet_assert(node->children->parent == node);
 			node->children->parent = nullptr;
@@ -512,7 +512,9 @@ public:
 		}
 		else if(max == node) {
 			pheet_assert(node->parent == nullptr);
-			pheet_assert(node->state == 1);
+			if(node->state == 2) {
+				sub_unconsolidated();
+			}
 			if(max->next == max) {
 				max = nullptr;
 			}
