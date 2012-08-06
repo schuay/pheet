@@ -61,7 +61,7 @@ namespace pheet {
 						// TBD:  add parent height to spawn
 						// computeGranularity controls number of rng_spawn calls per node
 						rng_spawn(parent.state.state, child.state.state, i);
-						Pheet::template spawn_s<UTSStartTaskStrat<Pheet> >(NormalOrHighPrioStrategy<Pheet>(false),child);
+						Pheet::template spawn_s<UTSStartTaskStrat<Pheet> >(UTSStrategy<Pheet>(parentHeight, Pheet::get_place()),child);
 						
 					}
 				}

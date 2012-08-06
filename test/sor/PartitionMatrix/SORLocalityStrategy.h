@@ -26,7 +26,7 @@ template <class Pheet>
       this->set_transitive_weight(1);
     }
 
- NormalOrHighPrioStrategy():highprio(true) {this->set_transitive_weight(1000);}
+    // NormalOrHighPrioStrategy():highprio(true) {this->set_transitive_weight(1000);}
 
     NormalOrHighPrioStrategy(Self& other)
       : BaseStrategy(other), highprio(other.highprio)
@@ -54,6 +54,55 @@ template <class Pheet>
   };
 
 
+  template <class Pheet>
+    class UTSStrategy :  public NormalOrHighPrioStrategy<Pheet>
+  {
+  public:
+    typedef UTSStrategy<Pheet> Self;
+    typedef NormalOrHighPrioStrategy<Pheet> BaseStrategy;
+
+  UTSStrategy(size_t height, typename Pheet::Place* last_place):BaseStrategy(false),height(height),last_place(last_place)
+    {
+      this->set_transitive_weight(1);
+    }
+
+    UTSStrategy(Self& other)
+      : BaseStrategy(other), height(other.height),last_place(other.last_place)
+      {}
+
+    UTSStrategy(Self&& other)
+      : BaseStrategy(other), height(other.height),last_place(other.last_place)
+      {}
+
+    ~UTSStrategy() {}
+
+    inline bool forbid_call_conversion() const {
+      return false;
+    }
+
+    inline bool prioritize(Self& other) {
+
+      procs_t distancetothis = Pheet::get_place()->get_distance(last_place);
+
+      if(distancetothis == 0)
+	{
+	  // If local task, prioritize recently used
+	  return height > other.height;
+	}
+      else
+	{
+	  // If stealing, prioritize not recently used
+	  return height < other.height;
+	}
+    }
+
+  private:
+    size_t height;
+    typename Pheet::Place* last_place;
+  };
+
+
+
 template <class Pheet>
 class SORLocalityStrategy :  public NormalOrHighPrioStrategy<Pheet>
   {
@@ -62,7 +111,7 @@ public:
 	typedef SORLocalityStrategy<Pheet> Self;
 	typedef NormalOrHighPrioStrategy<Pheet> BaseStrategy;
 
-	SORLocalityStrategy(typename Pheet::Place* last_place, ptrdiff_t timestamp):last_place(last_place),timestamp(timestamp)
+  SORLocalityStrategy(typename Pheet::Place* last_place, ptrdiff_t timestamp):BaseStrategy(true),last_place(last_place),timestamp(timestamp)
 	{
 		this->set_transitive_weight(1);
 	}

@@ -106,10 +106,10 @@ const unsigned int uts_test_standardworkloads[] = {0,1,2,3,4,5,6,7,8};
 const procs_t tristrip_test_nodecount[] = {1024*12};
 
 #define SOR_TEST	true
- const procs_t sor_test_cpus[] = {1, 2, 3, 6, 12};
- const int sor_test_maxtrissize[] = {1536};//,4096,8192};
+ const procs_t sor_test_cpus[] = {1, 2, 3, 6, 12, 24, 48};
+ const int sor_test_maxtrissize[] = {1536};
 const int sor_test_iterations[] =  {100};
-const int sor_test_slices[] = {12};
+const int sor_test_slices[] = {128};
 const double sor_test_omega[] = {1.25};
 const bool sor_prio[] = {true,false};
 
@@ -119,7 +119,7 @@ const bool sor_prio[] = {true,false};
  const size_t lupiv_test_n[] = { 1536};
  const int lupiv_test_types[] = {0};
 
- //#define SORANDUTS
+ #define SORANDUTS
 
 }
 
