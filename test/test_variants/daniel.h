@@ -119,7 +119,7 @@ const bool sor_prio[] = {true,false};
  const size_t lupiv_test_n[] = { 1536};
  const int lupiv_test_types[] = {0};
 
-#define SORANDUTS
+ //#define SORANDUTS
 
 }
 

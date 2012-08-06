@@ -18,17 +18,15 @@ template <class Pheet>
 
     bool highprio;
   public:
-
     typedef NormalOrHighPrioStrategy<Pheet> Self;
     typedef typename Pheet::Environment::BaseStrategy BaseStrategy;
 
-  NormalOrHighPrioStrategy(bool highprio):highprio(highprio)
+ NormalOrHighPrioStrategy(bool highprio):highprio(highprio)
     {
-  //    printf("U");
       this->set_transitive_weight(1);
     }
 
-  NormalOrHighPrioStrategy():highprio(true) {this->set_transitive_weight(1000);}
+ NormalOrHighPrioStrategy():highprio(true) {this->set_transitive_weight(1000);}
 
     NormalOrHighPrioStrategy(Self& other)
       : BaseStrategy(other), highprio(other.highprio)
@@ -45,13 +43,12 @@ template <class Pheet>
     }
 
     inline bool prioritize(Self& other) {
-   //   printf("x\n");
+
       if(highprio!=other.highprio)
 	return highprio;
 
-   //   printf("k\n");
       bool res =  BaseStrategy::prioritize(other);
-      //printf("KalleC\n");
+
       return res;
     }
   };
@@ -67,7 +64,6 @@ public:
 
 	SORLocalityStrategy(typename Pheet::Place* last_place, ptrdiff_t timestamp):last_place(last_place),timestamp(timestamp)
 	{
-//		this->set_memory_footprint(1);
 		this->set_transitive_weight(1);
 	}
 
@@ -92,6 +88,8 @@ public:
 
 	  if(distancetothis != distancetoother)
 	    return distancetothis < distancetoother;
+
+	  //	  return BaseStrategy::prioritize(other);
 
 	  if(distancetothis == 0)
 	  {
