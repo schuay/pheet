@@ -159,22 +159,59 @@ template <class Pheet, class SubProblem>
 void ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubProblem>::update(uint8_t set, size_t pos) {
   cut += weights[set ^ 1][pos];
 
-  for(size_t i = 0; i < sub_problem->graph[pos].num_edges; ++i) {
-    weights[set][sub_problem->graph[pos].edges[i].target] += sub_problem->graph[pos].edges[i].weight;
-    if(sub_problem->sets[2].test(sub_problem->graph[pos].edges[i].target)) {
-      pheet_assert(contributions[sub_problem->graph[pos].edges[i].target] >= sub_problem->graph[pos].edges[i].weight);
+  size_t f, j;
+  size_t subrem[2];
+  subrem[0] = sub_problem->k-sub_problem->sets[0].count();
+  subrem[1] = (sub_problem->size-sub_problem->k)-sub_problem->sets[1].count();
 
-      contributions[sub_problem->graph[pos].edges[i].target] -= sub_problem->graph[pos].edges[i].weight;
+  pheet_assert(subrem[0]+subrem[1]==sub_problem->sets[2].count());
+
+  for(size_t i = 0; i < sub_problem->graph[pos].num_edges; ++i) {
+    size_t v = sub_problem->graph[pos].edges[i].target;
+
+    weights[set][v] += sub_problem->graph[pos].edges[i].weight;
+
+    if (sub_problem->sets[2].test(v)) {
+      pheet_assert(contributions[v] >= sub_problem->graph[pos].edges[i].weight);
+
+      contributions[v] -= sub_problem->graph[pos].edges[i].weight;
       contrib_sum -= sub_problem->graph[pos].edges[i].weight;
       
-      free_edges[sub_problem->graph[pos].edges[i].target]--;
+      free_edges[v]--;
 
+      /*
+	for (size_t s=0; s<2; s++) {
+	if (subrem[s]>0) {
+	f = 0; j = 0;
+	fweight[s][v] = 0;
+	while (f+subrem[s]<=free_edges[v]) { // note <=
+	if (sub_problem->sets[2].test(sub_problem->graph[v].edges[j].target)) {
+	fweight[s][v] += sub_problem->graph[v].edges[j].weight;
+	f++;
+	}
+	  j++;
+	  }
+	  seen[s][v] = f;	scanned[s][v] = j;
+	  }
+	  }
+      */
       for (size_t s=0; s<2; s++) {
-	if (sub_problem->graph[pos].edges[i].reverse<scanned[s][sub_problem->graph[pos].edges[i].target]) {
-	  pheet_assert(fweight[s][sub_problem->graph[pos].edges[i].target]>=sub_problem->graph[pos].edges[i].weight);
+	if (sub_problem->graph[pos].edges[i].reverse<scanned[s][v]) {
+	  pheet_assert(fweight[s][v]>=sub_problem->graph[pos].edges[i].weight);
+	  
+	  fweight[s][v] -= sub_problem->graph[pos].edges[i].weight;
+	  seen[s][v]--;
+	} else {
+	  f = seen[s][v]; j = scanned[s][v];
+	  while (f>0&&f+subrem[s]>free_edges[v]) { // note >
+	    j--;
+	    if (sub_problem->sets[2].test(sub_problem->graph[v].edges[j].target)) {
 
-	  fweight[s][sub_problem->graph[pos].edges[i].target] -= sub_problem->graph[pos].edges[i].weight;
-	  seen[s][sub_problem->graph[pos].edges[i].target]--;
+	      fweight[s][v] -= sub_problem->graph[v].edges[j].weight;
+	      f--;
+	    }
+	  }
+	  seen[s][v] = f; scanned[s][v] = j;
 	}
       }
     }
@@ -193,13 +230,6 @@ void ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubPro
   size_t v = sub_problem->sets[2]._Find_first();
   nv = v;
   size_t best_contrib = 0;
-
-  size_t f, j;
-  size_t subrem[2];
-  subrem[0] = sub_problem->k-sub_problem->sets[0].count();
-  subrem[1] = (sub_problem->size-sub_problem->k)-sub_problem->sets[1].count();
-  
-  pheet_assert(subrem[0]+subrem[1]==sub_problem->sets[2].count());
 
   size_t ss = (subrem[0] < subrem[1]) ? 0 : 1;
 
@@ -222,8 +252,8 @@ void ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubPro
       if (subrem[s]>0) {
 	f = seen[s][v]; j = scanned[s][v];
 	//comment in next two lines to deactive incremental computation
-	f = 0; j = 0;
-	fweight[s][v] = 0;
+	//f = 0; j = 0;
+	//fweight[s][v] = 0;
 	while (f+subrem[s]<=free_edges[v]) { // note <=
 	  if (sub_problem->sets[2].test(sub_problem->graph[v].edges[j].target)) {
 	    fweight[s][v] += sub_problem->graph[v].edges[j].weight;
@@ -231,8 +261,7 @@ void ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubPro
 	  }
 	  j++;
 	}
-	seen[s][v] = f;
-	scanned[s][v] = j;
+	seen[s][v] = f;	scanned[s][v] = j;
       }
     }
     smallest[si].weight = fweight[ss][v];

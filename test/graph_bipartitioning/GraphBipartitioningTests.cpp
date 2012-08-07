@@ -144,14 +144,20 @@ void GraphBipartitioningTests::run_test() {
 //	this->run_partitioner<  Pheet::WithScheduler<StrategyScheduler>,
 //							PPoPPImprovedStrategyBranchBoundGraphBipartitioning<>::WithSchedulingStrategy<PPoPPImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy>::T >();
 	this->run_partitioner<  Pheet::WithScheduler<StrategyScheduler>,
-							PPoPPImprovedStrategyBranchBoundGraphBipartitioning<>::WithSchedulingStrategy<PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy>::T >();
+							PPoPPImprovedStrategyBranchBoundGraphBipartitioning<>
+								::WithSchedulingStrategy<PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy>
+								::BT >();
 	this->run_partitioner<  Pheet::WithScheduler<StrategyScheduler>,
 							PPoPPImprovedStrategyBranchBoundGraphBipartitioning<>
 								::WithSchedulingStrategy<PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy>
 								::WithLogic<ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic>
-								::T >();
+								::BT >();
 	this->run_partitioner<	Pheet::WithScheduler<BasicScheduler>,
 							ImprovedBranchBoundGraphBipartitioning>();
+	this->run_partitioner<  Pheet::WithScheduler<StrategyScheduler>,
+							ImprovedBranchBoundGraphBipartitioning<>
+								::WithLogic<ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic>
+								::BT >();
 //	this->run_partitioner<  Pheet::WithScheduler<StrategyScheduler>,
 //							PPoPPImprovedStrategyBranchBoundGraphBipartitioning<>::WithSchedulingStrategy<PPoPPImprovedStrategyBranchBoundGraphBipartitioningUpperLowerBoundStrategy>::T >();
 

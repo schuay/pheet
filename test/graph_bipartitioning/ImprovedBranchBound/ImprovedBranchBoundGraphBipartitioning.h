@@ -35,6 +35,9 @@ public:
 	template <size_t ms>
 		using WithMaxSize = ImprovedBranchBoundGraphBipartitioningImpl<Pheet, Logic, ms>;
 
+	template <class P>
+		using BT = ImprovedBranchBoundGraphBipartitioningImpl<P, Logic, MaxSize>;
+
 	ImprovedBranchBoundGraphBipartitioningImpl(GraphVertex* data, size_t size, Solution& solution, PerformanceCounters& pc);
 	~ImprovedBranchBoundGraphBipartitioningImpl();
 
@@ -96,7 +99,7 @@ void ImprovedBranchBoundGraphBipartitioningImpl<Pheet, Logic, MaxSize>::print_he
 	std::cout << "logic\t";
 }
 
-template <class Pheet>
+template <class Pheet = Pheet>
 using ImprovedBranchBoundGraphBipartitioning = ImprovedBranchBoundGraphBipartitioningImpl<Pheet, ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic, 64>;
 
 
