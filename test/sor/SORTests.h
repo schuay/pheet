@@ -20,10 +20,10 @@ namespace pheet {
 	class SORTests : public Tests
 	{
 	public:
-		void run_test(bool usestrategy);
+	  void run_test(bool usestrat);
 	private:
 		template <class Scheduler>
-		void test(bool prio);
+		void test(bool runuts,bool runsor, bool usestrat);
 	};
 
 }

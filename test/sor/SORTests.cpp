@@ -24,7 +24,7 @@
 namespace pheet {
 
 	template <class Test>
-	void SORTests::test(bool prio)
+	void SORTests::test(bool runuts, bool runsor, bool usestrat)
 	{
 #ifdef SOR_TEST
 	    for(size_t itr = 0; itr < sizeof(sor_test_iterations)/sizeof(sor_test_iterations[0]); itr++) {
@@ -32,7 +32,7 @@ namespace pheet {
 		for(size_t o = 0; o < sizeof(sor_test_omega)/sizeof(sor_test_omega[0]); o++) {
 		  for(size_t ms = 0; ms < sizeof(sor_test_maxtrissize)/sizeof(sor_test_maxtrissize[0]); ms++) {
 		    for(size_t c = 0; c < sizeof(sor_test_cpus)/sizeof(sor_test_cpus[0]); c++) {
-		      SORTest<Test> iart(sor_test_cpus[c],sor_test_maxtrissize[ms],sor_test_maxtrissize[ms],sor_test_slices[sl],sor_test_omega[o],sor_test_iterations[itr],prio);
+		      SORTest<Test> iart(sor_test_cpus[c],sor_test_maxtrissize[ms],sor_test_maxtrissize[ms],sor_test_slices[sl],sor_test_omega[o],sor_test_iterations[itr],true,runuts,runsor,usestrat);
 		      iart.run_test();
 		    }
 		  }
@@ -49,9 +49,9 @@ namespace pheet {
 
 		  //			  for(size_t pp = 0; pp < sizeof(sor_prio)/sizeof(sor_prio[0]); pp++) {
 				 if(usestrategy)
-					test<SORRun<Pheet::WithScheduler<StrategyScheduler> > >(true);
+				   test<SORRun<Pheet::WithScheduler<StrategyScheduler> > >(sor_runuts,sor_runsor,sor_usestrat);
 				 else
-					 test<SORRun<Pheet::WithScheduler<BasicScheduler> > >(true);
+				   test<SORRun<Pheet::WithScheduler<BasicScheduler> > >(sor_runuts,sor_runsor,sor_usestrat);
 				 //			  }
 		}
 #endif

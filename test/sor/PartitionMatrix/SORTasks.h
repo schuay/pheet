@@ -47,10 +47,10 @@ namespace pheet {
 		SORParams& sp;
 		int iterations;
 		SORPerformanceCounters<Pheet> pc;
-
+		bool usestrat;
 	public:
 
-		SORStartTask(SORParams& sp, int iterations, SORPerformanceCounters<Pheet>& pc):sp(sp),iterations(iterations),pc(pc) { }
+	SORStartTask(SORParams& sp, int iterations, SORPerformanceCounters<Pheet>& pc, bool usestrat):sp(sp),iterations(iterations),pc(pc),usestrat(usestrat) { }
 		virtual ~SORStartTask() {}
 
 		void operator()()
@@ -71,7 +71,7 @@ namespace pheet {
 			      
 			      for(int i = 0; i < sp.slices; i++)
 				{
-				  if(!sp.prio)
+				  if(!usestrat)
 				    Pheet::template spawn<SORSliceTask<Pheet> >(column_owners+i,timestamps+i,i,sp,p,pc);
 				  else
 				    Pheet::template spawn_s<SORSliceTask<Pheet>>(SORLocalityStrategy<Pheet>(column_owners[i],timestamps[i]),column_owners+i,timestamps+i,i,sp,p,pc);
@@ -187,15 +187,6 @@ namespace pheet {
 				}
 
 			}
-			//volatile int xxx=0;
-			//for(int i=0;i<10000;i++)
-			//	xxx++;
-
-	//		struct timeval stop_time;
-	//		gettimeofday(&stop_time, NULL);
-	//		TaskSched ts(start_time, stop_time,(size_t)Pheet::get_place());
-	//		pc.red.add(ts);
-
 
 		}
 

@@ -8,9 +8,9 @@
 #ifndef TriStripPERFORMANCECOUNTERS_H_
 #define TriStripPERFORMANCECOUNTERS_H_
 
-#include "pheet/pheet.h"
-#include "pheet/primitives/PerformanceCounter/Basic/BasicPerformanceCounter.h"
-#include "pheet/primitives/PerformanceCounter/Events/EventsList.h"
+//#include "pheet/pheet.h"
+//#include "pheet/primitives/PerformanceCounter/Basic/BasicPerformanceCounter.h"
+//#include "pheet/primitives/PerformanceCounter/Events/EventsList.h"
 
 namespace pheet {
 
@@ -25,9 +25,35 @@ public:
 	static void print_headers();
 	void print_values();
 
-	BasicPerformanceCounter<Pheet, sor_slices_rescheduled_at_same_place> slices_rescheduled_at_same_place;
-	BasicPerformanceCounter<Pheet, sor_average_distance> average_distance;
+	//	BasicPerformanceCounter<Pheet, true> tristripcount;
+	SumReducer<Pheet, size_t> tristripcount;
+	SumReducer<Pheet, size_t> nodecount;
+
+
+	//	BasicPerformanceCounter<Pheet, sor_slices_rescheduled_at_same_place> slices_rescheduled_at_same_place;
+	//	BasicPerformanceCounter<Pheet, sor_average_distance> average_distance;
 //	EventsList<Pheet, size_t, sor_events> events;
+
+	void addstrip(std::vector<GraphNode*> strip)
+        {
+              nodecount.add(strip.size());
+	  //              printf("%d\n",strip.size());
+	  // Should store the strip, but for now only count it
+              tristripcount.incr();
+        }
+
+        size_t getNodeCount()
+        {
+              return nodecount.get_sum();
+        }
+
+        size_t getCount()
+        {
+              return tristripcount.get_sum();
+        }
+        //      BasicPerformanceCounter<Pheet, true> tristripcount;
+
+
 };
 
 
@@ -39,16 +65,18 @@ inline TriStripPerformanceCounters<Pheet>::TriStripPerformanceCounters()
 
 template <class Pheet>
 inline TriStripPerformanceCounters<Pheet>::TriStripPerformanceCounters(TriStripPerformanceCounters<Pheet>& other)
-  :slices_rescheduled_at_same_place(other.slices_rescheduled_at_same_place),
-   average_distance(other.average_distance)////,events(other.events)
+  :tristripcount(other.tristripcount),nodecount(other.nodecount)
+  // :slices_rescheduled_at_same_place(other.slices_rescheduled_at_same_place),
+  // average_distance(other.average_distance)////,events(other.events)
 {
 
 }
 
 template <class Pheet>
 inline TriStripPerformanceCounters<Pheet>::TriStripPerformanceCounters(TriStripPerformanceCounters<Pheet>&& other)
-  :slices_rescheduled_at_same_place(other.slices_rescheduled_at_same_place),
-   average_distance(other.average_distance)//,events(other.events)
+  :tristripcount(other.tristripcount),nodecount(other.nodecount)
+  // :slices_rescheduled_at_same_place(other.slices_rescheduled_at_same_place),
+  // average_distance(other.average_distance)//,events(other.events)
 {
 
 }
