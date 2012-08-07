@@ -10,13 +10,15 @@
 #define TriStripRUN_H_
 
 #include <pheet/pheet.h>
+#include "TriStripResult.h"
+
 #include "TriStripTasks.h"
 #include <boost/random/uniform_real.hpp>
 #include <boost/random/variate_generator.hpp>
 #include <boost/generator_iterator.hpp>
 #include <iostream>
 #include <fstream>
-#include "TriStripPerformanceCounters.h"
+//#include "TriStripPerformanceCounters.h"
 #include "../GraphDual.h"
 #include "TriStripResult.h"
 
@@ -61,7 +63,8 @@ char const TriStripRun<Scheduler>::name[] = "TriStrip";
 template <class Pheet>
 size_t TriStripRun<Pheet>::getNodeTriStripCount()
 {
-	return result.getNodeCount();
+  //	return result.getNodeCount();
+  return ppc.getNodeCount();
 }
 
 
@@ -70,7 +73,8 @@ size_t TriStripRun<Pheet>::getNodeTriStripCount()
 template <class Pheet>
 size_t TriStripRun<Pheet>::getTriStripCount()
 {
-	return result.getCount();
+  //	return result.getCount();
+  return ppc.getCount();
 }
 
 template <class Pheet>

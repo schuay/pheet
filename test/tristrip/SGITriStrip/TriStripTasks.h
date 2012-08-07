@@ -234,7 +234,7 @@ namespace pheet {
 
 			}
 			  }
-			result.addstrip(strip);
+			pc.addstrip(strip);
 
 
 		}

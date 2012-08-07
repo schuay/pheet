@@ -27,7 +27,7 @@ namespace pheet {
 template <class Impl>
 class SORTest : Test {
 public:
-    SORTest(procs_t cpus, int M, int N, int slices, double omega, int iterations, bool prio);
+    SORTest(procs_t cpus, int M, int N, int slices, double omega, int iterations, bool prio, bool runuts, bool runsor, bool usestrat);
 	~SORTest();
 
 	void run_test();
@@ -40,11 +40,14 @@ private:
 	double omega;
 	int iterations;
 	bool prio;
+	bool runuts;
+	bool runsor;
+	bool usestrat;
 };
 
 template <class Impl>
-  SORTest<Impl>::SORTest(procs_t cpus, int M, int N, int slices, double omega, int iterations, bool prio)
-  : cpus(cpus),M(M),N(N),slices(slices),omega(omega),iterations(iterations),prio(prio){
+  SORTest<Impl>::SORTest(procs_t cpus, int M, int N, int slices, double omega, int iterations, bool prio,bool runuts, bool runsor, bool usestrat )
+  : cpus(cpus),M(M),N(N),slices(slices),omega(omega),iterations(iterations),prio(prio),runuts(runuts),runsor(runsor),usestrat(usestrat){
 
 }
 
@@ -56,8 +59,7 @@ SORTest<Impl>::~SORTest() {
 template <class Impl>
 void SORTest<Impl>::run_test() {
 
-#ifdef SORANDUTS
-  std::string command = "T5 -t 1 -a 0 -d 15 -b 4 -r 34";
+  std::string command = "T5 -t 1 -a 0 -d 20 -b 4 -r 34";
   std::istringstream ss(command);
   std::string arg;
   std::vector<std::string> v1;
@@ -70,10 +72,8 @@ void SORTest<Impl>::run_test() {
   v2.push_back(0);
 
   uts_parseParams(v2.size()-1,&v2[0]);
-#endif
 
-
-  Impl iar(cpus, M, N, slices, omega, iterations, prio);
+  Impl iar(cpus, M, N, slices, omega, iterations, prio,runuts,runsor,usestrat);
 
 	Time start, end;
 	check_time(start);

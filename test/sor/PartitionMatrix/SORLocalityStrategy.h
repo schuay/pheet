@@ -63,15 +63,28 @@ template <class Pheet>
 
   UTSStrategy(size_t height, typename Pheet::Place* last_place):BaseStrategy(false),height(height),last_place(last_place)
     {
+      //      this->set_transitive_weight(std::min(5000,1<<(std::max((int)1,(int)20-(int)height))));
+
+
+      // return;
+      if(height>4)
+	this->set_transitive_weight(1);
+      else
+	this->set_transitive_weight(10000);
+      return;
+
       this->set_transitive_weight(1);
+      return;
+      const size_t cost = 1000;
+      this->set_transitive_weight((19*19*cost+1)-(height*height*cost));
     }
 
     UTSStrategy(Self& other)
-      : BaseStrategy(other), height(other.height),last_place(other.last_place)
+      : BaseStrategy(other), height(other.height),last_place(Pheet::get_place())
       {}
 
     UTSStrategy(Self&& other)
-      : BaseStrategy(other), height(other.height),last_place(other.last_place)
+      : BaseStrategy(other), height(other.height),last_place(Pheet::get_place())
       {}
 
     ~UTSStrategy() {}
@@ -81,6 +94,8 @@ template <class Pheet>
     }
 
     inline bool prioritize(Self& other) {
+
+      //      return BaseStrategy::prioritize(other);
 
       procs_t distancetothis = Pheet::get_place()->get_distance(last_place);
 

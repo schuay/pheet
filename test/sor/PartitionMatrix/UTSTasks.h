@@ -28,9 +28,10 @@ namespace pheet {
 	class UTSStartTaskStrat : public Pheet::Task
 	{
 		Node parent;
+		bool usestrat;
 	public:
 
-		UTSStartTaskStrat(Node parent):parent(parent) { }
+	UTSStartTaskStrat(Node parent, bool usestrat):parent(parent),usestrat(usestrat) { }
 		virtual ~UTSStartTaskStrat() {}
 
 		void operator()() //(typename Task::TEC& tec)
@@ -61,8 +62,10 @@ namespace pheet {
 						// TBD:  add parent height to spawn
 						// computeGranularity controls number of rng_spawn calls per node
 						rng_spawn(parent.state.state, child.state.state, i);
-						Pheet::template spawn_s<UTSStartTaskStrat<Pheet> >(UTSStrategy<Pheet>(parentHeight, Pheet::get_place()),child);
-						
+						if(usestrat)
+						  Pheet::template spawn_s<UTSStartTaskStrat<Pheet> >(UTSStrategy<Pheet>(parentHeight, Pheet::get_place()),child,usestrat);
+						else
+						  Pheet::template spawn<UTSStartTaskStrat<Pheet> >(child,usestrat);
 					}
 				}
 			}

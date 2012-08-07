@@ -41,10 +41,12 @@ namespace pheet {
       SORParams& sp;
       int iterations;
       SORPerformanceCounters<Pheet> pc;
-      
+      bool runuts;
+      bool runsor;
+      bool usestrat;
     public:
       
-    SORAndUTSTask(SORParams& sp, int iterations, SORPerformanceCounters<Pheet>& pc):sp(sp),iterations(iterations),pc(pc) { }
+    SORAndUTSTask(SORParams& sp, int iterations, SORPerformanceCounters<Pheet>& pc, bool runuts, bool runsor, bool usestrat):sp(sp),iterations(iterations),pc(pc),runuts(runuts),runsor(runsor),usestrat(usestrat) { }
       virtual ~SORAndUTSTask() {}
       
       void operator()()
@@ -53,54 +55,12 @@ namespace pheet {
 	Node root;
         uts_initRoot(&root, type);
 
-	Pheet::template spawn<UTSStartTaskStrat<Pheet> >(root);
-	Pheet::template spawn<SORStartTask<Pheet> >(sp, iterations,pc);
+	if(runuts)
+	  Pheet::template spawn<UTSStartTaskStrat<Pheet> >(root,usestrat);
+	if(runsor)
+	  Pheet::template spawn<SORStartTask<Pheet> >(sp, iterations,pc,usestrat);
       }
 
     };
-
-	template <class Pheet>
-	class UTSStartTask : public Pheet::Task
-	{
-		Node parent;
-	public:
-
-		UTSStartTask(Node parent):parent(parent) { }
-		virtual ~UTSStartTask() {}
-
-		void operator()() //(typename Task::TEC& tec)
-		{
-			Node child;
-			int parentHeight = parent.height;
-			int numChildren, childType;
-
-			numChildren = uts_numChildren(&parent);
-			childType   = uts_childType(&parent);
-
-			// record number of children in parent
-			parent.numChildren = numChildren;
-  
-			// construct children and push onto stack
-			if (numChildren > 0) 
-			{
-				typename Pheet::Finish f;
-				int i, j;
-				child.type = childType;
-				child.height = parentHeight + 1;
-
-			    for (i = 0; i < numChildren; i++) 
-				{
-					for (j = 0; j < computeGranularity; j++) 
-					{
-						// TBD:  add parent height to spawn
-						// computeGranularity controls number of rng_spawn calls per node
-						rng_spawn(parent.state.state, child.state.state, i);
-						Pheet::template spawn<UTSStartTask<Pheet> >(child);
-						
-					}
-				}
-			}
-		}
-	};
 }
 #endif /* INAROWTASK_H_ */

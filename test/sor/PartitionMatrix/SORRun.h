@@ -24,7 +24,7 @@ namespace pheet {
 template <class Pheet>
 class SORRun {
 public:
-  SORRun(procs_t cpus, int M, int N, int slices, double omega, int iterations, bool prio);
+  SORRun(procs_t cpus, int M, int N, int slices, double omega, int iterations, bool prio, bool runuts, bool runsor, bool usestrat);
 	~SORRun();
 
 	void run();
@@ -46,6 +46,9 @@ private:
 	double* backend;
 	typename Pheet::Environment::PerformanceCounters pc;
 	SORPerformanceCounters<Pheet> ppc;
+	bool runuts;
+	bool runsor;
+	bool usestrat;
 };
 
 
@@ -59,8 +62,8 @@ double SORRun<Pheet>::getTotal()
 }
 
 template <class Pheet>
-  SORRun<Pheet>::SORRun(procs_t cpus, int M, int N, int slices, double omega, int iterations, bool prio):
-cpus(cpus), iterations(iterations) {
+  SORRun<Pheet>::SORRun(procs_t cpus, int M, int N, int slices, double omega, int iterations, bool prio, bool runuts, bool runsor, bool usestrat):
+cpus(cpus), iterations(iterations),runuts(runuts),runsor(runsor),usestrat(usestrat) {
 	
 	sp.M=M;
 	sp.N=N;
@@ -106,11 +109,11 @@ SORRun<Pheet>::~SORRun() {
 template <class Pheet>
 void SORRun<Pheet>::run() {
   typename Pheet::Environment env(cpus,pc);
-#ifndef SORANDUTS
-	Pheet::template finish<SORStartTask<Pheet> >(sp, iterations,ppc);
-#else
-	Pheet::template finish<SORAndUTSTask<Pheet> >(sp, iterations,ppc);
-#endif
+  //#ifndef SORANDUTS
+  //	Pheet::template finish<SORStartTask<Pheet> >(sp, iterations,ppc);
+  //#else
+  Pheet::template finish<SORAndUTSTask<Pheet> >(sp, iterations,ppc, runuts, runsor, usestrat);
+	//#endif
 
 }
 
