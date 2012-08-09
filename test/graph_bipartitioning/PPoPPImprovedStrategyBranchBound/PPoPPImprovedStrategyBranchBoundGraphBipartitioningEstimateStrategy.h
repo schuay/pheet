@@ -57,9 +57,21 @@ inline PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy<Pheet
  uncertainty(sub_problem->get_estimate() - sub_problem->get_lower_bound()) {
 //	size_t depth = sub_problem->sets[0].count() - sub_problem->sets[1].count();
 	size_t ub = *estimate;
-	size_t w = (ub)/(sub_problem->get_lower_bound() + 1);
+	size_t lb = sub_problem->get_lower_bound();
+	if(lb >= ub) {
+		this->set_transitive_weight(1);
+	}
+	else {
+		size_t open = ub - lb;
+		size_t w = open / (ub/sub_problem->size);
+		this->set_transitive_weight((size_t)1 << (std::min(w>>1, (size_t)28)));
+	}
+/*	if(ub)
+	size_t w = 2 + sub_problem->size - (sub_problem->get_lower_bound())/((ub/sub_problem->size)+1);
+	size_t w =
+//	size_t w = (ub)/(sub_problem->get_lower_bound());
 	size_t w2 = std::min((size_t)28, sub_problem->size - sub_problem->sets[0].count() - sub_problem->sets[1].count());
-	this->set_transitive_weight((size_t)1 << (std::min(w, w2) + 2));
+	this->set_transitive_weight((size_t)1 << (std::min(w, w2)));*/
 }
 /*
 template <class Pheet, class SubProblem>
