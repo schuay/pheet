@@ -58,12 +58,12 @@ void LUPivTests::run_test(bool usesstrategy) {
 	//else
 	//this->run_kernel<	Pheet::WithScheduler<BasicScheduler>,
 	//					PPoPPLocalityStrategyLUPiv>();
-	/*
+
 	this->run_kernel<	Pheet::WithScheduler<StrategyScheduler>,
 						SimpleLUPiv >();
 
 	this->run_kernel<	Pheet::WithScheduler<BasicScheduler>,
-	SimpleLUPiv>();*/
+	SimpleLUPiv>();
 #endif
 }
 

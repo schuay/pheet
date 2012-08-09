@@ -312,7 +312,7 @@ void ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubPro
   //if (fw>0) std::cout<<'+'<<' '<<fw<<' '<<sub_problem->sets[2].count()<<'\n';
     
   lb += fw;
-  est += fw;
+//  est += fw;
   // Is this correct
   ub -= fw;
 
