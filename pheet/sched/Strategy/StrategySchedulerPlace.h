@@ -79,6 +79,9 @@ public:
 
 	static Self* get();
 
+	template<class Strategy>
+		bool spawn_to_call_check(Strategy&& s);
+
 	template<class CallTaskType, typename ... TaskParams>
 		void finish(TaskParams&& ... params);
 
@@ -784,6 +787,16 @@ void StrategySchedulerPlace<Pheet, CallThreshold>::spawn(F&& f, TaskParams&& ...
 }
 
 template <class Pheet, uint8_t CallThreshold>
+template<class Strategy>
+inline bool StrategySchedulerPlace<Pheet, CallThreshold>::spawn_to_call_check(Strategy&& s) {
+	size_t weight = (s.get_transitive_weight());
+	size_t current_tasks = task_storage.size();
+	size_t threshold = (current_tasks * current_tasks);
+
+	return weight <= threshold;
+}
+
+template <class Pheet, uint8_t CallThreshold>
 template<class CallTaskType, class Strategy, typename ... TaskParams>
 inline void StrategySchedulerPlace<Pheet, CallThreshold>::spawn_s(Strategy&& s, TaskParams&& ... params) {
 	performance_counters.num_spawns.incr();
@@ -795,13 +808,9 @@ inline void StrategySchedulerPlace<Pheet, CallThreshold>::spawn_s(Strategy&& s, 
 	}
 	else {
 		// TUNE: offsets and parameters
-		size_t weight = (s.get_transitive_weight());
-		size_t current_tasks = task_storage.size();
-		size_t threshold = (current_tasks * current_tasks);
-		if(s.forbid_call_conversion() || weight > threshold) {
+		if(s.forbid_call_conversion() || !spawn_to_call_check(s)) {
+			pheet_assert(s.get_transitive_weight() > 0);
 		//	spawn2call_counter = 0;
-			pheet_assert(weight > 0);
-
 			performance_counters.num_actual_spawns.incr();
 			CallTaskType* task = new CallTaskType(params ...);
 			pheet_assert(current_task_parent != NULL);
@@ -831,12 +840,9 @@ inline void StrategySchedulerPlace<Pheet, CallThreshold>::spawn_s(Strategy&& s, 
 	}
 	else {
 		// TUNE: offsets and parameters
-		size_t weight = s.get_transitive_weight();
-		size_t current_tasks = task_storage.size();
-		size_t threshold = (current_tasks * current_tasks);
-		if(weight > threshold) {
+		if(s.forbid_call_conversion() || !spawn_to_call_check(s)) {
 		//	spawn2call_counter = 0;
-			pheet_assert(weight > 0);
+			pheet_assert(s.get_transitive_weight() > 0);
 
 			performance_counters.num_actual_spawns.incr();
 			auto bound = std::bind(f, params ...);
