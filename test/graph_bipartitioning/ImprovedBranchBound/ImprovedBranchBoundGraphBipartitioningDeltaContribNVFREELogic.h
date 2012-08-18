@@ -217,12 +217,14 @@ void ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubPro
     }
   }
   
-  ptrdiff_t* delta = new ptrdiff_t[sub_problem->sets[2].count()];
+  size_t nf =  sub_problem->sets[2].count();
 
-  VertexWeight *smallest = new VertexWeight[sub_problem->sets[2].count()];
+  //ptrdiff_t* delta = new ptrdiff_t[sub_problem->sets[2].count()];
+  ptrdiff_t delta[nf];
+  ptrdiff_t gamma[nf];
 
   size_t di = 0;
-  size_t si = 0;
+  size_t gi = 0;
   lb = 0;
   est = 0;
   ub = 0;
@@ -232,6 +234,7 @@ void ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubPro
   size_t best_contrib = 0;
 
   size_t ss = (subrem[0] < subrem[1]) ? 0 : 1;
+  size_t fw = 0;
 
   // go through free nodes
   while(v != sub_problem->sets[2].size()) {
@@ -246,12 +249,12 @@ void ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubPro
     est += std::min(weights[0][v], weights[1][v]);
     ub += std::max(weights[0][v], weights[1][v]);
     
-    pheet_assert(free_edges[v]<sub_problem->sets[2].count());
+    pheet_assert(free_edges[v]<nf);
 
     for (size_t s=0; s<2; s++) {
       if (subrem[s]>0) {
 	f = seen[s][v]; j = scanned[s][v];
-	//comment in next two lines to deactive incremental computation
+	//comment in next two lines to deactivate incremental computation
 	//f = 0; j = 0;
 	//fweight[s][v] = 0;
 	while (f+subrem[s]<=free_edges[v]) { // note <=
@@ -264,9 +267,11 @@ void ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubPro
 	seen[s][v] = f;	scanned[s][v] = j;
       }
     }
-    smallest[si].weight = fweight[ss][v];
-    smallest[si].source = v;
-    si++;
+    fw += fweight[1-ss][v];
+    size_t g = fweight[ss][v]-fweight[1-ss][v];
+    pheet_assert(g>=0);
+    if (g>0) gamma[gi++] = g;
+    //if (g>0) std::cout<<g<<'#'<<'\n';
 
     v = sub_problem->sets[2]._Find_next(v);
   }
@@ -291,32 +296,18 @@ void ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubPro
     } while(pivot > 0 && delta[pivot - 1] > 0);
   }
   
-  delete[] delta;
-
-  size_t fw = 0;
-  /*
-  v = sub_problem->sets[2]._Find_first();
-  while(v != sub_problem->sets[2].size()) {
-    fw += std::min(fweight[0][v],fweight[1][v]);
-
-    v = sub_problem->sets[2]._Find_next(v);
+  if (nf-gi<subrem[ss]) {
+    std::sort(gamma,gamma+gi);
+    for (size_t i=0; i<subrem[ss]-(nf-gi); i++) fw += gamma[i];
   }
-  */
-  std::sort(smallest,smallest+si,weight_compare());
-
-  for (size_t i=0; i<subrem[ss]; i++) fw += smallest[i].weight;
-  for (size_t i=subrem[ss]; i<subrem[0]+subrem[1]; i++) 
-    fw += fweight[1-ss][smallest[i].source];
   fw >>= 1;
   //JLT - brings something!!
   //if (fw>0) std::cout<<'+'<<' '<<fw<<' '<<sub_problem->sets[2].count()<<'\n';
     
   lb += fw;
 //  est += fw;
-  // Is this correct
+  // Is this correct (MW?)
   ub -= fw;
-
-  delete [] smallest;
 }
 
 template <class Pheet, class SubProblem>
