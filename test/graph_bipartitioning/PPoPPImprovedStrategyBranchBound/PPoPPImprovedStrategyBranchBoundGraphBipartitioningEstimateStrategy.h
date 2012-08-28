@@ -63,7 +63,7 @@ inline PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy<Pheet
 	}
 	else {
 		size_t open = ub - lb;
-		size_t w = open / (ub/sub_problem->size);
+		size_t w = open / (1+(ub/sub_problem->size));
 		this->set_transitive_weight((size_t)1 << (std::min(w>>1, (size_t)28)));
 	}
 /*	if(ub)
