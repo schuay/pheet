@@ -63,7 +63,7 @@ void LUPivTests::run_test(bool usesstrategy) {
 						SimpleLUPiv >();
 
 	this->run_kernel<	Pheet::WithScheduler<BasicScheduler>,
-	SimpleLUPiv>();
+						SimpleLUPiv>();
 #endif
 }
 
