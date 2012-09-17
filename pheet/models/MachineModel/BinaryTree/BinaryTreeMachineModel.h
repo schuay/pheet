@@ -171,14 +171,24 @@ procs_t BinaryTreeMachineModel<Pheet, BaseModelT>::get_num_leaves() {
 
 template <class Pheet, class BaseModelT>
 void BinaryTreeMachineModel<Pheet, BaseModelT>::bind() {
-	pheet_assert(base.is_leaf() || (first_child == 0 && last_child == (base.get_num_children() - 1)));
-	base.bind();
+	if(base.is_leaf() || (first_child == 0 && last_child == (base.get_num_children() - 1))) {
+//		pheet_assert(base.is_leaf());
+		base.bind();
+	}
+	else {
+		get_child(0).bind();
+	}
 }
 
 template <class Pheet, class BaseModelT>
 void BinaryTreeMachineModel<Pheet, BaseModelT>::unbind() {
-	pheet_assert(base.is_leaf() || (first_child == 0 && last_child == (base.get_num_children() - 1)));
-	base.unbind();
+	if(base.is_leaf() || (first_child == 0 && last_child == (base.get_num_children() - 1))) {
+//		pheet_assert(base.is_leaf());
+		base.unbind();
+	}
+	else {
+		get_child(0).unbind();
+	}
 }
 
 template <class Pheet, class BaseModelT>
