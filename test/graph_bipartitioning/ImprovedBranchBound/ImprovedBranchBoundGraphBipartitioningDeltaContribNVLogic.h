@@ -36,6 +36,13 @@ public:
 	void update(uint8_t set, size_t pos);
 	void bulk_update(uint8_t set, Set positions);
 
+	size_t get_minnode(uint8_t set);
+	size_t get_lowdeg_lower();
+	size_t cc_w(size_t largest_w);
+
+	bool no_edges();
+	void assign_deltabound();
+
 	static void print_name();
 private:
 	SubProblem* sub_problem;
@@ -116,6 +123,11 @@ size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProbl
 }
 
 template <class Pheet, class SubProblem>
+size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::get_lowdeg_lower() {
+  return 0;
+}
+
+template <class Pheet, class SubProblem>
 size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::get_estimate() {
 //	return get_cut() + ((lb + ub + contrib_sum) >> 1);
 	return get_cut() + lb + contrib_sum;
@@ -125,6 +137,61 @@ template <class Pheet, class SubProblem>
 size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::get_upper_bound() {
 	return get_cut() + ub + contrib_sum;
 }
+
+template <class Pheet, class SubProblem>
+size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::get_minnode(uint8_t set) {
+  // only one free
+
+  size_t fweight;
+
+  size_t w = sub_problem->sets[2]._Find_first();
+  fweight = 0;
+  for (size_t i=0; i<sub_problem->graph[w].num_edges; ++i) {
+    if(sub_problem->sets[2].test(sub_problem->graph[w].edges[i].target)) {
+      fweight += sub_problem->graph[w].edges[i].weight;
+    }
+  }
+  
+  size_t mincut, sumcut = 0;
+  size_t v = sub_problem->sets[2]._Find_next(w);
+  while(v != sub_problem->sets[2].size()) {
+    sumcut += weights[set][v];
+    v = sub_problem->sets[2]._Find_next(v);
+  }
+		
+  mincut = sumcut+weights[set^1][w]+fweight;
+
+  v = sub_problem->sets[2]._Find_first();
+  while(v != sub_problem->sets[2].size()) {
+    sumcut += weights[set][v];
+    v = sub_problem->sets[2]._Find_next(v);
+    if (v!=sub_problem->sets[2].size()) {
+      fweight = 0;
+      for (size_t i=0; i<sub_problem->graph[v].num_edges; ++i) {
+	if(sub_problem->sets[2].test(sub_problem->graph[v].edges[i].target)) {
+	  fweight += sub_problem->graph[v].edges[i].weight;
+	}
+      }
+      sumcut -= weights[set][v];
+      if (sumcut+weights[set^1][v]+fweight<mincut) {
+	mincut = sumcut+weights[set^1][v]+fweight;
+	w = v;
+      }
+    }
+  }
+
+  return w;
+}
+
+template <class Pheet, class SubProblem>
+size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::cc_w(size_t largest_w) {
+  return 0;
+}
+
+template <class Pheet, class SubProblem>
+bool ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::no_edges() {
+  return 0;
+ }
 
 template <class Pheet, class SubProblem>
 void ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::update(uint8_t set, size_t pos) {
@@ -187,6 +254,10 @@ void ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem
 		current_bit = positions._Find_next(current_bit);
 	}
 }
+
+template <class Pheet, class SubProblem>
+void ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::assign_deltabound() {
+ }
 
 template <class Pheet, class SubProblem>
 void ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::print_name() {

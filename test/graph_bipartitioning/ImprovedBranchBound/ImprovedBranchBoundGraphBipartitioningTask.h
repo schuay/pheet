@@ -53,13 +53,25 @@ void ImprovedBranchBoundGraphBipartitioningTask<Pheet, Logic, MaxSize>::operator
 	if(sub_problem->get_lower_bound() >= *upper_bound) {
 		pc.num_irrelevant_tasks.incr();
 		return;
+	} else if (sub_problem->get_lowdeg_lower()+1000>=*upper_bound) {
+	  // "1" change to currently largest free edge weight
+	  // some possibility to cut, compute cc - JLT: move into logic
+	  if (sub_problem->get_lowdeg_lower()+sub_problem->cc_w(1000)>=*upper_bound) {
+	    return; // actually irrelevant
+	  }
 	}
 
 	SubProblem* sub_problem2 =
 			sub_problem->split(pc.subproblem_pc);
 
-	if(sub_problem->is_solution()) {
+	if(sub_problem->is_solution()) { // JLT: this should not happen now
 		sub_problem->update_solution(upper_bound, best, pc.subproblem_pc);
+	}
+	else if (sub_problem->can_complete1()) {
+		sub_problem->complete_solution1(upper_bound, best, pc.subproblem_pc);
+	}
+	else if (sub_problem->can_complete2()) {
+		sub_problem->complete_solution2(upper_bound, best, pc.subproblem_pc);
 	}
 	else if(sub_problem->get_lower_bound() < *upper_bound) {
 		Pheet::template
@@ -71,6 +83,12 @@ void ImprovedBranchBoundGraphBipartitioningTask<Pheet, Logic, MaxSize>::operator
 	if(sub_problem2->is_solution()) {
 		sub_problem2->update_solution(upper_bound, best, pc.subproblem_pc);
 		delete sub_problem2;
+	}
+	else if (sub_problem2->can_complete1()) {
+		sub_problem2->complete_solution1(upper_bound, best, pc.subproblem_pc);
+	}
+	else if (sub_problem2->can_complete2()) {
+		sub_problem2->complete_solution2(upper_bound, best, pc.subproblem_pc);
 	}
 	else if(sub_problem2->get_lower_bound() < *upper_bound) {
 		Pheet::template

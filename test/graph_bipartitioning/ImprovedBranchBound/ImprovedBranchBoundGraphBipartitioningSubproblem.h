@@ -24,16 +24,21 @@ template <class Pheet, size_t MaxSize = 64>
 class ImprovedBranchBoundGraphBipartitioningSubproblemBase {
 protected:
 	ImprovedBranchBoundGraphBipartitioningSubproblemBase(GraphVertex const* graph, size_t size, size_t k)
-	: graph(graph), size(size), k(k) {}
+: graph(graph), size(size), k(k) {}
 
 public:
 	typedef std::bitset<MaxSize> Set;
 
 	GraphVertex const* const graph;
+//size_t const lw; // largest weight edge (JLT: more dynamic approx. perhaps better)
 	size_t const size;
 	size_t const k;
 
 	Set sets[3];
+// JLT would like
+// uint8 assigned[size] = 0/1/2 - where is vertex assigned?
+// free[size] = [0,...,size-1]; - list of free vertices
+// subsetsize[3]; current size of subsets, subsetsize[2] is number of free vertices
 };
 
 template <class Pheet, template <class P, class SP> class LogicT, size_t MaxSize = 64>
@@ -54,9 +59,16 @@ public:
 	Self* split(PerformanceCounters& pc);
 	bool is_solution();
 	void update_solution(size_t* upper_bound, SolutionReducer& best, PerformanceCounters& pc);
+	bool can_complete1();
+	bool can_complete2();
+	void complete_solution1(size_t* upper_bound, SolutionReducer& best, PerformanceCounters& pc);
+	void complete_solution2(size_t* upper_bound, SolutionReducer& best, PerformanceCounters& pc);
 	size_t get_lower_bound();
 	size_t get_estimate();
 	size_t get_upper_bound();
+	size_t get_lowdeg_lower();
+	size_t cc_w(size_t largest_w);
+
 private:
 	void update(uint8_t set, size_t pos);
 
@@ -115,7 +127,7 @@ void ImprovedBranchBoundGraphBipartitioningSubproblem<Pheet, LogicT, MaxSize>::u
 
 //	uint8_t other_set = set ^ 1;
 
-	logic.update(set, pos);
+	logic.update(set, pos); // JLT - sometimes not good
 }
 
 template <class Pheet, template <class P, class SP> class LogicT, size_t MaxSize>
@@ -161,8 +173,93 @@ void ImprovedBranchBoundGraphBipartitioningSubproblem<Pheet, LogicT, MaxSize>::u
 }
 
 template <class Pheet, template <class P, class SP> class LogicT, size_t MaxSize>
+bool ImprovedBranchBoundGraphBipartitioningSubproblem<Pheet, LogicT, MaxSize>::can_complete1() {
+  return ((this->sets[0].count() == this->k-1) || 
+	  (this->sets[1].count() == (this->size - this->k)-1));
+  //return 0;
+}
+
+template <class Pheet, template <class P, class SP> class LogicT, size_t MaxSize>
+void ImprovedBranchBoundGraphBipartitioningSubproblem<Pheet, LogicT, MaxSize>::complete_solution1(size_t* upper_bound, MaxReducer<Pheet, GraphBipartitioningSolution<MaxSize> >& best, PerformanceCounters& pc) {
+  size_t s = (this->sets[0].count() == this->k-1) ? 0 : 1;
+
+  //std::cout<<'#';
+
+  size_t v = logic.get_minnode(s);
+
+  update(s,v);
+
+  this->sets[1-s] |= this->sets[2];
+  Set tmp = this->sets[2];
+  this->sets[2].reset();
+  logic.bulk_update(1-s, tmp);
+
+	size_t cut = logic.get_cut();
+	size_t old_ub = *upper_bound;
+
+	while(cut < old_ub) {
+		if(SIZET_CAS(upper_bound, old_ub, cut)) {
+			pc.last_update_time.take_time();
+			pc.num_upper_bound_changes.incr();
+
+			pc.events.add(cut);
+
+			GraphBipartitioningSolution<MaxSize> my_best;
+			my_best.weight = cut;
+			my_best.sets[0] = this->sets[0];
+			my_best.sets[1] = this->sets[1];
+			best.add_value(my_best);
+		}
+		else {
+			old_ub = *upper_bound;
+		}
+	}
+}
+
+template <class Pheet, template <class P, class SP> class LogicT, size_t MaxSize>
+bool ImprovedBranchBoundGraphBipartitioningSubproblem<Pheet, LogicT, MaxSize>::can_complete2() {
+  return logic.no_edges();
+}
+
+template <class Pheet, template <class P, class SP> class LogicT, size_t MaxSize>
+void ImprovedBranchBoundGraphBipartitioningSubproblem<Pheet, LogicT, MaxSize>::complete_solution2(size_t* upper_bound, MaxReducer<Pheet, GraphBipartitioningSolution<MaxSize> >& best, PerformanceCounters& pc) {
+  logic.assign_deltabound();
+
+	size_t cut = logic.get_cut();
+	size_t old_ub = *upper_bound;
+
+	while(cut < old_ub) {
+		if(SIZET_CAS(upper_bound, old_ub, cut)) {
+			pc.last_update_time.take_time();
+			pc.num_upper_bound_changes.incr();
+
+			pc.events.add(cut);
+
+			GraphBipartitioningSolution<MaxSize> my_best;
+			my_best.weight = cut;
+			my_best.sets[0] = this->sets[0];
+			my_best.sets[1] = this->sets[1];
+			best.add_value(my_best);
+		}
+		else {
+			old_ub = *upper_bound;
+		}
+	}
+}
+
+template <class Pheet, template <class P, class SP> class LogicT, size_t MaxSize>
 size_t ImprovedBranchBoundGraphBipartitioningSubproblem<Pheet, LogicT, MaxSize>::get_lower_bound() {
 	return logic.get_lower_bound();
+}
+
+template <class Pheet, template <class P, class SP> class LogicT, size_t MaxSize>
+size_t ImprovedBranchBoundGraphBipartitioningSubproblem<Pheet, LogicT, MaxSize>::get_lowdeg_lower() {
+	return logic.get_lowdeg_lower();
+}
+
+template <class Pheet, template <class P, class SP> class LogicT, size_t MaxSize>
+size_t ImprovedBranchBoundGraphBipartitioningSubproblem<Pheet, LogicT, MaxSize>::cc_w(size_t largest_w) {
+	return logic.cc_w(largest_w);
 }
 
 template <class Pheet, template <class P, class SP> class LogicT, size_t MaxSize>
