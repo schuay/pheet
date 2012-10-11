@@ -17,13 +17,13 @@
 #include "StrategyBranchBound/BranchBoundGraphBipartitioningAutoStrategy.h"
 #include "StrategyBranchBound/BranchBoundGraphBipartitioningBestFirstStrategy.h"
 
-#include "ImprovedBranchBound/ImprovedBranchBoundGraphBipartitioningBasicLogic.h"
-#include "ImprovedBranchBound/ImprovedBranchBoundGraphBipartitioningImprovedLogic.h"
-#include "ImprovedBranchBound/ImprovedBranchBoundGraphBipartitioningDeltaLogic.h"
-#include "ImprovedBranchBound/ImprovedBranchBoundGraphBipartitioningDeltaNVLogic.h"
-#include "ImprovedBranchBound/ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic.h"
+#include "Basic/BBGraphBipartitioningBasicLogic.h"
+#include "Basic/BBGraphBipartitioningImprovedLogic.h"
+#include "Basic/BBGraphBipartitioningDeltaLogic.h"
+#include "Basic/BBGraphBipartitioningDeltaNVLogic.h"
+#include "Basic/BBGraphBipartitioningLogic.h"
 */
-#include "ImprovedBranchBound/ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic.h"
+#include "Basic/BBGraphBipartitioningFREELogic.h"
 
 #include <pheet/sched/Basic/BasicScheduler.h>
 #include <pheet/sched/Centralized/CentralizedScheduler.h>
@@ -35,27 +35,27 @@
 #include <pheet/primitives/Mutex/TASLock/TASLock.h>
 #include <pheet/primitives/Mutex/TTASLock/TTASLock.h>
 
-#include "ImprovedBranchBound/ImprovedBranchBoundGraphBipartitioning.h"
-#include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioning.h"
-#include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy.h"
-#include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstStrategy.h"
-#include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy.h"
-#include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy.h"
-#include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningUpperBoundStrategy.h"
-#include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningUpperBoundFifoStrategy.h"
-#include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningUpperLowerBoundStrategy.h"
-#include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategy.h"
-#include "ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategy.h"
+#include "Basic/BBGraphBipartitioning.h"
+#include "Strategy/StrategyBBGraphBipartitioning.h"
+#include "Strategy/StrategyBBGraphBipartitioningBestFirstStrategy.h"
+#include "Strategy/StrategyBBGraphBipartitioningDepthFirstStrategy.h"
+#include "Strategy/StrategyBBGraphBipartitioningDepthFirstBestStrategy.h"
+#include "Strategy/StrategyBBGraphBipartitioningLowerBoundStrategy.h"
+#include "Strategy/StrategyBBGraphBipartitioningUpperBoundStrategy.h"
+#include "Strategy/StrategyBBGraphBipartitioningUpperBoundFifoStrategy.h"
+#include "Strategy/StrategyBBGraphBipartitioningUpperLowerBoundStrategy.h"
+#include "Strategy/StrategyBBGraphBipartitioningAutoStrategy.h"
+#include "Strategy/StrategyBBGraphBipartitioningDynamicStrategy.h"
 
-#include "PPoPPImprovedStrategyBranchBound/PPoPPImprovedStrategyBranchBoundGraphBipartitioning.h"
-#include "PPoPPImprovedStrategyBranchBound/PPoPPImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy.h"
-#include "PPoPPImprovedStrategyBranchBound/PPoPPImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy.h"
-#include "PPoPPImprovedStrategyBranchBound/PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy.h"
-#include "PPoPPImprovedStrategyBranchBound/PPoPPImprovedStrategyBranchBoundGraphBipartitioningUpperLowerBoundStrategy.h"
+#include "PPoPP/PPoPPBBGraphBipartitioning.h"
+#include "PPoPP/PPoPPBBGraphBipartitioningBestFirstStrategy.h"
+#include "PPoPP/PPoPPBBGraphBipartitioningLowerBoundStrategy.h"
+#include "PPoPP/PPoPPBBGraphBipartitioningEstimateStrategy.h"
+#include "PPoPP/PPoPPBBGraphBipartitioningUpperLowerBoundStrategy.h"
 
 
 
-//#include "PPoPPImprovedStrategyBranchBound/PPoPPImprovedStrategyBranchBoundGraphBipartitioning.h"
+//#include "PPoPP/PPoPPBBGraphBipartitioning.h"
 
 
 /*
@@ -82,106 +82,106 @@ void GraphBipartitioningTests::run_test() {
 
 #ifdef AMP_STEALING_DEQUE_TEST
 //	this->run_partitioner<	Pheet::WithScheduler<BasicScheduler>::WithTaskStorage<YourImplementation>,
-//							ImprovedBranchBoundGraphBipartitioning>();
+//							BBGraphBipartitioning>();
 	this->run_partitioner<	Pheet::WithScheduler<BasicScheduler>,
-							ImprovedBranchBoundGraphBipartitioning>();
+							BBGraphBipartitioning>();
 
 #elif AMP_QUEUE_STACK_TEST
 
 	this->run_partitioner<	Pheet::WithScheduler<CentralizedScheduler>,
-						ImprovedBranchBoundGraphBipartitioning>();
+						BBGraphBipartitioning>();
 
 	this->run_partitioner<	Pheet::WithScheduler<CentralizedScheduler>::WithTaskStorage<GlobalLockQueue>,
-						ImprovedBranchBoundGraphBipartitioning>();
+						BBGraphBipartitioning>();
 
 	this->run_partitioner<	Pheet::WithScheduler<BasicScheduler>,
-						ImprovedBranchBoundGraphBipartitioning>();
+						BBGraphBipartitioning>();
 
 #elif AMP_SKIPLIST_TEST
 	this->run_partitioner<	Pheet::WithScheduler<CentralizedScheduler>,
-						ImprovedBranchBoundGraphBipartitioning>();
+						BBGraphBipartitioning>();
 	this->run_partitioner<	Pheet::WithScheduler<CentralizedScheduler>::WithPriorityTaskStorage<GlobalLockMultiSetPriorityQueue>,
-						ImprovedBranchBoundGraphBipartitioning>();
+						BBGraphBipartitioning>();
 	this->run_partitioner<	Pheet,
-						ImprovedBranchBoundGraphBipartitioning>();
+						BBGraphBipartitioning>();
 	this->run_partitioner<	Pheet::WithScheduler<BasicScheduler>,
-						ImprovedBranchBoundGraphBipartitioning>();
+						BBGraphBipartitioning>();
 
 
 #elif AMP_LOCK_TEST
 
 	this->run_partitioner<	Pheet::WithScheduler<CentralizedScheduler>,
-						ImprovedBranchBoundGraphBipartitioning>();
+						BBGraphBipartitioning>();
 	this->run_partitioner<	Pheet::WithScheduler<CentralizedScheduler>::WithMutex<TASLock>,
-						ImprovedBranchBoundGraphBipartitioning>();
+						BBGraphBipartitioning>();
 	this->run_partitioner<	Pheet::WithScheduler<CentralizedScheduler>::WithMutex<TTASLock>,
-						ImprovedBranchBoundGraphBipartitioning>();
+						BBGraphBipartitioning>();
 	this->run_partitioner<	Pheet::WithScheduler<BasicScheduler>,
-						ImprovedBranchBoundGraphBipartitioning>();
+						BBGraphBipartitioning>();
 
 #else
 /*
 	this->run_partitioner<	Pheet,
-							ImprovedStrategyBranchBoundGraphBipartitioning<>::WithSchedulingStrategy<ImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategy>::T >();
+							StrategyBBGraphBipartitioning<>::WithSchedulingStrategy<StrategyBBGraphBipartitioningDynamicStrategy>::T >();
 	this->run_partitioner<	Pheet,
-							ImprovedStrategyBranchBoundGraphBipartitioning<>::WithSchedulingStrategy<ImprovedStrategyBranchBoundGraphBipartitioningUpperBoundStrategy>::T >();
+							StrategyBBGraphBipartitioning<>::WithSchedulingStrategy<StrategyBBGraphBipartitioningUpperBoundStrategy>::T >();
 	this->run_partitioner<	Pheet,
-							ImprovedStrategyBranchBoundGraphBipartitioning<>::WithSchedulingStrategy<ImprovedStrategyBranchBoundGraphBipartitioningUpperLowerBoundStrategy>::T >();
+							StrategyBBGraphBipartitioning<>::WithSchedulingStrategy<StrategyBBGraphBipartitioningUpperLowerBoundStrategy>::T >();
 	this->run_partitioner<	Pheet,
-							ImprovedStrategyBranchBoundGraphBipartitioning<>::WithSchedulingStrategy<ImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy>::T >();
+							StrategyBBGraphBipartitioning<>::WithSchedulingStrategy<StrategyBBGraphBipartitioningBestFirstStrategy>::T >();
 	this->run_partitioner<	Pheet,
-							ImprovedStrategyBranchBoundGraphBipartitioning>(); // strategy: ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy
+							StrategyBBGraphBipartitioning>(); // strategy: StrategyBBGraphBipartitioningDepthFirstBestStrategy
 	this->run_partitioner<	Pheet,
-							ImprovedStrategyBranchBoundGraphBipartitioning<>::WithSchedulingStrategy<ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstStrategy>::T >();
+							StrategyBBGraphBipartitioning<>::WithSchedulingStrategy<StrategyBBGraphBipartitioningDepthFirstStrategy>::T >();
 	this->run_partitioner<	Pheet,
-							ImprovedStrategyBranchBoundGraphBipartitioning<>::WithSchedulingStrategy<ImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy>::T >();
+							StrategyBBGraphBipartitioning<>::WithSchedulingStrategy<StrategyBBGraphBipartitioningLowerBoundStrategy>::T >();
 	this->run_partitioner<	Pheet,
-							ImprovedStrategyBranchBoundGraphBipartitioning>();
+							StrategyBBGraphBipartitioning>();
 	this->run_partitioner<	Pheet,
-							ImprovedStrategyBranchBoundGraphBipartitioning>();
+							StrategyBBGraphBipartitioning>();
 	this->run_partitioner<	Pheet,
-							ImprovedBranchBoundGraphBipartitioning>();*/
+							BBGraphBipartitioning>();*/
 //	this->run_partitioner<  Pheet::WithScheduler<StrategyScheduler>,
-//							PPoPPImprovedStrategyBranchBoundGraphBipartitioning<>::WithSchedulingStrategy<PPoPPImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy>::T >();
+//							PPoPPBBGraphBipartitioning<>::WithSchedulingStrategy<PPoPPBBGraphBipartitioningLowerBoundStrategy>::T >();
 	this->run_partitioner<  Pheet::WithScheduler<StrategyScheduler>,
-							PPoPPImprovedStrategyBranchBoundGraphBipartitioning<>
-								::WithSchedulingStrategy<PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy>
+							PPoPPBBGraphBipartitioning<>
+								::WithSchedulingStrategy<PPoPPBBGraphBipartitioningEstimateStrategy>
 								::BT >();
 	this->run_partitioner<  Pheet::WithScheduler<StrategyScheduler>,
-							PPoPPImprovedStrategyBranchBoundGraphBipartitioning<>
-								::WithSchedulingStrategy<PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy>
-								::WithLogic<ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic>
+							PPoPPBBGraphBipartitioning<>
+								::WithSchedulingStrategy<PPoPPBBGraphBipartitioningEstimateStrategy>
+								::WithLogic<BBGraphBipartitioningFREELogic>
 								::BT >();
 	this->run_partitioner<	Pheet::WithScheduler<BasicScheduler>,
-							ImprovedBranchBoundGraphBipartitioning>();
+							BBGraphBipartitioning>();
 	this->run_partitioner<  Pheet::WithScheduler<BasicScheduler>,
-							ImprovedBranchBoundGraphBipartitioning<>
-								::WithLogic<ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic>
+							BBGraphBipartitioning<>
+								::WithLogic<BBGraphBipartitioningFREELogic>
 								::BT >();
 	this->run_partitioner<  Pheet::WithScheduler<StrategyScheduler>,
-							ImprovedBranchBoundGraphBipartitioning>();
+							BBGraphBipartitioning>();
 	this->run_partitioner<  Pheet::WithScheduler<StrategyScheduler>,
-							ImprovedBranchBoundGraphBipartitioning<>
-								::WithLogic<ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic>
+							BBGraphBipartitioning<>
+								::WithLogic<BBGraphBipartitioningFREELogic>
 								::BT >();
 //	this->run_partitioner<  Pheet::WithScheduler<StrategyScheduler>,
-//							PPoPPImprovedStrategyBranchBoundGraphBipartitioning<>::WithSchedulingStrategy<PPoPPImprovedStrategyBranchBoundGraphBipartitioningUpperLowerBoundStrategy>::T >();
+//							PPoPPBBGraphBipartitioning<>::WithSchedulingStrategy<PPoPPBBGraphBipartitioningUpperLowerBoundStrategy>::T >();
 
 //	this->run_partitioner<  Pheet::WithScheduler<StrategyScheduler>,
-//							PPoPPImprovedStrategyBranchBoundGraphBipartitioning<>::WithSchedulingStrategy<PPoPPImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy>::T >();
+//							PPoPPBBGraphBipartitioning<>::WithSchedulingStrategy<PPoPPBBGraphBipartitioningBestFirstStrategy>::T >();
 /*	this->run_partitioner<  Pheet::WithScheduler<StrategyScheduler>,
-	PPoPPImprovedStrategyBranchBoundGraphBipartitioning<>
-									::WithSchedulingStrategy<PPoPPImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy>
-									::WithLogic<ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic>
+	PPoPPBBGraphBipartitioning<>
+									::WithSchedulingStrategy<PPoPPBBGraphBipartitioningBestFirstStrategy>
+									::WithLogic<BBGraphBipartitioningFREELogic>
 									::T >();
 */
 	/*	this->run_partitioner<  Pheet::WithScheduler<StrategyScheduler>,
-							PPoPPImprovedStrategyBranchBoundGraphBipartitioning>();
+							PPoPPBBGraphBipartitioning>();
 
 	this->run_partitioner<  Pheet::WithScheduler<StrategyScheduler>,
-							PPoPPImprovedStrategyBranchBoundGraphBipartitioning<>::WithSchedulingStrategy<PPoPPImprovedStrategyBranchBoundGraphBipartitioningDepthFirstStrategy>::T >();
+							PPoPPBBGraphBipartitioning<>::WithSchedulingStrategy<PPoPPBBGraphBipartitioningDepthFirstStrategy>::T >();
   	this->run_partitioner<  Pheet::WithScheduler<StrategyScheduler>,
-  							PPoPPImprovedStrategyBranchBoundGraphBipartitioning<>::WithSchedulingStrategy<PPoPPImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy>::T >();
+  							PPoPPBBGraphBipartitioning<>::WithSchedulingStrategy<PPoPPBBGraphBipartitioningLowerBoundStrategy>::T >();
   							*/
 
 #endif

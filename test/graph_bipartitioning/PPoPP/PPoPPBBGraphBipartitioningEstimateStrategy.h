@@ -1,13 +1,13 @@
 /*
- * ImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy.h
+ * StrategyBBGraphBipartitioningEstimateStrategy.h
  *
  *  Created on: Jan 13, 2012
  *      Author: Martin Wimmer
  *	   License: Boost Software License 1.0 (BSL1.0)
  */
 
-#ifndef PPOPPIMPROVEDSTRATEGYBRANCHBOUNDGRAPHBIPARTITIONINGESTIMATESTRATEGY_H_
-#define PPOPPIMPROVEDSTRATEGYBRANCHBOUNDGRAPHBIPARTITIONINGESTIMATESTRATEGY_H_
+#ifndef PPOPPBBGRAPHBIPARTITIONINGESTIMATESTRATEGY_H_
+#define PPOPPBBGRAPHBIPARTITIONINGESTIMATESTRATEGY_H_
 
 #include <pheet/pheet.h>
 #include <pheet/sched/strategies/UserDefinedPriority/UserDefinedPriority.h>
@@ -15,17 +15,17 @@
 namespace pheet {
 
 template <class Pheet, class SubProblem>
-  class PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy : public Pheet::Environment::BaseStrategy {
+  class PPoPPBBGraphBipartitioningEstimateStrategy : public Pheet::Environment::BaseStrategy {
 public:
-    typedef PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy<Pheet,SubProblem> Self;
+    typedef PPoPPBBGraphBipartitioningEstimateStrategy<Pheet,SubProblem> Self;
     typedef typename Pheet::Environment::BaseStrategy BaseStrategy;
 
-    PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy(SubProblem* sub_problem);
-//    PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy(Self const& other);
-//    PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy(Self && other);
+    PPoPPBBGraphBipartitioningEstimateStrategy(SubProblem* sub_problem);
+//    PPoPPBBGraphBipartitioningEstimateStrategy(Self const& other);
+//    PPoPPBBGraphBipartitioningEstimateStrategy(Self && other);
 
 
-	~PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy();
+	~PPoPPBBGraphBipartitioningEstimateStrategy();
 
 
 
@@ -52,7 +52,7 @@ private:
 };
 
 template <class Pheet, class SubProblem>
-inline PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy<Pheet, SubProblem>::PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy(SubProblem* sub_problem)
+inline PPoPPBBGraphBipartitioningEstimateStrategy<Pheet, SubProblem>::PPoPPBBGraphBipartitioningEstimateStrategy(SubProblem* sub_problem)
 :estimate(sub_problem->get_estimate()),
  uncertainty(sub_problem->get_estimate() - sub_problem->get_lower_bound()) {
 //	size_t depth = sub_problem->sets[0].count() - sub_problem->sets[1].count();
@@ -75,25 +75,25 @@ inline PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy<Pheet
 }
 /*
 template <class Pheet, class SubProblem>
-  inline PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy<Pheet, SubProblem>::PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy(Self const& other):BaseStrategy(other),sub_problem(other.sub_problem),estimate(other.estimate)
+  inline PPoPPBBGraphBipartitioningEstimateStrategy<Pheet, SubProblem>::PPoPPBBGraphBipartitioningEstimateStrategy(Self const& other):BaseStrategy(other),sub_problem(other.sub_problem),estimate(other.estimate)
 {
 
 }
 
  template <class Pheet, class SubProblem>
-   inline PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy<Pheet, SubProblem>::PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy(Self&& other):BaseStrategy(other),sub_problem(other.sub_problem),estimate(other.estimate)
+   inline PPoPPBBGraphBipartitioningEstimateStrategy<Pheet, SubProblem>::PPoPPBBGraphBipartitioningEstimateStrategy(Self&& other):BaseStrategy(other),sub_problem(other.sub_problem),estimate(other.estimate)
    {
 
    }
 */
 
 template <class Pheet, class SubProblem>
-inline PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy<Pheet, SubProblem>::~PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy() {
+inline PPoPPBBGraphBipartitioningEstimateStrategy<Pheet, SubProblem>::~PPoPPBBGraphBipartitioningEstimateStrategy() {
 
 }
 
 template <class Pheet, class SubProblem>
-inline bool PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy<Pheet, SubProblem>::prioritize(Self& other)
+inline bool PPoPPBBGraphBipartitioningEstimateStrategy<Pheet, SubProblem>::prioritize(Self& other)
 {
 	// Since we rebase all tasks should be from the same place
 	pheet_assert(this->get_place() == other.get_place());
@@ -105,7 +105,7 @@ inline bool PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy<
 
 /*
 template <class Pheet, class SubProblem>
-UserDefinedPriority<Pheet> PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy<Pheet, SubProblem>::operator()(SubProblem* sub_problem, size_t* estimate) {
+UserDefinedPriority<Pheet> PPoPPBBGraphBipartitioningEstimateStrategy<Pheet, SubProblem>::operator()(SubProblem* sub_problem, size_t* estimate) {
 	size_t lb = sub_problem->get_lower_bound();
 	size_t ub = sub_problem->get_estimate();
 
@@ -125,10 +125,10 @@ UserDefinedPriority<Pheet> PPoPPImprovedStrategyBranchBoundGraphBipartitioningEs
 
 
 template <class Pheet, class SubProblem>
-inline void PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy<Pheet, SubProblem>::print_name() {
+inline void PPoPPBBGraphBipartitioningEstimateStrategy<Pheet, SubProblem>::print_name() {
 	std::cout << "EstimateStrategy";
 }
 
 }
 
-#endif /* IMPROVEDSTRATEGYBRANCHBOUNDGRAPHBIPARTITIONINGESTIMATESTRATEGY_H_ */
+#endif /* STRATEGYBBGRAPHBIPARTITIONINGESTIMATESTRATEGY_H_ */

@@ -1,13 +1,13 @@
 /*
- * ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic.h
+ * BBGraphBipartitioningFREELogic.h
  *
  *  Created on: Jan 13, 2012
  *      Author: Martin Wimmer, JLT
  *	   License: Boost Software License 1.0 (BSL1.0)
  */
 
-#ifndef IMPROVEDBRANCHBOUNDGRAPHBIPARTITIONINGDELTACONTRIBNVFREELOGIC_H_
-#define IMPROVEDBRANCHBOUNDGRAPHBIPARTITIONINGDELTACONTRIBNVFREELOGIC_H_
+#ifndef BBGRAPHBIPARTITIONINGFREELOGIC_H_
+#define BBGRAPHBIPARTITIONINGFREELOGIC_H_
 
 #include "pheet/pheet.h"
 #include "../graph_helpers.h"
@@ -18,14 +18,14 @@
 namespace pheet {
 
 template <class Pheet, class SubProblem>
-class ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic {
+class BBGraphBipartitioningFREELogic {
 public:
-	typedef ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubProblem> Self;
+	typedef BBGraphBipartitioningFREELogic<Pheet, SubProblem> Self;
 	typedef typename SubProblem::Set Set;
 
-	ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic(SubProblem* sub_problem);
-	ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic(SubProblem* sub_problem, Self const& other);
-	~ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic();
+	BBGraphBipartitioningFREELogic(SubProblem* sub_problem);
+	BBGraphBipartitioningFREELogic(SubProblem* sub_problem, Self const& other);
+	~BBGraphBipartitioningFREELogic();
 
 	void init_root();
 	size_t get_next_vertex();
@@ -70,7 +70,7 @@ private:
 };
 
 template <class Pheet, class SubProblem>
-ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubProblem>::ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic(SubProblem* sub_problem)
+BBGraphBipartitioningFREELogic<Pheet, SubProblem>::BBGraphBipartitioningFREELogic(SubProblem* sub_problem)
   : sub_problem(sub_problem), cut(0), lb(0), nv(0), contrib_sum(0) {
   for (int i=0; i<2; i++) {
     weights[i] = new size_t[sub_problem->size];
@@ -110,7 +110,7 @@ ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubProblem>
 }
 
 template <class Pheet, class SubProblem>
-ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubProblem>::ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic(SubProblem* sub_problem, Self const& other)
+BBGraphBipartitioningFREELogic<Pheet, SubProblem>::BBGraphBipartitioningFREELogic(SubProblem* sub_problem, Self const& other)
   : sub_problem(sub_problem), cut(other.cut), lb(other.lb), nv(other.nv), contrib_sum(other.contrib_sum), deg0(other.deg0), max_free(other.max_free) {
     for (int i=0; i<2; i++) {
       weights[i] = new size_t[sub_problem->size];
@@ -129,7 +129,7 @@ ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubProblem>
 }
 
 template <class Pheet, class SubProblem>
-ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubProblem>::~ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic() {
+BBGraphBipartitioningFREELogic<Pheet, SubProblem>::~BBGraphBipartitioningFREELogic() {
   for (int i=0; i<2; i++) {
     delete[] weights[i];
     delete[] scanned[i];
@@ -141,28 +141,28 @@ ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubProblem>
 }
 
 template <class Pheet, class SubProblem>
-void ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubProblem>::init_root() {
+void BBGraphBipartitioningFREELogic<Pheet, SubProblem>::init_root() {
 
 }
 
 template <class Pheet, class SubProblem>
-size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubProblem>::get_next_vertex() {
+size_t BBGraphBipartitioningFREELogic<Pheet, SubProblem>::get_next_vertex() {
 	pheet_assert(sub_problem->sets[2].test(nv));
 	return nv;
 }
 
 template <class Pheet, class SubProblem>
-size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubProblem>::get_cut() {
+size_t BBGraphBipartitioningFREELogic<Pheet, SubProblem>::get_cut() {
 	return cut;
 }
 
 template <class Pheet, class SubProblem>
-size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubProblem>::get_lower_bound() {
+size_t BBGraphBipartitioningFREELogic<Pheet, SubProblem>::get_lower_bound() {
 	return cut + lb;
 }
 
 template <class Pheet, class SubProblem>
-size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubProblem>::get_lowdeg_lower() {
+size_t BBGraphBipartitioningFREELogic<Pheet, SubProblem>::get_lowdeg_lower() {
   size_t subrem[2];
   subrem[0] = sub_problem->k-sub_problem->sets[0].count();
   subrem[1] = (sub_problem->size-sub_problem->k)-sub_problem->sets[1].count();
@@ -173,18 +173,18 @@ size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubP
 }
 
 template <class Pheet, class SubProblem>
-size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubProblem>::get_estimate() {
+size_t BBGraphBipartitioningFREELogic<Pheet, SubProblem>::get_estimate() {
 	pheet_assert(est + contrib_sum >= lb);
 	return get_cut() + est + contrib_sum;
 }
 
 template <class Pheet, class SubProblem>
-size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubProblem>::get_upper_bound() {
+size_t BBGraphBipartitioningFREELogic<Pheet, SubProblem>::get_upper_bound() {
 	return get_cut() + ub + contrib_sum;
 }
 
 template <class Pheet, class SubProblem>
-size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubProblem>::get_minnode(uint8_t set) {
+size_t BBGraphBipartitioningFREELogic<Pheet, SubProblem>::get_minnode(uint8_t set) {
   // only one free
 
   size_t w = sub_problem->sets[2]._Find_first();
@@ -214,7 +214,7 @@ size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubP
 }
 
 template <class Pheet, class SubProblem>
-size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubProblem>::cc_w() {
+size_t BBGraphBipartitioningFREELogic<Pheet, SubProblem>::cc_w() {
   // determine smallest weight edge in cc with more edges than missing in smallest subset
 	size_t largest_w = std::numeric_limits<size_t>::max();
 
@@ -276,12 +276,12 @@ size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubP
  }
 
 template <class Pheet, class SubProblem>
-bool ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubProblem>::no_edges() {
+bool BBGraphBipartitioningFREELogic<Pheet, SubProblem>::no_edges() {
   return (deg0 == sub_problem->sets[2].count());
  }
 
 template <class Pheet, class SubProblem>
-void ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubProblem>::update(uint8_t set, size_t pos) {
+void BBGraphBipartitioningFREELogic<Pheet, SubProblem>::update(uint8_t set, size_t pos) {
 	pheet_assert((set & 1) == set);
 	pheet_assert(pos < sub_problem->size);
 	pheet_assert(!sub_problem->sets[set].test(pos));
@@ -294,7 +294,7 @@ void ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubPro
 }
 
 template <class Pheet, class SubProblem>
-void ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubProblem>::update_data(uint8_t set, size_t pos) {
+void BBGraphBipartitioningFREELogic<Pheet, SubProblem>::update_data(uint8_t set, size_t pos) {
 	cut += weights[set ^ 1][pos];
 
 	size_t f, j;
@@ -457,7 +457,7 @@ void ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubPro
 }
 
 template <class Pheet, class SubProblem>
-void ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubProblem>::bulk_update(uint8_t set, Set positions) {
+void BBGraphBipartitioningFREELogic<Pheet, SubProblem>::bulk_update(uint8_t set, Set positions) {
   size_t v = positions._Find_first();
   while(v != positions.size()) {
     //update(set, v); // JLT: can be done cheaper
@@ -481,7 +481,7 @@ void ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubPro
 }
 
 template <class Pheet, class SubProblem>
-void ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubProblem>::assign_deltabound() {
+void BBGraphBipartitioningFREELogic<Pheet, SubProblem>::assign_deltabound() {
   size_t subrem[2];
   subrem[0] = sub_problem->k-sub_problem->sets[0].count();
   subrem[1] = (sub_problem->size-sub_problem->k)-sub_problem->sets[1].count();
@@ -537,14 +537,14 @@ void ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubPro
 
 
 template <class Pheet, class SubProblem>
-bool ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubProblem>::can_complete() {
+bool BBGraphBipartitioningFREELogic<Pheet, SubProblem>::can_complete() {
 	return ((sub_problem->sets[0].count() == sub_problem->k-1) ||
 			(sub_problem->sets[1].count() == (sub_problem->size - sub_problem->k)-1)) ||
 			no_edges();
 }
 
 template <class Pheet, class SubProblem>
-void ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubProblem>::complete_solution() {
+void BBGraphBipartitioningFREELogic<Pheet, SubProblem>::complete_solution() {
 	size_t s;
 	if(sub_problem->sets[0].count() == sub_problem->k-1) {
 		s = 0;
@@ -572,10 +572,10 @@ void ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubPro
 }
 
 template <class Pheet, class SubProblem>
-void ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubProblem>::print_name() {
-	std::cout << "DeltaContribNVFREELogic";
+void BBGraphBipartitioningFREELogic<Pheet, SubProblem>::print_name() {
+	std::cout << "FREELogic";
 }
 
 }
 
-#endif /* IMPROVEDBRANCHBOUNDGRAPHBIPARTITIONINGDELTACONTRIBNVFREELOGIC_H_ */
+#endif /* BBGRAPHBIPARTITIONINGFREELOGIC_H_ */

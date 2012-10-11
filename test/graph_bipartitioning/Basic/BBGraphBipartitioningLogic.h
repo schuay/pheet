@@ -1,13 +1,13 @@
 /*
- * ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic.h
+ * BBGraphBipartitioningLogic.h
  *
  *  Created on: Jan 13, 2012
  *      Author: Martin Wimmer
  *	   License: Boost Software License 1.0 (BSL1.0)
  */
 
-#ifndef IMPROVEDBRANCHBOUNDGRAPHBIPARTITIONINGDELTACONTRIBNVLOGIC_H_
-#define IMPROVEDBRANCHBOUNDGRAPHBIPARTITIONINGDELTACONTRIBNVLOGIC_H_
+#ifndef BBGRAPHBIPARTITIONINGLOGIC_H_
+#define BBGRAPHBIPARTITIONINGLOGIC_H_
 
 #include "pheet/pheet.h"
 #include "../graph_helpers.h"
@@ -18,14 +18,14 @@
 namespace pheet {
 
 template <class Pheet, class SubProblem>
-class ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic {
+class BBGraphBipartitioningLogic {
 public:
-	typedef ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem> Self;
+	typedef BBGraphBipartitioningLogic<Pheet, SubProblem> Self;
 	typedef typename SubProblem::Set Set;
 
-	ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic(SubProblem* sub_problem);
-	ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic(SubProblem* sub_problem, Self const& other);
-	~ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic();
+	BBGraphBipartitioningLogic(SubProblem* sub_problem);
+	BBGraphBipartitioningLogic(SubProblem* sub_problem, Self const& other);
+	~BBGraphBipartitioningLogic();
 
 	void init_root();
 	size_t get_next_vertex();
@@ -62,7 +62,7 @@ private:
 };
 
 template <class Pheet, class SubProblem>
-ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic(SubProblem* sub_problem)
+BBGraphBipartitioningLogic<Pheet, SubProblem>::BBGraphBipartitioningLogic(SubProblem* sub_problem)
 : sub_problem(sub_problem), cut(0), lb(0), nv(0), ub(0), contrib_sum(0) {
 	weights[0] = new size_t[sub_problem->size];
 	weights[1] = new size_t[sub_problem->size];
@@ -88,7 +88,7 @@ ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::Im
 }
 
 template <class Pheet, class SubProblem>
-ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic(SubProblem* sub_problem, Self const& other)
+BBGraphBipartitioningLogic<Pheet, SubProblem>::BBGraphBipartitioningLogic(SubProblem* sub_problem, Self const& other)
 : sub_problem(sub_problem), cut(other.cut), lb(other.lb), nv(other.nv), ub(other.ub), contrib_sum(other.contrib_sum) {
 	weights[0] = new size_t[sub_problem->size];
 	weights[1] = new size_t[sub_problem->size];
@@ -99,51 +99,51 @@ ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::Im
 }
 
 template <class Pheet, class SubProblem>
-ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::~ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic() {
+BBGraphBipartitioningLogic<Pheet, SubProblem>::~BBGraphBipartitioningLogic() {
 	delete[] weights[0];
 	delete[] weights[1];
 	delete[] contributions;
 }
 
 template <class Pheet, class SubProblem>
-void ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::init_root() {
+void BBGraphBipartitioningLogic<Pheet, SubProblem>::init_root() {
 
 }
 
 template <class Pheet, class SubProblem>
-size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::get_next_vertex() {
+size_t BBGraphBipartitioningLogic<Pheet, SubProblem>::get_next_vertex() {
 	pheet_assert(sub_problem->sets[2].test(nv));
 	return nv;
 }
 
 template <class Pheet, class SubProblem>
-size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::get_cut() {
+size_t BBGraphBipartitioningLogic<Pheet, SubProblem>::get_cut() {
 	return cut;
 }
 
 template <class Pheet, class SubProblem>
-size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::get_lower_bound() {
+size_t BBGraphBipartitioningLogic<Pheet, SubProblem>::get_lower_bound() {
 	return get_cut() + lb;
 }
 /*
 template <class Pheet, class SubProblem>
-size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::get_lowdeg_lower() {
+size_t BBGraphBipartitioningLogic<Pheet, SubProblem>::get_lowdeg_lower() {
   return 0;
 }*/
 
 template <class Pheet, class SubProblem>
-size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::get_estimate() {
+size_t BBGraphBipartitioningLogic<Pheet, SubProblem>::get_estimate() {
 //	return get_cut() + ((lb + ub + contrib_sum) >> 1);
 	return get_cut() + lb + contrib_sum;
 }
 
 template <class Pheet, class SubProblem>
-size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::get_upper_bound() {
+size_t BBGraphBipartitioningLogic<Pheet, SubProblem>::get_upper_bound() {
 	return get_cut() + ub + contrib_sum;
 }
 
 template <class Pheet, class SubProblem>
-size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::get_minnode(uint8_t set) {
+size_t BBGraphBipartitioningLogic<Pheet, SubProblem>::get_minnode(uint8_t set) {
   // only one free
 
   size_t fweight;
@@ -188,18 +188,18 @@ size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProbl
 }
 /*
 template <class Pheet, class SubProblem>
-size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::cc_w(size_t largest_w) {
+size_t BBGraphBipartitioningLogic<Pheet, SubProblem>::cc_w(size_t largest_w) {
   return 0;
 }
 */
 /*
 template <class Pheet, class SubProblem>
-bool ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::no_edges() {
+bool BBGraphBipartitioningLogic<Pheet, SubProblem>::no_edges() {
   return 0;
  }
 */
 template <class Pheet, class SubProblem>
-void ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::update(uint8_t set, size_t pos) {
+void BBGraphBipartitioningLogic<Pheet, SubProblem>::update(uint8_t set, size_t pos) {
 	pheet_assert((set & 1) == set);
 	pheet_assert(pos < sub_problem->size);
 	pheet_assert(!sub_problem->sets[set].test(pos));
@@ -212,7 +212,7 @@ void ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem
 }
 
 template <class Pheet, class SubProblem>
-void ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::update_data(uint8_t set, size_t pos) {
+void BBGraphBipartitioningLogic<Pheet, SubProblem>::update_data(uint8_t set, size_t pos) {
 	cut += weights[set ^ 1][pos];
 
 	for(size_t i = 0; i < sub_problem->graph[pos].num_edges; ++i) {
@@ -265,7 +265,7 @@ void ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem
 }
 
 template <class Pheet, class SubProblem>
-void ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::bulk_update(uint8_t set, Set positions) {
+void BBGraphBipartitioningLogic<Pheet, SubProblem>::bulk_update(uint8_t set, Set positions) {
 	size_t current_bit = positions._Find_first();
 	while(current_bit != positions.size()) {
 		update_data(set, current_bit);
@@ -274,13 +274,13 @@ void ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem
 }
 
 template <class Pheet, class SubProblem>
-bool ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::can_complete() {
+bool BBGraphBipartitioningLogic<Pheet, SubProblem>::can_complete() {
 	return ((sub_problem->sets[0].count() == sub_problem->k-1) ||
 			(sub_problem->sets[1].count() == (sub_problem->size - sub_problem->k)-1));
 }
 
 template <class Pheet, class SubProblem>
-void ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::complete_solution() {
+void BBGraphBipartitioningLogic<Pheet, SubProblem>::complete_solution() {
 	size_t s;
 	if(sub_problem->sets[0].count() == sub_problem->k-1) {
 		s = 0;
@@ -305,10 +305,10 @@ void ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem
 }
 
 template <class Pheet, class SubProblem>
-void ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::print_name() {
-	std::cout << "DeltaContribNVLogic";
+void BBGraphBipartitioningLogic<Pheet, SubProblem>::print_name() {
+	std::cout << "Logic";
 }
 
 }
 
-#endif /* IMPROVEDBRANCHBOUNDGRAPHBIPARTITIONINGDELTACONTRIBNVLOGIC_H_ */
+#endif /* BBGRAPHBIPARTITIONINGLOGIC_H_ */

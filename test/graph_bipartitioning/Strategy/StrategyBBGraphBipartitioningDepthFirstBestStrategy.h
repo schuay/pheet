@@ -1,13 +1,13 @@
 /*
- * ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy.h
+ * StrategyBBGraphBipartitioningDepthFirstBestStrategy.h
  *
  *  Created on: Jan 12, 2012
  *      Author: Martin Wimmer
  *	   License: Boost Software License 1.0 (BSL1.0)
  */
 
-#ifndef IMPROVEDSTRATEGYBRANCHBOUNDGRAPHBIPARTITIONINGDEPTHFIRSTBESTSTRATEGY_H_
-#define IMPROVEDSTRATEGYBRANCHBOUNDGRAPHBIPARTITIONINGDEPTHFIRSTBESTSTRATEGY_H_
+#ifndef STRATEGYBBGRAPHBIPARTITIONINGDEPTHFIRSTBESTSTRATEGY_H_
+#define STRATEGYBBGRAPHBIPARTITIONINGDEPTHFIRSTBESTSTRATEGY_H_
 
 #include "pheet/pheet.h"
 #include "pheet/sched/strategies/UserDefinedPriority/UserDefinedPriority.h"
@@ -15,10 +15,10 @@
 namespace pheet {
 
 template <class Pheet, class SubProblem>
-class ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy {
+class StrategyBBGraphBipartitioningDepthFirstBestStrategy {
 public:
-	ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy();
-	~ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy();
+	StrategyBBGraphBipartitioningDepthFirstBestStrategy();
+	~StrategyBBGraphBipartitioningDepthFirstBestStrategy();
 
 	UserDefinedPriority<Pheet> operator()(SubProblem* sub_problem);
 
@@ -26,17 +26,17 @@ public:
 };
 
 template <class Pheet, class SubProblem>
-inline ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy<Pheet, SubProblem>::ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy() {
+inline StrategyBBGraphBipartitioningDepthFirstBestStrategy<Pheet, SubProblem>::StrategyBBGraphBipartitioningDepthFirstBestStrategy() {
 
 }
 
 template <class Pheet, class SubProblem>
-inline ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy<Pheet, SubProblem>::~ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy() {
+inline StrategyBBGraphBipartitioningDepthFirstBestStrategy<Pheet, SubProblem>::~StrategyBBGraphBipartitioningDepthFirstBestStrategy() {
 
 }
 
 template <class Pheet, class SubProblem>
-UserDefinedPriority<Pheet> ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy<Pheet, SubProblem>::operator()(SubProblem* sub_problem) {
+UserDefinedPriority<Pheet> StrategyBBGraphBipartitioningDepthFirstBestStrategy<Pheet, SubProblem>::operator()(SubProblem* sub_problem) {
 	size_t ubc = sub_problem->get_global_upper_bound();
 	size_t lb = sub_problem->get_lower_bound();
 	if(ubc < lb) {
@@ -56,10 +56,10 @@ UserDefinedPriority<Pheet> ImprovedStrategyBranchBoundGraphBipartitioningDepthFi
 }
 
 template <class Pheet, class SubProblem>
-inline void ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy<Pheet, SubProblem>::print_name() {
+inline void StrategyBBGraphBipartitioningDepthFirstBestStrategy<Pheet, SubProblem>::print_name() {
 	std::cout << "DepthFirstBestStrategy";
 }
 
 }
 
-#endif /* IMPROVEDSTRATEGYBRANCHBOUNDGRAPHBIPARTITIONINGDEPTHFIRSTBESTSTRATEGY_H_ */
+#endif /* STRATEGYBBGRAPHBIPARTITIONINGDEPTHFIRSTBESTSTRATEGY_H_ */

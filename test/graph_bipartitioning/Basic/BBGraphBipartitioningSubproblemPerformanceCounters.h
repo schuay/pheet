@@ -1,13 +1,13 @@
 /*
- * ImprovedBranchBoundGraphBipartitioningSubproblemPerformanceCounters.h
+ * BBGraphBipartitioningSubproblemPerformanceCounters.h
  *
  *  Created on: Jan 12, 2012
  *      Author: Martin Wimmer
  *	   License: Boost Software License 1.0 (BSL1.0)
  */
 
-#ifndef IMPROVEDBRANCHBOUNDGRAPHBIPARTITIONINGSUBPROBLEMPERFORMANCECOUNTERS_H_
-#define IMPROVEDBRANCHBOUNDGRAPHBIPARTITIONINGSUBPROBLEMPERFORMANCECOUNTERS_H_
+#ifndef BBGRAPHBIPARTITIONINGSUBPROBLEMPERFORMANCECOUNTERS_H_
+#define BBGRAPHBIPARTITIONINGSUBPROBLEMPERFORMANCECOUNTERS_H_
 
 #include "pheet/pheet.h"
 
@@ -21,11 +21,11 @@
 namespace pheet {
 
 template <class Pheet>
-class ImprovedBranchBoundGraphBipartitioningSubproblemPerformanceCounters {
+class BBGraphBipartitioningSubproblemPerformanceCounters {
 public:
-	ImprovedBranchBoundGraphBipartitioningSubproblemPerformanceCounters();
-	ImprovedBranchBoundGraphBipartitioningSubproblemPerformanceCounters(ImprovedBranchBoundGraphBipartitioningSubproblemPerformanceCounters<Pheet>& other);
-	~ImprovedBranchBoundGraphBipartitioningSubproblemPerformanceCounters();
+	BBGraphBipartitioningSubproblemPerformanceCounters();
+	BBGraphBipartitioningSubproblemPerformanceCounters(BBGraphBipartitioningSubproblemPerformanceCounters<Pheet>& other);
+	~BBGraphBipartitioningSubproblemPerformanceCounters();
 
 	static void print_headers();
 	void print_values();
@@ -40,13 +40,13 @@ public:
 
 
 template <class Pheet>
-inline ImprovedBranchBoundGraphBipartitioningSubproblemPerformanceCounters<Pheet>::ImprovedBranchBoundGraphBipartitioningSubproblemPerformanceCounters()
+inline BBGraphBipartitioningSubproblemPerformanceCounters<Pheet>::BBGraphBipartitioningSubproblemPerformanceCounters()
 {
 
 }
 
 template <class Pheet>
-inline ImprovedBranchBoundGraphBipartitioningSubproblemPerformanceCounters<Pheet>::ImprovedBranchBoundGraphBipartitioningSubproblemPerformanceCounters(ImprovedBranchBoundGraphBipartitioningSubproblemPerformanceCounters<Pheet>& other)
+inline BBGraphBipartitioningSubproblemPerformanceCounters<Pheet>::BBGraphBipartitioningSubproblemPerformanceCounters(BBGraphBipartitioningSubproblemPerformanceCounters<Pheet>& other)
 :num_upper_bound_changes(other.num_upper_bound_changes),
  num_allocated_subproblems(other.num_allocated_subproblems),
  memory_allocation_time(other.memory_allocation_time),
@@ -57,12 +57,12 @@ inline ImprovedBranchBoundGraphBipartitioningSubproblemPerformanceCounters<Pheet
 }
 
 template <class Pheet>
-inline ImprovedBranchBoundGraphBipartitioningSubproblemPerformanceCounters<Pheet>::~ImprovedBranchBoundGraphBipartitioningSubproblemPerformanceCounters() {
+inline BBGraphBipartitioningSubproblemPerformanceCounters<Pheet>::~BBGraphBipartitioningSubproblemPerformanceCounters() {
 
 }
 
 template <class Pheet>
-inline void ImprovedBranchBoundGraphBipartitioningSubproblemPerformanceCounters<Pheet>::print_headers() {
+inline void BBGraphBipartitioningSubproblemPerformanceCounters<Pheet>::print_headers() {
 	BasicPerformanceCounter<Pheet, graph_bipartitioning_test_count_upper_bound_changes>::print_header("num_upper_bound_changes\t");
 	BasicPerformanceCounter<Pheet, graph_bipartitioning_test_count_allocated_subproblems>::print_header("num_allocated_subproblems\t");
 	TimePerformanceCounter<Pheet, graph_bipartitioning_test_measure_memory_allocation_time>::print_header("memory_allocation_time\t");
@@ -71,7 +71,7 @@ inline void ImprovedBranchBoundGraphBipartitioningSubproblemPerformanceCounters<
 }
 
 template <class Pheet>
-inline void ImprovedBranchBoundGraphBipartitioningSubproblemPerformanceCounters<Pheet>::print_values() {
+inline void BBGraphBipartitioningSubproblemPerformanceCounters<Pheet>::print_values() {
 	num_upper_bound_changes.print("%d\t");
 	num_allocated_subproblems.print("%d\t");
 	memory_allocation_time.print("%f\t");
@@ -82,4 +82,4 @@ inline void ImprovedBranchBoundGraphBipartitioningSubproblemPerformanceCounters<
 
 }
 
-#endif /* IMPROVEDBRANCHBOUNDGRAPHBIPARTITIONINGSUBPROBLEMPERFORMANCECOUNTERS_H_ */
+#endif /* BBGRAPHBIPARTITIONINGSUBPROBLEMPERFORMANCECOUNTERS_H_ */

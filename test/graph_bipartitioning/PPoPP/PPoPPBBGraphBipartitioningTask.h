@@ -1,30 +1,30 @@
 /*
- * ImprovedStrategyBranchBoundGraphBipartitioningTask.h
+ * StrategyBBGraphBipartitioningTask.h
  *
  *  Created on: Dec 5, 2011
  *      Author: Martin Wimmer
  *	   License: Boost Software License 1.0 (BSL1.0)
  */
 
-#ifndef PPOPPIMPROVEDSTRATEGYBRANCHBOUNDGRAPHBIPARTITIONINGTASK_H_
-#define PPOPPIMPROVEDSTRATEGYBRANCHBOUNDGRAPHBIPARTITIONINGTASK_H_
+#ifndef PPOPPBBGRAPHBIPARTITIONINGTASK_H_
+#define PPOPPBBGRAPHBIPARTITIONINGTASK_H_
 
-#include "../ImprovedBranchBound/ImprovedBranchBoundGraphBipartitioningSubproblem.h"
-#include "../ImprovedStrategyBranchBound/ImprovedStrategyBranchBoundGraphBipartitioningPerformanceCounters.h"
+#include "../Basic/BBGraphBipartitioningSubproblem.h"
+#include "../Strategy/StrategyBBGraphBipartitioningPerformanceCounters.h"
 
 namespace pheet {
 
 template <class Pheet, template <class P, class SP> class Logic, template <class P, class SubProblem> class SchedulingStrategy, size_t MaxSize = 64>
-class PPoPPImprovedStrategyBranchBoundGraphBipartitioningTask : public Pheet::Task {
+class PPoPPBBGraphBipartitioningTask : public Pheet::Task {
 public:
-	typedef PPoPPImprovedStrategyBranchBoundGraphBipartitioningTask<Pheet, Logic, SchedulingStrategy, MaxSize> Self;
+	typedef PPoPPBBGraphBipartitioningTask<Pheet, Logic, SchedulingStrategy, MaxSize> Self;
 	typedef GraphBipartitioningSolution<MaxSize> Solution;
 	typedef MaxReducer<Pheet, Solution> SolutionReducer;
-	typedef ImprovedStrategyBranchBoundGraphBipartitioningPerformanceCounters<Pheet> PerformanceCounters;
-	typedef ImprovedBranchBoundGraphBipartitioningSubproblem<Pheet, Logic, MaxSize> SubProblem;
+	typedef StrategyBBGraphBipartitioningPerformanceCounters<Pheet> PerformanceCounters;
+	typedef BBGraphBipartitioningSubproblem<Pheet, Logic, MaxSize> SubProblem;
 
-	PPoPPImprovedStrategyBranchBoundGraphBipartitioningTask(SubProblem* sub_problem, SolutionReducer& best, PerformanceCounters& pc);
-	virtual ~PPoPPImprovedStrategyBranchBoundGraphBipartitioningTask();
+	PPoPPBBGraphBipartitioningTask(SubProblem* sub_problem, SolutionReducer& best, PerformanceCounters& pc);
+	virtual ~PPoPPBBGraphBipartitioningTask();
 
 	virtual void operator()();
 
@@ -36,20 +36,20 @@ typedef SchedulingStrategy<Pheet, SubProblem> Strategy; // strategy;
 };
 
 template <class Pheet, template <class P, class SubProblem> class Logic, template <class P, class SubProblem> class SchedulingStrategy, size_t MaxSize>
-PPoPPImprovedStrategyBranchBoundGraphBipartitioningTask<Pheet, Logic, SchedulingStrategy, MaxSize>::PPoPPImprovedStrategyBranchBoundGraphBipartitioningTask(SubProblem* sub_problem, SolutionReducer& best, PerformanceCounters& pc)
+PPoPPBBGraphBipartitioningTask<Pheet, Logic, SchedulingStrategy, MaxSize>::PPoPPBBGraphBipartitioningTask(SubProblem* sub_problem, SolutionReducer& best, PerformanceCounters& pc)
 : sub_problem(sub_problem), best(best), pc(pc) {
 
 }
 
 template <class Pheet, template <class P, class SubProblem> class Logic, template <class P, class SubProblem> class SchedulingStrategy, size_t MaxSize>
-PPoPPImprovedStrategyBranchBoundGraphBipartitioningTask<Pheet, Logic, SchedulingStrategy, MaxSize>::~PPoPPImprovedStrategyBranchBoundGraphBipartitioningTask() {
+PPoPPBBGraphBipartitioningTask<Pheet, Logic, SchedulingStrategy, MaxSize>::~PPoPPBBGraphBipartitioningTask() {
 	if(sub_problem != NULL) {
 		delete sub_problem;
 	}
 }
 
 template <class Pheet, template <class P, class SubProblem> class Logic, template <class P, class SubProblem> class SchedulingStrategy, size_t MaxSize>
-void PPoPPImprovedStrategyBranchBoundGraphBipartitioningTask<Pheet, Logic, SchedulingStrategy, MaxSize>::operator()() {
+void PPoPPBBGraphBipartitioningTask<Pheet, Logic, SchedulingStrategy, MaxSize>::operator()() {
 	if(sub_problem->get_lower_bound() >= sub_problem->get_global_upper_bound()) {
 		pc.num_irrelevant_tasks.incr();
 		return;
@@ -87,4 +87,4 @@ void PPoPPImprovedStrategyBranchBoundGraphBipartitioningTask<Pheet, Logic, Sched
 
 }
 
-#endif /* IMPROVEDSTRATEGYBRANCHBOUNDGRAPHBIPARTITIONINGTASK_H_ */
+#endif /* STRATEGYBBGRAPHBIPARTITIONINGTASK_H_ */
