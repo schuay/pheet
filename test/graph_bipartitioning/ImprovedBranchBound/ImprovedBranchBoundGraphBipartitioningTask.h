@@ -23,21 +23,20 @@ public:
 	typedef ImprovedBranchBoundGraphBipartitioningPerformanceCounters<Pheet> PerformanceCounters;
 	typedef ImprovedBranchBoundGraphBipartitioningSubproblem<Pheet, Logic, MaxSize> SubProblem;
 
-	ImprovedBranchBoundGraphBipartitioningTask(SubProblem* sub_problem, size_t* upper_bound, SolutionReducer& best, PerformanceCounters& pc);
+	ImprovedBranchBoundGraphBipartitioningTask(SubProblem* sub_problem, SolutionReducer& best, PerformanceCounters& pc);
 	virtual ~ImprovedBranchBoundGraphBipartitioningTask();
 
 	virtual void operator()();
 
 private:
 	SubProblem* sub_problem;
-	size_t* upper_bound;
 	SolutionReducer best;
 	PerformanceCounters pc;
 };
 
 template <class Pheet, template <class P, class SP> class Logic, size_t MaxSize>
-ImprovedBranchBoundGraphBipartitioningTask<Pheet, Logic, MaxSize>::ImprovedBranchBoundGraphBipartitioningTask(SubProblem* sub_problem, size_t* upper_bound, SolutionReducer& best, PerformanceCounters& pc)
-: sub_problem(sub_problem), upper_bound(upper_bound), best(best), pc(pc) {
+ImprovedBranchBoundGraphBipartitioningTask<Pheet, Logic, MaxSize>::ImprovedBranchBoundGraphBipartitioningTask(SubProblem* sub_problem, SolutionReducer& best, PerformanceCounters& pc)
+: sub_problem(sub_problem), best(best), pc(pc) {
 
 }
 
@@ -50,32 +49,40 @@ ImprovedBranchBoundGraphBipartitioningTask<Pheet, Logic, MaxSize>::~ImprovedBran
 
 template <class Pheet, template <class P, class SP> class Logic, size_t MaxSize>
 void ImprovedBranchBoundGraphBipartitioningTask<Pheet, Logic, MaxSize>::operator()() {
-	if(sub_problem->get_lower_bound() >= *upper_bound) {
+	if(sub_problem->get_lower_bound() >= sub_problem->get_global_upper_bound()) {
 		pc.num_irrelevant_tasks.incr();
 		return;
-	}
+	}/* else if (sub_problem->get_lowdeg_lower()+1000>=*upper_bound) {
+	  // "1" change to currently largest free edge weight
+	  // some possibility to cut, compute cc - JLT: move into logic
+	  if (sub_problem->get_lowdeg_lower()+sub_problem->cc_w(1000)>=*upper_bound) {
+	    return; // actually irrelevant
+	  }
+	}*/
 
 	SubProblem* sub_problem2 =
 			sub_problem->split(pc.subproblem_pc);
 
-	if(sub_problem->is_solution()) {
-		sub_problem->update_solution(upper_bound, best, pc.subproblem_pc);
+	if(sub_problem->can_complete(pc.subproblem_pc)) {
+		sub_problem->complete_solution(pc.subproblem_pc);
+		sub_problem->update_solution(best, pc.subproblem_pc);
 	}
-	else if(sub_problem->get_lower_bound() < *upper_bound) {
+	else if(sub_problem->get_lower_bound() < sub_problem->get_global_upper_bound()) {
 		Pheet::template
-			spawn<Self>(sub_problem, upper_bound, best, pc);
+			spawn<Self>(sub_problem, best, pc);
 		// Make sure subproblem doesn't get deleted in destructor
 		sub_problem = NULL;
 	}
 
-	if(sub_problem2->is_solution()) {
-		sub_problem2->update_solution(upper_bound, best, pc.subproblem_pc);
+	if(sub_problem2->can_complete(pc.subproblem_pc)) {
+		sub_problem2->complete_solution(pc.subproblem_pc);
+		sub_problem2->update_solution(best, pc.subproblem_pc);
 		delete sub_problem2;
 	}
-	else if(sub_problem2->get_lower_bound() < *upper_bound) {
+	else if(sub_problem2->get_lower_bound() < sub_problem2->get_global_upper_bound()) {
 		Pheet::template
 		  //call<Self>(sub_problem2, upper_bound, best, pc);
-			spawn<Self>(sub_problem2, upper_bound, best, pc);
+			spawn<Self>(sub_problem2, best, pc);
 	}
 	else {
 		delete sub_problem2;

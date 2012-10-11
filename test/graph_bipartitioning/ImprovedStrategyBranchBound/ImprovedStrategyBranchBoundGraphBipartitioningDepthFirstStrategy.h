@@ -20,7 +20,7 @@ public:
 	ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstStrategy();
 	~ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstStrategy();
 
-	UserDefinedPriority<Pheet> operator()(SubProblem* sub_problem, size_t* upper_bound);
+	UserDefinedPriority<Pheet> operator()(SubProblem* sub_problem);
 
 	static void print_name();
 };
@@ -36,7 +36,7 @@ inline ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstStrategy<Pheet, S
 }
 
 template <class Pheet, class SubProblem>
-UserDefinedPriority<Pheet> ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstStrategy<Pheet, SubProblem>::operator()(SubProblem* sub_problem, size_t* upper_bound) {
+UserDefinedPriority<Pheet> ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstStrategy<Pheet, SubProblem>::operator()(SubProblem* sub_problem) {
 	// Depth: assumption: good for pop, bad for steal
 	size_t depth = sub_problem->sets[0].count() + sub_problem->sets[1].count();
 

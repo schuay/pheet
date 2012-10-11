@@ -23,7 +23,7 @@ public:
 	ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategyImpl();
 	~ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategyImpl();
 
-	Strategy<Pheet> operator()(SubProblem* sub_problem, size_t* upper_bound);
+	Strategy<Pheet> operator()(SubProblem* sub_problem);
 
 	static void print_name();
 };
@@ -39,7 +39,7 @@ inline ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategyImpl<Pheet, Str
 }
 
 template <class Pheet, template <class P> class Strategy, class SubProblem>
-inline Strategy<Pheet> ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategyImpl<Pheet, Strategy, SubProblem>::operator()(SubProblem* sub_problem, size_t* upper_bound) {
+inline Strategy<Pheet> ImprovedStrategyBranchBoundGraphBipartitioningAutoStrategyImpl<Pheet, Strategy, SubProblem>::operator()(SubProblem* sub_problem) {
 	return Strategy<Pheet>();
 }
 

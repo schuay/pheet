@@ -76,9 +76,9 @@ void ImprovedBranchBoundGraphBipartitioningImpl<Pheet, Logic, MaxSize>::operator
 	size_t ub = std::numeric_limits< size_t >::max();
 
 	size_t k = size >> 1;
-	SubProblem* prob = new SubProblem(data, size, k);
+	SubProblem* prob = new SubProblem(data, size, k, &ub);
 	Pheet::template
-		finish<BBTask>(prob, &ub, best, pc);
+		finish<BBTask>(prob, best, pc);
 
 	solution = best.get_max();
 	pheet_assert(solution.weight == ub);

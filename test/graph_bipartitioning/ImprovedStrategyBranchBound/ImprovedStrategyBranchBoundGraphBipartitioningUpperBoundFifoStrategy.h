@@ -18,7 +18,7 @@ template <class Pheet, class SubProblem>
 class ImprovedStrategyBranchBoundGraphBipartitioningUpperBoundFifoStrategy : public BaseStrategy<Pheet> {
 public:
 	typedef ImprovedStrategyBranchBoundGraphBipartitioningUpperBoundFifoStrategy<Pheet, SubProblem> Self;
-	ImprovedStrategyBranchBoundGraphBipartitioningUpperBoundFifoStrategy(SubProblem* sub_problem, size_t* upper_bound);
+	ImprovedStrategyBranchBoundGraphBipartitioningUpperBoundFifoStrategy(SubProblem* sub_problem);
 	ImprovedStrategyBranchBoundGraphBipartitioningUpperBoundFifoStrategy(Self const& other);
 	ImprovedStrategyBranchBoundGraphBipartitioningUpperBoundFifoStrategy(Self const&& other);
 	~ImprovedStrategyBranchBoundGraphBipartitioningUpperBoundFifoStrategy();
@@ -34,7 +34,7 @@ private:
 };
 
 template <class Pheet, class SubProblem>
-ImprovedStrategyBranchBoundGraphBipartitioningUpperBoundFifoStrategy<Pheet, SubProblem>::ImprovedStrategyBranchBoundGraphBipartitioningUpperBoundFifoStrategy(SubProblem* sub_problem, size_t* upper_bound)
+ImprovedStrategyBranchBoundGraphBipartitioningUpperBoundFifoStrategy<Pheet, SubProblem>::ImprovedStrategyBranchBoundGraphBipartitioningUpperBoundFifoStrategy(SubProblem* sub_problem)
 :pop_prio(std::numeric_limits< prio_t >::max() - sub_problem->get_upper_bound())
 {
 

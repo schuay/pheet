@@ -20,7 +20,7 @@ public:
     typedef PPoPPImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy<Pheet,SubProblem> Self;
     typedef typename Pheet::Environment::BaseStrategy BaseStrategy;
 
-    PPoPPImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy(SubProblem* sub_problem, size_t* upper_bound);
+    PPoPPImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy(SubProblem* sub_problem);
 	PPoPPImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy(Self const& other);
 	PPoPPImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy(Self && other);
 
@@ -42,15 +42,15 @@ private:
 };
 
 template <class Pheet, class SubProblem>
-inline PPoPPImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy<Pheet, SubProblem>::PPoPPImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy(SubProblem* sub_problem, size_t* upper_bound)
+inline PPoPPImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy<Pheet, SubProblem>::PPoPPImprovedStrategyBranchBoundGraphBipartitioningBestFirstStrategy(SubProblem* sub_problem)
 :depth(std::max(sub_problem->sets[0].count(), sub_problem->sets[1].count())),
  lower_bound(sub_problem->get_lower_bound()),
 	// Difference to upper bound - larger is better
 	// One maybe good, maybe bad decision: Always use the value relative to the current upper bound
 	// Why: gives older elements a slight advantage. They will be rechecked and maybe dropped altogether
 	// Also problematic if upper bound is near the limits of size_t as we may have an overflow (shouldn't be a problem in our case)
- diff(*upper_bound - lower_bound) {
-	size_t ub = *upper_bound;
+ diff(sub_problem->get_global_upper_bound() - lower_bound) {
+	size_t ub = sub_problem->get_global_upper_bound();
 	size_t w = (ub)/(sub_problem->get_lower_bound());
 	size_t w2 = std::min((size_t)28, sub_problem->size - sub_problem->sets[0].count() - sub_problem->sets[1].count());
 	this->set_transitive_weight((size_t)1 << (std::min(w, w2) + 2));

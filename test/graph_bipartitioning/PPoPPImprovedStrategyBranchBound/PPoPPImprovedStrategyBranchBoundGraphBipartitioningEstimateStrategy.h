@@ -20,7 +20,7 @@ public:
     typedef PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy<Pheet,SubProblem> Self;
     typedef typename Pheet::Environment::BaseStrategy BaseStrategy;
 
-    PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy(SubProblem* sub_problem, size_t* estimate);
+    PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy(SubProblem* sub_problem);
 //    PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy(Self const& other);
 //    PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy(Self && other);
 
@@ -52,11 +52,11 @@ private:
 };
 
 template <class Pheet, class SubProblem>
-inline PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy<Pheet, SubProblem>::PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy(SubProblem* sub_problem, size_t* estimate)
+inline PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy<Pheet, SubProblem>::PPoPPImprovedStrategyBranchBoundGraphBipartitioningEstimateStrategy(SubProblem* sub_problem)
 :estimate(sub_problem->get_estimate()),
  uncertainty(sub_problem->get_estimate() - sub_problem->get_lower_bound()) {
 //	size_t depth = sub_problem->sets[0].count() - sub_problem->sets[1].count();
-	size_t ub = *estimate;
+	size_t ub = sub_problem->get_global_upper_bound();;
 	size_t lb = sub_problem->get_lower_bound();
 	if(lb >= ub) {
 		this->set_transitive_weight(1);

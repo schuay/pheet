@@ -20,7 +20,7 @@ public:
 	ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy();
 	~ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy();
 
-	UserDefinedPriority<Pheet> operator()(SubProblem* sub_problem, size_t* upper_bound);
+	UserDefinedPriority<Pheet> operator()(SubProblem* sub_problem);
 
 	static void print_name();
 };
@@ -36,8 +36,8 @@ inline ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy<Phee
 }
 
 template <class Pheet, class SubProblem>
-UserDefinedPriority<Pheet> ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy<Pheet, SubProblem>::operator()(SubProblem* sub_problem, size_t* upper_bound) {
-	size_t ubc = *upper_bound;
+UserDefinedPriority<Pheet> ImprovedStrategyBranchBoundGraphBipartitioningDepthFirstBestStrategy<Pheet, SubProblem>::operator()(SubProblem* sub_problem) {
+	size_t ubc = sub_problem->get_global_upper_bound();
 	size_t lb = sub_problem->get_lower_bound();
 	if(ubc < lb) {
 		// Prioritize this task, as it will immediatly terminate anyway

@@ -20,7 +20,7 @@ public:
 	ImprovedStrategyBranchBoundGraphBipartitioningUpperLowerBoundStrategy();
 	~ImprovedStrategyBranchBoundGraphBipartitioningUpperLowerBoundStrategy();
 
-	UserDefinedPriority<Pheet> operator()(SubProblem* sub_problem, size_t* upper_bound);
+	UserDefinedPriority<Pheet> operator()(SubProblem* sub_problem);
 
 	static void print_name();
 };
@@ -36,7 +36,7 @@ inline ImprovedStrategyBranchBoundGraphBipartitioningUpperLowerBoundStrategy<Phe
 }
 
 template <class Pheet, class SubProblem>
-UserDefinedPriority<Pheet> ImprovedStrategyBranchBoundGraphBipartitioningUpperLowerBoundStrategy<Pheet, SubProblem>::operator()(SubProblem* sub_problem, size_t* upper_bound) {
+UserDefinedPriority<Pheet> ImprovedStrategyBranchBoundGraphBipartitioningUpperLowerBoundStrategy<Pheet, SubProblem>::operator()(SubProblem* sub_problem) {
 	size_t lb = sub_problem->get_lower_bound();
 	size_t ub = sub_problem->get_upper_bound();
 

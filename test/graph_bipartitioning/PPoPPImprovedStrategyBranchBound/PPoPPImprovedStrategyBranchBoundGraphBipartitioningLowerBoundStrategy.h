@@ -20,7 +20,7 @@ public:
     typedef PPoPPImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy<Pheet,SubProblem> Self;
     typedef typename Pheet::Environment::BaseStrategy BaseStrategy;
     
-    PPoPPImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy(SubProblem* sub_problem, size_t* upper_bound);
+    PPoPPImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy(SubProblem* sub_problem);
     PPoPPImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy(Self const& other);
     PPoPPImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy(Self && other);
 
@@ -36,9 +36,9 @@ private:
 };
 
 template <class Pheet, class SubProblem>
-inline PPoPPImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy<Pheet, SubProblem>::PPoPPImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy(SubProblem* sub_problem, size_t* upper_bound)
+inline PPoPPImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy<Pheet, SubProblem>::PPoPPImprovedStrategyBranchBoundGraphBipartitioningLowerBoundStrategy(SubProblem* sub_problem)
 :lower_bound(sub_problem->get_lower_bound()) {
-	size_t ub = *upper_bound;
+	size_t ub = sub_problem->get_global_upper_bound();;
 	size_t w = (ub)/(sub_problem->get_lower_bound() + 1);
 	size_t w2 = std::min((size_t)28, sub_problem->size - sub_problem->sets[0].count() - sub_problem->sets[1].count());
 	this->set_transitive_weight((size_t)1 << (std::min(w, w2) + 2));

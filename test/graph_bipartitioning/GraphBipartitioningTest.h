@@ -125,7 +125,8 @@ GraphVertex* GraphBipartitioningTest<Pheet, Partitioner>::generate_data() {
 			for(size_t j = 0; j < edges[i].size(); ++j) {
 				data[i].edges[j] = edges[i][j];
 			}
-			std::sort(&data[i].edges[0],&data[i].edges[data[i].num_edges],edgeweight_compare());
+			//std::sort(&data[i].edges[0],&data[i].edges[data[i].num_edges],edgeweight_compare());
+			std::sort(data[i].edges,data[i].edges+data[i].num_edges,edgeweight_compare());
 			/*
 			for (size_t j=0;  j < data[i].num_edges; j++) {
 			  std::cout << data[i].edges[j].weight << ' ';

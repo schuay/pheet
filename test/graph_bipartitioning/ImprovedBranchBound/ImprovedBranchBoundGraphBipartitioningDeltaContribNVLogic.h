@@ -36,6 +36,16 @@ public:
 	void update(uint8_t set, size_t pos);
 	void bulk_update(uint8_t set, Set positions);
 
+	size_t get_minnode(uint8_t set);
+//	size_t get_lowdeg_lower();
+//	size_t cc_w(size_t largest_w);
+
+//	bool no_edges();
+//	void assign_deltabound();
+
+	bool can_complete();
+	void complete_solution();
+
 	static void print_name();
 private:
 	SubProblem* sub_problem;
@@ -114,6 +124,11 @@ template <class Pheet, class SubProblem>
 size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::get_lower_bound() {
 	return get_cut() + lb;
 }
+/*
+template <class Pheet, class SubProblem>
+size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::get_lowdeg_lower() {
+  return 0;
+}*/
 
 template <class Pheet, class SubProblem>
 size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::get_estimate() {
@@ -127,7 +142,71 @@ size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProbl
 }
 
 template <class Pheet, class SubProblem>
+size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::get_minnode(uint8_t set) {
+  // only one free
+
+  size_t fweight;
+
+  size_t w = sub_problem->sets[2]._Find_first();
+  fweight = 0;
+  for (size_t i=0; i<sub_problem->graph[w].num_edges; ++i) {
+    if(sub_problem->sets[2].test(sub_problem->graph[w].edges[i].target)) {
+      fweight += sub_problem->graph[w].edges[i].weight;
+    }
+  }
+  
+  size_t mincut, sumcut = 0;
+  size_t v = sub_problem->sets[2]._Find_next(w);
+  while(v != sub_problem->sets[2].size()) {
+    sumcut += weights[set][v];
+    v = sub_problem->sets[2]._Find_next(v);
+  }
+		
+  mincut = sumcut+weights[set^1][w]+fweight;
+
+  v = sub_problem->sets[2]._Find_first();
+  while(v != sub_problem->sets[2].size()) {
+    sumcut += weights[set][v];
+    v = sub_problem->sets[2]._Find_next(v);
+    if (v!=sub_problem->sets[2].size()) {
+      fweight = 0;
+      for (size_t i=0; i<sub_problem->graph[v].num_edges; ++i) {
+	if(sub_problem->sets[2].test(sub_problem->graph[v].edges[i].target)) {
+	  fweight += sub_problem->graph[v].edges[i].weight;
+	}
+      }
+      sumcut -= weights[set][v];
+      if (sumcut+weights[set^1][v]+fweight<mincut) {
+	mincut = sumcut+weights[set^1][v]+fweight;
+	w = v;
+      }
+    }
+  }
+
+  return w;
+}
+/*
+template <class Pheet, class SubProblem>
+size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::cc_w(size_t largest_w) {
+  return 0;
+}
+*/
+/*
+template <class Pheet, class SubProblem>
+bool ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::no_edges() {
+  return 0;
+ }
+*/
+template <class Pheet, class SubProblem>
 void ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::update(uint8_t set, size_t pos) {
+	pheet_assert((set & 1) == set);
+	pheet_assert(pos < sub_problem->size);
+	pheet_assert(!sub_problem->sets[set].test(pos));
+	pheet_assert(sub_problem->sets[2].test(pos));
+
+	sub_problem->sets[2].set(pos, false);
+	sub_problem->sets[set].set(pos);
+
 	cut += weights[set ^ 1][pos];
 
 	for(size_t i = 0; i < sub_problem->graph[pos].num_edges; ++i) {
@@ -186,6 +265,37 @@ void ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem
 		update(set, current_bit);
 		current_bit = positions._Find_next(current_bit);
 	}
+}
+
+template <class Pheet, class SubProblem>
+bool ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::can_complete() {
+	return ((sub_problem->sets[0].count() == sub_problem->k-1) ||
+			(sub_problem->sets[1].count() == (sub_problem->size - sub_problem->k)-1));
+}
+
+template <class Pheet, class SubProblem>
+void ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::complete_solution() {
+	size_t s;
+	if(sub_problem->sets[0].count() == sub_problem->k-1) {
+		s = 0;
+	}
+	else if(sub_problem->sets[1].count() == (sub_problem->size - sub_problem->k)-1) {
+		s = 1;
+	}
+	else {
+		pheet_assert(true);
+	}
+
+	//std::cout<<'#';
+
+	size_t v = get_minnode(s);
+
+	update(s,v);
+
+	sub_problem->sets[1-s] |= sub_problem->sets[2];
+	Set tmp = sub_problem->sets[2];
+	sub_problem->sets[2].reset();
+	bulk_update(1-s, tmp);
 }
 
 template <class Pheet, class SubProblem>

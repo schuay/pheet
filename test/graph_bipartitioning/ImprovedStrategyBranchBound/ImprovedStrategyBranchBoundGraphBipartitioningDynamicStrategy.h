@@ -26,7 +26,7 @@ public:
 	ImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategyImpl();
 	~ImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategyImpl();
 
-	Strategy<Pheet, SubProblem> operator()(SubProblem* sub_problem, size_t* upper_bound);
+	Strategy<Pheet, SubProblem> operator()(SubProblem* sub_problem);
 
 	static void print_name();
 };
@@ -42,8 +42,8 @@ inline ImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategyImpl<Pheet, 
 }
 
 template <class Pheet, template <class P, class SP> class Strategy, class SubProblem>
-inline Strategy<Pheet, SubProblem> ImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategyImpl<Pheet, Strategy, SubProblem>::operator()(SubProblem* sub_problem, size_t* upper_bound) {
-	return Strategy<Pheet, SubProblem>(sub_problem, upper_bound);
+inline Strategy<Pheet, SubProblem> ImprovedStrategyBranchBoundGraphBipartitioningDynamicStrategyImpl<Pheet, Strategy, SubProblem>::operator()(SubProblem* sub_problem) {
+	return Strategy<Pheet, SubProblem>(sub_problem);
 }
 
 template <class Pheet, template <class P, class SP> class Strategy, class SubProblem>
