@@ -34,11 +34,12 @@ public:
 	size_t get_estimate();
 	size_t get_upper_bound();
 	void update(uint8_t set, size_t pos);
+	void update_data(uint8_t set, size_t pos);
 	void bulk_update(uint8_t set, Set positions);
 	
 	size_t get_minnode(uint8_t set);
 	size_t get_lowdeg_lower();
-	size_t cc_w(size_t largest_w);
+	size_t cc_w();
 
 	bool no_edges();
 	void assign_deltabound();
@@ -213,8 +214,9 @@ size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubP
 }
 
 template <class Pheet, class SubProblem>
-size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubProblem>::cc_w(size_t largest_w) {
+size_t ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubProblem>::cc_w() {
   // determine smallest weight edge in cc with more edges than missing in smallest subset
+	size_t largest_w = std::numeric_limits<size_t>::max();
 
   size_t h, t;  // head and tail of queue
   size_t c = 0; // component number
@@ -288,6 +290,11 @@ void ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubPro
 	sub_problem->sets[2].set(pos, false);
 	sub_problem->sets[set].set(pos);
 
+	update_data(set, pos);
+}
+
+template <class Pheet, class SubProblem>
+void ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubProblem>::update_data(uint8_t set, size_t pos) {
 	cut += weights[set ^ 1][pos];
 
 	size_t f, j;
@@ -431,17 +438,18 @@ void ImprovedBranchBoundGraphBipartitioningDeltaContribNVFREELogic<Pheet, SubPro
 	lb += fw;
 	}
 
-	/*  if (max_free<subrem[1-ss]) {
-	  if (cut+lb<=sub_problem->get_global_upper_bound()&&cut+lb+max_w>sub_problem->get_global_upper_bound()) {
+	if (max_free<subrem[1-ss]) {
+	  if (cut+lb<=sub_problem->get_global_upper_bound()&&cut+lb+1000>sub_problem->get_global_upper_bound()) {
 		  // How do I transform this?
-		  if (sub_problem->get_lowdeg_lower()+sub_problem->cc_w(1000)>=*upper_bound) {
+		  lb += +cc_w();
+/*		  if (get_lowdeg_lower()+cc_w(1000)>=sub_problem->get_global_upper_bound()) {
 			  return; // actually irrelevant
-		  }
+		  }*/
 		  //std::cout<<'#';
 			// trigger
 			// cc_w should go here
 	  }
-	}*/
+	}
 
 	//est += fw;
 	// Is this correct (MW?)

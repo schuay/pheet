@@ -30,7 +30,6 @@ public:
 
 private:
 	SubProblem* sub_problem;
-	size_t* upper_bound;
 	SolutionReducer best;
 typedef SchedulingStrategy<Pheet, SubProblem> Strategy; // strategy;
 	PerformanceCounters pc;
@@ -51,7 +50,7 @@ PPoPPImprovedStrategyBranchBoundGraphBipartitioningTask<Pheet, Logic, Scheduling
 
 template <class Pheet, template <class P, class SubProblem> class Logic, template <class P, class SubProblem> class SchedulingStrategy, size_t MaxSize>
 void PPoPPImprovedStrategyBranchBoundGraphBipartitioningTask<Pheet, Logic, SchedulingStrategy, MaxSize>::operator()() {
-	if(sub_problem->get_lower_bound() >= *upper_bound) {
+	if(sub_problem->get_lower_bound() >= sub_problem->get_global_upper_bound()) {
 		pc.num_irrelevant_tasks.incr();
 		return;
 	}

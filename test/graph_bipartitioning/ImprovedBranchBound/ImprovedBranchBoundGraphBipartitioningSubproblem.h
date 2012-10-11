@@ -37,6 +37,10 @@ public:
 	size_t* upper_bound;
 
 	Set sets[3];
+
+	size_t get_global_upper_bound() {
+		return *this->upper_bound;
+	}
 // JLT would like
 // uint8 assigned[size] = 0/1/2 - where is vertex assigned?
 // free[size] = [0,...,size-1]; - list of free vertices
@@ -65,15 +69,13 @@ public:
 	void complete_solution(PerformanceCounters& pc) {
 		logic.complete_solution();
 	}
-	bool is_solution();
+//	bool is_solution();
 	void update(uint8_t set, size_t pos);
 	void update_solution(SolutionReducer& best, PerformanceCounters& pc);
 	size_t get_lower_bound();
 	size_t get_estimate();
 	size_t get_upper_bound();
-	size_t get_global_upper_bound() {
-		return *this->upper_bound;
-	}
+
 //	size_t get_lowdeg_lower();
 //	size_t cc_w(size_t largest_w);
 
@@ -136,12 +138,12 @@ void ImprovedBranchBoundGraphBipartitioningSubproblem<Pheet, LogicT, MaxSize>::u
 
 	logic.update(set, pos); // JLT - sometimes not good
 }
-
+/*
 template <class Pheet, template <class P, class SP> class LogicT, size_t MaxSize>
 bool ImprovedBranchBoundGraphBipartitioningSubproblem<Pheet, LogicT, MaxSize>::is_solution() {
 	return (this->sets[0].count() == this->k) || (this->sets[1].count() == (this->size - this->k));
 }
-
+*/
 template <class Pheet, template <class P, class SP> class LogicT, size_t MaxSize>
 void ImprovedBranchBoundGraphBipartitioningSubproblem<Pheet, LogicT, MaxSize>::update_solution(MaxReducer<Pheet, GraphBipartitioningSolution<MaxSize> >& best, PerformanceCounters& pc) {
 /*	if(this->sets[0].count() == this->k) {

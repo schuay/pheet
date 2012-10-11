@@ -34,6 +34,7 @@ public:
 	size_t get_estimate();
 	size_t get_upper_bound();
 	void update(uint8_t set, size_t pos);
+	void update_data(uint8_t set, size_t pos);
 	void bulk_update(uint8_t set, Set positions);
 
 	size_t get_minnode(uint8_t set);
@@ -207,6 +208,11 @@ void ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem
 	sub_problem->sets[2].set(pos, false);
 	sub_problem->sets[set].set(pos);
 
+	update_data(set, pos);
+}
+
+template <class Pheet, class SubProblem>
+void ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::update_data(uint8_t set, size_t pos) {
 	cut += weights[set ^ 1][pos];
 
 	for(size_t i = 0; i < sub_problem->graph[pos].num_edges; ++i) {
@@ -262,7 +268,7 @@ template <class Pheet, class SubProblem>
 void ImprovedBranchBoundGraphBipartitioningDeltaContribNVLogic<Pheet, SubProblem>::bulk_update(uint8_t set, Set positions) {
 	size_t current_bit = positions._Find_first();
 	while(current_bit != positions.size()) {
-		update(set, current_bit);
+		update_data(set, current_bit);
 		current_bit = positions._Find_next(current_bit);
 	}
 }
