@@ -76,10 +76,10 @@ public:
 
 	void next() {
 		pheet_assert(has_next());
-		check_current_view();
 
 		last_block = block;
 		last_index = block_index;
+		last_block_taken_offset = block->get_taken_offset();
 
 		// Might lead to problems under some relaxed memory consistency models,
 		// since a new size may be available even though the value in the array is still in some cache
@@ -91,7 +91,9 @@ public:
 			}while(block_index < block->get_size() && block->is_taken(block_index, taken_offset));
 
 			while(block_index == block->get_max_size() || (!block->is_active())) {
-				block = block->get_next();
+				DataBlock* tmp = this->acquire_block(block->get_next());
+				block->deregister();
+				block = tmp;
 				block_index = 0;
 			}
 		}while(block_index < block->get_size() && block->is_taken(block_index, taken_offset));
@@ -100,7 +102,7 @@ public:
 	}
 
 	void stealer_push_ref(StealerRef& stealer) {
-		if(!last_block->is_taken(last_index, last_block->get_taken_offset())) {
+		if(!last_block->is_taken(last_index, last_block_taken_offset)) {
 			auto sp = last_block->get_data(last_index).stealer_push;
 			(this->*sp)(stealer);
 		}
@@ -128,14 +130,27 @@ public:
 		task_storage.push(std::move(s), data);
 	}
 private:
-	void check_current_view();
+	DataBlock* acquire_block(DataBlock* const& block) {
+		DataBlock* tmp = block;
+		DataBlock* tmp2;
+		Pheet::Backoff bo;
+		tmp->acquire_block();
+		tmp2 = block;
+		while(tmp2 != tmp) {
+			tmp->deregister();
+			tmp = tmp2;
+			tmp->acquire_block();
+			tmp2 = block;
+		}
+
+		return block;
+	}
 
 	TaskStorage& task_storage;
 
-	View* current_view;
-	View* old_view;
 	DataBlock* last_block;
 	size_t last_index;
+	size_t last_block_taken_offset;
 	DataBlock* block;
 	size_t block_index;
 };
@@ -143,9 +158,7 @@ private:
 template <class Pheet, class TaskStorage, class StealerRef>
 BasicLinkedListStrategyTaskStorageStream<Pheet, TaskStorage, StealerRef>::BasicLinkedListStrategyTaskStorageStream(TaskStorage& task_storage)
 : task_storage(task_storage),
-  current_view(task_storage.acquire_current_view()),
-  old_view(nullptr),
-  block(current_view->get_front()),
+  block(this->acquire_block(task_storage.get_front())),
   block_index(0) {
 
 }
@@ -157,7 +170,7 @@ BasicLinkedListStrategyTaskStorageStream<Pheet, TaskStorage, StealerRef>::~Basic
 		old_view->deregister();
 	current_view->deregister();*/
 }
-
+/*
 template <class Pheet, class TaskStorage, class StealerRef>
 inline void
 BasicLinkedListStrategyTaskStorageStream<Pheet, TaskStorage, StealerRef>::check_current_view() {
@@ -175,7 +188,7 @@ BasicLinkedListStrategyTaskStorageStream<Pheet, TaskStorage, StealerRef>::check_
 		old_view = nullptr;
 	}
 }
-
+*/
 }
 
 #endif /* BASICLINKEDLISTSTRATEGYTASKSTORAGESTREAM_H_ */

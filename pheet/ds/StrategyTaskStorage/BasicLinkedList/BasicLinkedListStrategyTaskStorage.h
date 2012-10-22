@@ -11,7 +11,6 @@
 
 #include "BasicLinkedListStrategyTaskStoragePerformanceCounters.h"
 #include "BasicLinkedListStrategyTaskStorageDataBlock.h"
-#include "BasicLinkedListStrategyTaskStorageView.h"
 #include "BasicLinkedListStrategyTaskStorageStream.h"
 #include "../../StrategyHeap/Basic/BasicStrategyHeap.h"
 //#include "../../StrategyHeap/Volatile2/VolatileStrategyHeap2.h"
@@ -73,10 +72,10 @@ private:
 	TaskStorage* task_storage;
 };
 
-template <class View>
-struct BasicLinkedListStrategyTaskStorageViewReuseCheck {
-	bool operator()(View& v) {
-		return v.try_reuse();
+template <class DataBlock>
+struct BasicLinkedListStrategyTaskStorageDataBlockReuseCheck {
+	bool operator()(DataBlock& b) {
+		return b.is_reusable();
 	}
 };
 
@@ -90,8 +89,7 @@ public:
 	typedef typename Stealer::StealerRef StealerRef;
 	typedef BasicLinkedListStrategyTaskStorageStream<Pheet, Self, StealerRef> Stream;
 	typedef BasicLinkedListStrategyTaskStorageItem<Pheet, T, Self, Stream, StealerRef> Item;
-	typedef BasicLinkedListStrategyTaskStorageView<Pheet, Item, BlockSize> View;
-	typedef BasicLinkedListStrategyTaskStorageDataBlock<Pheet, Item, View, BlockSize> DataBlock;
+	typedef BasicLinkedListStrategyTaskStorageDataBlock<Pheet, Item, Self, BlockSize> DataBlock;
 
 	typedef BasicLinkedListStrategyTaskStorageLocalReference<Pheet, DataBlock> LocalRef;
 	typedef BasicLinkedListStrategyTaskStorageStrategyRetriever<Pheet, Self> StrategyRetriever;
@@ -100,7 +98,7 @@ public:
 	typedef BasicLinkedListStrategyTaskStoragePerformanceCounters<Pheet, typename StrategyHeap::PerformanceCounters>
 		PerformanceCounters;
 
-	typedef ItemReuseMemoryManager<Pheet, View, BasicLinkedListStrategyTaskStorageViewReuseCheck<View> > ViewMemoryManager;
+	typedef ItemReuseMemoryManager<Pheet, DataBlock, BasicLinkedListStrategyTaskStorageDataBlockReuseCheck<DataBlock> > DataBlockMemoryManager;
 
 	template <template <class, typename, class> class NewStrategyHeap>
 	using WithStrategyHeap = BasicLinkedListStrategyTaskStorageImpl<Pheet, TT, StealerT, NewStrategyHeap, BlockSize>;
@@ -130,14 +128,7 @@ public:
 		return false;
 	}
 
-	inline View* get_current_view() { return current_view; }
-	View* acquire_current_view() {
-		View* ret;
-		do {
-			ret = current_view;
-		} while(!ret->try_register());
-		return ret;
-	}
+	inline DataBlock* const& get_front_block() { return front; }
 
 	static void print_name() {
 		std::cout << "BasicLinkedListStrategyTaskStorage";
@@ -146,23 +137,23 @@ private:
 
 	void check_view();
 
-	ViewMemoryManager views;
-	View* current_view;
+	DataBlockMemoryManager blocks;
 
+	DataBlock* front;
 	DataBlock* back;
 	size_t back_index;
 
 	PerformanceCounters pc;
 	StrategyHeap heap;
-	std::vector<DataBlock*> data_block_reuse;
+//	std::vector<DataBlock*> data_block_reuse;
 };
 
 template <class Pheet, typename TT, template <class, class> class StealerT, template <class SP, typename ST, class SR> class StrategyHeapT, size_t BlockSize>
 BasicLinkedListStrategyTaskStorageImpl<Pheet, TT, StealerT, StrategyHeapT, BlockSize>::BasicLinkedListStrategyTaskStorageImpl()
 :heap(StrategyRetriever(this), pc.strategy_heap_performance_counters){
-	current_view = &(views.acquire_item());
-	current_view->init_first(new DataBlock(0, nullptr), &data_block_reuse);
-	back = current_view->get_front();
+	front = &(blocks.acquire_item);
+	back = front;
+	front->
 }
 
 template <class Pheet, typename TT, template <class, class> class StealerT, template <class SP, typename ST, class SR> class StrategyHeapT, size_t BlockSize>

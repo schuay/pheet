@@ -22,23 +22,23 @@ struct BasicLinkedListStrategyTaskStorageDataBlockAgeComparator {
 	}
 };
 
-template <class Pheet, typename TT, class View, size_t BlockSize>
+template <class Pheet, typename TT, class TaskStorage, size_t BlockSize>
 class BasicLinkedListStrategyTaskStorageDataBlock {
 public:
 	typedef TT T;
 	typedef typename T::Item Item;
-	typedef BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize> Self;
+	typedef BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, TaskStorage, BlockSize> Self;
 	typedef BasicLinkedListStrategyTaskStorageDataBlockAgeComparator<Self> AgeComparator;
 
-	BasicLinkedListStrategyTaskStorageDataBlock(size_t id, Self* prev);
+	BasicLinkedListStrategyTaskStorageDataBlock();
 	~BasicLinkedListStrategyTaskStorageDataBlock();
 
-	void delete_predecessors();
+//	void delete_predecessors();
 
-	bool local_take(size_t index, typename T::Item& ret, View* current_view);
+	bool local_take(size_t index, typename T::Item& ret, TaskStorage* ts);
 	bool take(size_t index, size_t stored_taken_offset, typename T::Item& ret);
 	bool take(size_t index, size_t stored_taken_offset);
-	void mark_removed(size_t index, View* current_view);
+	void mark_removed(size_t index, TaskStorage* ts);
 	T& peek(size_t index);
 
 	size_t push(T&& item, std::vector<Self*>* block_reuse);
@@ -57,7 +57,7 @@ public:
 		}
 		return data[index].strategy;
 	}
-	inline Self* get_next() { return next; }
+	inline Self* const& get_next() { return next; }
 	inline bool is_active() {
 		pheet_assert(active != 0 || next != nullptr);
 		return active != 0;
@@ -85,17 +85,24 @@ public:
 	void reset_content();
 	void reuse(size_t id, Self* prev);
 
+	bool is_reusable() {
+		return reg == 0 && num_pred == 0;
+	}
+
 private:
-	void clean(View* current_view);
+	void clean(TaskStorage* ts);
 
 	T data[BlockSize];
 
 	size_t id;
 	Self* prev;
 	Self* next;
-	Self* orig_prev;
-	Self* orig_next;
-	Self* next_freed;
+	size_t num_pred;
+	size_t reg;
+
+//	Self* orig_prev;
+//	Self* orig_next;
+//	Self* next_freed;
 	size_t filled;
 
 	size_t active;
@@ -103,45 +110,45 @@ private:
 	size_t taken_offset;
 };
 
-template <class Pheet, typename TT, class View, size_t BlockSize>
-BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::BasicLinkedListStrategyTaskStorageDataBlock(size_t id, Self* prev)
-:id(id), prev(prev), next(nullptr), orig_prev(prev), orig_next(next), next_freed(nullptr), filled(0), active(BlockSize), taken_offset(0) {
-	if(orig_prev != nullptr) {
+template <class Pheet, typename TT, class TaskStorage, size_t BlockSize>
+BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, TaskStorage, BlockSize>::BasicLinkedListStrategyTaskStorageDataBlock(size_t id, Self* prev)
+:id(0), prev(nullptr), next(nullptr), num_pred(0), reg(0), filled(0), active(BlockSize), taken_offset(0) {
+/*	if(orig_prev != nullptr) {
 		pheet_assert(orig_prev->orig_next == nullptr);
 		orig_prev->orig_next = this;
-	}
+	}*/
 }
 
-template <class Pheet, typename TT, class View, size_t BlockSize>
-BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::~BasicLinkedListStrategyTaskStorageDataBlock() {
+template <class Pheet, typename TT, class TaskStorage, size_t BlockSize>
+BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, TaskStorage, BlockSize>::~BasicLinkedListStrategyTaskStorageDataBlock() {
 	// Delete remaining strategies
 	for(size_t i = 0; i < filled; ++i) {
 		pheet_assert(data[i].taken == taken_offset + 1);
 		delete data[i].strategy;
 	}
 }
-
-template <class Pheet, typename TT, class View, size_t BlockSize>
-void BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::delete_predecessors() {
+/*
+template <class Pheet, typename TT, class TaskStorage, size_t BlockSize>
+void BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, TaskStorage, BlockSize>::delete_predecessors() {
 	Self* p1 = prev;
 	while(p1 != nullptr) {
 		Self* p2 = p1->prev;
 		delete p1;
 		p1 = p2;
 	}
-}
+}*/
 
-template <class Pheet, typename TT, class View, size_t BlockSize>
-void BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::mark_removed(size_t index, View* current_view) {
+template <class Pheet, typename TT, class TaskStorage, size_t BlockSize>
+void BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, TaskStorage, BlockSize>::mark_removed(size_t index, TaskStorage* ts) {
 	pheet_assert(active > 0);
 	pheet_assert((data[index].taken & 1) == 1);
 
 	--active;
-	clean(current_view);
+	clean(ts);
 }
 
-template <class Pheet, typename TT, class View, size_t BlockSize>
-bool BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::local_take(size_t index, typename T::Item& ret, View* current_view) {
+template <class Pheet, typename TT, class TaskStorage, size_t BlockSize>
+bool BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, TaskStorage, BlockSize>::local_take(size_t index, typename T::Item& ret, TaskStorage* ts) {
 	pheet_assert(active > 0);
 	pheet_assert(index < filled);
 	pheet_assert(taken_offset == 0);
@@ -150,16 +157,16 @@ bool BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::lo
 	if(data[index].taken == taken_offset) {
 		if(SIZET_CAS(&(data[index].taken), taken_offset, taken_offset + 1)) {
 			ret = data[index].item;
-			clean(current_view);
+			clean(ts);
 			return true;
 		}
 	}
-	clean(current_view);
+	clean(ts);
 	return false;
 }
 
-template <class Pheet, typename TT, class View, size_t BlockSize>
-bool BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::take(size_t index, size_t stored_taken_offset, typename T::Item& ret) {
+template <class Pheet, typename TT, class TaskStorage, size_t BlockSize>
+bool BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, TaskStorage, BlockSize>::take(size_t index, size_t stored_taken_offset, typename T::Item& ret) {
 	pheet_assert(index < filled);
 	pheet_assert(stored_taken_offset == 0);
 
@@ -172,8 +179,8 @@ bool BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::ta
 	return false;
 }
 
-template <class Pheet, typename TT, class View, size_t BlockSize>
-bool BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::take(size_t index, size_t stored_taken_offset) {
+template <class Pheet, typename TT, class TaskStorage, size_t BlockSize>
+bool BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, TaskStorage, BlockSize>::take(size_t index, size_t stored_taken_offset) {
 	pheet_assert(index < filled);
 	pheet_assert(stored_taken_offset == 0);
 
@@ -185,64 +192,56 @@ bool BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::ta
 	return false;
 }
 /*
-template <class Pheet, typename TT, class View, size_t BlockSize>
-void BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::mark_removed(size_t index, View* current_view) {
+template <class Pheet, typename TT, class TaskStorage, size_t BlockSize>
+void BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, TaskStorage, BlockSize>::mark_removed(size_t index, TaskStorage* ts) {
 	pheet_assert(active > 0);
 	pheet_assert(index < filled);
 	--active;
-	clean(current_view);
+	clean(ts);
 }*/
 
-template <class Pheet, typename TT, class View, size_t BlockSize>
-TT& BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::peek(size_t index) {
+template <class Pheet, typename TT, class TaskStorage, size_t BlockSize>
+TT& BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, TaskStorage, BlockSize>::peek(size_t index) {
 	pheet_assert(active > 0);
 	pheet_assert(index < filled);
 
 	return data[index].item;
 }
 
-template <class Pheet, typename TT, class View, size_t BlockSize>
-void BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::clean(View* current_view) {
+template <class Pheet, typename TT, class TaskStorage, size_t BlockSize>
+void BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, TaskStorage, BlockSize>::clean(TaskStorage* ts) {
 	// There should be no problems with id wraparound, except that block with id 0 ignores rules
 	// This means O(log(n)) is not satisfied in for every predecessor of block 0
 	// This leads to a complexity of O((n/(size_t_max + 1))*log(size_t_max)) for n > size_t max which isn't really bad
 	// and rare in any case (it's linear to the number of wraparounds and not logarithmic)
 
 	if(active == 0 // Check if block is not used any more
-			&& (orig_prev == nullptr // Either no predecessor exists anymore
+			&& (num_pred == 0 // Either no predecessor exists anymore
 					// Or make sure the next block is a higher power of two (to guarantee O(log(n)) access times
 					// for other threads missing elements (don't want them to have O(n) for elements they never need)
 					|| ((next->id & id) != id))) {
 		 // Only free blocks if they have a successor (I believe as it may only be inactive if there is a successor)
 		pheet_assert(next != nullptr);
 		next->prev = prev;
-		pheet_assert(next_freed == nullptr);
-		current_view->mark_empty(this);
 		if(prev != nullptr) {
 			prev->next = next;
+			pheet_assert(num_pred > 0);
+			--num_pred;
 			// Tail recursion
-			prev->clean(current_view);
+			prev->clean();
 		}
 	}
-	current_view->update_front();
 }
 
-template <class Pheet, typename TT, class View, size_t BlockSize>
-size_t BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::push(T&& item, std::vector<Self*>* block_reuse) {
+template <class Pheet, typename TT, class TaskStorage, size_t BlockSize>
+size_t BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, TaskStorage, BlockSize>::push(T&& item, TaskStorage* ts) {
 	pheet_assert(filled < BlockSize);
 
 	data[filled] = item;
 
 	if(filled == BlockSize - 1) {
-		Self* tmp;
-		if(block_reuse->empty()) {
-			tmp = new Self(id + 1, this);
-		}
-		else {
-			tmp = block_reuse->back();
-			tmp->reuse(id + 1, this);
-			block_reuse->pop_back();
-		}
+		Self* tmp = ts->create_block();
+		tmp->reuse(id + 1, this);
 		MEMORY_FENCE();
 		next = tmp;
 	}
@@ -254,8 +253,9 @@ size_t BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::
 }
 
 
-template <class Pheet, typename TT, class View, size_t BlockSize>
-void BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::reset_content() {
+template <class Pheet, typename TT, class TaskStorage, size_t BlockSize>
+void BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, TaskStorage, BlockSize>::reset_content() {
+	// TODO: can we do this earlier? when we notice block is not active any more or something? maybe even delete strategies after each take?
 	pheet_assert(filled == BlockSize);
 	for(size_t i = 0; i < filled; ++i) {
 		pheet_assert(data[i].taken == taken_offset + 1);
@@ -263,28 +263,30 @@ void BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::re
 		delete data[i].strategy;
 	}
 	filled = 0;
-	next_freed = nullptr;
-
-	if(orig_prev != nullptr) {
-		orig_prev->orig_next = orig_next;
-	}
-	if(orig_next != nullptr) {
-		orig_next->orig_prev = orig_prev;
-	}
 }
 
 
-template <class Pheet, typename TT, class View, size_t BlockSize>
-void BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, View, BlockSize>::reuse(size_t id, Self* prev) {
+template <class Pheet, typename TT, class TaskStorage, size_t BlockSize>
+void BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, TaskStorage, BlockSize>::reuse(size_t id, Self* prev) {
+	if(filled == BlockSize) {
+		reset_content();
+	}
+	if(next != nullptr) {
+		pheet_assert(next->num_pred > 0);
+		--(next->num_pred);
+	}
 	pheet_assert(filled == 0);
 
 	this->id = id;
 	this->prev = prev;
-	this->orig_prev = prev;
 	next = nullptr;
-	orig_next = nullptr;
 	active = BlockSize;
 	taken_offset += 2;
+
+	pheet_assert(num_pred == 0);
+	if(prev != nullptr) {
+		num_pred = 1;
+	}
 }
 
 

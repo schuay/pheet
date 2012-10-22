@@ -11,6 +11,7 @@
 #ifdef SORTING_TEST
 #include "Reference/ReferenceSTLSort.h"
 #include "Reference/ReferenceQuicksort.h"
+#include "Reference/ReferenceQuicksortLoop.h"
 #include "Strategy/StrategyQuicksort.h"
 #include "Dag/DagQuicksort.h"
 #include "MixedMode/MixedModeQuicksort.h"
@@ -111,6 +112,8 @@ void SortingTests::run_test() {
 						ReferenceSTLSort>();
 	this->run_sorter<	Pheet::WithScheduler<SynchroneousScheduler>,
 						ReferenceQuicksort>();
+	this->run_sorter<	Pheet::WithScheduler<SynchroneousScheduler>,
+						ReferenceQuicksortLoop>();
 //	this->run_sorter<	Pheet::WithScheduler<SynchroneousScheduler>,
 //						ReferenceHeapSort<Pheet>::WithPriorityQueue<FibonacciSameHeap>::template BT >();
 //	this->run_sorter<	Pheet::WithScheduler<SynchroneousScheduler>,
