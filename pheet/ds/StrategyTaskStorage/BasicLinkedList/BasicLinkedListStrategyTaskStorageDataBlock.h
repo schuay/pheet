@@ -9,18 +9,20 @@
 #ifndef BASICLINKEDLISTSTRATEGYTASKSTORAGEDATABLOCK_H_
 #define BASICLINKEDLISTSTRATEGYTASKSTORAGEDATABLOCK_H_
 
+#include <pheet/misc/atomics.h>
+
 
 namespace pheet {
 
 /*
  * less for age. (younger is less)
  */
-template <class DataBlock>
+/*template <class DataBlock>
 struct BasicLinkedListStrategyTaskStorageDataBlockAgeComparator {
 	bool operator()(DataBlock* b1, DataBlock* b2) {
 		return ((ptrdiff_t)(b1->get_first_view_id() - b2->get_first_view_id())) > 0;
 	}
-};
+};*/
 
 template <class Pheet, typename TT, class TaskStorage, size_t BlockSize>
 class BasicLinkedListStrategyTaskStorageDataBlock {
@@ -28,7 +30,7 @@ public:
 	typedef TT T;
 	typedef typename T::Item Item;
 	typedef BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, TaskStorage, BlockSize> Self;
-	typedef BasicLinkedListStrategyTaskStorageDataBlockAgeComparator<Self> AgeComparator;
+//	typedef BasicLinkedListStrategyTaskStorageDataBlockAgeComparator<Self> AgeComparator;
 
 	BasicLinkedListStrategyTaskStorageDataBlock();
 	~BasicLinkedListStrategyTaskStorageDataBlock();
@@ -41,7 +43,7 @@ public:
 	void mark_removed(size_t index, TaskStorage* ts);
 	T& peek(size_t index);
 
-	size_t push(T&& item, std::vector<Self*>* block_reuse);
+	size_t push(T&& item, TaskStorage* ts);
 
 	inline T& get_data(size_t index) {
 		pheet_assert(index < filled);
@@ -74,12 +76,6 @@ public:
 	inline size_t get_size() { return filled; }
 	inline size_t get_max_size() { return BlockSize; }
 
-	inline void set_next_freed(Self* nf) {
-		pheet_assert(next_freed == nullptr);
-		next_freed = nf;
-	}
-	inline Self* get_next_freed() { return next_freed; }
-
 	inline size_t get_taken_offset() { return taken_offset; }
 
 	void reset_content();
@@ -87,6 +83,21 @@ public:
 
 	bool is_reusable() {
 		return reg == 0 && num_pred == 0;
+	}
+
+	void acquire_block() {
+		SIZET_ATOMIC_ADD(&reg, 1);
+	}
+	void deregister() {
+		pheet_assert(reg > 0);
+		SIZET_ATOMIC_SUB(&reg, 1);
+	}
+
+	void add_predecessor() {
+		++num_pred;
+	}
+	void sub_predecessor() {
+		--num_pred;
 	}
 
 private:
@@ -111,7 +122,7 @@ private:
 };
 
 template <class Pheet, typename TT, class TaskStorage, size_t BlockSize>
-BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, TaskStorage, BlockSize>::BasicLinkedListStrategyTaskStorageDataBlock(size_t id, Self* prev)
+BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, TaskStorage, BlockSize>::BasicLinkedListStrategyTaskStorageDataBlock()
 :id(0), prev(nullptr), next(nullptr), num_pred(0), reg(0), filled(0), active(BlockSize), taken_offset(0) {
 /*	if(orig_prev != nullptr) {
 		pheet_assert(orig_prev->orig_next == nullptr);
@@ -151,7 +162,7 @@ template <class Pheet, typename TT, class TaskStorage, size_t BlockSize>
 bool BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, TaskStorage, BlockSize>::local_take(size_t index, typename T::Item& ret, TaskStorage* ts) {
 	pheet_assert(active > 0);
 	pheet_assert(index < filled);
-	pheet_assert(taken_offset == 0);
+	pheet_assert((taken_offset & 1) == 0);
 	--active;
 
 	if(data[index].taken == taken_offset) {
@@ -168,7 +179,7 @@ bool BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, TaskStorage, BlockSi
 template <class Pheet, typename TT, class TaskStorage, size_t BlockSize>
 bool BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, TaskStorage, BlockSize>::take(size_t index, size_t stored_taken_offset, typename T::Item& ret) {
 	pheet_assert(index < filled);
-	pheet_assert(stored_taken_offset == 0);
+	pheet_assert((stored_taken_offset & 1) == 0);
 
 	if(data[index].taken == stored_taken_offset) {
 		if(SIZET_CAS(&(data[index].taken), stored_taken_offset, stored_taken_offset + 1)) {
@@ -182,7 +193,7 @@ bool BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, TaskStorage, BlockSi
 template <class Pheet, typename TT, class TaskStorage, size_t BlockSize>
 bool BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, TaskStorage, BlockSize>::take(size_t index, size_t stored_taken_offset) {
 	pheet_assert(index < filled);
-	pheet_assert(stored_taken_offset == 0);
+	pheet_assert((stored_taken_offset & 1) == 0);
 
 	if(data[index].taken == stored_taken_offset) {
 		if(SIZET_CAS(&(data[index].taken), stored_taken_offset, stored_taken_offset + 1)) {
@@ -220,15 +231,16 @@ void BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, TaskStorage, BlockSi
 					// Or make sure the next block is a higher power of two (to guarantee O(log(n)) access times
 					// for other threads missing elements (don't want them to have O(n) for elements they never need)
 					|| ((next->id & id) != id))) {
-		 // Only free blocks if they have a successor (I believe as it may only be inactive if there is a successor)
+		 // Only free blocks if they have a successor (I believe that it may only be inactive if there is a successor)
 		pheet_assert(next != nullptr);
 		next->prev = prev;
 		if(prev != nullptr) {
 			prev->next = next;
 			pheet_assert(num_pred > 0);
 			--num_pred;
+			++(next->num_pred);
 			// Tail recursion
-			prev->clean();
+			prev->clean(ts);
 		}
 	}
 }
@@ -274,6 +286,7 @@ void BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, TaskStorage, BlockSi
 	if(next != nullptr) {
 		pheet_assert(next->num_pred > 0);
 		--(next->num_pred);
+		next->prev = nullptr;
 	}
 	pheet_assert(filled == 0);
 

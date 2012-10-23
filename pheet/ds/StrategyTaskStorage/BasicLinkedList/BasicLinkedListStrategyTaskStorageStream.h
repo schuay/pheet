@@ -57,7 +57,7 @@ template <class Pheet, class TaskStorage, class StealerRef>
 class BasicLinkedListStrategyTaskStorageStream {
 public:
 	typedef typename TaskStorage::Item Item;
-	typedef typename TaskStorage::View View;
+//	typedef typename TaskStorage::View View;
 	typedef typename TaskStorage::DataBlock DataBlock;
 	typedef typename Pheet::Scheduler::BaseStrategy BaseStrategy;
 	typedef BasicLinkedListStrategyTaskStorageStreamRef<Pheet, DataBlock> StreamRef;
@@ -133,7 +133,7 @@ private:
 	DataBlock* acquire_block(DataBlock* const& block) {
 		DataBlock* tmp = block;
 		DataBlock* tmp2;
-		Pheet::Backoff bo;
+		typename Pheet::Backoff bo;
 		tmp->acquire_block();
 		tmp2 = block;
 		while(tmp2 != tmp) {
@@ -158,7 +158,7 @@ private:
 template <class Pheet, class TaskStorage, class StealerRef>
 BasicLinkedListStrategyTaskStorageStream<Pheet, TaskStorage, StealerRef>::BasicLinkedListStrategyTaskStorageStream(TaskStorage& task_storage)
 : task_storage(task_storage),
-  block(this->acquire_block(task_storage.get_front())),
+  block(this->acquire_block(task_storage.get_front_block())),
   block_index(0) {
 
 }

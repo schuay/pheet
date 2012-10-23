@@ -129,13 +129,16 @@ public:
 	}
 
 	inline DataBlock* const& get_front_block() { return front; }
+	inline DataBlock* create_block() {
+		return &(blocks.acquire_item());
+	}
 
 	static void print_name() {
 		std::cout << "BasicLinkedListStrategyTaskStorage";
 	}
 private:
 
-	void check_view();
+	void update_front();
 
 	DataBlockMemoryManager blocks;
 
@@ -151,17 +154,19 @@ private:
 template <class Pheet, typename TT, template <class, class> class StealerT, template <class SP, typename ST, class SR> class StrategyHeapT, size_t BlockSize>
 BasicLinkedListStrategyTaskStorageImpl<Pheet, TT, StealerT, StrategyHeapT, BlockSize>::BasicLinkedListStrategyTaskStorageImpl()
 :heap(StrategyRetriever(this), pc.strategy_heap_performance_counters){
-	front = &(blocks.acquire_item);
+	front = &(blocks.acquire_item());
 	back = front;
-	front->
+//	front->reuse(0, nullptr);
+	front->add_predecessor();
 }
 
 template <class Pheet, typename TT, template <class, class> class StealerT, template <class SP, typename ST, class SR> class StrategyHeapT, size_t BlockSize>
 BasicLinkedListStrategyTaskStorageImpl<Pheet, TT, StealerT, StrategyHeapT, BlockSize>::BasicLinkedListStrategyTaskStorageImpl(PerformanceCounters& pc)
 :pc(pc), heap(StrategyRetriever(this), this->pc.strategy_heap_performance_counters){
-	current_view = &(views.acquire_item());
-	current_view->init_first(new DataBlock(0, nullptr), &data_block_reuse);
-	back = current_view->get_front();
+	front = &(blocks.acquire_item());
+	back = front;
+//	front->reuse(0, nullptr);
+	front->add_predecessor();
 }
 
 template <class Pheet, typename TT, template <class, class> class StealerT, template <class SP, typename ST, class SR> class StrategyHeapT, size_t BlockSize>
@@ -170,14 +175,6 @@ BasicLinkedListStrategyTaskStorageImpl<Pheet, TT, StealerT, StrategyHeapT, Block
 
 //	pheet_assert(current_view->get_front() == back);
 //	pheet_assert(back->is_first());
-
-	// Back may have up to log n predecessors
-	back->delete_predecessors();
-	delete back;
-
-	for(auto i = data_block_reuse.begin(); i != data_block_reuse.end(); ++i) {
-		delete *i;
-	}
 
 	// Views are automatically deleted by the memory manager
 
@@ -203,7 +200,7 @@ void BasicLinkedListStrategyTaskStorageImpl<Pheet, TT, StealerT, StrategyHeapT, 
 
 	LocalRef r;
 	r.block = back;
-	r.index = back->push(std::move(it), &data_block_reuse);
+	r.index = back->push(std::move(it), this);
 	heap.template push<Strategy>(std::move(r));
 
 	if(back->get_next() != nullptr) {
@@ -217,12 +214,12 @@ TT BasicLinkedListStrategyTaskStorageImpl<Pheet, TT, StealerT, StrategyHeapT, Bl
 		LocalRef r = heap.pop();
 
 		T ret;
-		if(r.block->local_take(r.index, ret, current_view)) {
-			check_view();
+		if(r.block->local_take(r.index, ret, this)) {
+			update_front();
 			return ret;
 		}
 	}
-	check_view();
+	update_front();
 	return nullable_traits<T>::null_value;
 }
 
@@ -232,8 +229,9 @@ void BasicLinkedListStrategyTaskStorageImpl<Pheet, TT, StealerT, StrategyHeapT, 
 		LocalRef r = heap.pop();
 
 		pheet_assert(r.block->is_taken(r.index));
-		r.block->mark_removed(r.index, current_view);
+		r.block->mark_removed(r.index, this);
 	}
+	update_front();
 }
 
 template <class Pheet, typename TT, template <class, class> class StealerT, template <class SP, typename ST, class SR> class StrategyHeapT, size_t BlockSize>
@@ -243,15 +241,11 @@ TT& BasicLinkedListStrategyTaskStorageImpl<Pheet, TT, StealerT, StrategyHeapT, B
 }
 
 template <class Pheet, typename TT, template <class, class> class StealerT, template <class SP, typename ST, class SR> class StrategyHeapT, size_t BlockSize>
-void BasicLinkedListStrategyTaskStorageImpl<Pheet, TT, StealerT, StrategyHeapT, BlockSize>::check_view() {
-	if(current_view->needs_cleanup()) {
-//		check_blocked_freed_views();
-		View* next_view = &(views.acquire_item());
-
-		// Has a fence inside
-		next_view->reset(current_view);
-
-		current_view = next_view;
+void BasicLinkedListStrategyTaskStorageImpl<Pheet, TT, StealerT, StrategyHeapT, BlockSize>::update_front() {
+	while(!front->is_active()) {
+		front->sub_predecessor();
+		front = front->get_next();
+		front->add_predecessor();
 	}
 }
 
