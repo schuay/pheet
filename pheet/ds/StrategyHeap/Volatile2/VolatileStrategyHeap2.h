@@ -126,6 +126,7 @@ public:
 				max = node;
 				node->prev = node;
 				node->next = node;
+				node->d = 0;
 				node->children = nullptr;
 				node->parent = nullptr;
 				node->state = 1;
@@ -137,6 +138,7 @@ public:
 				node->next = max;
 				node->prev = max->prev;
 				max->prev = node;
+				node->d = 0;
 				node->children = nullptr;
 				node->parent = nullptr;
 				node->state = 1;
@@ -462,6 +464,7 @@ public:
 				max = node;
 				node->prev = node;
 				node->next = node;
+				node->d = 0;
 				node->children = nullptr;
 				node->parent = nullptr;
 				node->state = 1;
@@ -471,6 +474,7 @@ public:
 				node->next = max;
 				node->prev = max->prev;
 				max->prev = node;
+				node->d = 0;
 				node->children = nullptr;
 				node->parent = nullptr;
 				node->state = 1;
