@@ -10,17 +10,23 @@
 
 namespace pheet {
 
-template <class Pheet, typename TT>
+template <class Pheet, class Place, typename TT>
 struct CentralKStrategyTaskStorageItem {
-	typedef CentralKStrategyTaskStorageItem<Pheet, TT> Self;
+	typedef CentralKStrategyTaskStorageItem<Pheet, Place, TT> Self;
 	typedef TT Data;
 
 	typename Pheet::Scheduler::BaseStrategy* strategy;
 	TT data;
 	size_t position;
-	Block* block;
 
 	void (Place::*item_push)(Self* item);
+};
+
+template <class Item>
+struct CentralKStrategyTaskStorageItemReuseCheck {
+	bool operator() (Item const& item) const {
+		return strategy == nullptr;
+	}
 };
 
 } /* namespace pheet */

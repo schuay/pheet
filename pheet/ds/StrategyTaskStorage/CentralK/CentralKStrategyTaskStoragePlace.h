@@ -8,6 +8,7 @@
 #ifndef CENTRALKSTRATEGYTASKSTORAGEPLACE_H_
 #define CENTRALKSTRATEGYTASKSTORAGEPLACE_H_
 
+#include "CentralKStrategyTaskStorageDataBlock.h"
 #include "CentralKStrategyTaskStorageItem.h"
 
 #include <pheet/memory/ItemReuse/ItemReuseMemoryManager.h>
@@ -44,19 +45,22 @@ public:
 private:
 };
 
-template <class Pheet, typename TT, template <class SP, typename ST, class SR> class StrategyHeapT>
+template <class Pheet, typename TT, template <class SP, typename ST, class SR> class StrategyHeapT, size_t BlockSize, size_t Tests>
 class CentralKStrategyTaskStoragePlace {
 public:
-	typedef CentralKStrategyTaskStoragePlace<Pheet, TT, StrategyHeapT> Self;
+	typedef CentralKStrategyTaskStoragePlace<Pheet, TT, StrategyHeapT, BlockSize, Tests> Self;
+
+	typedef CentralKStrategyTaskStorageDataBlock<Pheet, Self, TT, BlockSize, Tests> DataBlock;
 
 	typedef TT T;
-	typedef CentralKStrategyTaskStorageItem<Pheet, TT> Item;
+	typedef CentralKStrategyTaskStorageItem<Pheet, Self, TT> Item;
 	typedef CentralKStrategyTaskStorageItemReference<Pheet, Item> Ref;
 	typedef CentralKStrategyTaskStorageStrategyRetriever<Pheet, Ref> StrategyRetriever;
 
 	typedef StrategyHeapT<Pheet, Ref, StrategyRetriever> StrategyHeap;
 
-	typedef ItemReuseMemoryManager<Pheet, Item, BasicLinkedListStrategyTaskStorageDataBlockReuseCheck<DataBlock> > DataBlockMemoryManager;
+	typedef ItemReuseMemoryManager<Pheet, Item, CentralKStrategyTaskStorageItemReuseCheck<Item> > ItemMemoryManager;
+	typedef ItemReuseMemoryManager<Pheet, DataBlock, CentralKStrategyTaskStorageDataBlockReuseCheck<DataBlock> > DataBlockMemoryManager;
 
 	CentralKStrategyTaskStoragePlace();
 	~CentralKStrategyTaskStoragePlace();
@@ -68,7 +72,6 @@ public:
 		it->data = data;
 		// TODO: put to a block and set position and block
 		it->position = 0;
-		it->block = nullptr;
 		it->item_push = &Self::template item_push<Strategy>;
 
 		Ref r;
@@ -107,6 +110,11 @@ public:
 	}
 private:
 	StrategyHeap heap;
+
+	DataBlock* tail_block;
+	DataBlock* head_block;
+	size_t head;
+
 };
 
 } /* namespace pheet */
