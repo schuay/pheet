@@ -20,18 +20,18 @@ public:
 	typedef typename Pheet::Place Place;
 
 	LifoFifoBaseStrategy()
-	: place(Pheet::get_place()), task_id(place->next_task_id()), transitive_weight(64)/*, memory_footprint(1024)*/ {
+	: place(Pheet::get_place()), task_id(place->next_task_id()), transitive_weight(64), k(0x100000)/*, memory_footprint(1024)*/ {
 	//	pheet_assert(transitive_weight != 0);
 		pheet_assert(transitive_weight < ((std::numeric_limits<size_t>::max() >> 3)));
 	}
 
 	LifoFifoBaseStrategy(Self const& other)
-	: place(other.place), task_id(other.task_id), transitive_weight(other.transitive_weight)/*, memory_footprint(other.memory_footprint)*/ {
+	: place(other.place), task_id(other.task_id), transitive_weight(other.transitive_weight), k(other.k)/*, memory_footprint(other.memory_footprint)*/ {
 	//	pheet_assert(transitive_weight != 0 || !other.forbid_call_conversion());
 	}
 
 	LifoFifoBaseStrategy(Self&& other)
-	: place(other.place), task_id(other.task_id), transitive_weight(other.transitive_weight)/*, memory_footprint(other.memory_footprint)*/ {
+	: place(other.place), task_id(other.task_id), transitive_weight(other.transitive_weight), k(other.k)/*, memory_footprint(other.memory_footprint)*/ {
 	//	pheet_assert(transitive_weight != 0 || !other.forbid_call_conversion());
 		pheet_assert(transitive_weight < ((std::numeric_limits<size_t>::max() >> 5)));
 	}
@@ -104,6 +104,15 @@ public:
 		new_task_id();
 	}
 
+	inline size_t get_k() {
+		return k;
+	}
+
+	inline void set_k(size_t k) {
+		pheet_assert(k > 0);
+		this->k = k;
+	}
+
 /*
 	inline Self& set_memory_footprint(size_t value) {
 		memory_footprint = value;
@@ -113,6 +122,7 @@ private:
 	Place* place;
 	ptrdiff_t task_id;
 	size_t transitive_weight;
+	size_t k;
 //	size_t memory_footprint;
 };
 

@@ -41,19 +41,19 @@ public:
 			return false;
 		}
 
-		while(old_tail != next_offset) {
-			size_t cur_k = std::min(k, next_offset - old_tail);
+		while(cur_tail != next_offset) {
+			size_t cur_k = std::min(k, next_offset - cur_tail);
 
-			size_t to_add = Pheet::rand_int<size_t>(cur_k - 1);
+			size_t to_add = Pheet::template rand_int<size_t>(cur_k - 1);
 			size_t i_limit = to_add + std::min(Tests, cur_k);
 			for(size_t i = to_add; i != i_limit; ++i) {
 				size_t wrapped_i = i % cur_k;
 				if(data[array_offset + wrapped_i] == nullptr) {
-					item->position = old_tail + wrapped_i;
-					if(PTR_CAS(&(data[array_offset + wrapped_i], nullptr, item))) {
+					item->position = cur_tail + wrapped_i;
+					if(PTR_CAS(&(data[array_offset + wrapped_i]), nullptr, item)) {
 						if(!verify(head, item->position)) {
 							data[array_offset + wrapped_i] = nullptr;
-							size_t old_pos = old_tail + wrapped_i;
+							size_t old_pos = cur_tail + wrapped_i;
 							if(!SIZET_CAS(item->position, old_pos, old_pos + 1)) {
 								// Item got eliminated by other thread, success
 								// I think linearization point is when item was put into array
@@ -61,11 +61,24 @@ public:
 							}
 						}
 						else {
+							if(cur_tail != old_tail) {
+								size_t nold_tail = *tail;
+								ptrdiff_t diff = (ptrdiff_t)cur_tail - (ptrdiff_t)nold_tail;
+								while(diff > 0) {
+									if(SIZET_CAS(tail, nold_tail, cur_tail)) {
+										break;
+									}
+									nold_tail = *tail;
+									diff = (ptrdiff_t)cur_tail - (ptrdiff_t)nold_tail;
+								}
+							}
 							return true;
 						}
 					}
 				}
 			}
+
+			cur_tail += cur_k;
 		}
 
 	}
@@ -134,7 +147,7 @@ public:
 		pheet_assert(array_offset < BlockSize);
 		size_t max = BlockSize - array_offset;
 
-		size_t to_add = Pheet::rand_int<size_t>(cur_k - 1);
+		size_t to_add = Pheet::template rand_int<size_t>(cur_k - 1);
 		size_t limit = to_add + std::min(max, Tests);
 
 		for(size_t i = to_add; i < limit; ++i) {

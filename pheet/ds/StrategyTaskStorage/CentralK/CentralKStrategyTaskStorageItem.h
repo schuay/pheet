@@ -25,7 +25,7 @@ struct CentralKStrategyTaskStorageItem {
 template <class Item>
 struct CentralKStrategyTaskStorageItemReuseCheck {
 	bool operator() (Item const& item) const {
-		return strategy == nullptr;
+		return item.strategy == nullptr;
 	}
 };
 

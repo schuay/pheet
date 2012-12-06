@@ -148,10 +148,13 @@ public:
 		// TODO: check whether the position is still valid, otherwise end function
 
 		Strategy* s = new Strategy(*reinterpret_cast<Strategy*>(strategy));
-		s->rebase();
 		r.strategy = s;
 
 		heap.template push<Strategy>(std::move(r));
+	}
+
+	bool is_full() {
+		return false;
 	}
 private:
 	void update_heap() {

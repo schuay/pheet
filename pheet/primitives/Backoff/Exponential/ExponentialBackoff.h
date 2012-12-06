@@ -25,6 +25,9 @@ public:
 	~ExponentialBackoffImpl();
 
 	void backoff();
+	void reset() {
+		limit = MIN_BACKOFF;
+	}
 private:
 	unsigned int limit;
 

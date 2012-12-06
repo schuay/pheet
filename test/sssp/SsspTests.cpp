@@ -14,6 +14,7 @@
 
 #include <pheet/sched/Basic/BasicScheduler.h>
 #include <pheet/sched/Strategy/StrategyScheduler.h>
+#include <pheet/sched/BStrategy/BStrategyScheduler.h>
 #include <pheet/sched/Synchroneous/SynchroneousScheduler.h>
 #endif
 
@@ -33,6 +34,8 @@ void SsspTests::run_test() {
 
 	this->run_algorithm<	Pheet::WithScheduler<SynchroneousScheduler>,
 							ReferenceSssp>();
+	this->run_algorithm<	Pheet::WithScheduler<BStrategyScheduler>,
+							StrategySssp>();
 	this->run_algorithm<	Pheet::WithScheduler<StrategyScheduler>,
 							StrategySssp>();
 /*
