@@ -420,6 +420,7 @@ public:
 	T pop();
 	T& peek();
 
+	bool empty() { return is_empty(); }
 	bool is_empty();
 	size_t size() { return total_size; }
 

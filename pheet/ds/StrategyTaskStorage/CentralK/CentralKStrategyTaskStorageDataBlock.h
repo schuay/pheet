@@ -26,52 +26,38 @@ public:
 			data[i] = nullptr;
 		}
 	}
-	~CentralKStrategyTaskStorageDataBlock();
+	~CentralKStrategyTaskStorageDataBlock() {}
 
-	bool put(size_t* head, size_t* tail, Item* item) {
+	bool put(size_t* head, size_t* tail, size_t& cur_tail, Item* item) {
 		// Take care not to break correct wraparounds when changing anything
 		size_t k = item->strategy->get_k();
-		size_t next_offset = offset + BlockSize;
-		size_t old_tail = *tail;
-		size_t cur_tail = old_tail;
-		size_t array_offset = old_tail - offset;
+	//	size_t next_offset = offset + BlockSize;
+	//	size_t old_tail = *tail;
+	//	size_t cur_tail = old_tail;
+		size_t array_offset = cur_tail - offset;
 
-		if(array_offset >= BlockSize) {
-			// Next block
-			return false;
-		}
-
-		while(cur_tail != next_offset) {
-			size_t cur_k = std::min(k, next_offset - cur_tail);
+		while(array_offset < BlockSize) {
+			size_t cur_k = std::min(k, BlockSize - array_offset);
 
 			size_t to_add = Pheet::template rand_int<size_t>(cur_k - 1);
 			size_t i_limit = to_add + std::min(Tests, cur_k);
 			for(size_t i = to_add; i != i_limit; ++i) {
 				size_t wrapped_i = i % cur_k;
 				if(data[array_offset + wrapped_i] == nullptr) {
-					item->position = cur_tail + wrapped_i;
+					item->orig_position = cur_tail + wrapped_i;
+					item->position = item->orig_position;
 					if(PTR_CAS(&(data[array_offset + wrapped_i]), nullptr, item)) {
-						if(!verify(head, item->position)) {
+						ptrdiff_t diff = (ptrdiff_t)item->position - (ptrdiff_t)*head;
+						if(diff < 0) {
 							data[array_offset + wrapped_i] = nullptr;
-							size_t old_pos = cur_tail + wrapped_i;
-							if(!SIZET_CAS(item->position, old_pos, old_pos + 1)) {
+						//	size_t old_pos = cur_tail + wrapped_i;
+							if(!SIZET_CAS(&(item->position), item->orig_position, item->orig_position + 1)) {
 								// Item got eliminated by other thread, success
 								// I think linearization point is when item was put into array
 								return true;
 							}
 						}
 						else {
-							if(cur_tail != old_tail) {
-								size_t nold_tail = *tail;
-								ptrdiff_t diff = (ptrdiff_t)cur_tail - (ptrdiff_t)nold_tail;
-								while(diff > 0) {
-									if(SIZET_CAS(tail, nold_tail, cur_tail)) {
-										break;
-									}
-									nold_tail = *tail;
-									diff = (ptrdiff_t)cur_tail - (ptrdiff_t)nold_tail;
-								}
-							}
 							return true;
 						}
 					}
@@ -79,8 +65,10 @@ public:
 			}
 
 			cur_tail += cur_k;
+			array_offset = cur_tail - offset;
 		}
-
+	//	update_tail(tail, old_tail, cur_tail);
+		return false;
 	}
 
 	bool is_reusable() const {
@@ -147,11 +135,11 @@ public:
 		pheet_assert(array_offset < BlockSize);
 		size_t max = BlockSize - array_offset;
 
-		size_t to_add = Pheet::template rand_int<size_t>(cur_k - 1);
+		size_t to_add = Pheet::template rand_int<size_t>(max - 1);
 		size_t limit = to_add + std::min(max, Tests);
 
 		for(size_t i = to_add; i < limit; ++i) {
-			size_t index = array_offset + (i % limit);
+			size_t index = array_offset + (i % max);
 
 			Item* item = data[index];
 			if(item != nullptr) {

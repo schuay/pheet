@@ -17,11 +17,11 @@
 
 namespace pheet {
 
-template <class Pheet, class TaskStoragePerformanceCounters, class StealerPerformanceCounters>
+template <class Pheet, class TaskStoragePerformanceCounters>
 class BStrategySchedulerPerformanceCounters {
 public:
 	BStrategySchedulerPerformanceCounters() {}
-	BStrategySchedulerPerformanceCounters(BStrategySchedulerPerformanceCounters<Pheet, TaskStoragePerformanceCounters, StealerPerformanceCounters>& other)
+	BStrategySchedulerPerformanceCounters(BStrategySchedulerPerformanceCounters<Pheet, TaskStoragePerformanceCounters>& other)
 		: num_spawns(other.num_spawns), num_actual_spawns(other.num_actual_spawns),
 		  num_spawns_to_call(other.num_spawns_to_call),
 		  num_calls(other.num_calls), num_finishes(other.num_finishes),
@@ -31,8 +31,8 @@ public:
 		  idle_time(other.idle_time), steal_time(other.steal_time),
 		  finish_stack_nonblocking_max(other.finish_stack_nonblocking_max),
 		  finish_stack_blocking_min(other.finish_stack_blocking_min),
-		  task_storage_performance_counters(other.task_storage_performance_counters),
-		  stealer_performance_counters(other.stealer_performance_counters) {}
+		  task_storage_performance_counters(other.task_storage_performance_counters)
+		  {}
 
 	static void print_headers();
 	void print_values();
@@ -56,11 +56,10 @@ public:
 	MinPerformanceCounter<Pheet, size_t, scheduler_measure_finish_stack_blocking_min> finish_stack_blocking_min;
 
 	TaskStoragePerformanceCounters task_storage_performance_counters;
-	StealerPerformanceCounters stealer_performance_counters;
 };
 
-template <class Pheet, class TaskStoragePerformanceCounters, class StealerPerformanceCounters>
-inline void BStrategySchedulerPerformanceCounters<Pheet, TaskStoragePerformanceCounters, StealerPerformanceCounters>::print_headers() {
+template <class Pheet, class TaskStoragePerformanceCounters>
+inline void BStrategySchedulerPerformanceCounters<Pheet, TaskStoragePerformanceCounters>::print_headers() {
 	BasicPerformanceCounter<Pheet, scheduler_count_spawns>::print_header("spawns\t");
 	BasicPerformanceCounter<Pheet, scheduler_count_actual_spawns>::print_header("actual_spawns\t");
 	BasicPerformanceCounter<Pheet, scheduler_count_calls>::print_header("calls\t");
@@ -79,11 +78,10 @@ inline void BStrategySchedulerPerformanceCounters<Pheet, TaskStoragePerformanceC
 	MinPerformanceCounter<Pheet, size_t, scheduler_measure_finish_stack_blocking_min>::print_header("finish_stack_blocking_min\t");
 
 	TaskStoragePerformanceCounters::print_headers();
-	StealerPerformanceCounters::print_headers();
 }
 
-template <class Pheet, class TaskStoragePerformanceCounters, class StealerPerformanceCounters>
-inline void BStrategySchedulerPerformanceCounters<Pheet, TaskStoragePerformanceCounters, StealerPerformanceCounters>::print_values() {
+template <class Pheet, class TaskStoragePerformanceCounters>
+inline void BStrategySchedulerPerformanceCounters<Pheet, TaskStoragePerformanceCounters>::print_values() {
 	num_spawns.print("%lu\t");
 	num_actual_spawns.print("%lu\t");
 	num_calls.print("%lu\t");
@@ -100,7 +98,6 @@ inline void BStrategySchedulerPerformanceCounters<Pheet, TaskStoragePerformanceC
 	finish_stack_blocking_min.print("%lu\t");
 
 	task_storage_performance_counters.print_values();
-	stealer_performance_counters.print_values();
 }
 
 }

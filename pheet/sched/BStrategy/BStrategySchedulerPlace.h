@@ -62,15 +62,14 @@ public:
 	typedef typename Pheet::Scheduler::TaskStorageItem TaskStorageItem;
 	typedef typename Pheet::Scheduler::TaskStorage CentralTaskStorage;
 	typedef typename Pheet::Scheduler::TaskStorage::Place TaskStorage;
-	typedef typename Pheet::Scheduler::Stealer Stealer;
 //	typedef typename Pheet::Scheduler::TaskDesc TaskDesc;
 //	typedef typename Pheet::Scheduler::PlaceDesc PlaceDesc;
-	typedef StrategySchedulerPerformanceCounters<Pheet, typename TaskStorage::PerformanceCounters, typename Stealer::PerformanceCounters> PerformanceCounters;
+	typedef BStrategySchedulerPerformanceCounters<Pheet, typename TaskStorage::PerformanceCounters> PerformanceCounters;
 	typedef typename Pheet::Scheduler::InternalMachineModel InternalMachineModel;
 	typedef typename Pheet::Scheduler::BaseStrategy BaseStrategy;
 
-	BStrategySchedulerPlace(InternalMachineModel model, CentralTaskStorage ctask_storage, Place** places, procs_t num_places, typename Pheet::Scheduler::State* scheduler_state, PerformanceCounters& perf_count);
-	BStrategySchedulerPlace(CentralTaskStorage ctask_storage, LevelDescription* levels, procs_t num_initialized_levels, InternalMachineModel model, typename Pheet::Scheduler::State* scheduler_state, PerformanceCounters& perf_count);
+	BStrategySchedulerPlace(InternalMachineModel model, CentralTaskStorage* ctask_storage, Place** places, procs_t num_places, typename Pheet::Scheduler::State* scheduler_state, PerformanceCounters& perf_count);
+	BStrategySchedulerPlace(CentralTaskStorage* ctask_storage, LevelDescription* levels, procs_t num_initialized_levels, InternalMachineModel model, typename Pheet::Scheduler::State* scheduler_state, PerformanceCounters& perf_count);
 	~BStrategySchedulerPlace();
 
 	void prepare_root();
@@ -126,8 +125,6 @@ private:
 	void run();
 	void execute_task(Task* task, StackElement* parent);
 	void main_loop();
-	void process_queue();
-	bool process_queue_until_finished(StackElement* parent);
 	void wait_for_finish(StackElement* parent);
 
 	void empty_stack();
@@ -179,7 +176,7 @@ thread_local BStrategySchedulerPlace<Pheet, CallThreshold>*
 BStrategySchedulerPlace<Pheet, CallThreshold>::local_place = nullptr;
 
 template <class Pheet, uint8_t CallThreshold>
-BStrategySchedulerPlace<Pheet, CallThreshold>::BStrategySchedulerPlace(InternalMachineModel model, CentralTaskStorage ctask_storage, Place** places, procs_t num_places, typename Pheet::Scheduler::State* scheduler_state, PerformanceCounters& perf_count)
+BStrategySchedulerPlace<Pheet, CallThreshold>::BStrategySchedulerPlace(InternalMachineModel model, CentralTaskStorage* ctask_storage, Place** places, procs_t num_places, typename Pheet::Scheduler::State* scheduler_state, PerformanceCounters& perf_count)
 : machine_model(model),
   num_initialized_levels(1), num_levels(find_last_bit_set(num_places)), levels(new LevelDescription[num_levels]),
   current_task_parent(nullptr),
@@ -208,7 +205,7 @@ BStrategySchedulerPlace<Pheet, CallThreshold>::BStrategySchedulerPlace(InternalM
 }
 
 template <class Pheet, uint8_t CallThreshold>
-BStrategySchedulerPlace<Pheet, CallThreshold>::BStrategySchedulerPlace(CentralTaskStorage ctask_storage, LevelDescription* levels, procs_t num_initialized_levels, InternalMachineModel model, typename Pheet::Scheduler::State* scheduler_state, PerformanceCounters& perf_count)
+BStrategySchedulerPlace<Pheet, CallThreshold>::BStrategySchedulerPlace(CentralTaskStorage* ctask_storage, LevelDescription* levels, procs_t num_initialized_levels, InternalMachineModel model, typename Pheet::Scheduler::State* scheduler_state, PerformanceCounters& perf_count)
 : machine_model(model),
   num_initialized_levels(num_initialized_levels), num_levels(num_initialized_levels + find_last_bit_set(levels[num_initialized_levels - 1].size >> 1)),
   levels(new LevelDescription[num_levels]),
@@ -298,7 +295,7 @@ void BStrategySchedulerPlace<Pheet, CallThreshold>::initialize_levels() {
 			levels[num_initialized_levels].partners = places + base_offset;
 			levels[num_initialized_levels].memory_level = child.get_memory_level();
 
-			places[offset] = new Place(levels, num_initialized_levels + 1, child, scheduler_state, performance_counters);
+			places[offset] = new Place(task_storage.get_central_task_storage(), levels, num_initialized_levels + 1, child, scheduler_state, performance_counters);
 
 			machine_model = machine_model.get_child(0);
 			levels[num_initialized_levels].size = offset - base_offset;

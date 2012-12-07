@@ -10,6 +10,7 @@
 
 #include "CentralKStrategyTaskStorageDataBlock.h"
 #include "CentralKStrategyTaskStorageItem.h"
+#include "CentralKStrategyTaskStoragePerformanceCounters.h"
 
 #include <pheet/memory/ItemReuse/ItemReuseMemoryManager.h>
 
@@ -26,7 +27,7 @@ struct CentralKStrategyTaskStorageItemReference {
 template <class Pheet, class Ref>
 class CentralKStrategyTaskStorageStrategyRetriever {
 public:
-	typedef BasicLinkedListStrategyTaskStorageStrategyRetriever<Pheet, Ref> Self;
+	typedef CentralKStrategyTaskStorageStrategyRetriever<Pheet, Ref> Self;
 
 	CentralKStrategyTaskStorageStrategyRetriever() {}
 
@@ -38,7 +39,7 @@ public:
 		return ref.item.position == ref.position;
 	}
 
-	inline void mark_removed(Item& item) {
+	inline void mark_removed(Ref& ref) {
 	//	item.block->mark_removed(item.index, task_storage->get_current_view());
 	}
 
@@ -48,7 +49,7 @@ private:
 template <class Pheet, class TaskStorage, typename TT, template <class SP, typename ST, class SR> class StrategyHeapT, size_t BlockSize, size_t Tests, bool LocalKPrio>
 class CentralKStrategyTaskStoragePlace {
 public:
-	typedef CentralKStrategyTaskStoragePlace<Pheet, TaskStorage, TT, StrategyHeapT, BlockSize, Tests> Self;
+	typedef CentralKStrategyTaskStoragePlace<Pheet, TaskStorage, TT, StrategyHeapT, BlockSize, Tests, LocalKPrio> Self;
 
 	typedef CentralKStrategyTaskStorageDataBlock<Pheet, Self, TT, BlockSize, Tests> DataBlock;
 
@@ -58,12 +59,14 @@ public:
 	typedef CentralKStrategyTaskStorageStrategyRetriever<Pheet, Ref> StrategyRetriever;
 
 	typedef StrategyHeapT<Pheet, Ref, StrategyRetriever> StrategyHeap;
+	typedef CentralKStrategyTaskStoragePerformanceCounters<Pheet, typename StrategyHeap::PerformanceCounters>
+			PerformanceCounters;
 
 	typedef ItemReuseMemoryManager<Pheet, Item, CentralKStrategyTaskStorageItemReuseCheck<Item> > ItemMemoryManager;
 	typedef ItemReuseMemoryManager<Pheet, DataBlock, CentralKStrategyTaskStorageDataBlockReuseCheck<DataBlock> > DataBlockMemoryManager;
 
 	CentralKStrategyTaskStoragePlace(TaskStorage* task_storage)
-	:task_storage(task_storage), head(0) {
+	:task_storage(task_storage), heap(sr, pc.strategy_heap_performance_counters), head(0) {
 		DataBlock* tmp = task_storage->start_block;
 		if(tmp == nullptr) {
 			// This assumes the first place is initialized before all others, otherwise synchronization would be needed!
@@ -93,7 +96,10 @@ public:
 		it.data = data;
 		it.item_push = &Self::template item_push<Strategy>;
 
-		while(!tail_block->put(&(task_storage->head), &(task_storage->tail), &it)) {
+		size_t old_tail = task_storage->tail;
+		size_t cur_tail = old_tail;
+
+		while(!tail_block->put(&(task_storage->head), &(task_storage->tail), cur_tail, &it)) {
 			if(tail_block->get_next() == nullptr) {
 				DataBlock& next_block = data_blocks.acquire_item();
 				tail_block->add_block(&next_block, task_storage->get_num_places());
@@ -102,9 +108,21 @@ public:
 			tail_block = tail_block->get_next();
 		}
 
+		if(cur_tail != old_tail) {
+			size_t nold_tail = task_storage->tail;
+			ptrdiff_t diff = (ptrdiff_t)cur_tail - (ptrdiff_t)nold_tail;
+			while(diff > 0) {
+				if(SIZET_CAS(&(task_storage->tail), nold_tail, cur_tail)) {
+					break;
+				}
+				nold_tail = task_storage->tail;
+				diff = (ptrdiff_t)cur_tail - (ptrdiff_t)nold_tail;
+			}
+		}
+
 		Ref r;
-		r.item = it;
-		r.position = it->position;
+		r.item = &it;
+		r.position = it.position;
 		r.strategy = new Strategy(std::move(s));
 
 		heap.template push<Strategy>(std::move(r));
@@ -117,7 +135,7 @@ public:
 			Ref r = heap.pop();
 
 			pheet_assert(r.strategy != nullptr);
-			delete r.strategy();
+			delete r.strategy;
 
 			if(r.item->position == r.position) {
 				if(SIZET_CAS(&(r.item->position), r.position, r.position + 1)) {
@@ -141,13 +159,13 @@ public:
 	}
 
 	template <class Strategy>
-	void item_push(Item* item) {
+	void item_push(Item* item, size_t position) {
 		Ref r;
 		r.item = item;
-		r.position = item.position;
+		r.position = position;
 		// TODO: check whether the position is still valid, otherwise end function
 
-		Strategy* s = new Strategy(*reinterpret_cast<Strategy*>(strategy));
+		Strategy* s = new Strategy(*reinterpret_cast<Strategy*>(item->strategy));
 		r.strategy = s;
 
 		heap.template push<Strategy>(std::move(r));
@@ -155,6 +173,14 @@ public:
 
 	bool is_full() {
 		return false;
+	}
+
+	TaskStorage* get_central_task_storage() {
+		return task_storage;
+	}
+
+	size_t size() {
+		return heap.size();
 	}
 private:
 	void update_heap() {
@@ -192,7 +218,7 @@ private:
 	}
 
 	void process_until(size_t limit) {
-		while(head != task_storage->head) {
+		while(head != limit) {
 			while(!head_block->in_block(head)) {
 				pheet_assert(head_block->get_next() != nullptr);
 				DataBlock* next = head_block->get_next();
@@ -201,19 +227,28 @@ private:
 			}
 
 			Item* item = head_block->get_item(head);
-			if(item->position == head) {
+			if(item != nullptr && item->position == head) {
 				// TODO: skip locally created items (maybe first check with a performance counter how often this occurs)
 
 				// Push item to local heap
-				auto ip = item->item_push;
-				(this->*ip)(item);
+		/*		auto ip = item->item_push;
+				(this->*ip)(item, head);*/
 			}
 
 			++head;
 		}
+		while(!head_block->in_block(head)) {
+			pheet_assert(head_block->get_next() != nullptr);
+			DataBlock* next = head_block->get_next();
+			head_block->deregister();
+			head_block = next;
+		}
 	}
 
+	PerformanceCounters pc;
+
 	TaskStorage* task_storage;
+	StrategyRetriever sr;
 	StrategyHeap heap;
 
 	DataBlock* tail_block;

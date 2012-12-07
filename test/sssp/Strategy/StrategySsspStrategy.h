@@ -20,7 +20,9 @@ public:
 	typedef typename Pheet::Environment::BaseStrategy BaseStrategy;
 
 	StrategySsspStrategy(size_t distance)
-	: distance(distance), rnd(Pheet::rand_int((1 + distance) << 4)) {}
+	: distance(distance), rnd(Pheet::rand_int((1 + distance) << 4)) {
+		this->set_k(4);
+	}
 
 	StrategySsspStrategy(Self& other)
 	: BaseStrategy(other), distance(other.distance), rnd(other.rnd) {

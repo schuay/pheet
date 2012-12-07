@@ -18,14 +18,15 @@ struct CentralKStrategyTaskStorageItem {
 	typename Pheet::Scheduler::BaseStrategy* strategy;
 	TT data;
 	size_t position;
+	size_t orig_position;
 
-	void (Place::*item_push)(Self* item);
+	void (Place::*item_push)(Self* item, size_t position);
 };
 
 template <class Item>
 struct CentralKStrategyTaskStorageItemReuseCheck {
 	bool operator() (Item const& item) const {
-		return item.strategy == nullptr;
+		return item.position != item.orig_position && item.strategy == nullptr;
 	}
 };
 
