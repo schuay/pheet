@@ -220,8 +220,12 @@ private:
 	void process_until(size_t limit) {
 		while(head != limit) {
 			while(!head_block->in_block(head)) {
-				pheet_assert(head_block->get_next() != nullptr);
 				DataBlock* next = head_block->get_next();
+				if(next == nullptr) {
+					MEMORY_FENCE();
+					next = head_block->get_next();
+					pheet_assert(next != nullptr);
+				}
 				head_block->deregister();
 				head_block = next;
 			}
