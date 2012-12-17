@@ -85,6 +85,7 @@ public:
 		size_t old = SIZET_FETCH_AND_SUB(&active_threads, 1);
 		pheet_assert(old > 0);
 		if(old == 1) {
+			pheet_assert(active_threads == 0);
 			for(size_t i = 0; i < BlockSize; ++i) {
 				if(data[i] != nullptr) {
 					delete data[i]->strategy;
@@ -92,12 +93,15 @@ public:
 					data[i] = nullptr;
 				}
 			}
-			active = false;
 			next = nullptr;
+			MEMORY_FENCE();
+			active = false;
 		}
 	}
 
 	void add_block(Self* block, size_t num_places) {
+		pheet_assert(block->is_reusable());
+		pheet_assert(block->next == nullptr);
 		block->active_threads = num_places;
 		block->active = true;
 
@@ -107,6 +111,7 @@ public:
 				block->offset = pred->offset + BlockSize;
 
 				if(PTR_CAS(&(pred->next), nullptr, block)) {
+					pheet_assert(!pred->is_reusable());
 					break;
 				}
 			}
@@ -160,13 +165,11 @@ public:
 	}
 //	void verify(Item* item, size_t position);
 
-private:
-	void reuse(size_t offset, size_t num_threads) {
-		pheet_assert(is_reusable());
-		this->offset = offset;
-		active = true;
+	size_t get_offset() {
+		return offset;
 	}
 
+private:
 	Item* data[BlockSize];
 
 	size_t offset;

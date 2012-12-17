@@ -105,6 +105,7 @@ public:
 				tail_block->add_block(&next_block, task_storage->get_num_places());
 			}
 			pheet_assert(tail_block->get_next() != nullptr);
+			pheet_assert(tail_block->get_offset() + BlockSize == tail_block->get_next()->get_offset());
 			tail_block = tail_block->get_next();
 		}
 
@@ -226,6 +227,10 @@ private:
 					next = head_block->get_next();
 					pheet_assert(next != nullptr);
 				}
+				if(head_block == tail_block) { // Make sure tail block doesn't lag behind
+					tail_block = next;
+				}
+				pheet_assert((ptrdiff_t)tail_block->get_offset() - (ptrdiff_t)head_block->get_offset() >= 0);
 				head_block->deregister();
 				head_block = next;
 			}
@@ -244,6 +249,11 @@ private:
 		while(!head_block->in_block(head)) {
 			pheet_assert(head_block->get_next() != nullptr);
 			DataBlock* next = head_block->get_next();
+			if(head_block == tail_block) { // Make sure tail block doesn't lag behind
+				tail_block = next;
+			}
+			pheet_assert(next != nullptr);
+			pheet_assert((ptrdiff_t)tail_block->get_offset() - (ptrdiff_t)head_block->get_offset() >= 0);
 			head_block->deregister();
 			head_block = next;
 		}
