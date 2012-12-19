@@ -240,8 +240,8 @@ private:
 				// TODO: skip locally created items (maybe first check with a performance counter how often this occurs)
 
 				// Push item to local heap
-		/*		auto ip = item->item_push;
-				(this->*ip)(item, head);*/
+				auto ip = item->item_push;
+				(this->*ip)(item, head);
 			}
 
 			++head;
