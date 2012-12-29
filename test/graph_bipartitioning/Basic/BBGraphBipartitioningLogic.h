@@ -59,16 +59,22 @@ private:
 
 	size_t* weights[2];
 	size_t* contributions;
+	size_t* data;
 };
 
 template <class Pheet, class SubProblem>
 BBGraphBipartitioningLogic<Pheet, SubProblem>::BBGraphBipartitioningLogic(SubProblem* sub_problem)
-: sub_problem(sub_problem), cut(0), lb(0), nv(0), ub(0), contrib_sum(0) {
-	weights[0] = new size_t[sub_problem->size];
-	weights[1] = new size_t[sub_problem->size];
-	memset(weights[0], 0, sizeof(size_t)*sub_problem->size);
-	memset(weights[1], 0, sizeof(size_t)*sub_problem->size);
-	contributions = new size_t[sub_problem->size];
+	: sub_problem(sub_problem), cut(0), lb(0), nv(0), ub(0), contrib_sum(0)
+{
+	auto numElems = sub_problem->size;
+	data = new size_t[numElems * 3];
+	size_t* p = data;
+	
+	memset(p, 0, sizeof(size_t) * numElems * 2); // zero out weights
+	weights[0] = p; p += numElems;
+	weights[1] = p; p += numElems;
+	contributions = p; p += numElems;
+	pheet_assert(p == data + numElems * 3);
 
 	size_t best_contrib = 0;
 	size_t best_contrib_i = 0;
@@ -94,20 +100,20 @@ template <class Pheet, class SubProblem>
 BBGraphBipartitioningLogic<Pheet, SubProblem>::BBGraphBipartitioningLogic(SubProblem* sub_problem, Self const& other)
 	: sub_problem(sub_problem), cut(other.cut), lb(other.lb), nv(other.nv), ub(other.ub), contrib_sum(other.contrib_sum)
 {
-	weights[0] = new size_t[sub_problem->size];
-	weights[1] = new size_t[sub_problem->size];
-	memcpy(weights[0], other.weights[0], sizeof(size_t)*sub_problem->size);
-	memcpy(weights[1], other.weights[1], sizeof(size_t)*sub_problem->size);
-	contributions = new size_t[sub_problem->size];
-	memcpy(contributions, other.contributions, sizeof(size_t)*sub_problem->size);
+ 	auto numElems = sub_problem->size;
+	data = new size_t[numElems * 3];
+	size_t* p = data;
+
+	weights[0] = p; p += numElems;
+	weights[1] = p; p += numElems;
+	contributions = p;
+	memcpy(data, other.data, sizeof(size_t) * numElems * 3);
 }
 
 template <class Pheet, class SubProblem>
 BBGraphBipartitioningLogic<Pheet, SubProblem>::~BBGraphBipartitioningLogic()
 {
-	delete[] weights[0];
-	delete[] weights[1];
-	delete[] contributions;
+	delete[] data;
 }
 
 template <class Pheet, class SubProblem>

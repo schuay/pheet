@@ -67,22 +67,32 @@ private:
 	size_t* fweight[2];
 	size_t deg0; // number of free nodes with no edges
 	size_t max_free; // largest degree of free node (approx)
+	
+	size_t* data;
 };
 
 template <class Pheet, class SubProblem>
 BBGraphBipartitioningFREELogic<Pheet, SubProblem>::BBGraphBipartitioningFREELogic(SubProblem* sub_problem)
 	: sub_problem(sub_problem), cut(0), lb(0), nv(0), contrib_sum(0)
 {
-	for (int i=0; i<2; i++)
-	{
-		weights[i] = new size_t[sub_problem->size];
-		memset(weights[i], 0, sizeof(size_t)*sub_problem->size); // don't like
-		scanned[i] = new size_t[sub_problem->size];
-		seen[i]	= new size_t[sub_problem->size];
-		fweight[i] = new size_t[sub_problem->size];
-	}
-	contributions = new size_t[sub_problem->size];
-	free_edges = new size_t[sub_problem->size];
+	auto numElems = sub_problem->size;
+	data = new size_t[numElems * 10];
+	size_t* p = data;
+	
+	// zero out the memory for weights, scanned, seen and fweight
+	memset(p, 0, sizeof(size_t) * numElems * 8);
+	weights[0] = p; p += numElems;
+	weights[1] = p; p += numElems;
+	scanned[0] = p; p += numElems;
+	scanned[1] = p; p += numElems;
+	seen[0] = p; p += numElems;
+	seen[1] = p; p += numElems;
+	fweight[0] = p; p += numElems;
+	fweight[1] = p; p += numElems;
+	
+	contributions = p; p += numElems;
+	free_edges = p; p += numElems;
+	pheet_assert(p == data + numElems * 10);
 
 	deg0 = 0;
 	max_free = 0;
@@ -105,13 +115,6 @@ BBGraphBipartitioningFREELogic<Pheet, SubProblem>::BBGraphBipartitioningFREELogi
 			max_free = free_edges[i];
 		else if (free_edges[i]==0)
 			deg0++;
-
-		for (size_t s=0; s<2; s++)
-		{
-			scanned[s][i] = 0;
-			seen[s][i]	= 0;
-			fweight[s][i] = 0;
-		}
 	}
 	nv = best_contrib_i;
 	contrib_sum >>= 1;
@@ -121,35 +124,30 @@ template <class Pheet, class SubProblem>
 BBGraphBipartitioningFREELogic<Pheet, SubProblem>::BBGraphBipartitioningFREELogic(SubProblem* sub_problem, Self const& other)
 	: sub_problem(sub_problem), cut(other.cut), lb(other.lb), nv(other.nv), contrib_sum(other.contrib_sum), deg0(other.deg0), max_free(other.max_free)
 {
-	for (int i=0; i<2; i++)
-	{
-		weights[i] = new size_t[sub_problem->size];
-		memcpy(weights[i], other.weights[i], sizeof(size_t)*sub_problem->size);
-		scanned[i] = new size_t[sub_problem->size];
-		memcpy(scanned[i], other.scanned[i], sizeof(size_t)*sub_problem->size);
-		seen[i] = new size_t[sub_problem->size];
-		memcpy(seen[i], other.seen[i], sizeof(size_t)*sub_problem->size);
-		fweight[i] = new size_t[sub_problem->size];
-		memcpy(fweight[i], other.fweight[i], sizeof(size_t)*sub_problem->size);
-	}
-	contributions = new size_t[sub_problem->size];
-	memcpy(contributions, other.contributions, sizeof(size_t)*sub_problem->size);
-	free_edges = new size_t[sub_problem->size];
-	memcpy(free_edges,other.free_edges,sizeof(size_t)*sub_problem->size);
+	auto numElems = sub_problem->size;
+	data = new size_t[numElems * 10];
+	size_t* p = data;
+
+	weights[0] = p; p += numElems;
+	weights[1] = p; p += numElems;
+	scanned[0] = p; p += numElems;
+	scanned[1] = p; p += numElems;
+	seen[0] = p; p += numElems;
+	seen[1] = p; p += numElems;
+	fweight[0] = p; p += numElems;
+	fweight[1] = p; p += numElems;
+
+	contributions = p; p += numElems;
+	free_edges = p; p += numElems;
+	pheet_assert(p == data + numElems * 10);
+	
+	memcpy(data, other.data, sizeof(size_t) * numElems * 10); // copy all data
 }
 
 template <class Pheet, class SubProblem>
 BBGraphBipartitioningFREELogic<Pheet, SubProblem>::~BBGraphBipartitioningFREELogic()
 {
-	for (int i=0; i<2; i++)
-	{
-		delete[] weights[i];
-		delete[] scanned[i];
-		delete[] seen[i];
-		delete[] fweight[i];
-	}
-	delete[] contributions;
-	delete[] free_edges;
+	delete[] data;
 }
 
 template <class Pheet, class SubProblem>
