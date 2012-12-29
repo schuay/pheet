@@ -183,7 +183,7 @@ BStrategySchedulerPlace<Pheet, CallThreshold>::BStrategySchedulerPlace(InternalM
   stack_filled_left(0), stack_filled_right(stack_size), stack_init_left(0),
   scheduler_state(scheduler_state),
   performance_counters(perf_count),
-  task_storage(ctask_storage /*performance_counters.task_storage_performance_counters*/),
+  task_storage(ctask_storage, performance_counters.task_storage_performance_counters),
 //  spawn2call_counter(0),
   thread_executor(this),
   task_id(0) {
@@ -213,7 +213,7 @@ BStrategySchedulerPlace<Pheet, CallThreshold>::BStrategySchedulerPlace(CentralTa
   stack_filled_left(0), stack_filled_right(stack_size), stack_init_left(0),
   scheduler_state(scheduler_state),
   performance_counters(perf_count),
-  task_storage(ctask_storage/*, performance_counters.task_storage_performance_counters*/),
+  task_storage(ctask_storage, performance_counters.task_storage_performance_counters),
 //  spawn2call_counter(0),
   thread_executor(this) {
 

@@ -25,6 +25,15 @@ public:
 
 	typedef TT T;
 
+	template <template <class SP, typename ST, class SR> class NewHeap>
+	using WithStrategyHeap = CentralKStrategyTaskStorageImpl<Pheet, TT, NewHeap, BlockSize, Tests, LocalKPrio>;
+
+	template <size_t NewBlockSize>
+	using WithBlockSize = CentralKStrategyTaskStorageImpl<Pheet, TT, StrategyHeapT, NewBlockSize, Tests, LocalKPrio>;
+
+	template <size_t NewTests>
+	using WithTests = CentralKStrategyTaskStorageImpl<Pheet, TT, StrategyHeapT, BlockSize, NewTests, LocalKPrio>;
+
 	CentralKStrategyTaskStorageImpl(size_t num_places)
 	:head(0), tail(0), start_block(nullptr), num_places(num_places) {}
 	~CentralKStrategyTaskStorageImpl() {}
@@ -39,7 +48,7 @@ public:
 	DataBlock* start_block;
 
 	static void print_name() {
-		std::cout << "CentralKStrategyTaskStorage";
+		std::cout << "CentralKStrategyTaskStorage<" << BlockSize << ", " << Tests << ", " << (LocalKPrio?"Local":"Global") << ">";
 	}
 
 private:
@@ -47,7 +56,10 @@ private:
 };
 
 template <class Pheet, typename TT>
-using CentralKStrategyTaskStorage = CentralKStrategyTaskStorageImpl<Pheet, TT, BasicStrategyHeap, 512, 128, true>;
+using CentralKStrategyTaskStorage = CentralKStrategyTaskStorageImpl<Pheet, TT, BasicStrategyHeap, 512, 128, false>;
+
+template <class Pheet, typename TT>
+using CentralKStrategyTaskStorageLocalK = CentralKStrategyTaskStorageImpl<Pheet, TT, BasicStrategyHeap, 512, 128, true>;
 
 } /* namespace pheet */
 #endif /* CENTRALKSTRATEGYTASKSTORAGE_H_ */

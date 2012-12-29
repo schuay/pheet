@@ -65,8 +65,8 @@ public:
 	typedef ItemReuseMemoryManager<Pheet, Item, CentralKStrategyTaskStorageItemReuseCheck<Item> > ItemMemoryManager;
 	typedef ItemReuseMemoryManager<Pheet, DataBlock, CentralKStrategyTaskStorageDataBlockReuseCheck<DataBlock> > DataBlockMemoryManager;
 
-	CentralKStrategyTaskStoragePlace(TaskStorage* task_storage)
-	:task_storage(task_storage), heap(sr, pc.strategy_heap_performance_counters), head(0) {
+	CentralKStrategyTaskStoragePlace(TaskStorage* task_storage, PerformanceCounters pc)
+	:pc(pc), task_storage(task_storage), heap(sr, pc.strategy_heap_performance_counters), head(0) {
 		DataBlock* tmp = task_storage->start_block;
 		if(tmp == nullptr) {
 			// This assumes the first place is initialized before all others, otherwise synchronization would be needed!
