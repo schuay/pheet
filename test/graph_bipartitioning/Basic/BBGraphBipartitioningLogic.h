@@ -72,13 +72,16 @@ BBGraphBipartitioningLogic<Pheet, SubProblem>::BBGraphBipartitioningLogic(SubPro
 
 	size_t best_contrib = 0;
 	size_t best_contrib_i = 0;
-	for(size_t i = 0; i < sub_problem->size; ++i) {
+	for(size_t i = 0; i < sub_problem->size; ++i)
+	{
 		contributions[i] = 0;
-		for(size_t j = 0; j < sub_problem->graph[i].num_edges; ++j) {
+		for(size_t j = 0; j < sub_problem->graph[i].num_edges; ++j)
+		{
 			contributions[i] += sub_problem->graph[i].edges[j].weight;
 		}
 		contrib_sum += contributions[i];
-		if(contributions[i] > best_contrib) {
+		if(contributions[i] > best_contrib)
+		{
 			best_contrib = contributions[i];
 			best_contrib_i = i;
 		}
@@ -89,7 +92,8 @@ BBGraphBipartitioningLogic<Pheet, SubProblem>::BBGraphBipartitioningLogic(SubPro
 
 template <class Pheet, class SubProblem>
 BBGraphBipartitioningLogic<Pheet, SubProblem>::BBGraphBipartitioningLogic(SubProblem* sub_problem, Self const& other)
-: sub_problem(sub_problem), cut(other.cut), lb(other.lb), nv(other.nv), ub(other.ub), contrib_sum(other.contrib_sum) {
+	: sub_problem(sub_problem), cut(other.cut), lb(other.lb), nv(other.nv), ub(other.ub), contrib_sum(other.contrib_sum)
+{
 	weights[0] = new size_t[sub_problem->size];
 	weights[1] = new size_t[sub_problem->size];
 	memcpy(weights[0], other.weights[0], sizeof(size_t)*sub_problem->size);
@@ -99,30 +103,33 @@ BBGraphBipartitioningLogic<Pheet, SubProblem>::BBGraphBipartitioningLogic(SubPro
 }
 
 template <class Pheet, class SubProblem>
-BBGraphBipartitioningLogic<Pheet, SubProblem>::~BBGraphBipartitioningLogic() {
+BBGraphBipartitioningLogic<Pheet, SubProblem>::~BBGraphBipartitioningLogic()
+{
 	delete[] weights[0];
 	delete[] weights[1];
 	delete[] contributions;
 }
 
 template <class Pheet, class SubProblem>
-void BBGraphBipartitioningLogic<Pheet, SubProblem>::init_root() {
-
-}
+void BBGraphBipartitioningLogic<Pheet, SubProblem>::init_root()
+{}
 
 template <class Pheet, class SubProblem>
-size_t BBGraphBipartitioningLogic<Pheet, SubProblem>::get_next_vertex() {
+size_t BBGraphBipartitioningLogic<Pheet, SubProblem>::get_next_vertex()
+{
 	pheet_assert(sub_problem->sets[2].test(nv));
 	return nv;
 }
 
 template <class Pheet, class SubProblem>
-size_t BBGraphBipartitioningLogic<Pheet, SubProblem>::get_cut() {
+size_t BBGraphBipartitioningLogic<Pheet, SubProblem>::get_cut()
+{
 	return cut;
 }
 
 template <class Pheet, class SubProblem>
-size_t BBGraphBipartitioningLogic<Pheet, SubProblem>::get_lower_bound() {
+size_t BBGraphBipartitioningLogic<Pheet, SubProblem>::get_lower_bound()
+{
 	return get_cut() + lb;
 }
 /*
@@ -132,59 +139,66 @@ size_t BBGraphBipartitioningLogic<Pheet, SubProblem>::get_lowdeg_lower() {
 }*/
 
 template <class Pheet, class SubProblem>
-size_t BBGraphBipartitioningLogic<Pheet, SubProblem>::get_estimate() {
+size_t BBGraphBipartitioningLogic<Pheet, SubProblem>::get_estimate()
+{
 //	return get_cut() + ((lb + ub + contrib_sum) >> 1);
 	return get_cut() + lb + contrib_sum;
 }
 
 template <class Pheet, class SubProblem>
-size_t BBGraphBipartitioningLogic<Pheet, SubProblem>::get_upper_bound() {
+size_t BBGraphBipartitioningLogic<Pheet, SubProblem>::get_upper_bound()
+{
 	return get_cut() + ub + contrib_sum;
 }
 
 template <class Pheet, class SubProblem>
-size_t BBGraphBipartitioningLogic<Pheet, SubProblem>::get_minnode(uint8_t set) {
-  // only one free
+size_t BBGraphBipartitioningLogic<Pheet, SubProblem>::get_minnode(uint8_t set)
+{
+	// only one free
 
-  size_t fweight;
+	size_t fweight;
 
-  size_t w = sub_problem->sets[2]._Find_first();
-  fweight = 0;
-  for (size_t i=0; i<sub_problem->graph[w].num_edges; ++i) {
-    if(sub_problem->sets[2].test(sub_problem->graph[w].edges[i].target)) {
-      fweight += sub_problem->graph[w].edges[i].weight;
-    }
-  }
-  
-  size_t mincut, sumcut = 0;
-  size_t v = sub_problem->sets[2]._Find_next(w);
-  while(v != sub_problem->sets[2].size()) {
-    sumcut += weights[set][v];
-    v = sub_problem->sets[2]._Find_next(v);
-  }
-		
-  mincut = sumcut+weights[set^1][w]+fweight;
-
-  v = sub_problem->sets[2]._Find_first();
-  while(v != sub_problem->sets[2].size()) {
-    sumcut += weights[set][v];
-    v = sub_problem->sets[2]._Find_next(v);
-    if (v!=sub_problem->sets[2].size()) {
-      fweight = 0;
-      for (size_t i=0; i<sub_problem->graph[v].num_edges; ++i) {
-	if(sub_problem->sets[2].test(sub_problem->graph[v].edges[i].target)) {
-	  fweight += sub_problem->graph[v].edges[i].weight;
+	size_t w = sub_problem->sets[2]._Find_first();
+	fweight = 0;
+	for (size_t i=0; i<sub_problem->graph[w].num_edges; ++i)
+	{
+		if(sub_problem->sets[2].test(sub_problem->graph[w].edges[i].target))
+			fweight += sub_problem->graph[w].edges[i].weight;
 	}
-      }
-      sumcut -= weights[set][v];
-      if (sumcut+weights[set^1][v]+fweight<mincut) {
-	mincut = sumcut+weights[set^1][v]+fweight;
-	w = v;
-      }
-    }
-  }
 
-  return w;
+	size_t mincut, sumcut = 0;
+	size_t v = sub_problem->sets[2]._Find_next(w);
+	while(v != sub_problem->sets[2].size())
+	{
+		sumcut += weights[set][v];
+		v = sub_problem->sets[2]._Find_next(v);
+	}
+
+	mincut = sumcut + weights[set^1][w] + fweight;
+
+	v = sub_problem->sets[2]._Find_first();
+	while (v != sub_problem->sets[2].size())
+	{
+		sumcut += weights[set][v];
+		v = sub_problem->sets[2]._Find_next(v);
+		if (v!=sub_problem->sets[2].size())
+		{
+			fweight = 0;
+			for (size_t i=0; i<sub_problem->graph[v].num_edges; ++i)
+			{
+				if(sub_problem->sets[2].test(sub_problem->graph[v].edges[i].target))
+					fweight += sub_problem->graph[v].edges[i].weight;
+			}
+			sumcut -= weights[set][v];
+			if (sumcut + weights[set^1][v] + fweight < mincut)
+			{
+				mincut = sumcut+weights[set^1][v]+fweight;
+				w = v;
+			}
+		}
+	}
+
+	return w;
 }
 /*
 template <class Pheet, class SubProblem>
@@ -199,7 +213,8 @@ bool BBGraphBipartitioningLogic<Pheet, SubProblem>::no_edges() {
  }
 */
 template <class Pheet, class SubProblem>
-void BBGraphBipartitioningLogic<Pheet, SubProblem>::update(uint8_t set, size_t pos) {
+void BBGraphBipartitioningLogic<Pheet, SubProblem>::update(uint8_t set, size_t pos)
+{
 	pheet_assert((set & 1) == set);
 	pheet_assert(pos < sub_problem->size);
 	pheet_assert(!sub_problem->sets[set].test(pos));
@@ -212,12 +227,15 @@ void BBGraphBipartitioningLogic<Pheet, SubProblem>::update(uint8_t set, size_t p
 }
 
 template <class Pheet, class SubProblem>
-void BBGraphBipartitioningLogic<Pheet, SubProblem>::update_data(uint8_t set, size_t pos) {
+void BBGraphBipartitioningLogic<Pheet, SubProblem>::update_data(uint8_t set, size_t pos)
+{
 	cut += weights[set ^ 1][pos];
 
-	for(size_t i = 0; i < sub_problem->graph[pos].num_edges; ++i) {
+	for(size_t i = 0; i < sub_problem->graph[pos].num_edges; ++i)
+	{
 		weights[set][sub_problem->graph[pos].edges[i].target] += sub_problem->graph[pos].edges[i].weight;
-		if(sub_problem->sets[2].test(sub_problem->graph[pos].edges[i].target)) {
+		if(sub_problem->sets[2].test(sub_problem->graph[pos].edges[i].target))
+		{
 			pheet_assert(contributions[sub_problem->graph[pos].edges[i].target] >= sub_problem->graph[pos].edges[i].weight);
 			contributions[sub_problem->graph[pos].edges[i].target] -= sub_problem->graph[pos].edges[i].weight;
 			contrib_sum -= sub_problem->graph[pos].edges[i].weight;
@@ -232,9 +250,11 @@ void BBGraphBipartitioningLogic<Pheet, SubProblem>::update_data(uint8_t set, siz
 	size_t current_bit = sub_problem->sets[2]._Find_first();
 	nv = current_bit;
 	size_t best_contrib = 0;
-	while(current_bit != sub_problem->sets[2].size()) {
+	while (current_bit != sub_problem->sets[2].size())
+	{
 		ptrdiff_t d = (ptrdiff_t)weights[1][current_bit] - (ptrdiff_t)weights[0][current_bit];
-		if(std::abs(d) + contributions[current_bit] >= best_contrib) {
+		if (std::abs(d) + contributions[current_bit] >= best_contrib)
+		{
 			best_contrib = std::abs(d) + contributions[current_bit];
 			nv = current_bit;
 		}
@@ -246,15 +266,19 @@ void BBGraphBipartitioningLogic<Pheet, SubProblem>::update_data(uint8_t set, siz
 	std::sort(delta, delta + di);
 
 	size_t pivot = (/*sub_problem->size - */sub_problem->k) - sub_problem->sets[0].count();
-	if(pivot < di && delta[pivot] < 0) {
-		do {
+	if (pivot < di && delta[pivot] < 0)
+	{
+		do
+		{
 			lb += -delta[pivot];
 			ub -= -delta[pivot];
 			++pivot;
 		} while(pivot < di && delta[pivot] < 0);
 	}
-	else if(pivot > 0 && delta[pivot - 1] > 0) {
-		do {
+	else if(pivot > 0 && delta[pivot - 1] > 0)
+	{
+		do
+		{
 			--pivot;
 			lb += delta[pivot];
 			ub -= delta[pivot];
@@ -265,29 +289,31 @@ void BBGraphBipartitioningLogic<Pheet, SubProblem>::update_data(uint8_t set, siz
 }
 
 template <class Pheet, class SubProblem>
-void BBGraphBipartitioningLogic<Pheet, SubProblem>::bulk_update(uint8_t set, Set positions) {
+void BBGraphBipartitioningLogic<Pheet, SubProblem>::bulk_update(uint8_t set, Set positions)
+{
 	size_t current_bit = positions._Find_first();
-	while(current_bit != positions.size()) {
+	while (current_bit != positions.size())
+	{
 		update_data(set, current_bit);
 		current_bit = positions._Find_next(current_bit);
 	}
 }
 
 template <class Pheet, class SubProblem>
-bool BBGraphBipartitioningLogic<Pheet, SubProblem>::can_complete() {
+bool BBGraphBipartitioningLogic<Pheet, SubProblem>::can_complete()
+{
 	return ((sub_problem->sets[0].count() == sub_problem->k-1) ||
 			(sub_problem->sets[1].count() == (sub_problem->size - sub_problem->k)-1));
 }
 
 template <class Pheet, class SubProblem>
-void BBGraphBipartitioningLogic<Pheet, SubProblem>::complete_solution() {
+void BBGraphBipartitioningLogic<Pheet, SubProblem>::complete_solution()
+{
 	size_t s;
-	if(sub_problem->sets[0].count() == sub_problem->k-1) {
+	if(sub_problem->sets[0].count() == sub_problem->k-1)
 		s = 0;
-	}
-	else if(sub_problem->sets[1].count() == (sub_problem->size - sub_problem->k)-1) {
+	else if(sub_problem->sets[1].count() == (sub_problem->size - sub_problem->k)-1)
 		s = 1;
-	}
 	else {
 		pheet_assert(true);
 	}
@@ -305,7 +331,8 @@ void BBGraphBipartitioningLogic<Pheet, SubProblem>::complete_solution() {
 }
 
 template <class Pheet, class SubProblem>
-void BBGraphBipartitioningLogic<Pheet, SubProblem>::print_name() {
+void BBGraphBipartitioningLogic<Pheet, SubProblem>::print_name()
+{
 	std::cout << "Logic";
 }
 
