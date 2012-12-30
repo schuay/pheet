@@ -164,35 +164,37 @@ size_t BBGraphBipartitioningLogic<Pheet, SubProblem>::get_minnode(uint8_t set)
 
 	size_t fweight;
 
-	size_t w = sub_problem->sets[2]._Find_first();
+	Set bitset = sub_problem->sets[2];
+	size_t w = bitset._Find_first();
 	fweight = 0;
-	for (size_t i=0; i<sub_problem->graph[w].num_edges; ++i)
+	const GraphVertex vertex = sub_problem->graph[w];
+	for (size_t i = 0; i < vertex.num_edges; ++i)
 	{
-		if(sub_problem->sets[2].test(sub_problem->graph[w].edges[i].target))
-			fweight += sub_problem->graph[w].edges[i].weight;
+		if (bitset.test(vertex.edges[i].target))
+			fweight += vertex.edges[i].weight;
 	}
 
 	size_t mincut, sumcut = 0;
-	size_t v = sub_problem->sets[2]._Find_next(w);
-	while(v != sub_problem->sets[2].size())
+	size_t v = bitset._Find_next(w);
+	while (v != bitset.size())
 	{
 		sumcut += weights[set][v];
-		v = sub_problem->sets[2]._Find_next(v);
+		v = bitset._Find_next(v);
 	}
 
 	mincut = sumcut + weights[set^1][w] + fweight;
 
-	v = sub_problem->sets[2]._Find_first();
-	while (v != sub_problem->sets[2].size())
+	v = bitset._Find_first();
+	while (v != bitset.size())
 	{
 		sumcut += weights[set][v];
-		v = sub_problem->sets[2]._Find_next(v);
-		if (v!=sub_problem->sets[2].size())
+		v = bitset._Find_next(v);
+		if (v != bitset.size())
 		{
 			fweight = 0;
 			for (size_t i=0; i<sub_problem->graph[v].num_edges; ++i)
 			{
-				if(sub_problem->sets[2].test(sub_problem->graph[v].edges[i].target))
+				if (bitset.test(sub_problem->graph[v].edges[i].target))
 					fweight += sub_problem->graph[v].edges[i].weight;
 			}
 			sumcut -= weights[set][v];
@@ -237,49 +239,58 @@ void BBGraphBipartitioningLogic<Pheet, SubProblem>::update_data(uint8_t set, siz
 {
 	cut += weights[set ^ 1][pos];
 
-	for(size_t i = 0; i < sub_problem->graph[pos].num_edges; ++i)
+	Set bitset = sub_problem->sets[2];
+	const GraphVertex vertex = sub_problem->graph[pos];
+	for(size_t i = 0; i < vertex.num_edges; ++i)
 	{
-		weights[set][sub_problem->graph[pos].edges[i].target] += sub_problem->graph[pos].edges[i].weight;
-		if(sub_problem->sets[2].test(sub_problem->graph[pos].edges[i].target))
+		const GraphEdge edge = vertex.edges[i];
+		weights[set][edge.target] += edge.weight;
+		if (bitset.test(edge.target))
 		{
-			pheet_assert(contributions[sub_problem->graph[pos].edges[i].target] >= sub_problem->graph[pos].edges[i].weight);
-			contributions[sub_problem->graph[pos].edges[i].target] -= sub_problem->graph[pos].edges[i].weight;
-			contrib_sum -= sub_problem->graph[pos].edges[i].weight;
+			pheet_assert(contributions[edge.target] >= edge.weight);
+			contributions[edge.target] -= edge.weight;
+			contrib_sum -= edge.weight;
 		}
 	}
 
-	ptrdiff_t* delta = new ptrdiff_t[sub_problem->sets[2].count()];
+	size_t nf =  bitset.count();
+	ptrdiff_t delta[nf];
+	//ptrdiff_t* delta = new ptrdiff_t[bitset.count()];
 
 	size_t di = 0;
 	lb = 0;
 	ub = 0;
-	size_t current_bit = sub_problem->sets[2]._Find_first();
+	size_t current_bit = bitset._Find_first();
 	nv = current_bit;
 	size_t best_contrib = 0;
-	while (current_bit != sub_problem->sets[2].size())
+	while (current_bit != bitset.size())
 	{
-		ptrdiff_t d = (ptrdiff_t)weights[1][current_bit] - (ptrdiff_t)weights[0][current_bit];
+		size_t weight0 = weights[0][current_bit];
+		size_t weight1 = weights[1][current_bit];
+		ptrdiff_t d = (ptrdiff_t)weight1 - (ptrdiff_t)weight0;
 		if (std::abs(d) + contributions[current_bit] >= best_contrib)
 		{
 			best_contrib = std::abs(d) + contributions[current_bit];
 			nv = current_bit;
 		}
 		delta[di++] = d;
-		lb += std::min(weights[0][current_bit], weights[1][current_bit]);
-		ub += std::max(weights[0][current_bit], weights[1][current_bit]);
-		current_bit = sub_problem->sets[2]._Find_next(current_bit);
+		lb += std::min(weight0, weight1);
+		ub += std::max(weight0, weight1);
+		current_bit = bitset._Find_next(current_bit);
 	}
 	std::sort(delta, delta + di);
 
 	size_t pivot = (/*sub_problem->size - */sub_problem->k) - sub_problem->sets[0].count();
 	if (pivot < di && delta[pivot] < 0)
 	{
+		auto d = delta[pivot];
 		do
 		{
-			lb += -delta[pivot];
-			ub -= -delta[pivot];
+			lb += -d;
+			ub -= -d;
 			++pivot;
-		} while(pivot < di && delta[pivot] < 0);
+			d = delta[pivot];
+		} while(pivot < di && d < 0);
 	}
 	else if(pivot > 0 && delta[pivot - 1] > 0)
 	{
@@ -291,7 +302,7 @@ void BBGraphBipartitioningLogic<Pheet, SubProblem>::update_data(uint8_t set, siz
 		} while(pivot > 0 && delta[pivot - 1] > 0);
 	}
 
-	delete[] delta;
+	//delete[] delta;
 }
 
 template <class Pheet, class SubProblem>
