@@ -72,11 +72,11 @@ public:
 	LastTimePerformanceCounter(LastTimePerformanceCounter<Pheet, true>& other);
 	~LastTimePerformanceCounter();
 
+	void start_timer();
 	void take_time();
 	void print(char const* formatting_string);
 	static void print_header(char const* const string);
 private:
-	void start_timer();
 
 	MaxReducer<Pheet, double> reducer;
 	struct timeval start_time;

@@ -74,6 +74,8 @@ void GraphBipartitioningTest<Pheet, Partitioner>::run_test() {
 	Time start, end;
 	{typename Pheet::Environment env(cpus, pc);
 		check_time(start);
+		ppc.subproblem_pc.last_update_time.start_timer();
+
 		Pheet::template
 			finish<Partitioner<Pheet> >(data, size, solution, ppc);
 		check_time(end);
