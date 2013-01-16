@@ -16,6 +16,7 @@
 #include <pheet/sched/Strategy/StrategyScheduler.h>
 #include <pheet/sched/BStrategy/BStrategyScheduler.h>
 #include <pheet/sched/Synchroneous/SynchroneousScheduler.h>
+#include <pheet/ds/StrategyTaskStorage/DistK/DistKStrategyTaskStorage.h>
 #endif
 
 namespace pheet {
@@ -34,6 +35,10 @@ void SsspTests::run_test() {
 
 	this->run_algorithm<	Pheet::WithScheduler<SynchroneousScheduler>,
 							ReferenceSssp>();
+	this->run_algorithm<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<DistKStrategyTaskStorage>,
+							StrategySssp>();
+	this->run_algorithm<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<DistKStrategyTaskStorageLocalK>,
+							StrategySssp>();
 	this->run_algorithm<	Pheet::WithScheduler<BStrategyScheduler>,
 							StrategySssp>();
 	this->run_algorithm<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<CentralKStrategyTaskStorageLocalK>,

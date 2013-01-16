@@ -79,12 +79,15 @@ public:
 	}
 
 	~CentralKStrategyTaskStoragePlace() {
+		// Check whether this is needed at all, or if scheduler only terminates if heap is empty
 		while(!heap.empty()) {
 			Ref r = heap.pop();
 			// All items should have been processed
 			pheet_assert(r.position != r.item->position);
-			delete r.item->strategy;
-			r.item->strategy = nullptr;
+		//	if(r.strategy != r.item->strategy) {
+				delete r.strategy;
+		//	}
+			r.strategy = nullptr;
 		}
 	}
 
@@ -136,7 +139,9 @@ public:
 			Ref r = heap.pop();
 
 			pheet_assert(r.strategy != nullptr);
-			delete r.strategy;
+		//	if(r.strategy != r.item->strategy) {
+				delete r.strategy;
+		//	}
 
 			if(r.item->position == r.position) {
 				if(SIZET_CAS(&(r.item->position), r.position, r.position + 1)) {
