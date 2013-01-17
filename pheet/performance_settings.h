@@ -68,6 +68,8 @@ bool const task_storage_measure_steal_time = pc_all | false;
 bool const task_storage_count_skipped_cleanups = pc_all | false;
 bool const task_storage_measure_max_control_block_items = pc_all | 		false;
 bool const task_storage_measure_max_heap_length = pc_all | 				false;
+bool const task_storage_count_blocks_created = pc_all | false;
+bool const task_storage_count_global_blocks = pc_all | false;
 
 bool const stealer_count_stream_tasks = pc_all | false;
 bool const stealer_count_stolen_tasks = pc_all | false;

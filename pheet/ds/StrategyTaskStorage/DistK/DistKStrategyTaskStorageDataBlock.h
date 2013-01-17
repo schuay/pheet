@@ -66,6 +66,10 @@ public:
 								next->local_id != local_id + 1));*/
 	}
 
+	bool is_empty() {
+		return active_items == 0;
+	}
+
 	bool is_full() {
 		return filled == BlockSize;
 	}

@@ -81,7 +81,11 @@ public:
 			tmp = &(data_blocks.acquire_item());
 			tmp->init_global_first(task_storage->get_num_places());
 			task_storage->start_block = tmp;
+
+			pc.num_blocks_created.incr();
+			pc.num_global_blocks.incr();
 		}
+		pc.num_blocks_created.incr();
 		global_tail = tmp;
 	}
 
@@ -122,6 +126,8 @@ public:
 		pheet_assert(remaining_k != 0);
 
 		if(local_tail->is_full()) {
+			pc.num_blocks_created.incr();
+
 			DataBlock* next = &(data_blocks.acquire_item());
 			local_tail->set_next(next);
 			local_tail = next;
@@ -152,7 +158,15 @@ public:
 
 				if(r.item->position == r.position) {
 					if(SIZET_CAS(&(r.item->position), r.position, r.position + 1)) {
+						pc.num_successful_takes.incr();
+						while(local_head != local_tail && local_head->is_empty()) {
+							local_head = local_head->get_next();
+						}
+
 						return r.item->data;
+					}
+					else {
+						pc.num_unsuccessful_takes.incr();
 					}
 				}
 				update_heap();
@@ -160,6 +174,9 @@ public:
 
 		// Heap is empty. Try work-stealing (without actual stealing, just copying)
 		} while(steal_work());
+		while(local_head != local_tail && local_head->is_empty()) {
+			local_head = local_head->get_next();
+		}
 
 		return nullable_traits<T>::null_value;
 	}
@@ -206,12 +223,14 @@ private:
 
 	void make_queue_global() {
 		if(task_storage->get_num_places() > 1) {
+			pc.num_blocks_created.incr();
 			DataBlock* new_list = &(data_blocks.acquire_item());
 			new_list->reset(local_tail->get_offset() + BlockSize);
 
 			size_t np = task_storage->get_num_places() - 1;
 			DataBlock* block = local_head;
 			while(block != nullptr) {
+				pc.num_global_blocks.incr();
 				block->set_active_threads(np);
 //				block->target_active_threads = 0;
 				block = block->get_next();
