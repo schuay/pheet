@@ -21,7 +21,7 @@ public:
 
 	StrategySsspStrategy(size_t distance)
 	: distance(distance), rnd(Pheet::rand_int((1 + distance) << 4)) {
-		this->set_k(4);
+		this->set_k(256);
 	}
 
 	StrategySsspStrategy(Self& other)

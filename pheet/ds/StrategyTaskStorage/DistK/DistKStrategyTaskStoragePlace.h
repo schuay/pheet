@@ -71,6 +71,8 @@ public:
 	DistKStrategyTaskStoragePlace(TaskStorage* task_storage, PerformanceCounters pc)
 	:pc(pc), task_storage(task_storage), heap(sr, pc.strategy_heap_performance_counters), remaining_k(std::numeric_limits<size_t>::max()),
 	 local_head(&(data_blocks.acquire_item())), local_tail(local_head)  {
+		local_head->reset(0);
+
 		DataBlock* tmp = task_storage->start_block;
 		if(tmp == nullptr) {
 			// This assumes the first place is initialized before all others, otherwise synchronization would be needed!
@@ -78,6 +80,7 @@ public:
 			tmp->init_global_first(task_storage->get_num_places());
 			task_storage->start_block = tmp;
 		}
+		global_tail = tmp;
 	}
 
 	~DistKStrategyTaskStoragePlace() {
@@ -121,6 +124,7 @@ public:
 			local_tail->set_next(next);
 			local_tail = next;
 		}
+		pheet_assert(local_tail->get_filled() < BlockSize);
 
 		Ref r;
 		r.item = &it;
@@ -184,6 +188,12 @@ private:
 	void update_heap() {
 		// Check whether update is necessary
 		if(!heap.empty()) {
+			if(LocalKPrio) {
+
+			}
+			else {
+				process_global_queue();
+			}
 		/*	if(LocalKPrio) {
 				size_t pos = heap.peek().position;
 				ptrdiff_t diff = ((ptrdiff_t)head) - ((ptrdiff_t) pos);
@@ -197,22 +207,22 @@ private:
 				}
 			}*/
 		}
+		else {
+			process_global_queue();
+		}
 	}
 
 	void make_queue_global() {
 		if(task_storage->get_num_places() > 1) {
 			DataBlock* new_list = &(data_blocks.acquire_item());
-			new_list->set_offset(local_tail->get_offset() + BlockSize);
-			new_list->prev = nullptr;
-			pheet_assert(new_list->next == nullptr);
-			new_list->state = 0;
+			new_list->reset(local_tail->get_offset() + BlockSize);
 
 			size_t np = task_storage->get_num_places() - 1;
 			DataBlock* block = local_head;
 			while(block != nullptr) {
 				block->set_active_threads(np);
 //				block->target_active_threads = 0;
-				block = block->next;
+				block = block->get_next();
 			}
 			local_tail->set_active_threads(np + 1);
 
@@ -226,8 +236,8 @@ private:
 
 			block = local_head;
 			while(block != nullptr) {
-				block->state = 2;
-				block = block->next;
+				block->set_state(2);
+				block = block->get_next();
 			}
 			local_head = new_list;
 			local_tail = new_list;
@@ -240,12 +250,12 @@ private:
 		while(next != nullptr) {
 			global_tail->mark_processed_globally();
 
-			for(size_t i = 0; i < next->filled; ++i) {
+			for(size_t i = 0; i < next->get_filled(); ++i) {
 				Item* data = next->get_item(i);
-				if(data->position == next->offset + i) {
+				if(data->position == next->get_offset() + i) {
 					// Item is usable
 					auto ip = data->item_push;
-					(this->*ip)(data, next->offset + i);
+					(this->*ip)(data, next->get_offset() + i);
 				}
 			}
 

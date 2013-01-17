@@ -40,9 +40,11 @@ public:
 		MEMORY_FENCE();
 
 		++filled;
+		pheet_assert(filled <= BlockSize);
 	}
 
 	bool is_reusable() {
+		pheet_assert(state != 4 || filled == 0);
 		if(state == 1) {
 			if(locally_active_threads == 0) {
 				make_reusable();
@@ -55,6 +57,7 @@ public:
 			}
 		}
 
+		pheet_assert(state != 4 || filled == 0);
 		return state == 4;
 				/*state == 3 ||
 				(state == 2 &&
@@ -148,6 +151,13 @@ public:
 		state = 0;
 	}
 
+	void reset(size_t new_offset) {
+		offset = new_offset;
+		prev = nullptr;
+		pheet_assert(next == nullptr);
+		state = 0;
+	}
+
 	void set_offset(size_t value) {
 		offset = value;
 	}
@@ -156,14 +166,27 @@ public:
 		return offset;
 	}
 
+	uint8_t get_state() {
+		return state;
+	}
+
+	void set_state(uint8_t value) {
+		state = value;
+	}
+
 	void set_active_threads(size_t value) {
 		active_threads = value;
 
 	}
 
+	size_t get_filled() {
+		return filled;
+	}
+
 	void mark_item_used() {
 		--active_items;
 		if(active_items == 0) {
+			pheet_assert(state != 4);
 			if(state == 0 && next != nullptr) {
 				state = 1;
 				if(prev != nullptr) {
@@ -187,6 +210,9 @@ public:
 		}
 	}
 
+	void mark_processed_globally() {
+		SIZET_ATOMIC_SUB(&active_threads, 1);
+	}
 private:
 	void global_unlink() {
 
