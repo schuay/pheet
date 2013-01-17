@@ -119,6 +119,8 @@ public:
 
 	TaskStorage& get_task_storage() { return task_storage; }
 
+	procs_t get_num_levels() { return num_levels; }
+
 private:
 	void initialize_levels();
 	void grow_levels_structure();

@@ -68,9 +68,11 @@ public:
 	typedef ItemReuseMemoryManager<Pheet, Item, DistKStrategyTaskStorageItemReuseCheck<Item> > ItemMemoryManager;
 	typedef ItemReuseMemoryManager<Pheet, DataBlock, DistKStrategyTaskStorageDataBlockReuseCheck<DataBlock> > DataBlockMemoryManager;
 
-	DistKStrategyTaskStoragePlace(TaskStorage* task_storage, PerformanceCounters pc)
+	typedef typename Pheet::Scheduler::Place SchedulerPlace;
+
+	DistKStrategyTaskStoragePlace(TaskStorage* task_storage, SchedulerPlace* scheduler_place, PerformanceCounters pc)
 	:pc(pc), task_storage(task_storage), heap(sr, pc.strategy_heap_performance_counters), remaining_k(std::numeric_limits<size_t>::max()),
-	 local_head(&(data_blocks.acquire_item())), local_tail(local_head)  {
+	 local_head(&(data_blocks.acquire_item())), local_tail(local_head), last_steal_head(nullptr), scheduler_place(scheduler_place)  {
 		local_head->reset(0);
 
 		DataBlock* tmp = task_storage->start_block;
@@ -123,6 +125,8 @@ public:
 			DataBlock* next = &(data_blocks.acquire_item());
 			local_tail->set_next(next);
 			local_tail = next;
+
+			last_steal_head = nullptr;
 		}
 		pheet_assert(local_tail->get_filled() < BlockSize);
 
@@ -194,18 +198,6 @@ private:
 			else {
 				process_global_queue();
 			}
-		/*	if(LocalKPrio) {
-				size_t pos = heap.peek().position;
-				ptrdiff_t diff = ((ptrdiff_t)head) - ((ptrdiff_t) pos);
-				if(diff >= 0) {
-					return;
-				}
-			}
-			else {
-				if(task_storage->tail == head) {
-					return;
-				}
-			}*/
 		}
 		else {
 			process_global_queue();
@@ -265,7 +257,66 @@ private:
 	}
 
 	bool steal_work() {
+		procs_t num_levels = scheduler_place->get_num_levels();
+		// Finalize elements in stack
+		// We do not steal from the last level as there are no partners
+		procs_t level = num_levels - 1;
+		while(level > 0) {
+			Self& partner = scheduler_place->get_random_partner_at_level(level)->get_task_storage();
+
+			if(process_local_list(partner.local_head)) {
+				// Success when stealing!
+				last_steal_head = partner.local_head;
+				return true;
+			}
+			else if(process_local_list(partner.last_steal_head)) {
+				last_steal_head = partner.last_steal_head;
+				return true;
+			}
+
+			--level;
+		}
+
 		return false;
+	}
+
+	bool process_local_list(DataBlock* block) {
+		bool success = false;
+
+		while(block != nullptr) {
+			if(block->get_state() != 0) {
+				break;
+			}
+			for(size_t i = 0; i < block->get_filled(); ++i) {
+				Item* data = block->get_item(i);
+				if(data->position == block->get_offset() + i) {
+
+					block->register_locally();
+
+					// Item has to be rechecked after registration (Might have been invalidated in the meantime)
+					for(size_t j = i; j < block->get_filled(); ++j) {
+						Item* data = block->get_item(j);
+						if(data->position == block->get_offset() + j) {
+							success = true;
+
+							// Item is usable
+							auto ip = data->item_push;
+							(this->*ip)(data, block->get_offset() + j);
+						}
+					}
+					block->deregister_locally();
+					break;
+				}
+			}
+
+			block = block->get_next();
+		}
+
+		if(success && LocalKPrio) {
+			// Enforce global queue in this case. With non-local it will be called anyway later
+			process_global_queue();
+		}
+		return success;
 	}
 
 	PerformanceCounters pc;
@@ -282,6 +333,10 @@ private:
 	DataBlock* local_tail;
 
 	DataBlock* global_tail;
+
+	DataBlock* last_steal_head;
+
+	SchedulerPlace* scheduler_place;
 };
 
 } /* namespace pheet */

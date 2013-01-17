@@ -213,6 +213,15 @@ public:
 	void mark_processed_globally() {
 		SIZET_ATOMIC_SUB(&active_threads, 1);
 	}
+
+	void register_locally() {
+		SIZET_ATOMIC_ADD(&locally_active_threads, 1);
+	}
+
+	void deregister_locally() {
+		pheet_assert(locally_active_threads > 0);
+		SIZET_ATOMIC_SUB(&locally_active_threads, 1);
+	}
 private:
 	void global_unlink() {
 

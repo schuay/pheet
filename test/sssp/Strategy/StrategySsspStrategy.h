@@ -20,32 +20,32 @@ public:
 	typedef typename Pheet::Environment::BaseStrategy BaseStrategy;
 
 	StrategySsspStrategy(size_t distance)
-	: distance(distance), rnd(Pheet::rand_int((1 + distance) << 4)) {
-		this->set_k(256);
+	: distance(distance)/*, rnd(Pheet::rand_int((1 + distance) << 4))*/ {
+		this->set_k(1024);
 	}
 
 	StrategySsspStrategy(Self& other)
-	: BaseStrategy(other), distance(other.distance), rnd(other.rnd) {
+	: BaseStrategy(other), distance(other.distance)/*, rnd(other.rnd)*/ {
 
 	}
 
 	StrategySsspStrategy(Self&& other)
-	: BaseStrategy(other), distance(other.distance), rnd(other.rnd) {}
+	: BaseStrategy(other), distance(other.distance)/*, rnd(other.rnd)*/ {}
 
 	~StrategySsspStrategy() {}
 
 	inline bool prioritize(Self& other) const {
-		auto p = Pheet::get_place();
+/*		auto p = Pheet::get_place();
 		if(this->get_place() == p) {
-			if(other.get_place() == p) {
+			if(other.get_place() == p) {*/
 				return distance < other.distance;
-			}
+/*			}
 			return true;
 		}
 		else if(other.get_place() == p) {
 			return false;
 		}
-		return rnd < other.rnd;
+		return rnd < other.rnd;*/
 
 	//	return BaseStrategy::prioritize(other);
 	}
@@ -53,14 +53,14 @@ public:
 	inline bool forbid_call_conversion() const {
 		return true;
 	}
-
+/*
 	inline void rebase() {
 		this->reset();
 		rnd = Pheet::rand_int((1 + distance) << 4);
-	}
+	}*/
 private:
 	size_t distance;
-	size_t rnd;
+//	size_t rnd;
 };
 
 

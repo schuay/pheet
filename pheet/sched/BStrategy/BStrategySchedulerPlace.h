@@ -118,6 +118,26 @@ public:
 	ptrdiff_t next_task_id() { return task_id++; }
 
 	TaskStorage& get_task_storage() { return task_storage; }
+	procs_t get_num_levels() {
+		return num_levels;
+	}
+	procs_t get_num_partners_at_level(procs_t level) {
+		pheet_assert(level < num_levels);
+		return levels[level].num_partners;
+	}
+	Place* get_partner_at_level(procs_t id, procs_t level) {
+		pheet_assert(level < num_levels);
+		pheet_assert(id < levels[level].num_partners);
+		return levels[level].partners[id];
+	}
+	Place* get_random_partner_at_level(procs_t level) {
+		pheet_assert(levels[level].num_partners > 0);
+		std::uniform_int_distribution<procs_t> n_r_gen(0, levels[level].num_partners - 1);
+		procs_t next_rand = n_r_gen(this->get_rng());
+		pheet_assert(next_rand < levels[level].num_partners);
+		pheet_assert(levels[level].partners[next_rand] != this);
+		return levels[level].partners[next_rand];
+	}
 
 private:
 	void initialize_levels();
@@ -183,7 +203,7 @@ BStrategySchedulerPlace<Pheet, CallThreshold>::BStrategySchedulerPlace(InternalM
   stack_filled_left(0), stack_filled_right(stack_size), stack_init_left(0),
   scheduler_state(scheduler_state),
   performance_counters(perf_count),
-  task_storage(ctask_storage, performance_counters.task_storage_performance_counters),
+  task_storage(ctask_storage, this, performance_counters.task_storage_performance_counters),
 //  spawn2call_counter(0),
   thread_executor(this),
   task_id(0) {
@@ -213,7 +233,7 @@ BStrategySchedulerPlace<Pheet, CallThreshold>::BStrategySchedulerPlace(CentralTa
   stack_filled_left(0), stack_filled_right(stack_size), stack_init_left(0),
   scheduler_state(scheduler_state),
   performance_counters(perf_count),
-  task_storage(ctask_storage, performance_counters.task_storage_performance_counters),
+  task_storage(ctask_storage, this, performance_counters.task_storage_performance_counters),
 //  spawn2call_counter(0),
   thread_executor(this) {
 
