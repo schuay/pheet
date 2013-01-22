@@ -138,7 +138,7 @@ public:
 
 		Ref r;
 		r.item = &it;
-		r.position = it.position;
+		r.position = it.orig_position;
 		r.strategy = it.strategy;
 
 		heap.template push<Strategy>(std::move(r));
