@@ -157,13 +157,14 @@ public:
 				}
 
 				if(r.item->position == r.position) {
+					T ret = r.item->data;
 					if(SIZET_CAS(&(r.item->position), r.position, r.position + 1)) {
 						pc.num_successful_takes.incr();
 						while(local_head != local_tail && local_head->is_empty()) {
 							local_head = local_head->get_next();
 						}
 
-						return r.item->data;
+						return ret;
 					}
 					else {
 						pc.num_unsuccessful_takes.incr();
