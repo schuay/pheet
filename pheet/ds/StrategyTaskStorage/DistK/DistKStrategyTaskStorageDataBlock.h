@@ -33,7 +33,7 @@ public:
 
 	void put(Item* item) {
 		item->position = offset + filled;
-		item->orig_position = item->position;
+		item->orig_position = offset + filled;
 		data[filled] = item;
 
 		// Make sure all changes to item are visible before item becomes visible
@@ -189,6 +189,9 @@ public:
 
 	void mark_item_used() {
 		--active_items;
+	}
+
+	void perform_cleanup_check() {
 		if(active_items == 0) {
 			pheet_assert(state != 4);
 			if(state == 0 && next != nullptr) {

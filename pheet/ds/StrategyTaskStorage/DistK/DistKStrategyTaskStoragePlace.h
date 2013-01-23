@@ -113,6 +113,7 @@ public:
 		it.strategy = new Strategy(std::move(s));
 		it.data = data;
 		it.item_push = &Self::template item_push<Strategy>;
+		it.block = local_tail;
 
 		if(k < remaining_k) remaining_k = k;
 		local_tail->put(&it);
@@ -152,22 +153,45 @@ public:
 				Ref r = heap.pop();
 
 				pheet_assert(r.strategy != nullptr);
+				bool local = true;
 				if(r.strategy != r.item->strategy) {
 					delete r.strategy;
+					local = false;
 				}
 
-				if(r.item->position == r.position) {
-					T ret = r.item->data;
-					if(SIZET_CAS(&(r.item->position), r.position, r.position + 1)) {
-						pc.num_successful_takes.incr();
-						while(local_head != local_tail && local_head->is_empty()) {
-							local_head = local_head->get_next();
-						}
+				if(local) {
+					if(r.item->position == r.position) {
+						T ret = r.item->data;
+						DataBlock* block = r.item->block;
+						if(SIZET_CAS(&(r.item->position), r.position, r.position + 1)) {
+							pc.num_successful_takes.incr();
 
-						return ret;
+							block->mark_item_used();
+							while(local_head != local_tail && local_head->is_empty()) {
+								local_head = local_head->get_next();
+							}
+							block->perform_cleanup_check();
+
+							return ret;
+						}
+						else {
+							block->mark_item_used();
+							block->perform_cleanup_check();
+
+							pc.num_unsuccessful_takes.incr();
+						}
 					}
-					else {
-						pc.num_unsuccessful_takes.incr();
+				}
+				else {
+					if(r.item->position == r.position) {
+						T ret = r.item->data;
+						if(SIZET_CAS(&(r.item->position), r.position, r.position + 1)) {
+							pc.num_successful_takes.incr();
+							return ret;
+						}
+						else {
+							pc.num_unsuccessful_takes.incr();
+						}
 					}
 				}
 				update_heap();
@@ -307,21 +331,22 @@ private:
 			if(block->get_state() != 0) {
 				break;
 			}
+			size_t offset = block->get_offset();
 			for(size_t i = 0; i < block->get_filled(); ++i) {
 				Item* data = block->get_item(i);
-				if(data->position == block->get_offset() + i) {
+				if(data->position == offset + i) {
 
 					block->register_locally();
 
 					// Item has to be rechecked after registration (Might have been invalidated in the meantime)
 					for(size_t j = i; j < block->get_filled(); ++j) {
 						Item* data = block->get_item(j);
-						if(data->position == block->get_offset() + j) {
+						if(data->position == offset + j) {
 							success = true;
 
 							// Item is usable
 							auto ip = data->item_push;
-							(this->*ip)(data, block->get_offset() + j);
+							(this->*ip)(data, offset + j);
 						}
 					}
 					block->deregister_locally();

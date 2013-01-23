@@ -21,6 +21,8 @@ struct DistKStrategyTaskStorageItem {
 	size_t position;
 	size_t orig_position;
 
+	typename Place::DataBlock* block;
+
 	void (Place::*item_push)(Self* item, size_t position);
 };
 
