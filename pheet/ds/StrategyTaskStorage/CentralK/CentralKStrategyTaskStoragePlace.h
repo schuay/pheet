@@ -100,13 +100,15 @@ public:
 		it.strategy = new Strategy(s);
 		it.data = data;
 		it.item_push = &Self::template item_push<Strategy>;
+		it.owner = this;
 
 		size_t old_tail = task_storage->tail;
 		size_t cur_tail = old_tail;
 
-		while(!tail_block->put(&(task_storage->head), &(task_storage->tail), cur_tail, &it)) {
+		while(!tail_block->put(&(task_storage->head), &(task_storage->tail), cur_tail, &it, pc.data_block_performance_counters)) {
 			if(tail_block->get_next() == nullptr) {
 				DataBlock& next_block = data_blocks.acquire_item();
+				pc.num_blocks_created.incr();
 				tail_block->add_block(&next_block, task_storage->get_num_places());
 			}
 			pheet_assert(tail_block->get_next() != nullptr);
@@ -147,8 +149,16 @@ public:
 
 			if(r.item->position == r.position) {
 				if(SIZET_CAS(&(r.item->position), r.position, r.position + 1)) {
+					pc.num_successful_takes.incr();
 					return r.item->data;
 				}
+				else {
+					pc.num_unsuccessful_takes.incr();
+					pc.num_taken_heap_items.incr();
+				}
+			}
+			else {
+				pc.num_taken_heap_items.incr();
 			}
 			update_heap();
 		}
@@ -158,7 +168,7 @@ public:
 		// Tries to find and take a random item from the queue inside the block
 		// Synchronization and verification all take place inside this method.
 		// Returned item is free to use by this thread
-		Item* item = head_block->take_rand_filled(head);
+		Item* item = head_block->take_rand_filled(head, pc.data_block_performance_counters, pc.num_unsuccessful_takes, pc.num_successful_takes);
 		if(item != nullptr) {
 			return item->data;
 		}
@@ -243,7 +253,7 @@ private:
 			}
 
 			Item* item = head_block->get_item(head);
-			if(item != nullptr && item->position == head) {
+			if(item != nullptr && item->owner != this && item->position == head) {
 				// TODO: skip locally created items (maybe first check with a performance counter how often this occurs)
 
 				// Push item to local heap

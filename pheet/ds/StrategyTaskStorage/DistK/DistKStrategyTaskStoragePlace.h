@@ -178,8 +178,12 @@ public:
 							block->mark_item_used();
 							block->perform_cleanup_check();
 
+							pc.num_taken_heap_items.incr();
 							pc.num_unsuccessful_takes.incr();
 						}
+					}
+					else {
+						pc.num_taken_heap_items.incr();
 					}
 				}
 				else {
@@ -190,8 +194,12 @@ public:
 							return ret;
 						}
 						else {
+							pc.num_taken_heap_items.incr();
 							pc.num_unsuccessful_takes.incr();
 						}
+					}
+					else {
+						pc.num_taken_heap_items.incr();
 					}
 				}
 				update_heap();

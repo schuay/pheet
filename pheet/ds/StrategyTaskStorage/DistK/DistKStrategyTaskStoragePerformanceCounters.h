@@ -22,6 +22,7 @@ public:
 	 num_global_blocks(other.num_global_blocks),
 	 num_unsuccessful_takes(other.num_unsuccessful_takes),
 	 num_successful_takes(other.num_successful_takes),
+	 num_taken_heap_items(other.num_taken_heap_items),
 	 strategy_heap_performance_counters(other.strategy_heap_performance_counters) {}
 
 	inline ~DistKStrategyTaskStoragePerformanceCounters() {}
@@ -31,6 +32,7 @@ public:
 		BasicPerformanceCounter<Pheet, task_storage_count_global_blocks>::print_header("num_global_blocks\t");
 		BasicPerformanceCounter<Pheet, task_storage_count_unsuccessful_takes>::print_header("num_unsuccessful_takes\t");
 		BasicPerformanceCounter<Pheet, task_storage_count_successful_takes>::print_header("num_successful_takes\t");
+		BasicPerformanceCounter<Pheet, task_storage_count_taken_heap_items>::print_header("num_taken_heap_items\t");
 
 		StrategyHeapPerformanceCounters::print_headers();
 	}
@@ -39,6 +41,7 @@ public:
 		num_global_blocks.print("%d\t");
 		num_unsuccessful_takes.print("%d\t");
 		num_successful_takes.print("%d\t");
+		num_taken_heap_items.print("%d\t");
 
 		strategy_heap_performance_counters.print_values();
 	}
@@ -47,6 +50,7 @@ public:
 	BasicPerformanceCounter<Pheet, task_storage_count_global_blocks> num_global_blocks;
 	BasicPerformanceCounter<Pheet, task_storage_count_unsuccessful_takes> num_unsuccessful_takes;
 	BasicPerformanceCounter<Pheet, task_storage_count_successful_takes> num_successful_takes;
+	BasicPerformanceCounter<Pheet, task_storage_count_taken_heap_items> num_taken_heap_items;
 
 	StrategyHeapPerformanceCounters strategy_heap_performance_counters;
 };

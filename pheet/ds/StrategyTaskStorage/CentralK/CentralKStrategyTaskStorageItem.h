@@ -20,6 +20,8 @@ struct CentralKStrategyTaskStorageItem {
 	size_t position;
 	size_t orig_position;
 
+	Place* owner;
+
 	void (Place::*item_push)(Self* item, size_t position);
 };
 

@@ -9,6 +9,7 @@
 #define CENTRALKSTRATEGYTASKSTORAGEDATABLOCK_H_
 
 #include "CentralKStrategyTaskStorageItem.h"
+#include "CentralKStrategyTaskStorageDataBlockPerformanceCounters.h"
 #include <pheet/misc/atomics.h>
 
 namespace pheet {
@@ -19,6 +20,7 @@ public:
 	typedef CentralKStrategyTaskStorageDataBlock<Pheet, Place, TT, BlockSize, Tests> Self;
 
 	typedef CentralKStrategyTaskStorageItem<Pheet, Place, TT> Item;
+	typedef CentralKStrategyTaskStorageDataBlockPerformanceCounters<Pheet> PerformanceCounters;
 
 	CentralKStrategyTaskStorageDataBlock()
 	:offset(0), next(nullptr), active_threads(0), active(false) {
@@ -28,7 +30,7 @@ public:
 	}
 	~CentralKStrategyTaskStorageDataBlock() {}
 
-	bool put(size_t* head, size_t* tail, size_t& cur_tail, Item* item) {
+	bool put(size_t* head, size_t* tail, size_t& cur_tail, Item* item, PerformanceCounters& pc) {
 		// Take care not to break correct wraparounds when changing anything
 		size_t k = item->strategy->get_k();
 	//	size_t next_offset = offset + BlockSize;
@@ -37,6 +39,8 @@ public:
 		size_t array_offset = cur_tail - offset;
 
 		while(array_offset < BlockSize) {
+			pc.num_put_tests.incr();
+
 			size_t cur_k = std::min(k, BlockSize - array_offset);
 
 			size_t to_add = Pheet::template rand_int<size_t>(cur_k - 1);
@@ -133,7 +137,7 @@ public:
 		return next;
 	}
 
-	Item* take_rand_filled(size_t position) {
+	Item* take_rand_filled(size_t position, PerformanceCounters& pc, BasicPerformanceCounter<Pheet, task_storage_count_unsuccessful_takes>& num_unsuccessful_takes, BasicPerformanceCounter<Pheet, task_storage_count_successful_takes>& num_successful_takes) {
 		// Take care not to break correct wraparounds when changing anything
 		size_t array_offset = position - offset;
 
@@ -144,6 +148,7 @@ public:
 		size_t limit = to_add + std::min(max, Tests);
 
 		for(size_t i = to_add; i < limit; ++i) {
+			pc.num_take_tests.incr();
 			size_t index = array_offset + (i % max);
 
 			Item* item = data[index];
@@ -155,7 +160,11 @@ public:
 					// We can't just take this item in this case or we might violate k-ordering
 					if((i % limit) < k) {
 						if(SIZET_CAS(&(item->position), g_index, g_index + 1)) {
+							num_successful_takes.incr();
 							return item;
+						}
+						else {
+							num_unsuccessful_takes.incr();
 						}
 					}
 				}
