@@ -26,6 +26,7 @@
 #include <pheet/ds/Queue/GlobalLock/GlobalLockQueue.h>
 #include <pheet/ds/MultiSet/GlobalLock/GlobalLockMultiSet.h>
 #include <pheet/ds/StrategyHeap/Volatile/VolatileStrategyHeap.h>
+#include <pheet/ds/StrategyTaskStorage/DistK/DistKStrategyTaskStorage.h>
 
 #include <pheet/primitives/Mutex/TASLock/TASLock.h>
 #include <pheet/primitives/Mutex/TTASLock/TTASLock.h>
@@ -36,8 +37,10 @@
 #include <pheet/sched/Centralized/CentralizedScheduler.h>
 #include <pheet/sched/CentralizedPriority/CentralizedPriorityScheduler.h>
 #include <pheet/sched/Strategy/StrategyScheduler.h>
+#include <pheet/sched/BStrategy/BStrategyScheduler.h>
 #include <pheet/sched/Synchroneous/SynchroneousScheduler.h>
 #include <pheet/sched/MixedMode/MixedModeScheduler.h>
+
 
 #include <iostream>
 #endif
@@ -58,6 +61,15 @@ void PrefixSumTests::run_test() {
 	std::cout << "----" << std::endl;
 
 	// default tests
+	this->run_prefix_sum<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<DistKStrategyTaskStorage>,
+							StrategyRecursiveParallelPrefixSum>();
+	this->run_prefix_sum<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<DistKStrategyTaskStorageLocalK>,
+							StrategyRecursiveParallelPrefixSum>();
+	this->run_prefix_sum<	Pheet::WithScheduler<BStrategyScheduler>,
+							StrategyRecursiveParallelPrefixSum>();
+	this->run_prefix_sum<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<CentralKStrategyTaskStorageLocalK>,
+							StrategyRecursiveParallelPrefixSum>();
+
 	this->run_prefix_sum<	Pheet::WithScheduler<StrategyScheduler>,
 						StrategyRecursiveParallelPrefixSum>();
 
@@ -69,9 +81,9 @@ void PrefixSumTests::run_test() {
 
 	this->run_prefix_sum<	Pheet::WithScheduler<StrategyScheduler>,
 						RecursiveParallelPrefixSum>();
-
+/*
 	this->run_prefix_sum<	Pheet,
-						RecursiveParallelPrefixSum>();
+						RecursiveParallelPrefixSum>();*/
 
 	this->run_prefix_sum<	Pheet::WithScheduler<BasicScheduler>,
 						RecursiveParallelPrefixSum>();

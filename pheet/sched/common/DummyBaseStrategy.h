@@ -48,6 +48,9 @@ public:
 		return *this;
 	}
 
+	inline void set_k(size_t value) {
+	}
+
 	inline Self& set_memory_footprint(size_t value) {
 	//	memory_footprint = value;
 		return *this;

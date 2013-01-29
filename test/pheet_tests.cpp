@@ -75,6 +75,8 @@ int main(int argc, char* argv[]) {
 	UTSTests utss;
 	utss.run_test();
 	
+	PrefixSumTests pst;
+	pst.run_test();
 
 	SsspTests sssp;
 	sssp.run_test();

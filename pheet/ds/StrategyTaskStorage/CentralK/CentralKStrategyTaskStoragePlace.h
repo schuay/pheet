@@ -254,8 +254,6 @@ private:
 
 			Item* item = head_block->get_item(head);
 			if(item != nullptr && item->owner != this && item->position == head) {
-				// TODO: skip locally created items (maybe first check with a performance counter how often this occurs)
-
 				// Push item to local heap
 				auto ip = item->item_push;
 				(this->*ip)(item, head);

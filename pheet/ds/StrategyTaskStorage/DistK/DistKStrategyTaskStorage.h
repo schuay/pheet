@@ -11,6 +11,7 @@
 
 #include "DistKStrategyTaskStoragePlace.h"
 #include "DistKStrategyTaskStorageDataBlock.h"
+#include <pheet/ds/StrategyHeap/Basic/BasicStrategyHeap.h>
 
 namespace pheet {
 

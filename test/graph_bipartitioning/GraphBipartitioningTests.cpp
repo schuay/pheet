@@ -28,9 +28,11 @@
 #include <pheet/sched/Basic/BasicScheduler.h>
 #include <pheet/sched/Centralized/CentralizedScheduler.h>
 #include <pheet/sched/Strategy/StrategyScheduler.h>
+#include <pheet/sched/BStrategy/BStrategyScheduler.h>
 
 #include <pheet/ds/Queue/GlobalLock/GlobalLockQueue.h>
 #include <pheet/ds/MultiSet/GlobalLock/GlobalLockMultiSet.h>
+#include <pheet/ds/StrategyTaskStorage/DistK/DistKStrategyTaskStorage.h>
 
 #include <pheet/primitives/Mutex/TASLock/TASLock.h>
 #include <pheet/primitives/Mutex/TTASLock/TTASLock.h>
@@ -120,29 +122,35 @@ void GraphBipartitioningTests::run_test() {
 						BBGraphBipartitioning>();
 
 #else
-/*
-	this->run_partitioner<	Pheet,
-							StrategyBBGraphBipartitioning<>::WithSchedulingStrategy<StrategyBBGraphBipartitioningDynamicStrategy>::T >();
-	this->run_partitioner<	Pheet,
-							StrategyBBGraphBipartitioning<>::WithSchedulingStrategy<StrategyBBGraphBipartitioningUpperBoundStrategy>::T >();
-	this->run_partitioner<	Pheet,
-							StrategyBBGraphBipartitioning<>::WithSchedulingStrategy<StrategyBBGraphBipartitioningUpperLowerBoundStrategy>::T >();
-	this->run_partitioner<	Pheet,
-							StrategyBBGraphBipartitioning<>::WithSchedulingStrategy<StrategyBBGraphBipartitioningBestFirstStrategy>::T >();
-	this->run_partitioner<	Pheet,
-							StrategyBBGraphBipartitioning>(); // strategy: StrategyBBGraphBipartitioningDepthFirstBestStrategy
-	this->run_partitioner<	Pheet,
-							StrategyBBGraphBipartitioning<>::WithSchedulingStrategy<StrategyBBGraphBipartitioningDepthFirstStrategy>::T >();
-	this->run_partitioner<	Pheet,
-							StrategyBBGraphBipartitioning<>::WithSchedulingStrategy<StrategyBBGraphBipartitioningLowerBoundStrategy>::T >();
-	this->run_partitioner<	Pheet,
-							StrategyBBGraphBipartitioning>();
-	this->run_partitioner<	Pheet,
-							StrategyBBGraphBipartitioning>();
-	this->run_partitioner<	Pheet,
-							BBGraphBipartitioning>();*/
-//	this->run_partitioner<  Pheet::WithScheduler<StrategyScheduler>,
-//							PPoPPBBGraphBipartitioning<>::WithSchedulingStrategy<PPoPPBBGraphBipartitioningLowerBoundStrategy>::T >();
+	this->run_partitioner<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<DistKStrategyTaskStorage>,
+							PPoPPBBGraphBipartitioning<>
+								::BT>();
+	this->run_partitioner<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<DistKStrategyTaskStorage>,
+							PPoPPBBGraphBipartitioning<>
+								::WithLogic<BBGraphBipartitioningFREELogic>
+								::BT>();
+	this->run_partitioner<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<DistKStrategyTaskStorageLocalK>,
+							PPoPPBBGraphBipartitioning<>
+								::BT>();
+	this->run_partitioner<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<DistKStrategyTaskStorageLocalK>,
+							PPoPPBBGraphBipartitioning<>
+								::WithLogic<BBGraphBipartitioningFREELogic>
+								::BT>();
+	this->run_partitioner<	Pheet::WithScheduler<BStrategyScheduler>,
+							PPoPPBBGraphBipartitioning<>
+								::BT>();
+	this->run_partitioner<	Pheet::WithScheduler<BStrategyScheduler>,
+							PPoPPBBGraphBipartitioning<>
+								::WithLogic<BBGraphBipartitioningFREELogic>
+								::BT>();
+	this->run_partitioner<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<CentralKStrategyTaskStorageLocalK>,
+							PPoPPBBGraphBipartitioning<>
+								::BT>();
+	this->run_partitioner<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<CentralKStrategyTaskStorageLocalK>,
+							PPoPPBBGraphBipartitioning<>
+								::WithLogic<BBGraphBipartitioningFREELogic>
+								::BT>();
+
 	this->run_partitioner<  Pheet::WithScheduler<StrategyScheduler>,
 							PPoPPBBGraphBipartitioning<>
 								::BT >();
