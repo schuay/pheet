@@ -148,9 +148,10 @@ public:
 		//	}
 
 			if(r.item->position == r.position) {
+				T ret = r.item->data;
 				if(SIZET_CAS(&(r.item->position), r.position, r.position + 1)) {
 					pc.num_successful_takes.incr();
-					return r.item->data;
+					return ret;
 				}
 				else {
 					pc.num_unsuccessful_takes.incr();
@@ -168,12 +169,7 @@ public:
 		// Tries to find and take a random item from the queue inside the block
 		// Synchronization and verification all take place inside this method.
 		// Returned item is free to use by this thread
-		Item* item = head_block->take_rand_filled(head, pc.data_block_performance_counters, pc.num_unsuccessful_takes, pc.num_successful_takes);
-		if(item != nullptr) {
-			return item->data;
-		}
-
-		return nullable_traits<T>::null_value;
+		return head_block->take_rand_filled(head, pc.data_block_performance_counters, pc.num_unsuccessful_takes, pc.num_successful_takes);
 	}
 
 	template <class Strategy>

@@ -19,6 +19,8 @@ class CentralKStrategyTaskStorageDataBlock {
 public:
 	typedef CentralKStrategyTaskStorageDataBlock<Pheet, Place, TT, BlockSize, Tests> Self;
 
+	typedef TT T;
+
 	typedef CentralKStrategyTaskStorageItem<Pheet, Place, TT> Item;
 	typedef CentralKStrategyTaskStorageDataBlockPerformanceCounters<Pheet> PerformanceCounters;
 
@@ -137,7 +139,7 @@ public:
 		return next;
 	}
 
-	Item* take_rand_filled(size_t position, PerformanceCounters& pc, BasicPerformanceCounter<Pheet, task_storage_count_unsuccessful_takes>& num_unsuccessful_takes, BasicPerformanceCounter<Pheet, task_storage_count_successful_takes>& num_successful_takes) {
+	T take_rand_filled(size_t position, PerformanceCounters& pc, BasicPerformanceCounter<Pheet, task_storage_count_unsuccessful_takes>& num_unsuccessful_takes, BasicPerformanceCounter<Pheet, task_storage_count_successful_takes>& num_successful_takes) {
 		// Take care not to break correct wraparounds when changing anything
 		size_t array_offset = position - offset;
 
@@ -159,9 +161,10 @@ public:
 					// If k is smaller than the distance to position, tail must have been updated in the meantime.
 					// We can't just take this item in this case or we might violate k-ordering
 					if((i % limit) < k) {
+						T ret = item->data;
 						if(SIZET_CAS(&(item->position), g_index, g_index + 1)) {
 							num_successful_takes.incr();
-							return item;
+							return ret;
 						}
 						else {
 							num_unsuccessful_takes.incr();
@@ -170,7 +173,7 @@ public:
 				}
 			}
 		}
-		return nullptr;
+		return nullable_traits<T>::null_value;;
 	}
 //	void verify(Item* item, size_t position);
 
