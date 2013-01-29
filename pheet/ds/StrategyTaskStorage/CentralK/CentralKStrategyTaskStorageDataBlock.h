@@ -173,7 +173,7 @@ public:
 				}
 			}
 		}
-		return nullable_traits<T>::null_value;;
+		return nullable_traits<T>::null_value;
 	}
 //	void verify(Item* item, size_t position);
 
