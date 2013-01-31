@@ -253,6 +253,9 @@ public:
 
 	template <class Strategy>
 	void item_push(Item* item, size_t position) {
+		if(reinterpret_cast<Strategy*>(item->strategy)->dead_task()) {
+			return;
+		}
 		Ref r;
 		r.item = item;
 		r.position = position;
