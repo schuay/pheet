@@ -35,13 +35,23 @@ public:
 		return ref.strategy;
 	}
 
+	template<class Strategy>
 	inline bool is_active(Ref const& ref) {
-		return ref.item.position == ref.position;
+		return ref.item->position == ref.position && !reinterpret_cast<Strategy*>(ref.strategy)->dead_task();
 	}
-
+/*
 	inline void mark_removed(Ref& ref) {
 	//	item.block->mark_removed(item.index, task_storage->get_current_view());
+		delete ref.strategy;
 	}
+
+	inline bool clean_item(Ref& ref) {
+		if(ref.item->position != ref.position) {
+			delete ref.strategy;
+			return true;
+		}
+		return false;
+	}*/
 
 private:
 };

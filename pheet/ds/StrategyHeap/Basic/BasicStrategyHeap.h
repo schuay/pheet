@@ -27,7 +27,7 @@ public:
 	T& peek() {
 		return top;
 	}
-	virtual T pop() = 0;
+	virtual T pop(/*size_t& total_size*/) = 0;
 
 	size_t parent_index = 0;
 	T top;
@@ -115,10 +115,10 @@ public:
 		return heap[0]->peek();
 	}*/
 
-	T pop() {
+	T pop(/*size_t& total_size*/) {
 		pheet_assert(!heap.empty());
 		pheet_assert(heap.size() == 1 || !comp(heap[0]->peek(), heap[1]->peek()));
-		return heap[0]->pop();
+		return heap[0]->pop(/*total_size*/);
 	}
 
 	void push(Item* item) {
@@ -229,10 +229,10 @@ public:
 		return heap[0]->peek();
 	}
 
-	T pop() {
+	T pop(/*size_t& total_size*/) {
 		pheet_assert(!heap.empty());
 		pheet_assert(heap.size() == 1 || !comp(heap[0]->peek(), heap[1]->peek()));
-		return heap[0]->pop();
+		return heap[0]->pop(/*total_size*/);
 	}
 
 	void push(Item* item) {
@@ -311,7 +311,7 @@ public:
 	typedef BasicStrategyHeapBase<Pheet, T> Base;
 
 	BasicStrategyItemHeap(StrategyRetriever& sr, std::map<std::type_index, Base*>& heap_heaps)
-	:comp(sr) {
+	:comp(sr), sr(sr) {
 		Base*& base = heap_heaps[std::type_index(typeid(Strategy))];
 		if(base == nullptr) {
 			pheet_assert(std::type_index(typeid(Strategy)) != std::type_index(typeid(BaseStrategy)));
@@ -328,15 +328,22 @@ public:
 		return heap[0];
 	}*/
 
-	T pop() {
-		T ret = this->top;
+	T pop(/*size_t& total_size*/) {
+		T ret;
 		pheet_assert(heap.size() > 0);
 		pheet_assert(!comp(this->top, heap[0]) && !comp(heap[0], this->top));
+	//	clean_heap(total_size);
 		if(heap.size() == 1) {
+			ret = this->top;
 			heap.pop_back();
 			parent->pop_index(this->parent_index);
 		}
+		else if(!sr.template is_active<Strategy>(heap.back())) {
+			ret = heap.back();
+			heap.pop_back();
+		}
 		else {
+			ret = this->top;
 			heap[0] = std::move(heap.back());
 			heap.pop_back();
 			bubble_down(0);
@@ -358,6 +365,7 @@ public:
 			parent->reorder_index(this->parent_index);
 		}
 	}
+
 /*
 	size_t perform_cleanup() {
 		size_t cleaned = 0;
@@ -398,7 +406,18 @@ private:
 		return index;
 	}
 
+	void clean_heap(size_t& total_size) {
+		while(heap.size() > 1) {
+			if(!sr.clean_item(heap.back())) {
+				break;
+			}
+			--total_size;
+			heap.pop_back();
+		}
+	}
+
 	BasicStrategyHeapComparator<Pheet, T, Strategy, StrategyRetriever> comp;
+	StrategyRetriever& sr;
 	std::vector<T> heap;
 	BasicStrategyHeapHeap<Pheet, T, BaseStrategy, Strategy, StrategyRetriever>* parent;
 };
@@ -471,7 +490,7 @@ template <class Pheet, typename TT, class StrategyRetriever>
 TT BasicStrategyHeap<Pheet, TT, StrategyRetriever>::pop() {
 //	total_size -= heap->perform_cleanup();
 	--total_size;
-	return root_heap.pop();
+	return root_heap.pop(/*total_size*/);
 }
 
 template <class Pheet, typename TT, class StrategyRetriever>

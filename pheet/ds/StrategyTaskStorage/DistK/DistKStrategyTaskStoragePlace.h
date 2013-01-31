@@ -38,13 +38,50 @@ public:
 		return ref.strategy;
 	}
 
+	template<class Strategy>
 	inline bool is_active(Ref const& ref) {
-		return ref.item.position == ref.position;
+		return ref.item->position == ref.position && !reinterpret_cast<Strategy*>(ref.strategy)->dead_task();
 	}
 
-	inline void mark_removed(Ref& ref) {
+/*	inline void mark_removed(Ref& ref) {
 	//	item.block->mark_removed(item.index, task_storage->get_current_view());
-	}
+	}*/
+/*
+	template<class Strategy>
+	inline bool clean_item(Ref& ref) {
+		if(ref.item->position != ref.position) {
+			if(ref.strategy != ref.item->strategy) {
+				delete ref.strategy;
+			}
+			else {
+				auto block = ref.item->block;
+				block->mark_item_used();
+				block->perform_cleanup_check();
+			}
+			return true;
+		}
+		else if(reinterpret_cast<Strategy*>(ref.strategy)->dead_task()) {
+			bool local = true;
+			if(r.strategy != r.item->strategy) {
+				delete r.strategy;
+				local = false;
+			}
+
+			if(local) {
+				T ret = ref.item->data;
+				DataBlock* block = ref.item->block;
+				if(SIZET_CAS(&(ref.item->position), ref.position, ref.position + 1)) {
+					block->mark_item_used();
+						while(local_head != local_tail && local_head->is_empty()) {
+							local_head = local_head->get_next();
+						}
+						block->perform_cleanup_check();
+
+						return ret;
+					}
+		}
+		return false;
+	}*/
 
 private:
 };

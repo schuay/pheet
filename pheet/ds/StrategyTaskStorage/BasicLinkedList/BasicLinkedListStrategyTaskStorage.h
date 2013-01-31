@@ -60,13 +60,22 @@ public:
 		return (item.block->get_data(item.index).strategy);
 	}
 
+	template<class Strategy>
 	inline bool is_active(Item& item) {
-		return (item.block->get_data(item.index).taken & 1) == 0;
+		return (item.block->get_data(item.index).taken & 1) == 0  && !reinterpret_cast<Strategy*>(item.block->get_data(item.index).strategy)->dead_task();
+	}
+/*
+	inline void mark_removed(Item& item) {
+		item.block->mark_removed(item.index, task_storage);
 	}
 
-	inline void mark_removed(Item& item) {
-		item.block->mark_removed(item.index, task_storage->get_current_view());
-	}
+	inline bool clean_item(Item& item) {
+		if(!is_active(item)) {
+			mark_removed(item);
+			return true;
+		}
+		return false;
+	}*/
 
 private:
 	TaskStorage* task_storage;

@@ -113,6 +113,10 @@ public:
 		this->k = k;
 	}
 
+	inline bool dead_task() {
+		return false;
+	}
+
 /*
 	inline Self& set_memory_footprint(size_t value) {
 		memory_footprint = value;

@@ -19,18 +19,18 @@ public:
 	typedef StrategySsspStrategy<Pheet> Self;
 	typedef typename Pheet::Environment::BaseStrategy BaseStrategy;
 
-	StrategySsspStrategy(size_t distance)
-	: distance(distance)/*, rnd(Pheet::rand_int((1 + distance) << 4))*/ {
+	StrategySsspStrategy(size_t distance, size_t& stored_distance)
+	: distance(distance), stored_distance(stored_distance)/*, rnd(Pheet::rand_int((1 + distance) << 4))*/ {
 		this->set_k(1024);
 	}
 
 	StrategySsspStrategy(Self& other)
-	: BaseStrategy(other), distance(other.distance)/*, rnd(other.rnd)*/ {
+	: BaseStrategy(other), distance(other.distance), stored_distance(other.stored_distance)/*, rnd(other.rnd)*/ {
 
 	}
 
 	StrategySsspStrategy(Self&& other)
-	: BaseStrategy(other), distance(other.distance)/*, rnd(other.rnd)*/ {}
+	: BaseStrategy(other), distance(other.distance), stored_distance(other.stored_distance)/*, rnd(other.rnd)*/ {}
 
 	~StrategySsspStrategy() {}
 
@@ -53,6 +53,10 @@ public:
 	inline bool forbid_call_conversion() const {
 		return true;
 	}
+
+	inline bool dead_task() {
+		return stored_distance < distance;
+	}
 /*
 	inline void rebase() {
 		this->reset();
@@ -60,6 +64,7 @@ public:
 	}*/
 private:
 	size_t distance;
+	size_t& stored_distance;
 //	size_t rnd;
 };
 

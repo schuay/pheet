@@ -44,7 +44,7 @@ public:
 				if(SIZET_CAS(&(graph[target].distance), old_d, new_d)) {
 					Pheet::template
 						spawn_s<Self>(
-								Strategy(new_d),
+								Strategy(new_d, graph[target].distance),
 								graph, target, new_d, pc);
 					break;
 				}
