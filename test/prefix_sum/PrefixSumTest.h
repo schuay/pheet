@@ -86,7 +86,7 @@ void PrefixSumTest<Pheet, Algorithm>::run_test() {
 		correctness &= is_correct(data[i]);
 	}
 	double seconds = calculate_seconds(start, end);
-	std::cout << "test\talgorithm\tscheduler\tnum_problems\ttype\tsize\tseed\tcpus\ttotal_time\tcorrectness\t";
+	std::cout << "test\talgorithm\tscheduler\tnum_problems\ttype\tsize\tseed\tcpus\ttotal_time\tcorrect\t";
 	Pheet::Environment::PerformanceCounters::print_headers();
 	Algorithm<Pheet>::PerformanceCounters::print_headers();
 	std::cout << std::endl;
