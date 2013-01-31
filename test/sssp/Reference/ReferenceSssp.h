@@ -9,6 +9,8 @@
 #ifndef REFERENCESSSP_H_
 #define REFERENCESSSP_H_
 
+#include "ReferenceSsspPerformanceCounters.h"
+
 namespace pheet {
 
 struct ReferenceSsspNode {
@@ -25,8 +27,10 @@ struct ReferenceSsspNodeLess {
 template <class Pheet>
 class ReferenceSssp : public Pheet::Task {
 public:
-	ReferenceSssp(SsspGraphVertex* graph, size_t size)
-	:graph(graph) {}
+	typedef ReferenceSsspPerformanceCounters<Pheet> PerformanceCounters;
+
+	ReferenceSssp(SsspGraphVertex* graph, size_t size, PerformanceCounters& pc)
+	:graph(graph), pc(pc) {}
 	virtual ~ReferenceSssp() {}
 
 	virtual void operator()() {
@@ -43,10 +47,12 @@ public:
 
 			size_t d = graph[node].distance;
 			if(d != n.distance) {
+				pc.num_dead_tasks.incr();
 				// Distance has already been improved in the meantime
 				// No need to check again
 				continue;
 			}
+			pc.num_actual_tasks.incr();
 			for(size_t i = 0; i < graph[node].num_edges; ++i) {
 				size_t new_d = d + graph[node].edges[i].weight;
 				size_t target = graph[node].edges[i].target;
@@ -64,6 +70,7 @@ public:
 	static char const name[];
 private:
 	SsspGraphVertex* graph;
+	PerformanceCounters pc;
 };
 
 template <class Pheet>

@@ -27,6 +27,7 @@
 #include <pheet/ds/Queue/GlobalLock/GlobalLockQueue.h>
 #include <pheet/ds/MultiSet/GlobalLock/GlobalLockMultiSet.h>
 #include <pheet/ds/StrategyHeap/Volatile/VolatileStrategyHeap.h>
+#include <pheet/ds/StrategyTaskStorage/DistK/DistKStrategyTaskStorage.h>
 
 #include <pheet/primitives/Mutex/TASLock/TASLock.h>
 #include <pheet/primitives/Mutex/TTASLock/TTASLock.h>
@@ -37,6 +38,7 @@
 #include <pheet/sched/Centralized/CentralizedScheduler.h>
 #include <pheet/sched/CentralizedPriority/CentralizedPriorityScheduler.h>
 #include <pheet/sched/Strategy/StrategyScheduler.h>
+#include <pheet/sched/BStrategy/BStrategyScheduler.h>
 #include <pheet/sched/Synchroneous/SynchroneousScheduler.h>
 #include <pheet/sched/MixedMode/MixedModeScheduler.h>
 
@@ -94,10 +96,15 @@ void SortingTests::run_test() {
 						DagQuicksort>();
 #else
 	// default tests
-//	this->run_sorter<	Pheet,
-//						DagQuicksort>();
-//	this->run_sorter<	typename Pheet::WithScheduler<StrategyScheduler>::template WithTaskStorage<Pheet::WithScheduler<StrategyScheduler>::Environment::TaskStorage::WithStrategyHeap<VolatileStrategyHeap>::template BT >,
-//						StrategyQuicksort>();
+	this->run_sorter<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<DistKStrategyTaskStorage>,
+						StrategyQuicksort>();
+	this->run_sorter<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<DistKStrategyTaskStorageLocalK>,
+						StrategyQuicksort>();
+	this->run_sorter<	Pheet::WithScheduler<BStrategyScheduler>,
+						StrategyQuicksort>();
+	this->run_sorter<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<CentralKStrategyTaskStorageLocalK>,
+						StrategyQuicksort>();
+
 	this->run_sorter<	Pheet::WithScheduler<StrategyScheduler>,
 						StrategyQuicksort>();
 	this->run_sorter<	Pheet::WithScheduler<StrategyScheduler>,

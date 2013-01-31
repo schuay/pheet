@@ -67,13 +67,13 @@ void SsspTest<Pheet, Algorithm>::run_test() {
 	SsspGraphVertex* data = generate_data();
 
 	typename Pheet::Environment::PerformanceCounters pc;
-//	typename Algorithm<Pheet>::PerformanceCounters ppc;
+	typename Algorithm<Pheet>::PerformanceCounters ppc;
 
 	Time start, end;
 	{typename Pheet::Environment env(cpus, pc);
 		check_time(start);
 		Pheet::template
-			finish<Algorithm<Pheet> >(data, size);
+			finish<Algorithm<Pheet> >(data, size, ppc);
 		check_time(end);
 	}
 
@@ -81,14 +81,14 @@ void SsspTest<Pheet, Algorithm>::run_test() {
 	double seconds = calculate_seconds(start, end);
 	std::cout << "test\talgorithm\tscheduler\ttype\tsize\tp\tmax_w\tseed\tcpus\ttotal_time\tcorrect\t";
 //	Algorithm<Pheet>::print_headers();
-//	Algorithm<Pheet>::PerformanceCounters::print_headers();
+	Algorithm<Pheet>::PerformanceCounters::print_headers();
 	Pheet::Environment::PerformanceCounters::print_headers();
 	std::cout << std::endl;
 	std::cout << "sssp\t" << Algorithm<Pheet>::name << "\t";
 	Pheet::Environment::print_name();
 	std::cout << "\t" << types[type] << "\t" << size << "\t" << p << "\t" << max_w << "\t" << seed << "\t" << cpus << "\t" << seconds << "\t" << correct << "\t";
 //	Algorithm<Pheet>::print_configuration();
-//	ppc.print_values();
+	ppc.print_values();
 	pc.print_values();
 	std::cout << std::endl;
 

@@ -34,4 +34,7 @@ bool const prefix_sum_log_pf_blocks = false;
 bool const prefix_sum_log_pf_preprocessed_blocks = false;
 bool const prefix_sum_log_schedule = false;
 
+bool const sssp_count_dead_tasks = false;
+bool const sssp_count_actual_tasks = false;
+
 #endif /* PHEET_TEST_SETTINGS_H_ */
