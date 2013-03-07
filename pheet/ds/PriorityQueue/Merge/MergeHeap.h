@@ -159,8 +159,11 @@ public:
 				}
 				else if(prev != iter && iter->next->filled <= ((iter->filled *3) >> 1)) {
 					// work array never gets merged unless it's not the work array any more
-					iter = merge(iter);
-					prev->next = iter;
+					SA* tmp = merge(iter);
+					pheet_assert(tmp != prev);
+					pheet_assert(tmp->next != tmp);
+					prev->next = tmp;
+					iter = prev;
 				}
 				else {
 					prev = iter;
@@ -256,7 +259,7 @@ private:
 		pheet_assert(length >= 2);
 		int slot = (find_last_bit_set(length - 1) - 1) << 1;
 		pheet_assert(slot >= 0);
-		while(arrays[slot].filled != 0) {
+		while(arrays[slot].filled != 0 || work == arrays + slot) {
 			++slot;
 		}
 		if(arrays[slot].data == nullptr) {

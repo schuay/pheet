@@ -11,6 +11,8 @@
 
 #include "ReferenceSsspPerformanceCounters.h"
 
+//#include <pheet/ds/PriorityQueue/Merge/MergeHeap.h>
+
 namespace pheet {
 
 struct ReferenceSsspNode {
@@ -35,6 +37,7 @@ public:
 
 	virtual void operator()() {
 		typename Pheet::DS::template Heap<ReferenceSsspNode, ReferenceSsspNodeLess> heap;
+//		MergeHeap<Pheet, ReferenceSsspNode, ReferenceSsspNodeLess> heap;
 
 		ReferenceSsspNode n;
 		n.distance = 0;

@@ -19,6 +19,7 @@
 
 //#include <pheet/ds/StealingDeque/CircularArray11/CircularArrayStealingDeque11.h>
 #include <pheet/ds/PriorityQueue/Heap/Heap.h>
+#include <pheet/ds/PriorityQueue/Merge/MergeHeap.h>
 #include <pheet/ds/PriorityQueue/STLPriorityQueueWrapper/STLPriorityQueueWrapper.h>
 //#include <pheet/ds/PriorityQueue/SortedArrayHeap/SortedArrayHeap.h>
 #include <pheet/ds/PriorityQueue/Fibonacci/FibonacciHeap.h>
@@ -119,18 +120,20 @@ void SortingTests::run_test() {
 						ReferenceSTLSort>();
 	this->run_sorter<	Pheet::WithScheduler<SynchroneousScheduler>,
 						ReferenceQuicksort>();
-	this->run_sorter<	Pheet::WithScheduler<SynchroneousScheduler>,
-						ReferenceQuicksortLoop>();
+/*	this->run_sorter<	Pheet::WithScheduler<SynchroneousScheduler>,
+						ReferenceQuicksortLoop>();*/
 //	this->run_sorter<	Pheet::WithScheduler<SynchroneousScheduler>,
 //						ReferenceHeapSort<Pheet>::WithPriorityQueue<FibonacciSameHeap>::template BT >();
 //	this->run_sorter<	Pheet::WithScheduler<SynchroneousScheduler>,
 //						ReferenceHeapSort<Pheet>::WithPriorityQueue<FibolikeHeap>::template BT >();
 //	this->run_sorter<	Pheet::WithScheduler<SynchroneousScheduler>,
 //						ReferenceHeapSort<Pheet>::WithPriorityQueue<FibonacciHeap>::template BT >();
-//	this->run_sorter<	Pheet::WithScheduler<SynchroneousScheduler>,
-//						ReferenceHeapSort>();
-	this->run_sorter<	Pheet::WithScheduler<MixedModeScheduler>,
-						MixedModeQuicksort>();
+/*	this->run_sorter<	Pheet::WithScheduler<SynchroneousScheduler>,
+						ReferenceHeapSort<Pheet>::WithPriorityQueue<MergeHeap>::template BT >();
+	this->run_sorter<	Pheet::WithScheduler<SynchroneousScheduler>,
+						ReferenceHeapSort>();*/
+//	this->run_sorter<	Pheet::WithScheduler<MixedModeScheduler>,
+//						MixedModeQuicksort>();
 //	this->run_sorter<	Pheet::WithScheduler<FinisherScheduler>,
 //						DagQuicksort>();
 #endif
