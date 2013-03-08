@@ -17,10 +17,10 @@
 namespace pheet {
 
 template <class TT>
-struct SortedArray {
-	typedef SortedArray<TT> Self;
+struct MergeHeapSortedArray {
+	typedef MergeHeapSortedArray<TT> Self;
 
-	SortedArray()
+	MergeHeapSortedArray()
 	:filled(0),
 	 next(nullptr)
 	 {}
@@ -39,7 +39,7 @@ class MergeHeap {
 public:
 	typedef MergeHeap<Pheet, TT, Comparator> Self;
 	typedef TT T;
-	typedef SortedArray<TT> SA;
+	typedef MergeHeapSortedArray<TT> SA;
 
 	template <class NP, typename NT, class NComparator = std::less<TT> >
 	using BT = MergeHeap<NP, NT, NComparator>;
@@ -55,8 +55,9 @@ public:
 	~MergeHeap() {
 		pheet_assert(empty());
 
-		for(int i = 11; i < 126 && arrays[i].data != nullptr; ++i) {
-			delete[] arrays[i].data;
+		for(int i = 11; i < 126; ++i) {
+			if(arrays[i].data != nullptr)
+				delete[] arrays[i].data;
 		}
 	}
 
