@@ -176,9 +176,6 @@ public:
 				if(comp(work->data[0], item)) {
 					work->data[1] = work->data[0];
 					work->data[0] = item;
-					if(max == work) {
-						this->top = item;
-					}
 				}
 				else {
 					work->data[1] = item;
@@ -186,6 +183,9 @@ public:
 						max = work;
 						this->top = item;
 						parent->reorder_index(this->parent_index);
+					}
+					else if(max == work) {
+						this->top = item;
 					}
 				}
 				work->filled = 2;
@@ -211,6 +211,9 @@ public:
 						max = work;
 						this->top = item;
 						parent->reorder_index(this->parent_index);
+					}
+					else if(max == work) {
+						this->top = item;
 					}
 					if(work->filled == work->size) {
 						// We have completely filled up our work array. Put it into the data-structure and retrieve new work array
