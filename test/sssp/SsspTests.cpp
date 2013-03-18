@@ -41,6 +41,8 @@ void SsspTests::run_test() {
 							StrategySssp>();
 	this->run_algorithm<	Pheet::WithScheduler<BStrategyScheduler>,
 							StrategySssp>();
+//	this->run_algorithm<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<CentralKStrategyTaskStorageMergeHeap>,
+//							StrategySssp>();
 	this->run_algorithm<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<CentralKStrategyTaskStorageLocalK>,
 							StrategySssp>();
 	this->run_algorithm<	Pheet::WithScheduler<StrategyScheduler>,

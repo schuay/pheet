@@ -8,6 +8,9 @@
 #ifndef CENTRALKSTRATEGYTASKSTORAGE_H_
 #define CENTRALKSTRATEGYTASKSTORAGE_H_
 
+#include "../../StrategyHeap/Basic/BasicStrategyHeap.h"
+#include "../../StrategyHeap/Merge/MergeStrategyHeap.h"
+
 #include "CentralKStrategyTaskStoragePlace.h"
 #include "CentralKStrategyTaskStorageDataBlock.h"
 
@@ -57,6 +60,8 @@ private:
 
 template <class Pheet, typename TT>
 using CentralKStrategyTaskStorage = CentralKStrategyTaskStorageImpl<Pheet, TT, BasicStrategyHeap, 512, 128, false>;
+template <class Pheet, typename TT>
+using CentralKStrategyTaskStorageMergeHeap = CentralKStrategyTaskStorageImpl<Pheet, TT, MergeStrategyHeap, 512, 128, false>;
 
 template <class Pheet, typename TT>
 using CentralKStrategyTaskStorageLocalK = CentralKStrategyTaskStorageImpl<Pheet, TT, BasicStrategyHeap, 512, 128, true>;

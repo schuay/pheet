@@ -92,13 +92,17 @@ public:
 		if(max->dead > 0) {
 			pheet_assert(filled > 0);
 
-			ret = max->data[max->dead];
 			--(max->dead);
+			ret = max->data[max->filled + max->dead];
 			return ret;
 		}
 
-		SA* old_max = max;
-		--old_max->filled;
+		--(max->filled);
+		// Test ordering property
+		pheet_assert(max->filled == 0 || !comp(max->data[max->filled], max->data[max->filled - 1]));
+//		pheet_assert(this->top.block == max->data[max->filled].block && this->top.index == max->data[max->filled].index);
+		ret = this->top;
+
 		if(filled == 0) {
 			max = nullptr;
 			work = last_initialized_array;
@@ -138,11 +142,15 @@ public:
 				else {
 					prev = iter;
 					iter = iter->next;
-					if(max == nullptr || comp(iter->data[iter->filled - 1], max->data[max->filled - 1])) {
+					if(max == nullptr || comp(max->data[max->filled - 1], iter->data[iter->filled - 1])) {
 						max = iter;
 					}
 				}
 			}
+			this->top = max->data[max->filled - 1];
+			// Test ordering property
+			pheet_assert(!comp(ret, this->top));
+			parent->reorder_index(this->parent_index);
 		}
 
 		return ret;
@@ -164,7 +172,7 @@ public:
 			else {
 				pheet_assert(max != work);
 				pheet_assert(max->filled > 0);
-				if(comp(item, max->data[max->filled - 1])) {
+				if(comp(max->data[max->filled - 1], item)) {
 					max = work;
 					this->top = item;
 					parent->reorder_index(this->parent_index);
@@ -173,19 +181,19 @@ public:
 		}
 		else {
 			if(work->filled == 1) {
-				if(comp(work->data[0], item)) {
+				if(comp(item, work->data[0])) {
 					work->data[1] = work->data[0];
 					work->data[0] = item;
 				}
 				else {
 					work->data[1] = item;
-					if(max != work && comp(item, max->data[max->filled - 1])) {
+					if(max == work) {
+						this->top = item;
+					}
+					else if(comp(max->data[max->filled - 1], item)) {
 						max = work;
 						this->top = item;
 						parent->reorder_index(this->parent_index);
-					}
-					else if(max == work) {
-						this->top = item;
 					}
 				}
 				work->filled = 2;
@@ -194,7 +202,7 @@ public:
 				}
 			}
 			else {
-				if(comp(work->data[work->filled - 1], item)) {
+				if(comp(item, work->data[work->filled - 1])) {
 					// Put the existing work array into the data-structure and retrieve new work array
 					put_work();
 					// Not many checks required now. Item is obviously not max, and new work array should be empty
@@ -207,13 +215,13 @@ public:
 
 					work->data[work->filled] = item;
 					++(work->filled);
-					if(max != work && comp(item, max->data[max->filled - 1])) {
+					if(max == work) {
+						this->top = item;
+					}
+					else if(comp(max->data[max->filled - 1], item)) {
 						max = work;
 						this->top = item;
 						parent->reorder_index(this->parent_index);
-					}
-					else if(max == work) {
-						this->top = item;
 					}
 					if(work->filled == work->size) {
 						// We have completely filled up our work array. Put it into the data-structure and retrieve new work array
@@ -226,7 +234,9 @@ public:
 
 private:
 	SA* merge(SA* item) {
+		pheet_assert(item->filled > 0);
 		pheet_assert(item->next != nullptr);
+		pheet_assert(item->next->filled > 0);
 		if((item->next->filled + item->next->dead) == 0) {
 			item->next = item->next->next;
 			return item;
@@ -234,6 +244,7 @@ private:
 		size_t total_size = item->filled + item->next->filled;
 		size_t total_dead = item->dead + item->next->dead;
 		SA* result = find_slot(total_size + total_dead);
+		pheet_assert(result->size >= total_size + total_dead);
 		result->next = item->next->next;
 
 		size_t dead_offset = total_size;
@@ -246,54 +257,54 @@ private:
 		pheet_assert(dead_offset == total_size + total_dead);
 
 		size_t a = 0, b = 0, c = 0;
-/*		while(a < item->filled && !sr.template is_active<Strategy>(item->data[a])) {
+		while(a < item->filled - 1 && !sr.template is_active<Strategy>(item->data[a])) {
 			--total_size;
 			++total_dead;
 			result->data[total_size] = item->data[a];
 			++a;
 		}
-		while(b < item->next->filled && !sr.template is_active<Strategy>(item->next->data[b])) {
+		while(b < item->next->filled - 1 && !sr.template is_active<Strategy>(item->next->data[b])) {
 			--total_size;
 			++total_dead;
 			result->data[total_size] = item->next->data[b];
 			++b;
-		}*/
+		}
 		while(a < item->filled && b < item->next->filled) {
-			if(comp(item->next->data[b], item->data[a])) {
+			if(comp(item->data[a], item->next->data[b])) {
 				result->data[c] = item->data[a];
 				++a;
-			/*	while(a < item->filled && !sr.template is_active<Strategy>(item->data[a])) {
+				while(a < item->filled - 1 && !sr.template is_active<Strategy>(item->data[a])) {
 					--total_size;
 					++total_dead;
 					result->data[total_size] = item->data[a];
 					++a;
-				}*/
+				}
 			}
 			else {
 				result->data[c] = item->next->data[b];
 				++b;
-			/*	while(b < item->next->filled && !sr.template is_active<Strategy>(item->next->data[b])) {
+				while(b < item->next->filled - 1 && !sr.template is_active<Strategy>(item->next->data[b])) {
 					--total_size;
 					++total_dead;
 					result->data[total_size] = item->next->data[b];
 					++b;
-				}*/
+				}
 			}
 			++c;
 		}
 		if(a < item->filled) {
 			while(a < (item->filled - 1)) {
-			//	if(sr.template is_active<Strategy>(item->data[a])) {
+				if(sr.template is_active<Strategy>(item->data[a])) {
 					result->data[c] = item->data[a];
 					++a;
 					++c;
-			/*	}
+				}
 				else {
 					--total_size;
 					++total_dead;
 					result->data[total_size] = item->data[a];
 					++a;
-				}*/
+				}
 			}
 			result->data[c] = item->data[a];
 			++a;
@@ -301,17 +312,17 @@ private:
 		}
 		else if(b < item->next->filled) {
 			while(b < (item->next->filled - 1)) {
-			//	if(sr.template is_active<Strategy>(item->next->data[b])) {
+				if(sr.template is_active<Strategy>(item->next->data[b])) {
 					result->data[c] = item->next->data[b];
 					++b;
 					++c;
-			/*	}
+				}
 				else {
 					--total_size;
 					++total_dead;
 					result->data[total_size] = item->next->data[b];
 					++b;
-				}*/
+				}
 			}
 			result->data[c] = item->next->data[b];
 			++b;
@@ -319,6 +330,7 @@ private:
 		}
 		if(max == item || max == item->next) {
 			max = result;
+			this->top = result->data[total_size - 1];
 		}
 		item->filled = 0;
 		item->dead = 0;

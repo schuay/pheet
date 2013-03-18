@@ -226,6 +226,7 @@ void BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, TaskStorage, BlockSi
 	// This leads to a complexity of O((n/(size_t_max + 1))*log(size_t_max)) for n > size_t max which isn't really bad
 	// and rare in any case (it's linear to the number of wraparounds and not logarithmic)
 
+	pheet_assert(active != 0 || next != nullptr);
 	if(active == 0 // Check if block is not used any more
 			&& (num_pred == 0 // Either no predecessor exists anymore
 					// Or make sure the next block is a higher power of two (to guarantee O(log(n)) access times

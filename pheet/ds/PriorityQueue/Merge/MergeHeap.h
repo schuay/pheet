@@ -130,9 +130,8 @@ public:
 
 		--filled;
 
-		SA* old_max = max;
-		--old_max->filled;
-		TT ret = old_max->data[old_max->filled];
+		--max->filled;
+		TT ret = max->data[max->filled];
 		if(filled == 0) {
 			max = nullptr;
 			work = last_initialized_array;
