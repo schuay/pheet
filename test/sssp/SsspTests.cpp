@@ -11,6 +11,7 @@
 #include "Simple/SimpleSssp.h"
 #include "Strategy/StrategySssp.h"
 #include "Reference/ReferenceSssp.h"
+#include "Analysis/SsspAnalysis.h"
 
 #include <pheet/sched/Basic/BasicScheduler.h>
 #include <pheet/sched/Strategy/StrategyScheduler.h>
@@ -30,6 +31,9 @@ SsspTests::~SsspTests() {
 }
 
 void SsspTests::run_test() {
+	this->run_algorithm<	Pheet::WithScheduler<SynchroneousScheduler>,
+							SsspAnalysis>();
+	return;
 #ifdef SSSP_TEST
 	std::cout << "----" << std::endl;
 
