@@ -32,9 +32,12 @@ SsspTests::~SsspTests() {
 }
 
 void SsspTests::run_test() {
-//	this->run_algorithm<	Pheet::WithScheduler<SynchroneousScheduler>,
-//							SsspAnalysis>();
-//	return;
+#ifdef SSSP_SIM
+	// Simulator
+	this->run_algorithm<	Pheet::WithScheduler<SynchroneousScheduler>,
+							SsspAnalysis>();
+	return;
+#endif
 #ifdef SSSP_TEST
 	std::cout << "----" << std::endl;
 

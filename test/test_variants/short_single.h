@@ -54,9 +54,16 @@ const procs_t sssp_test_cpus[] = {1, 2, 4, 8};
 const unsigned int sssp_test_seeds[] = {0};
 const GraphBipartitioningProblem sssp_test_problems[] = {
 		// n, p, max_w
-		{3000, 0.5, 1000}
+		{3000, 0.5, 100000000},
 };
 const int sssp_test_types[] = {0};
+
+//#define SSSP_SIM true
+const size_t sssp_sim_k = 1000;
+const size_t sssp_sim_p = 200;
+
+
+
 
 #define SORANDUTS
 
