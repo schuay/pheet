@@ -44,7 +44,9 @@ public:
 	virtual void operator()() {
 		SsspAnalysisNodeLess less;
 
+		// k tasks may not be visible to others
 		size_t const k = sssp_sim_k;
+		// Number of items processed in each phase (= #threads in model)
 		size_t const block_size = sssp_sim_p;
 		size_t phase = 0;
 
@@ -67,6 +69,7 @@ public:
 			n = v[offset];
 			if(n.processed) {
 				++offset;
+				// Node was already processed
 				continue;
 			}
 			size_t node = n.node_id;
@@ -82,10 +85,12 @@ public:
 			++phase;
 
 			std::cout << "Phase " << phase << ":" << std::endl;
+			std::cout << "Nodes in list (* ... nodes not visible to all threads) " << std::endl;
 
 			size_t sum = 0;
 			size_t samples = 0;
 			size_t base = v[offset].distance;
+			// Print list of nodes
 			for(size_t i = offset; i < v.size(); ++i) {
 				if(graph[v[i].node_id].distance == v[i].distance && !v[i].processed) {
 					++samples;
@@ -101,12 +106,13 @@ public:
 				}
 			}
 			if(samples > 0) {
-				std::cout << std::endl << (sum / (samples)) << std::endl;
+				std::cout << std::endl << "Avg. Weight: " << (sum / (samples)) << std::endl;
 			}
 			else {
 				std::cout << std::endl;
 			}
 
+			// Go through list and only process nodes visible to all threads and the first node (which is always processed)
 			size_t orig_size = v.size();
 			size_t sum_new = 0;
 			size_t sum_upd = 0;
@@ -117,9 +123,12 @@ public:
 				size_t d = graph[node].distance;
 				size_t a = n.added;
 
+				// Node is visible to all threads or the first node
 				if(j == 0 || a < orig_size - k) {
+					// Node has not been processed, and no better distance value has been found
 					if(d == n.distance && !n.processed) {
 						pc.num_actual_tasks.incr();
+						// relax node
 						for(size_t i = 0; i < graph[node].num_edges; ++i) {
 							size_t new_d = d + graph[node].edges[i].weight;
 							size_t target = graph[node].edges[i].target;
@@ -134,19 +143,20 @@ public:
 								graph[target].distance = new_d;
 								n.distance = new_d;
 								n.node_id = target;
-						//		n.added = v.size();
 								n.processed = false;
 								v.push_back(n);
 							}
 						}
 						v[offset + j2].processed = true;
+						// Store in which phase node has been settled (will be overwritten if same node is settled again)
 						settled[node] = phase;
 						++j;
 					}
 				}
-//				++offset;
 			}
+			// If not enough nodes visible to all threads are available process some random nodes
 			if(orig_size - offset > 1 && j < block_size) {
+				// Shuffle nodes for randomness
 				std::random_shuffle(v.begin() + offset + 1, v.begin() + orig_size);
 
 				for(j2 = 1;j < block_size && offset + j2 < orig_size; ++j2) {
@@ -155,9 +165,12 @@ public:
 					size_t d = graph[node].distance;
 					size_t a = n.added;
 
-					if(j == 0 || a >= orig_size - k) {
+					// Node not visible to all threads
+					if(a >= orig_size - k) {
+						// Node has not been processed, and no better distance value has been found
 						if(d == n.distance && !n.processed) {
 							pc.num_actual_tasks.incr();
+							// relax node
 							for(size_t i = 0; i < graph[node].num_edges; ++i) {
 								size_t new_d = d + graph[node].edges[i].weight;
 								size_t target = graph[node].edges[i].target;
@@ -172,7 +185,6 @@ public:
 									graph[target].distance = new_d;
 									n.distance = new_d;
 									n.node_id = target;
-							//		n.added = v.size();
 									n.processed = false;
 									v.push_back(n);
 								}
@@ -184,13 +196,17 @@ public:
 					}
 				}
 			}
-			std::random_shuffle(v.begin() + orig_size, v.end());
 
+			// Shuffle newly added nodes so the nodes not visible to all threads are really random
+			std::random_shuffle(v.begin() + orig_size, v.end());
 			for(size_t i2 = orig_size; i2 < v.size(); ++i2) {
+				// Store information that tells us whether node is visible to all threads
 				v[i2].added = i2;
 			}
 			++offset;
-			std::cout << sum_new << " - " << sum_upd << " " << v.size() << std::endl;
+			std::cout << "New nodes found: " << sum_new << std::endl << "Better distance value found for " << sum_upd << " nodes" << std::endl;
+			std::cout << "------------------" << std::endl;
+			// Sort nodes by distance value for next iteration
 			std::sort(v.begin() + offset, v.end(), less);
 		}
 
@@ -201,7 +217,7 @@ public:
 					++counter;
 				}
 			}
-			std::cout << "Settled in phase " << i << ": " << counter << std::endl;
+			std::cout << "Nodes settled in phase " << i << ": " << counter << std::endl;
 		}
 		delete[] settled;
 	}
