@@ -10,6 +10,7 @@
 #ifdef SSSP_TEST
 #include "Simple/SimpleSssp.h"
 #include "Strategy/StrategySssp.h"
+#include "Adaptive/AdaptiveSssp.h"
 #include "Reference/ReferenceSssp.h"
 #include "Analysis/SsspAnalysis.h"
 
@@ -31,20 +32,24 @@ SsspTests::~SsspTests() {
 }
 
 void SsspTests::run_test() {
-	this->run_algorithm<	Pheet::WithScheduler<SynchroneousScheduler>,
-							SsspAnalysis>();
-	return;
+//	this->run_algorithm<	Pheet::WithScheduler<SynchroneousScheduler>,
+//							SsspAnalysis>();
+//	return;
 #ifdef SSSP_TEST
 	std::cout << "----" << std::endl;
 
 	this->run_algorithm<	Pheet::WithScheduler<SynchroneousScheduler>,
 							ReferenceSssp>();
 	this->run_algorithm<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<DistKStrategyTaskStorage>,
+							AdaptiveSssp>();
+	this->run_algorithm<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<DistKStrategyTaskStorage>,
 							StrategySssp>();
 	this->run_algorithm<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<DistKStrategyTaskStorageLocalK>,
 							StrategySssp>();
 	this->run_algorithm<	Pheet::WithScheduler<BStrategyScheduler>,
 							StrategySssp>();
+	this->run_algorithm<	Pheet::WithScheduler<BStrategyScheduler>,
+							AdaptiveSssp>();
 //	this->run_algorithm<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<CentralKStrategyTaskStorageMergeHeap>,
 //							StrategySssp>();
 	this->run_algorithm<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<CentralKStrategyTaskStorageLocalK>,
