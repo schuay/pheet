@@ -88,28 +88,39 @@ public:
 			std::cout << "Nodes in list (* ... nodes not visible to all threads) " << std::endl;
 
 			size_t sum = 0;
+			size_t processed_sum = 0;
 			size_t samples = 0;
+			size_t processed_samples = 0;
 			size_t base = v[offset].distance;
 			// Print list of nodes
 			for(size_t i = offset; i < v.size(); ++i) {
-				if(graph[v[i].node_id].distance == v[i].distance && !v[i].processed) {
-					++samples;
-					sum += v[i].distance - base;
-					std::cout << v[i].distance/* - base*/;
-					if(v[i].added >= v.size() - k) {
-						std::cout << "*";
+				if(graph[v[i].node_id].distance == v[i].distance) {
+					if(!v[i].processed) {
+						++samples;
+						sum += v[i].distance - base;
+						std::cout << v[i].distance/* - base*/;
+						if(v[i].added >= v.size() - k) {
+							std::cout << "*";
+						}
+						std::cout << ",";
 					}
-					std::cout << ",";
+					else {
+						++processed_samples;
+						processed_sum += v[i].distance - base;
+					}
 				}
 				else {
 					pheet_assert(i != offset);
 				}
 			}
 			if(samples > 0) {
-				std::cout << std::endl << "Avg. Weight: " << (sum / (samples)) << std::endl;
+				std::cout << std::endl << "Avg. Weight: " << (sum / (samples)) << " for " << samples << " nodes" << std::endl;
 			}
 			else {
 				std::cout << std::endl;
+			}
+			if(processed_samples > 0) {
+				std::cout << "Avg. Weight (incl processed > dist): " << ((sum + processed_sum) / (processed_samples + samples)) << " for " << (processed_samples + samples) << " nodes" << std::endl;
 			}
 
 			// Go through list and only process nodes visible to all threads and the first node (which is always processed)
@@ -203,6 +214,7 @@ public:
 				// Store information that tells us whether node is visible to all threads
 				v[i2].added = i2;
 			}
+
 			++offset;
 			std::cout << "New nodes found: " << sum_new << std::endl << "Better distance value found for " << sum_upd << " nodes" << std::endl;
 			std::cout << "------------------" << std::endl;
