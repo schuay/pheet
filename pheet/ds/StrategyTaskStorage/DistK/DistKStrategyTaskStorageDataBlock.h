@@ -51,8 +51,8 @@ public:
 			}
 		}
 		else if(state == 3) {
-			if(active_threads == 0) {
-				pheet_assert(locally_active_threads == 0);
+			if(active_threads == 0 && locally_active_threads == 0) {
+//				pheet_assert(locally_active_threads == 0);
 				make_reusable();
 			}
 		}
@@ -80,49 +80,6 @@ public:
 		this->active_threads = num_threads;
 //		this->target_active_threads = 0;
 	}
-/*
-	void deregister() {
-		size_t old = SIZET_FETCH_AND_SUB(&active_threads, 1);
-		pheet_assert(old > 0);
-		if(old == 1) {
-			pheet_assert(active_threads == 0);
-			for(size_t i = 0; i < BlockSize; ++i) {
-				if(data[i] != nullptr) {
-					delete data[i]->strategy;
-					data[i]->strategy = nullptr;
-					data[i] = nullptr;
-				}
-			}
-			next = nullptr;
-			MEMORY_FENCE();
-			active = false;
-		}
-	}
-
-	void add_block(Self* block, size_t num_places) {
-		pheet_assert(block->is_reusable());
-		pheet_assert(block->next == nullptr);
-		block->active_threads = num_places;
-		block->active = true;
-
-		Self* pred = this;
-		while(true) {
-			if(pred->next == nullptr) {
-				block->offset = pred->offset + BlockSize;
-
-				if(PTR_CAS(&(pred->next), nullptr, block)) {
-					pheet_assert(!pred->is_reusable());
-					break;
-				}
-			}
-			pred = pred->next;
-		}
-
-	}
-
-	bool in_block(size_t position) {
-		return position - offset < BlockSize;
-	}*/
 
 	bool connect_list(Self* list) {
 		size_t id = global_id;
@@ -148,11 +105,9 @@ public:
 	}
 
 	void set_next(Self* value) {
-		value->offset = offset + BlockSize;
+		value->reset(offset + BlockSize);
 		value->prev = this;
-		pheet_assert(value->next == nullptr);
 		next = value;
-		state = 0;
 	}
 
 	void reset(size_t new_offset) {
@@ -160,6 +115,7 @@ public:
 		prev = nullptr;
 		pheet_assert(next == nullptr);
 		state = 0;
+		active_items = BlockSize;
 	}
 
 	void set_offset(size_t value) {
@@ -194,7 +150,7 @@ public:
 	void perform_cleanup_check() {
 		if(active_items == 0) {
 			pheet_assert(state != 4);
-			if(state == 0 && next != nullptr) {
+			if(state == 0 && next != nullptr) { // If next == nullptr, another item is guaranteed to be added later
 				state = 1;
 				if(prev != nullptr) {
 					prev->next = next;
@@ -206,8 +162,7 @@ public:
 				}
 			}
 			else if(state == 2) {
-				if(active_threads == 0) {
-					pheet_assert(locally_active_threads == 0);
+				if(active_threads == 0 && locally_active_threads == 0) {
 					make_reusable();
 				}
 				else {
@@ -219,6 +174,7 @@ public:
 
 	void mark_processed_globally() {
 		SIZET_ATOMIC_SUB(&active_threads, 1);
+		pheet_assert(active_threads > 0 || next != nullptr);
 	}
 
 	void register_locally() {
@@ -228,6 +184,12 @@ public:
 	void deregister_locally() {
 		pheet_assert(locally_active_threads > 0);
 		SIZET_ATOMIC_SUB(&locally_active_threads, 1);
+	}
+
+	void mark_block_final() {
+		// Rest of block will never be filled. Adapt active items accordingly
+		pheet_assert(filled <= BlockSize);
+		active_items -= BlockSize - filled;
 	}
 private:
 	void global_unlink() {
@@ -244,6 +206,8 @@ private:
 	}
 
 	void clean_up_data() {
+		pheet_assert(active_items == 0 || (next == nullptr && active_items == BlockSize - filled));
+
 		for(size_t i = 0; i < filled; ++i) {
 			pheet_assert(data[i] != nullptr);
 

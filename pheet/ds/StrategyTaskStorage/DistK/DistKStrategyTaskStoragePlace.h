@@ -197,14 +197,15 @@ public:
 				}
 
 				if(local) {
+					DataBlock* block = r.item->block;
 					if(r.item->position == r.position) {
 						T ret = r.item->data;
-						DataBlock* block = r.item->block;
 						if(SIZET_CAS(&(r.item->position), r.position, r.position + 1)) {
 							pc.num_successful_takes.incr();
 
 							block->mark_item_used();
 							while(local_head != local_tail && local_head->is_empty()) {
+								pheet_assert(local_head->get_next() != nullptr);
 								local_head = local_head->get_next();
 							}
 							block->perform_cleanup_check();
@@ -212,16 +213,14 @@ public:
 							return ret;
 						}
 						else {
-							block->mark_item_used();
-							block->perform_cleanup_check();
-
-							pc.num_taken_heap_items.incr();
 							pc.num_unsuccessful_takes.incr();
 						}
 					}
-					else {
-						pc.num_taken_heap_items.incr();
-					}
+					// Local thread notices that item has been removed by other thread. Clean up if necessary
+					block->mark_item_used();
+					block->perform_cleanup_check();
+
+					pc.num_taken_heap_items.incr();
 				}
 				else {
 					if(r.item->position == r.position) {
@@ -231,13 +230,10 @@ public:
 							return ret;
 						}
 						else {
-							pc.num_taken_heap_items.incr();
 							pc.num_unsuccessful_takes.incr();
 						}
 					}
-					else {
-						pc.num_taken_heap_items.incr();
-					}
+					pc.num_taken_heap_items.incr();
 				}
 				update_heap();
 			}
@@ -245,6 +241,7 @@ public:
 		// Heap is empty. Try work-stealing (without actual stealing, just copying)
 		} while(steal_work());
 		while(local_head != local_tail && local_head->is_empty()) {
+			pheet_assert(local_head->get_next() != nullptr);
 			local_head = local_head->get_next();
 		}
 
@@ -298,6 +295,7 @@ private:
 		if(task_storage->get_num_places() > 1) {
 			pc.num_blocks_created.incr();
 			DataBlock* new_list = &(data_blocks.acquire_item());
+			pheet_assert(new_list != nullptr);
 			new_list->reset(local_tail->get_offset() + BlockSize);
 
 			size_t np = task_storage->get_num_places() - 1;
@@ -323,6 +321,8 @@ private:
 				block->set_state(2);
 				block = block->get_next();
 			}
+			local_tail->mark_block_final();
+
 			local_head = new_list;
 			local_tail = new_list;
 		}

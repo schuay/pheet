@@ -98,11 +98,16 @@ public:
 					if(!v[i].processed) {
 						++samples;
 						sum += v[i].distance - base;
-						std::cout << v[i].distance/* - base*/;
-						if(v[i].added >= v.size() - k) {
-							std::cout << "*";
+						if(samples < 50 || i >= v.size() - 50) {
+							std::cout << v[i].distance/* - base*/;
+							if(v[i].added + k >= v.size()) {
+								std::cout << "*";
+							}
+							std::cout << ",";
 						}
-						std::cout << ",";
+						else if(samples == 100) {
+							std::cout << "..., ";
+						}
 					}
 					else {
 						++processed_samples;
@@ -127,6 +132,7 @@ public:
 			size_t orig_size = v.size();
 			size_t sum_new = 0;
 			size_t sum_upd = 0;
+			size_t max_h = 0;
 			size_t j, j2;
 			for(j = 0, j2 = 0; j < block_size && offset + j2 < orig_size; ++j2) {
 				n = v[offset + j2];
@@ -135,10 +141,16 @@ public:
 				size_t a = n.added;
 
 				// Node is visible to all threads or the first node
-				if(j == 0 || a < orig_size - k) {
+				if(j == 0 || a + k < orig_size) {
 					// Node has not been processed, and no better distance value has been found
 					if(d == n.distance && !n.processed) {
 						pc.num_actual_tasks.incr();
+
+						size_t h = d - base;
+						if(h > max_h) {
+							max_h = h;
+						}
+
 						// relax node
 						for(size_t i = 0; i < graph[node].num_edges; ++i) {
 							size_t new_d = d + graph[node].edges[i].weight;
@@ -165,6 +177,7 @@ public:
 					}
 				}
 			}
+			size_t max_h_rnd = max_h;
 			// If not enough nodes visible to all threads are available process some random nodes
 			if(orig_size - offset > 1 && j < block_size) {
 				// Shuffle nodes for randomness
@@ -177,10 +190,16 @@ public:
 					size_t a = n.added;
 
 					// Node not visible to all threads
-					if(a >= orig_size - k) {
+					if(a + k >= orig_size) {
 						// Node has not been processed, and no better distance value has been found
 						if(d == n.distance && !n.processed) {
 							pc.num_actual_tasks.incr();
+
+							size_t h = d - base;
+							if(h > max_h_rnd) {
+								max_h_rnd = h;
+							}
+
 							// relax node
 							for(size_t i = 0; i < graph[node].num_edges; ++i) {
 								size_t new_d = d + graph[node].edges[i].weight;
@@ -217,6 +236,7 @@ public:
 
 			++offset;
 			std::cout << "New nodes found: " << sum_new << std::endl << "Better distance value found for " << sum_upd << " nodes" << std::endl;
+			std::cout << "Maximum h: " << max_h << ", including randomly selected nodes: " << max_h_rnd << std::endl;
 			std::cout << "------------------" << std::endl;
 			// Sort nodes by distance value for next iteration
 			std::sort(v.begin() + offset, v.end(), less);
