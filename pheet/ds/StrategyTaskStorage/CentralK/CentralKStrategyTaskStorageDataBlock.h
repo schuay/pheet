@@ -30,7 +30,17 @@ public:
 			data[i] = nullptr;
 		}
 	}
-	~CentralKStrategyTaskStorageDataBlock() {}
+	~CentralKStrategyTaskStorageDataBlock() {
+		if(active_threads > 0) {
+			for(size_t i = 0; i < BlockSize; ++i) {
+				if(data[i] != nullptr) {
+					delete data[i]->strategy;
+					data[i]->strategy = nullptr;
+					data[i] = nullptr;
+				}
+			}
+		}
+	}
 
 	bool put(size_t* head, size_t* tail, size_t& cur_tail, Item* item, PerformanceCounters& pc) {
 		// Take care not to break correct wraparounds when changing anything

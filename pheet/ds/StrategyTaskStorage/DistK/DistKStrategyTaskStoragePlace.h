@@ -205,6 +205,7 @@ public:
 
 							block->mark_item_used();
 							while(local_head != local_tail && local_head->is_empty()) {
+								pheet_assert(local_head->get_state() == 0);
 								pheet_assert(local_head->get_next() != nullptr);
 								local_head = local_head->get_next();
 							}
@@ -218,6 +219,11 @@ public:
 					}
 					// Local thread notices that item has been removed by other thread. Clean up if necessary
 					block->mark_item_used();
+					while(local_head != local_tail && local_head->is_empty()) {
+						pheet_assert(local_head->get_state() == 0);
+						pheet_assert(local_head->get_next() != nullptr);
+						local_head = local_head->get_next();
+					}
 					block->perform_cleanup_check();
 
 					pc.num_taken_heap_items.incr();
@@ -241,6 +247,7 @@ public:
 		// Heap is empty. Try work-stealing (without actual stealing, just copying)
 		} while(steal_work());
 		while(local_head != local_tail && local_head->is_empty()) {
+			pheet_assert(local_head->get_state() == 0);
 			pheet_assert(local_head->get_next() != nullptr);
 			local_head = local_head->get_next();
 		}

@@ -105,6 +105,7 @@ public:
 	}
 
 	void set_next(Self* value) {
+		pheet_assert(next == nullptr);
 		value->reset(offset + BlockSize);
 		value->prev = this;
 		next = value;
@@ -153,6 +154,7 @@ public:
 			if(state == 0 && next != nullptr) { // If next == nullptr, another item is guaranteed to be added later
 				state = 1;
 				if(prev != nullptr) {
+					pheet_assert(prev->next == this);
 					prev->next = next;
 				}
 				next->prev = prev;
