@@ -214,9 +214,14 @@ private:
 		// Check whether update is necessary
 		if(!heap.empty()) {
 			if(LocalKPrio) {
-				size_t pos = heap.peek().position;
+				auto peek = heap.peek();
+
+				size_t pos = peek.position;
 				ptrdiff_t diff = ((ptrdiff_t)head) - ((ptrdiff_t) pos);
 				if(diff >= 0) {
+					return;
+				}
+				if(pos != peek.item->position) {
 					return;
 				}
 			}

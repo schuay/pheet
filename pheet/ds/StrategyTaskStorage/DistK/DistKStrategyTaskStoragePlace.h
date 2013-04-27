@@ -25,6 +25,8 @@ struct DistKStrategyTaskStorageItemReference {
 	size_t position;
 	// If strategy equals item->strategy => locally created
 	typename Pheet::Scheduler::BaseStrategy* strategy;
+	// 0: local, 1: global, 2: stolen
+	uint8_t type;
 };
 
 template <class Pheet, class Ref>
@@ -42,46 +44,6 @@ public:
 	inline bool is_active(Ref const& ref) {
 		return ref.item->position == ref.position && !reinterpret_cast<Strategy*>(ref.strategy)->dead_task();
 	}
-
-/*	inline void mark_removed(Ref& ref) {
-	//	item.block->mark_removed(item.index, task_storage->get_current_view());
-	}*/
-/*
-	template<class Strategy>
-	inline bool clean_item(Ref& ref) {
-		if(ref.item->position != ref.position) {
-			if(ref.strategy != ref.item->strategy) {
-				delete ref.strategy;
-			}
-			else {
-				auto block = ref.item->block;
-				block->mark_item_used();
-				block->perform_cleanup_check();
-			}
-			return true;
-		}
-		else if(reinterpret_cast<Strategy*>(ref.strategy)->dead_task()) {
-			bool local = true;
-			if(r.strategy != r.item->strategy) {
-				delete r.strategy;
-				local = false;
-			}
-
-			if(local) {
-				T ret = ref.item->data;
-				DataBlock* block = ref.item->block;
-				if(SIZET_CAS(&(ref.item->position), ref.position, ref.position + 1)) {
-					block->mark_item_used();
-						while(local_head != local_tail && local_head->is_empty()) {
-							local_head = local_head->get_next();
-						}
-						block->perform_cleanup_check();
-
-						return ret;
-					}
-		}
-		return false;
-	}*/
 
 private:
 };
@@ -108,7 +70,7 @@ public:
 	typedef typename Pheet::Scheduler::Place SchedulerPlace;
 
 	DistKStrategyTaskStoragePlace(TaskStorage* task_storage, SchedulerPlace* scheduler_place, PerformanceCounters pc)
-	:pc(pc), task_storage(task_storage), heap(sr, pc.strategy_heap_performance_counters), remaining_k(std::numeric_limits<size_t>::max()),
+	:pc(pc), task_storage(task_storage), heap(sr, pc.strategy_heap_performance_counters), local_offset(0), remaining_k(std::numeric_limits<size_t>::max()),
 	 local_head(&(data_blocks.acquire_item())), local_tail(local_head), last_steal_head(nullptr), scheduler_place(scheduler_place)  {
 		local_head->reset(0);
 
@@ -178,6 +140,7 @@ public:
 		r.item = &it;
 		r.position = it.orig_position;
 		r.strategy = it.strategy;
+		r.type = 0; // local
 
 		heap.template push<Strategy>(std::move(r));
 	}
@@ -190,11 +153,7 @@ public:
 				Ref r = heap.pop();
 
 				pheet_assert(r.strategy != nullptr);
-				bool local = true;
-				if(r.strategy != r.item->strategy) {
-					delete r.strategy;
-					local = false;
-				}
+				bool local = r.type == 0;
 
 				if(local) {
 					DataBlock* block = r.item->block;
@@ -229,6 +188,8 @@ public:
 					pc.num_taken_heap_items.incr();
 				}
 				else {
+					delete r.strategy;
+
 					if(r.item->position == r.position) {
 						T ret = r.item->data;
 						if(SIZET_CAS(&(r.item->position), r.position, r.position + 1)) {
@@ -256,14 +217,14 @@ public:
 	}
 
 	template <class Strategy>
-	void item_push(Item* item, size_t position) {
+	void item_push(Item* item, size_t position, uint8_t type) {
 		if(reinterpret_cast<Strategy*>(item->strategy)->dead_task()) {
 			return;
 		}
 		Ref r;
 		r.item = item;
 		r.position = position;
-		// TODO: check whether the position is still valid, otherwise end function
+		r.type = type;
 
 		Strategy* s = new Strategy(*reinterpret_cast<Strategy*>(item->strategy));
 		r.strategy = s;
@@ -287,7 +248,19 @@ private:
 		// Check whether update is necessary
 		if(!heap.empty()) {
 			if(LocalKPrio) {
-
+				auto peek = heap.peek();
+				if(peek.position == peek.item->position) {
+					if(peek.type == 2) { // stolen
+						process_global_queue();
+					}
+					else if(peek.type == 0) {
+						ptrdiff_t diff = ((ptrdiff_t)local_offset) - ((ptrdiff_t) peek.position);
+						if(diff < 0) {
+							// Might process queue for more items than necessary, but difficult to filter otherwise
+							process_global_queue();
+						}
+					}
+				}
 			}
 			else {
 				process_global_queue();
@@ -304,6 +277,7 @@ private:
 			DataBlock* new_list = &(data_blocks.acquire_item());
 			pheet_assert(new_list != nullptr);
 			new_list->reset(local_tail->get_offset() + BlockSize);
+			local_offset = local_tail->get_offset() + BlockSize;
 
 			size_t np = task_storage->get_num_places() - 1;
 			DataBlock* block = local_head;
@@ -346,7 +320,7 @@ private:
 				if(data->position == next->get_offset() + i) {
 					// Item is usable
 					auto ip = data->item_push;
-					(this->*ip)(data, next->get_offset() + i);
+					(this->*ip)(data, next->get_offset() + i, 1);
 				}
 			}
 
@@ -401,7 +375,7 @@ private:
 
 							// Item is usable
 							auto ip = data->item_push;
-							(this->*ip)(data, offset + j);
+							(this->*ip)(data, offset + j, 2);
 						}
 					}
 					block->deregister_locally();
@@ -412,10 +386,6 @@ private:
 			block = block->get_next();
 		}
 
-		if(success && LocalKPrio) {
-			// Enforce global queue in this case. With non-local it will be called anyway later
-			process_global_queue();
-		}
 		return success;
 	}
 
@@ -428,6 +398,7 @@ private:
 	StrategyRetriever sr;
 	StrategyHeap heap;
 
+	size_t local_offset;
 	size_t remaining_k;
 	DataBlock* local_head;
 	DataBlock* local_tail;

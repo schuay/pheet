@@ -23,7 +23,7 @@ struct DistKStrategyTaskStorageItem {
 
 	typename Place::DataBlock* block;
 
-	void (Place::*item_push)(Self* item, size_t position);
+	void (Place::*item_push)(Self* item, size_t position, uint8_t type);
 };
 
 template <class Item>
