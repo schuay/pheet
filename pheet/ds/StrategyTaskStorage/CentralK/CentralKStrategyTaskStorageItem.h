@@ -15,6 +15,16 @@ struct CentralKStrategyTaskStorageItem {
 	typedef CentralKStrategyTaskStorageItem<Pheet, Place, TT> Self;
 	typedef TT Data;
 
+	~CentralKStrategyTaskStorageItem() {
+		// Some items may not be cleaned up at the end, and cannot be cleaned up at data-block level
+		// due to race conditions. Therefore delete at the item level.
+		if(strategy != nullptr) {
+			delete strategy;
+			strategy = nullptr;
+		}
+	}
+
+
 	typename Pheet::Scheduler::BaseStrategy* strategy;
 	TT data;
 	size_t position;
