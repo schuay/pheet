@@ -21,7 +21,7 @@ public:
 
 	StrategySsspStrategy(size_t distance, size_t& stored_distance)
 	: distance(distance), stored_distance(stored_distance)/*, rnd(Pheet::rand_int((1 + distance) << 4))*/ {
-		this->set_k(1024);
+		this->set_k(default_k);
 	}
 
 	StrategySsspStrategy(Self& other)
@@ -62,12 +62,15 @@ public:
 		this->reset();
 		rnd = Pheet::rand_int((1 + distance) << 4);
 	}*/
+	static size_t default_k;
 private:
 	size_t distance;
 	size_t& stored_distance;
 //	size_t rnd;
 };
 
+template <class Pheet>
+size_t StrategySsspStrategy<Pheet>::default_k = 1024;
 
 } /* namespace pheet */
 #endif /* STRATEGYSSSPSTRATEGY_H_ */

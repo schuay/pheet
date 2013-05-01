@@ -42,7 +42,7 @@ const unsigned int lupiv_test_seeds[] = {0};
 const size_t lupiv_test_n[] = {1024};
 const int lupiv_test_types[] = {0};
 
-#define PREFIX_SUM_TEST	true
+#define PREFIX_SUM_TEST true
 const procs_t prefix_sum_test_cpus[] = {1, 2, 4, 8};
 const unsigned int prefix_sum_test_seeds[] = {0};
 const size_t prefix_sum_num_problems[] = {1, 2, 4};
@@ -57,6 +57,7 @@ const GraphBipartitioningProblem sssp_test_problems[] = {
 		{3000, 0.5, 100000000},
 };
 const int sssp_test_types[] = {0};
+const size_t sssp_test_k[] = {1024};// {1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384};
 
 //#define SSSP_SIM true
 const size_t sssp_sim_k = 1000;
@@ -65,7 +66,7 @@ const size_t sssp_sim_p = 200;
 
 
 
-#define SORANDUTS
+//#define SORANDUTS
 
 
 }

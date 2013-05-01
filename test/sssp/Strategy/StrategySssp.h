@@ -53,6 +53,10 @@ public:
 		}
 	}
 
+	static void set_k(size_t k) {
+		Strategy::default_k = k;
+	}
+
 	static char const name[];
 private:
 	SsspGraphVertex* graph;

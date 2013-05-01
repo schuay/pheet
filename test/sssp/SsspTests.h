@@ -36,26 +36,28 @@ void SsspTests::run_algorithm() {
 
 	for(size_t t = 0; t < sizeof(sssp_test_types)/sizeof(sssp_test_types[0]); t++) {
 		for(size_t pr = 0; pr < sizeof(sssp_test_problems)/sizeof(sssp_test_problems[0]); pr++) {
-			bool max_processed = false;
-			procs_t cpus;
-			for(size_t c = 0; c < sizeof(sssp_test_cpus)/sizeof(sssp_test_cpus[0]); c++) {
-				cpus = sssp_test_cpus[c];
-				if(cpus >= max_cpus) {
-					if(!max_processed) {
-						cpus = max_cpus;
-						max_processed = true;
+			for(size_t k = 0; k < sizeof(sssp_test_k)/sizeof(sssp_test_k[0]); k++) {
+				bool max_processed = false;
+				procs_t cpus;
+				for(size_t c = 0; c < sizeof(sssp_test_cpus)/sizeof(sssp_test_cpus[0]); c++) {
+					cpus = sssp_test_cpus[c];
+					if(cpus >= max_cpus) {
+						if(!max_processed) {
+							cpus = max_cpus;
+							max_processed = true;
+						}
+						else {
+							continue;
+						}
 					}
-					else {
-						continue;
+					for(size_t s = 0; s < sizeof(sssp_test_seeds)/sizeof(sssp_test_seeds[0]); s++) {
+						SsspTest<Pheet, Partitioner> gbt(cpus, sssp_test_types[t], sssp_test_k[k],
+								sssp_test_problems[pr].n,
+								sssp_test_problems[pr].p,
+								sssp_test_problems[pr].max_w,
+								sssp_test_seeds[s]);
+						gbt.run_test();
 					}
-				}
-				for(size_t s = 0; s < sizeof(sssp_test_seeds)/sizeof(sssp_test_seeds[0]); s++) {
-					SsspTest<Pheet, Partitioner> gbt(cpus, sssp_test_types[t],
-							sssp_test_problems[pr].n,
-							sssp_test_problems[pr].p,
-							sssp_test_problems[pr].max_w,
-							sssp_test_seeds[s]);
-					gbt.run_test();
 				}
 			}
 		}

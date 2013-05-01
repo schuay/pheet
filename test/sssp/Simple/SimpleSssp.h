@@ -50,6 +50,8 @@ public:
 		}
 	}
 
+	static void set_k(size_t k) {}
+
 	static char const name[];
 private:
 	SsspGraphVertex* graph;
