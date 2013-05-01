@@ -48,9 +48,9 @@ public:
 		while(array_offset < BlockSize) {
 			pc.num_put_tests.incr();
 
-			size_t cur_k = std::min(k, BlockSize - array_offset);
+			size_t cur_k = std::min(k, BlockSize - array_offset - 1);
 
-			size_t to_add = Pheet::template rand_int<size_t>(cur_k - 1);
+			size_t to_add = Pheet::template rand_int<size_t>(cur_k);
 			size_t i_limit = to_add + std::min(Tests, cur_k);
 			for(size_t i = to_add; i != i_limit; ++i) {
 				size_t wrapped_i = i % cur_k;
@@ -75,7 +75,7 @@ public:
 				}
 			}
 
-			cur_tail += cur_k;
+			cur_tail += cur_k + 1;
 			array_offset = cur_tail - offset;
 		}
 	//	update_tail(tail, old_tail, cur_tail);

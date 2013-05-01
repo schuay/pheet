@@ -72,6 +72,7 @@ void SsspTest<Pheet, Algorithm>::run_test() {
 
 	Time start, end;
 	{typename Pheet::Environment env(cpus, pc);
+		Algorithm<Pheet>::set_k(k);
 		check_time(start);
 		Pheet::template
 			finish<Algorithm<Pheet> >(data, size, ppc);

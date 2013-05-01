@@ -114,12 +114,12 @@ public:
 		it.item_push = &Self::template item_push<Strategy>;
 		it.block = local_tail;
 
-		if(k < remaining_k) remaining_k = k;
 		local_tail->put(&it);
 
 		pheet_assert(remaining_k != 0);
 
 		--remaining_k;
+		if(k < remaining_k) remaining_k = k;
 		if(remaining_k == 0) {
 			make_queue_global();
 		}
