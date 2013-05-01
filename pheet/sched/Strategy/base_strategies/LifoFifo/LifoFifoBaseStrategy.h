@@ -109,7 +109,6 @@ public:
 	}
 
 	inline void set_k(size_t k) {
-		pheet_assert(k > 0);
 		this->k = k;
 	}
 
