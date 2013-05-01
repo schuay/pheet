@@ -65,7 +65,7 @@ void PrefixSumTests::run_test() {
 							StrategyRecursiveParallelPrefixSum>();
 	this->run_prefix_sum<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<DistKStrategyTaskStorageLocalK>,
 							StrategyRecursiveParallelPrefixSum>();
-	this->run_prefix_sum<	Pheet::WithScheduler<BStrategyScheduler>,
+	this->run_prefix_sum<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<CentralKStrategyTaskStorage>,
 							StrategyRecursiveParallelPrefixSum>();
 	this->run_prefix_sum<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<CentralKStrategyTaskStorageLocalK>,
 							StrategyRecursiveParallelPrefixSum>();

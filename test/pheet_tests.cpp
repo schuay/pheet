@@ -21,6 +21,7 @@
 #include "prefix_sum/PrefixSumTests.h"
 #include "sssp/SsspTests.h"
 #include "set_bench/SetBench.h"
+#include "count_bench/CountBench.h"
 #include <map>
 #include <string>
 
@@ -84,6 +85,9 @@ int main(int argc, char* argv[]) {
 
 	SetBench sb;
 	sb.run_test();
+
+	CountBench cb;
+	cb.run_test();
 
 	return 0;
 }

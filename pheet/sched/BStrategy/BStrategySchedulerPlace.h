@@ -10,7 +10,11 @@
 #define BSTRATEGYSCHEDULERPLACE_H_
 
 #include "BStrategySchedulerPerformanceCounters.h"
+#include "../../settings.h"
+#include "../common/CPUThreadExecutor.h"
+#include "../common/FinishRegion.h"
 #include "../common/PlaceBase.h"
+
 
 namespace pheet {
 

@@ -10,5 +10,6 @@ include test/uts/sub.mk
 include test/sor/sub.mk
 include test/prefix_sum/sub.mk
 include test/set_bench/sub.mk
+include test/count_bench/sub.mk
 include test/sssp/sub.mk
 include test/tristrip/sub.mk

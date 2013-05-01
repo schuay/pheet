@@ -13,6 +13,8 @@
 #include "../Ordered/ScalarMonoid.h"
 #include "SumOperation.h"
 
+#include <iostream>
+
 /*
  *
  */
@@ -32,6 +34,10 @@ public:
 	void sub(T const& value);
 
 	T const& get_sum();
+
+	static void print_name() {
+		std::cout << "SumReducer";
+	}
 private:
 	typedef OrderedReducer<Pheet, ScalarMonoid<T, Op> > Reducer;
 	Reducer reducer;

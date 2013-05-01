@@ -75,6 +75,8 @@ void SortingTests::run_test() {
 						DagQuicksortNoCut>();
 	this->run_sorter<	Pheet::WithScheduler<BasicScheduler>,
 						DagQuicksortNoCut>();
+	this->run_sorter<	Pheet,
+						DagQuicksortNoCut>();
 #elif AMP_SKIPLIST_TEST
 	this->run_sorter<	Pheet::WithScheduler<CentralizedPriorityScheduler>,
 						DagQuicksortNoCut>();
@@ -95,13 +97,15 @@ void SortingTests::run_test() {
 						DagQuicksortNoCut>();
 	this->run_sorter<	Pheet::WithScheduler<BasicScheduler>,
 						DagQuicksortNoCut>();
+	this->run_sorter<	Pheet,
+						DagQuicksortNoCut>();
 #else
 	// default tests
 	this->run_sorter<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<DistKStrategyTaskStorage>,
 						StrategyQuicksort>();
 	this->run_sorter<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<DistKStrategyTaskStorageLocalK>,
 						StrategyQuicksort>();
-	this->run_sorter<	Pheet::WithScheduler<BStrategyScheduler>,
+	this->run_sorter<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<CentralKStrategyTaskStorage>,
 						StrategyQuicksort>();
 	this->run_sorter<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<CentralKStrategyTaskStorageLocalK>,
 						StrategyQuicksort>();

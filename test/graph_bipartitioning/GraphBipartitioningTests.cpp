@@ -136,10 +136,10 @@ void GraphBipartitioningTests::run_test() {
 							PPoPPBBGraphBipartitioning<>
 								::WithLogic<BBGraphBipartitioningFREELogic>
 								::BT>();
-	this->run_partitioner<	Pheet::WithScheduler<BStrategyScheduler>,
+	this->run_partitioner<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<CentralKStrategyTaskStorage>,
 							PPoPPBBGraphBipartitioning<>
 								::BT>();
-	this->run_partitioner<	Pheet::WithScheduler<BStrategyScheduler>,
+	this->run_partitioner<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<CentralKStrategyTaskStorage>,
 							PPoPPBBGraphBipartitioning<>
 								::WithLogic<BBGraphBipartitioningFREELogic>
 								::BT>();

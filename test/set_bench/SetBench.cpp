@@ -9,8 +9,8 @@
 
 #include "../init.h"
 
-#ifdef SET_BENCH
 #include "SetBench.h"
+#ifdef SET_BENCH
 #include <pheet/ds/Set/GlobalLock/GlobalLockSet.h>
 #endif
 

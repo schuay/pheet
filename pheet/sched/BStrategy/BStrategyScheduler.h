@@ -13,10 +13,14 @@
 #include "BStrategySchedulerPerformanceCounters.h"
 #include "BStrategySchedulerTaskStorageItem.h"
 
+#include "../../settings.h"
 //#include "../../ds/StrategyTaskStorage/Local/LocalStrategyTaskStorage.h"
-#include "../../ds/StrategyTaskStorage/CentralK/CentralKStrategyTaskStorage.h"
+#include "../../ds/StrategyTaskStorage/DistK/DistKStrategyTaskStorage.h"
 #include "../../ds/StrategyStealer/Basic/BasicStrategyStealer.h"
 #include "../Strategy/base_strategies/LifoFifo/LifoFifoBaseStrategy.h"
+#include "../../models/MachineModel/BinaryTree/BinaryTreeMachineModel.h"
+#include "../common/SchedulerTask.h"
+#include "../common/SchedulerFunctorTask.h"
 
 namespace pheet {
 
@@ -289,7 +293,7 @@ inline void BStrategySchedulerImpl<Pheet, TaskStorageT, BaseStrategyT>::call(F&&
 
 
 template<class Pheet>
-using BStrategyScheduler = BStrategySchedulerImpl<Pheet, CentralKStrategyTaskStorage, LifoFifoBaseStrategy>;
+using BStrategyScheduler = BStrategySchedulerImpl<Pheet, DistKStrategyTaskStorageLocalK, LifoFifoBaseStrategy>;
 
 }
 
