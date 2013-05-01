@@ -19,6 +19,13 @@ struct GraphBipartitioningProblem {
 	size_t max_w;
 };
 
+struct SetBenchProblem {
+	size_t range;
+	size_t blocks;
+	double contains_p;
+	double add_p;
+};
+
 }
 
 #include ACTIVE_TEST

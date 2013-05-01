@@ -65,36 +65,36 @@ void SortingTests::run_test() {
 //	this->run_sorter<	Pheet::WithScheduler<BasicScheduler>::WithTaskStorage<YourImplementation>,
 //						DagQuicksort>();
 	this->run_sorter<	Pheet::WithScheduler<BasicScheduler>,
-						DagQuicksort>();
+						DagQuicksortNoCut>();
 
 #elif AMP_QUEUE_STACK_TEST
 
 	this->run_sorter<	Pheet::WithScheduler<CentralizedScheduler>,
-						DagQuicksort>();
+						DagQuicksortNoCut>();
 	this->run_sorter<	Pheet::WithScheduler<CentralizedScheduler>::WithTaskStorage<GlobalLockQueue>,
-						DagQuicksort>();
+						DagQuicksortNoCut>();
 	this->run_sorter<	Pheet::WithScheduler<BasicScheduler>,
-						DagQuicksort>();
+						DagQuicksortNoCut>();
 #elif AMP_SKIPLIST_TEST
 	this->run_sorter<	Pheet::WithScheduler<CentralizedPriorityScheduler>,
-						DagQuicksort>();
+						DagQuicksortNoCut>();
 	this->run_sorter<	Pheet::WithScheduler<CentralizedPriorityScheduler>::WithPriorityTaskStorage<GlobalLockMultiSetPriorityQueue>,
-						DagQuicksort>();
+						DagQuicksortNoCut>();
 	this->run_sorter<	Pheet,
-						DagQuicksort>();
+						DagQuicksortNoCut>();
 	this->run_sorter<	Pheet::WithScheduler<BasicScheduler>,
-						DagQuicksort>();
+						DagQuicksortNoCut>();
 
 #elif AMP_LOCK_TEST
 
 	this->run_sorter<	Pheet::WithScheduler<CentralizedScheduler>,
-						DagQuicksort>();
+						DagQuicksortNoCut>();
 	this->run_sorter<	Pheet::WithScheduler<CentralizedScheduler>::WithMutex<TASLock>,
-						DagQuicksort>();
+						DagQuicksortNoCut>();
 	this->run_sorter<	Pheet::WithScheduler<CentralizedScheduler>::WithMutex<TTASLock>,
-						DagQuicksort>();
+						DagQuicksortNoCut>();
 	this->run_sorter<	Pheet::WithScheduler<BasicScheduler>,
-						DagQuicksort>();
+						DagQuicksortNoCut>();
 #else
 	// default tests
 	this->run_sorter<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<DistKStrategyTaskStorage>,
