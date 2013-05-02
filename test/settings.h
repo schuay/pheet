@@ -11,7 +11,7 @@
 
 //#define PHEET_DEBUG_MODE
 // #define PHEET_ALL_PERFORMANCE_COUNTERS
-#define ACTIVE_TEST 	"test_variants/short_single.h"
+#define ACTIVE_TEST 	"test_variants/standard.h"
 
 bool const graph_bipartitioning_test_count_irrelevant_tasks = false;
 bool const graph_bipartitioning_test_count_upper_bound_changes = false;

@@ -16,7 +16,7 @@ namespace pheet {
 
 // Debug configuration
 #define SORTING_TEST true
-const procs_t sorting_test_cpus[] = {1, 2, 6, 12, 48};
+const procs_t sorting_test_cpus[] = {1, 2, 3, 6, 12, 24, 48};
 const unsigned int sorting_test_seeds[] = {0};
 const size_t sorting_test_n[] = {5000000};
 const int sorting_test_types[] = {0};

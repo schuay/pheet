@@ -28,15 +28,15 @@ const GraphBipartitioningProblem graph_bipartitioning_test_problems[] = {
 };
 const int graph_bipartitioning_test_types[] = {0};
 
-#define INAROW_TEST true
+//#define INAROW_TEST true
 const procs_t inarow_test_cpus[] = {1, 2, 4, 8};
 const unsigned int inarow_test_lookaheads[] = {5};
 
-const bool    nqueens_test        = false;
+//#define NQUEENS_TEST true
 const procs_t nqueens_test_cpus[] = {1, 2, 4, 8};
 const size_t  nqueens_test_n[]    = {24};
 
-#define LUPIV_TEST	true
+//#define LUPIV_TEST	true
 const procs_t lupiv_test_cpus[] = {1, 2, 4, 8};
 const unsigned int lupiv_test_seeds[] = {0};
 const size_t lupiv_test_n[] = {1024};

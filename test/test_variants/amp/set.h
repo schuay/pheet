@@ -14,7 +14,7 @@
 namespace pheet {
 
 #define SET_BENCH true
-const procs_t count_bench_cpus[] = {1, 2, 3, 6, 12, 24, 48};
+const procs_t set_bench_cpus[] = {1, 2, 3, 6, 12, 24, 48};
 const unsigned int set_bench_seeds[] = {0};
 const SetBenchProblem set_bench_problems[] = {
 		// n, p, max_w

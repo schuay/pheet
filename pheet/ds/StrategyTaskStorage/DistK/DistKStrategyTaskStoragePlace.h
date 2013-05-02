@@ -146,6 +146,7 @@ public:
 	}
 
 	T pop() {
+	//	typename Pheet::Backoff bo;
 		do {
 			update_heap();
 
@@ -197,6 +198,9 @@ public:
 							return ret;
 						}
 						else {
+							// TODO: Test if faster: Conflict on non-local data. Backoff
+						//	bo.backoff();
+
 							pc.num_unsuccessful_takes.incr();
 						}
 					}

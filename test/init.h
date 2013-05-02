@@ -33,53 +33,59 @@ struct SetBenchProblem {
 namespace pheet {
 
 #ifdef GRAPHBIANDLUPIV_TEST
-const bool    graphbiandlupiv_test        = GRAPHBIANDLUPIV_TEST;
+bool const    graphbiandlupiv_test        = GRAPHBIANDLUPIV_TEST;
 #else
-const bool    graphbiandlupiv_test        = false;
+bool const    graphbiandlupiv_test        = false;
 #endif
 
 
 #ifdef SORTING_TEST
-const bool    sorting_test        = SORTING_TEST;
+bool const    sorting_test        = SORTING_TEST;
 #else
-const bool    sorting_test        = false;
+bool const    sorting_test        = false;
 #endif
 
 #ifdef GRAPH_BIPARTITIONING_TEST
-const bool    graph_bipartitioning_test        = GRAPH_BIPARTITIONING_TEST;
+bool const    graph_bipartitioning_test        = GRAPH_BIPARTITIONING_TEST;
 #else
-const bool    graph_bipartitioning_test        = false;
+bool const    graph_bipartitioning_test        = false;
 #endif
 
 #ifdef INAROW_TEST
-const bool    inarow_test        = INAROW_TEST;
+bool const    inarow_test        = INAROW_TEST;
 #else
-const bool    inarow_test        = false;
+bool const    inarow_test        = false;
 #endif
 
 #ifdef LUPIV_TEST
-const bool    lupiv_test        = LUPIV_TEST;
+bool const    lupiv_test        = LUPIV_TEST;
 #else
-const bool    lupiv_test        = false;
+bool const    lupiv_test        = false;
 #endif
 
 #ifdef SOR_TEST
-const bool    sor_test        = SOR_TEST;
+bool const    sor_test        = SOR_TEST;
 #else
-const bool    sor_test        = false;
+bool const    sor_test        = false;
 #endif
 
 #ifdef TriStrip_TEST
-const bool    tristrip_test        = TriStrip_TEST;
+bool const    tristrip_test        = TriStrip_TEST;
 #else
-const bool    tristrip_test        = false;
+bool const    tristrip_test        = false;
 #endif
 
 
 #ifdef UTS_TEST
-const bool    uts_test        = UTS_TEST;
+bool const    uts_test        = UTS_TEST;
 #else
-const bool    uts_test        = false;
+bool const    uts_test        = false;
+#endif
+
+#ifdef NQUEENS_TEST
+bool const    nqueens_test        = NQUEENS_TEST;
+#else
+bool const    nqueens_test        = false;
 #endif
 
 }

@@ -37,7 +37,7 @@ void CountBench::run_bench() {
 	procs_t max_cpus = std::min(mm.get_num_leaves(), Pheet::Environment::max_cpus);
 
 	for(size_t p = 0; p < sizeof(count_bench_p)/sizeof(count_bench_p[0]); p++) {
-		for(size_t n = 0; n < sizeof(sorting_test_n)/sizeof(sorting_test_n[0]); n++) {
+		for(size_t n = 0; n < sizeof(count_bench_n)/sizeof(count_bench_n[0]); n++) {
 			bool max_processed = false;
 			procs_t cpus;
 			for(size_t c = 0; c < sizeof(count_bench_cpus)/sizeof(count_bench_cpus[0]); c++) {
