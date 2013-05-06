@@ -51,9 +51,9 @@ public:
 			size_t cur_k = std::min(k, BlockSize - array_offset - 1);
 
 			size_t to_add = Pheet::template rand_int<size_t>(cur_k);
-			size_t i_limit = to_add + std::min(Tests, cur_k);
+			size_t i_limit = to_add + std::min(Tests, cur_k + 1);
 			for(size_t i = to_add; i != i_limit; ++i) {
-				size_t wrapped_i = i % cur_k;
+				size_t wrapped_i = i % (cur_k + 1);
 				if(data[array_offset + wrapped_i] == nullptr) {
 					item->orig_position = cur_tail + wrapped_i;
 					item->position = item->orig_position;
@@ -165,7 +165,7 @@ public:
 					size_t k = item->strategy->get_k();
 					// If k is smaller than the distance to position, tail must have been updated in the meantime.
 					// We can't just take this item in this case or we might violate k-ordering
-					if((i % limit) < k) {
+					if((i % limit) <= k) {
 						T ret = item->data;
 						if(SIZET_CAS(&(item->position), g_index, g_index + 1)) {
 							num_successful_takes.incr();
