@@ -97,7 +97,7 @@ void PrefixSumTest<Pheet, Algorithm>::run_test() {
 	apc.print_values();
 	cout << endl;
 	for(size_t i = 0; i < num_problems; ++i) {
-		delete[] data[i];
+		free(data[i]);
 	}
 	delete[] data;
 }
@@ -105,7 +105,7 @@ void PrefixSumTest<Pheet, Algorithm>::run_test() {
 
 template <class Pheet, template <class P> class Algorithm>
 unsigned int* PrefixSumTest<Pheet, Algorithm>::generate_data() {
-	unsigned int* data = new unsigned int[size];
+	posix_memalign((void**)&data, 64, size * sizeof(*data));
 
 //	boost::mt19937 rng;
 //	rng.seed(seed);
