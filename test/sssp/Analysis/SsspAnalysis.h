@@ -59,6 +59,9 @@ public:
 		size_t* settled = new size_t[size];
 		settled[0] = 0;
 
+		std::vector<size_t> h_hist;
+		h_hist.push_back(0);
+
 		graph[0].distance = 0;
 
 		std::vector<SsspAnalysisNode> v;
@@ -84,6 +87,8 @@ public:
 			}
 			++phase;
 
+			size_t base = v[offset].distance;
+#ifndef SSSP_SIM_STRUCTURED
 			std::cout << "Phase " << phase << ":" << std::endl;
 			std::cout << "Nodes in list (* ... nodes not visible to all threads) " << std::endl;
 
@@ -91,7 +96,6 @@ public:
 			size_t processed_sum = 0;
 			size_t samples = 0;
 			size_t processed_samples = 0;
-			size_t base = v[offset].distance;
 			// Print list of nodes
 			for(size_t i = offset; i < v.size(); ++i) {
 				if(graph[v[i].node_id].distance == v[i].distance) {
@@ -127,6 +131,7 @@ public:
 			if(processed_samples > 0) {
 				std::cout << "Avg. Weight (incl processed > dist): " << ((sum + processed_sum) / (processed_samples + samples)) << " for " << (processed_samples + samples) << " nodes" << std::endl;
 			}
+#endif
 
 			// Go through list and only process nodes visible to all threads and the first node (which is always processed)
 			size_t orig_size = v.size();
@@ -235,9 +240,13 @@ public:
 			}
 
 			++offset;
+#ifndef SSSP_SIM_STRUCTURED
 			std::cout << "New nodes found: " << sum_new << std::endl << "Better distance value found for " << sum_upd << " nodes" << std::endl;
 			std::cout << "Maximum h: " << max_h << ", including randomly selected nodes: " << max_h_rnd << std::endl;
 			std::cout << "------------------" << std::endl;
+#endif
+			h_hist.push_back(max_h_rnd);
+
 			// Sort nodes by distance value for next iteration
 			std::sort(v.begin() + offset, v.end(), less);
 		}
@@ -249,7 +258,11 @@ public:
 					++counter;
 				}
 			}
+#ifndef SSSP_SIM_STRUCTURED
 			std::cout << "Nodes settled in phase " << i << ": " << counter << std::endl;
+#else
+			std::cout << "SSSP_SIM_DATA\t" << i << "\t" << counter << "\t" << h_hist[i] << std::endl;
+#endif
 		}
 		delete[] settled;
 	}

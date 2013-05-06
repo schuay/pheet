@@ -51,7 +51,7 @@ const int prefix_sum_test_types[] = {0};
 
 #define SSSP_TEST true
 const procs_t sssp_test_cpus[] = {1, 2, 4, 8};
-const unsigned int sssp_test_seeds[] = {0};
+const unsigned int sssp_test_seeds[] = {0}; //, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19};
 const GraphBipartitioningProblem sssp_test_problems[] = {
 		// n, p, max_w
 		{3000, 0.5, 100000000},
@@ -60,6 +60,7 @@ const int sssp_test_types[] = {0};
 const size_t sssp_test_k[] = {1024};// {1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384};
 
 //#define SSSP_SIM true
+//#define SSSP_SIM_STRUCTURED true
 const size_t sssp_sim_k = 1000;
 const size_t sssp_sim_p = 200;
 
