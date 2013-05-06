@@ -43,7 +43,10 @@
 #define UINT_FETCH_AND_SUB(p, val)		(__sync_fetch_and_sub(p, val))
 #define LONG_FETCH_AND_SUB(p, val)		(__sync_fetch_and_sub(p, val))
 #define ULONG_FETCH_AND_SUB(p, val)		(__sync_fetch_and_sub(p, val))
-#define SIZET_FETCH_AND_SUB(p, val)		(__sync_fetch_and_sub(p, val))
+inline size_t size_t_fetch_and_sub(size_t* p, size_t val) {
+	return __sync_fetch_and_sub(p, val);
+}
+#define SIZET_FETCH_AND_SUB(p, val)		(size_t_fetch_and_sub(p, val))
 
 #define MEMORY_FENCE()				(__sync_synchronize())
 
