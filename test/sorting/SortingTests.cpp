@@ -28,6 +28,7 @@
 #include <pheet/ds/Queue/GlobalLock/GlobalLockQueue.h>
 #include <pheet/ds/MultiSet/GlobalLock/GlobalLockMultiSet.h>
 #include <pheet/ds/StrategyHeap/Volatile/VolatileStrategyHeap.h>
+#include <pheet/ds/StrategyTaskStorage/CentralK/CentralKStrategyTaskStorage.h>
 #include <pheet/ds/StrategyTaskStorage/DistK/DistKStrategyTaskStorage.h>
 
 #include <pheet/primitives/Mutex/TASLock/TASLock.h>
@@ -77,7 +78,7 @@ void SortingTests::run_test() {
 						DagQuicksortNoCut>();
 	this->run_sorter<	Pheet,
 						DagQuicksortNoCut>();
-#elif AMP_SKIPLIST_TEST
+#elif AMP_HEAP_TEST
 	this->run_sorter<	Pheet::WithScheduler<CentralizedPriorityScheduler>,
 						DagQuicksortNoCut>();
 	this->run_sorter<	Pheet::WithScheduler<CentralizedPriorityScheduler>::WithPriorityTaskStorage<GlobalLockMultiSetPriorityQueue>,

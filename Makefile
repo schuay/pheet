@@ -8,7 +8,7 @@ TEST_TARGET = bin/pheet_test
 
 include test/sub.mk
 
-lib/%.o : test/%.cpp
+lib/%.o : test/%.cpp test/settings.h
 	$(CXX) -c $(CXXFLAGS) $(INCLUDE_PATH) -o $@ $<
 
 
