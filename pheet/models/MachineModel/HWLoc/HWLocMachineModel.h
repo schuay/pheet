@@ -129,6 +129,8 @@ public:
 	procs_t get_num_leaves();
 	procs_t get_memory_level();
 
+	bool supports_SMT() const { return false; }
+ 
 	void bind();
 	void unbind();
 
