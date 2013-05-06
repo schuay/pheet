@@ -11,6 +11,7 @@
 
 #include "pheet/pheet.h"
 #include "../graph_helpers.h"
+#include "../FastBitset.h"
 #include "pheet/primitives/Reducer/Max/MaxReducer.h"
 
 #include "BBGraphBipartitioningSubproblemPerformanceCounters.h"
@@ -27,7 +28,8 @@ protected:
 	: graph(graph), size(size), k(k), upper_bound(upper_bound) {}
 
 public:
-	typedef std::bitset<MaxSize> Set;
+	//typedef std::bitset<MaxSize> Set;
+	typedef FastBitset<MaxSize> Set;
 
 	GraphVertex const* const graph;
 //size_t const lw; // largest weight edge (JLT: more dynamic approx. perhaps better)
