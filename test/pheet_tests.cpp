@@ -29,13 +29,13 @@ int main(int argc, char* argv[]) {
 
 	std::map<std::string, Tests*> tests;
 
-	LUPivTests lpt;
+/*	LUPivTests lpt;
 	SORTests sors;
 	TriStripTests tristrip;
 
 	tests["SOR"] = &sors;
 	tests["lupiv"] = &lpt;
-	tests["tristrip"] = &tristrip;
+	tests["tristrip"] = &tristrip;*/
 	
 	if(argc==3)
 	  {
@@ -65,6 +65,9 @@ int main(int argc, char* argv[]) {
 
   	GraphBipartitioningTests gpt;
   	gpt.run_test();
+   
+  	PrefixSumTests pt;
+  	pt.run_test();
 
 	InARowTests iarts;
 	iarts.run_test();
