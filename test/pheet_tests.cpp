@@ -60,8 +60,8 @@ int main(int argc, char* argv[]) {
 	    return 0;
 	  }
 	
-	SortingTests st;
-   	st.run_test();
+	/*SortingTests st;
+	st.run_test();*/
 
   	GraphBipartitioningTests gpt;
   	gpt.run_test();
@@ -69,7 +69,7 @@ int main(int argc, char* argv[]) {
   	PrefixSumTests pt;
   	pt.run_test();
 
-	InARowTests iarts;
+	/*InARowTests iarts;
 	iarts.run_test();
 
 	NQueensTests nqt;
@@ -80,7 +80,7 @@ int main(int argc, char* argv[]) {
 	
 
 	SsspTests sssp;
-	sssp.run_test();
+	sssp.run_test();*/
 
 	return 0;
 }
