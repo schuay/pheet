@@ -25,6 +25,7 @@
 */
 #include "Basic/BBGraphBipartitioningFREELogic.h"
 
+#include <pheet/models/MachineModel/HWLoc/HWLocSMTMachineModel.h>
 #include <pheet/sched/Basic/BasicScheduler.h>
 #include <pheet/sched/Centralized/CentralizedScheduler.h>
 #include <pheet/sched/Strategy/StrategyScheduler.h>
@@ -143,27 +144,20 @@ void GraphBipartitioningTests::run_test() {
 							BBGraphBipartitioning>();*/
 //	this->run_partitioner<  Pheet::WithScheduler<StrategyScheduler>,
 //							PPoPPBBGraphBipartitioning<>::WithSchedulingStrategy<PPoPPBBGraphBipartitioningLowerBoundStrategy>::T >();
-	this->run_partitioner<  Pheet::WithScheduler<StrategyScheduler>,
-							PPoPPBBGraphBipartitioning<>
-								::WithSchedulingStrategy<PPoPPBBGraphBipartitioningEstimateStrategy>
-								::BT >();
-	this->run_partitioner<  Pheet::WithScheduler<StrategyScheduler>,
-							PPoPPBBGraphBipartitioning<>
-								::WithSchedulingStrategy<PPoPPBBGraphBipartitioningEstimateStrategy>
-								::WithLogic<BBGraphBipartitioningFREELogic>
-								::BT >();
-	this->run_partitioner<	Pheet::WithScheduler<BasicScheduler>,
-							BBGraphBipartitioning>();
-	this->run_partitioner<  Pheet::WithScheduler<BasicScheduler>,
-							BBGraphBipartitioning<>
-								::WithLogic<BBGraphBipartitioningFREELogic>
-								::BT >();
-	this->run_partitioner<  Pheet::WithScheduler<StrategyScheduler>,
-							BBGraphBipartitioning>();
-	this->run_partitioner<  Pheet::WithScheduler<StrategyScheduler>,
-							BBGraphBipartitioning<>
-								::WithLogic<BBGraphBipartitioningFREELogic>
-								::BT >();
+	this->run_partitioner<Pheet::WithScheduler<StrategyScheduler>, PPoPPBBGraphBipartitioning<>::BT >();
+	this->run_partitioner<Pheet::WithScheduler<StrategyScheduler>, PPoPPBBGraphBipartitioning<>::WithLogic<BBGraphBipartitioningFREELogic>::BT>();
+	this->run_partitioner<Pheet::WithScheduler<StrategyScheduler>::WithMachineModel<HWLocSMTMachineModel>, PPoPPBBGraphBipartitioning<>::BT >();
+	this->run_partitioner<Pheet::WithScheduler<StrategyScheduler>::WithMachineModel<HWLocSMTMachineModel>, PPoPPBBGraphBipartitioning<>::WithLogic<BBGraphBipartitioningFREELogic>::BT>();
+ 
+	this->run_partitioner<Pheet::WithScheduler<BasicScheduler>, BBGraphBipartitioning>();
+	this->run_partitioner<Pheet::WithScheduler<BasicScheduler>, BBGraphBipartitioning<>::WithLogic<BBGraphBipartitioningFREELogic>::BT>();
+	this->run_partitioner<Pheet::WithScheduler<BasicScheduler>::WithMachineModel<HWLocSMTMachineModel>, BBGraphBipartitioning>();
+	this->run_partitioner<Pheet::WithScheduler<BasicScheduler>::WithMachineModel<HWLocSMTMachineModel>, BBGraphBipartitioning<>::WithLogic<BBGraphBipartitioningFREELogic>::BT>();
+ 
+	this->run_partitioner<Pheet::WithScheduler<StrategyScheduler>, BBGraphBipartitioning>();
+	this->run_partitioner<Pheet::WithScheduler<StrategyScheduler>, BBGraphBipartitioning<>::WithLogic<BBGraphBipartitioningFREELogic>::BT>();
+	this->run_partitioner<Pheet::WithScheduler<StrategyScheduler>::WithMachineModel<HWLocSMTMachineModel>, BBGraphBipartitioning>();
+	this->run_partitioner<Pheet::WithScheduler<StrategyScheduler>::WithMachineModel<HWLocSMTMachineModel>, BBGraphBipartitioning<>::WithLogic<BBGraphBipartitioningFREELogic>::BT>();
 //	this->run_partitioner<  Pheet::WithScheduler<StrategyScheduler>,
 //							PPoPPBBGraphBipartitioning<>::WithSchedulingStrategy<PPoPPBBGraphBipartitioningUpperLowerBoundStrategy>::T >();
 
