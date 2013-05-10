@@ -48,10 +48,10 @@ public:
 private:
 };
 
-template <class Pheet, class TaskStorage, typename TT, template <class SP, typename ST, class SR> class StrategyHeapT, size_t BlockSize, bool LocalKPrio>
+template <class Pheet, class TaskStorage, typename TT, template <class SP, typename ST, class SR> class StrategyHeapT, size_t BlockSize, bool DelayedKPrio>
 class DistKStrategyTaskStoragePlace {
 public:
-	typedef DistKStrategyTaskStoragePlace<Pheet, TaskStorage, TT, StrategyHeapT, BlockSize, LocalKPrio> Self;
+	typedef DistKStrategyTaskStoragePlace<Pheet, TaskStorage, TT, StrategyHeapT, BlockSize, DelayedKPrio> Self;
 
 	typedef DistKStrategyTaskStorageDataBlock<Pheet, Self, TT, BlockSize> DataBlock;
 
@@ -152,7 +152,8 @@ public:
 
 			while(heap.size() > 0) {
 				Ref r = heap.pop();
-				++tasks_taken_since_update;
+				if(DelayedKPrio)
+					++tasks_taken_since_update;
 
 				pheet_assert(r.strategy != nullptr);
 				bool local = r.type == 0;
@@ -211,7 +212,7 @@ public:
 			}
 
 		// Heap is empty. Try work-stealing (without actual stealing, just copying)
-		} while(steal_work());
+		} while(spy());
 		while(local_head != local_tail && local_head->is_empty()) {
 			pheet_assert(local_head->get_state() == 0);
 			pheet_assert(local_head->get_next() != nullptr);
@@ -252,7 +253,7 @@ private:
 	void update_heap() {
 		// Check whether update is necessary
 		if(!heap.empty()) {
-			if(LocalKPrio) {
+			if(DelayedKPrio) {
 				auto peek = heap.peek();
 				if(peek.position == peek.item->position) {
 					if(peek.type == 2) { // stolen
@@ -338,11 +339,13 @@ private:
 			global_tail = next;
 			next = next->get_next();
 		}
-		update_offset = local_tail->get_offset() + local_tail->get_filled();
-		tasks_taken_since_update = 0;
+		if(DelayedKPrio) {
+			update_offset = local_tail->get_offset() + local_tail->get_filled();
+			tasks_taken_since_update = 0;
+		}
 	}
 
-	bool steal_work() {
+	bool spy() {
 		procs_t num_levels = scheduler_place->get_num_levels();
 		// Finalize elements in stack
 		// We do not steal from the last level as there are no partners
