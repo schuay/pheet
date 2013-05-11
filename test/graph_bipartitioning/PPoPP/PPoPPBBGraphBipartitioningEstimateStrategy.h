@@ -55,6 +55,7 @@ template <class Pheet, class SubProblem>
 inline PPoPPBBGraphBipartitioningEstimateStrategy<Pheet, SubProblem>::PPoPPBBGraphBipartitioningEstimateStrategy(SubProblem* sub_problem)
 :estimate(sub_problem->get_estimate()),
  uncertainty(sub_problem->get_estimate() - sub_problem->get_lower_bound()) {
+//	this->set_k(1024);
 //	size_t depth = sub_problem->sets[0].count() - sub_problem->sets[1].count();
 	size_t ub = sub_problem->get_global_upper_bound();;
 	size_t lb = sub_problem->get_lower_bound();

@@ -62,6 +62,7 @@ const GraphBipartitioningProblem sssp_test_problems[] = {
         {20000, 0.1, 1}
 };
 const int sssp_test_types[] = {0};
+const size_t sssp_test_k[] = {1024}; //{1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096}
 
 }
 

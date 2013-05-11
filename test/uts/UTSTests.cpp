@@ -32,7 +32,7 @@ namespace pheet {
 	{
 #ifdef UTS_TEST
 		for(size_t s = 0; s < sizeof(uts_test_standardworkloads)/sizeof(uts_test_standardworkloads[0]); s++) {
-			for(size_t c = 0; c < sizeof(inarow_test_cpus)/sizeof(inarow_test_cpus[0]); c++) {
+			for(size_t c = 0; c < sizeof(uts_test_cpus)/sizeof(uts_test_cpus[0]); c++) {
 				UTSTest<Test> iart(uts_test_cpus[c],uts_test_standardworkloads_params[uts_test_standardworkloads[s]]);
 				iart.run_test();
 			}

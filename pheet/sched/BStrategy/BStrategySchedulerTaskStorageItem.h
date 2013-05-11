@@ -13,13 +13,15 @@ namespace pheet {
 
 template <class Pheet, typename Task, typename StackElement>
 struct BStrategySchedulerTaskStorageItem {
+	typedef BStrategySchedulerTaskStorageItem<Pheet, Task, StackElement> Self;
+
 	BStrategySchedulerTaskStorageItem();
 
 	Task* task;
 	StackElement* stack_element;
 
-	bool operator==(PrioritySchedulerTaskStorageItem<Pheet> const& other) const;
-	bool operator!=(PrioritySchedulerTaskStorageItem<Pheet> const& other) const;
+	bool operator==(Self const& other) const;
+	bool operator!=(Self const& other) const;
 };
 
 
@@ -30,12 +32,12 @@ BStrategySchedulerTaskStorageItem<Pheet, Task, StackElement>::BStrategyScheduler
 }
 
 template <class Pheet, typename Task, typename StackElement>
-bool BStrategySchedulerTaskStorageItem<Pheet, Task, StackElement>::operator==(PrioritySchedulerTaskStorageItem<Pheet> const& other) const {
+bool BStrategySchedulerTaskStorageItem<Pheet, Task, StackElement>::operator==(Self const& other) const {
 	return other.task == task;
 }
 
 template <class Pheet, typename Task, typename StackElement>
-bool BStrategySchedulerTaskStorageItem<Pheet, Task, StackElement>::operator!=(PrioritySchedulerTaskStorageItem<Pheet> const& other) const {
+bool BStrategySchedulerTaskStorageItem<Pheet, Task, StackElement>::operator!=(Self const& other) const {
 	return other.task != task;
 }
 

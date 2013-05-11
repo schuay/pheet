@@ -75,7 +75,7 @@ void DagQuicksortImpl<Pheet, CUTOFF_LENGTH>::operator()() {
 	size_t pivot = middle - data;
 	std::swap(*(data + length - 1), *middle);    // move pivot to middle
 
-	if(pivot > CUTOFF_LENGTH) {
+	if(pivot >= CUTOFF_LENGTH) {
 		Pheet::template
 			spawn<Self>(data, pivot);
 	}
@@ -106,6 +106,9 @@ void DagQuicksortImpl<Pheet>::print_scheduler_name() {
 
 template<class Pheet>
 using DagQuicksort = DagQuicksortImpl<Pheet, 512>;
+
+template<class Pheet>
+using DagQuicksortNoCut = DagQuicksortImpl<Pheet, 0>;
 
 }
 

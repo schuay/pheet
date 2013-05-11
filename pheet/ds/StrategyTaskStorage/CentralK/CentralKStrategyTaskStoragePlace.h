@@ -35,13 +35,23 @@ public:
 		return ref.strategy;
 	}
 
+	template<class Strategy>
 	inline bool is_active(Ref const& ref) {
-		return ref.item.position == ref.position;
+		return ref.item->position == ref.position && !reinterpret_cast<Strategy*>(ref.strategy)->dead_task();
 	}
-
+/*
 	inline void mark_removed(Ref& ref) {
 	//	item.block->mark_removed(item.index, task_storage->get_current_view());
+		delete ref.strategy;
 	}
+
+	inline bool clean_item(Ref& ref) {
+		if(ref.item->position != ref.position) {
+			delete ref.strategy;
+			return true;
+		}
+		return false;
+	}*/
 
 private:
 };
@@ -65,8 +75,10 @@ public:
 	typedef ItemReuseMemoryManager<Pheet, Item, CentralKStrategyTaskStorageItemReuseCheck<Item> > ItemMemoryManager;
 	typedef ItemReuseMemoryManager<Pheet, DataBlock, CentralKStrategyTaskStorageDataBlockReuseCheck<DataBlock> > DataBlockMemoryManager;
 
-	CentralKStrategyTaskStoragePlace(TaskStorage* task_storage)
-	:task_storage(task_storage), heap(sr, pc.strategy_heap_performance_counters), head(0) {
+	typedef typename Pheet::Scheduler::Place SchedulerPlace;
+
+	CentralKStrategyTaskStoragePlace(TaskStorage* task_storage, SchedulerPlace* scheduler_place, PerformanceCounters pc)
+	:pc(pc), task_storage(task_storage), heap(sr, pc.strategy_heap_performance_counters), head(0) {
 		DataBlock* tmp = task_storage->start_block;
 		if(tmp == nullptr) {
 			// This assumes the first place is initialized before all others, otherwise synchronization would be needed!
@@ -79,12 +91,15 @@ public:
 	}
 
 	~CentralKStrategyTaskStoragePlace() {
+		// Check whether this is needed at all, or if scheduler only terminates if heap is empty
 		while(!heap.empty()) {
 			Ref r = heap.pop();
 			// All items should have been processed
 			pheet_assert(r.position != r.item->position);
-			delete r.item->strategy;
-			r.item->strategy = nullptr;
+		//	if(r.strategy != r.item->strategy) {
+				delete r.strategy;
+		//	}
+			r.strategy = nullptr;
 		}
 	}
 
@@ -95,13 +110,15 @@ public:
 		it.strategy = new Strategy(s);
 		it.data = data;
 		it.item_push = &Self::template item_push<Strategy>;
+		it.owner = this;
 
 		size_t old_tail = task_storage->tail;
 		size_t cur_tail = old_tail;
 
-		while(!tail_block->put(&(task_storage->head), &(task_storage->tail), cur_tail, &it)) {
+		while(!tail_block->put(&(task_storage->head), &(task_storage->tail), cur_tail, &it, pc.data_block_performance_counters)) {
 			if(tail_block->get_next() == nullptr) {
 				DataBlock& next_block = data_blocks.acquire_item();
+				pc.num_blocks_created.incr();
 				tail_block->add_block(&next_block, task_storage->get_num_places());
 			}
 			pheet_assert(tail_block->get_next() != nullptr);
@@ -123,7 +140,7 @@ public:
 
 		Ref r;
 		r.item = &it;
-		r.position = it.position;
+		r.position = it.orig_position;
 		r.strategy = new Strategy(std::move(s));
 
 		heap.template push<Strategy>(std::move(r));
@@ -136,12 +153,23 @@ public:
 			Ref r = heap.pop();
 
 			pheet_assert(r.strategy != nullptr);
-			delete r.strategy;
+		//	if(r.strategy != r.item->strategy) {
+				delete r.strategy;
+		//	}
 
 			if(r.item->position == r.position) {
+				T ret = r.item->data;
 				if(SIZET_CAS(&(r.item->position), r.position, r.position + 1)) {
-					return r.item->data;
+					pc.num_successful_takes.incr();
+					return ret;
 				}
+				else {
+					pc.num_unsuccessful_takes.incr();
+					pc.num_taken_heap_items.incr();
+				}
+			}
+			else {
+				pc.num_taken_heap_items.incr();
 			}
 			update_heap();
 		}
@@ -151,16 +179,14 @@ public:
 		// Tries to find and take a random item from the queue inside the block
 		// Synchronization and verification all take place inside this method.
 		// Returned item is free to use by this thread
-		Item* item = head_block->take_rand_filled(head);
-		if(item != nullptr) {
-			return item->data;
-		}
-
-		return nullable_traits<T>::null_value;
+		return head_block->take_rand_filled(head, pc.data_block_performance_counters, pc.num_unsuccessful_takes, pc.num_successful_takes);
 	}
 
 	template <class Strategy>
 	void item_push(Item* item, size_t position) {
+		if(reinterpret_cast<Strategy*>(item->strategy)->dead_task()) {
+			return;
+		}
 		Ref r;
 		r.item = item;
 		r.position = position;
@@ -188,9 +214,14 @@ private:
 		// Check whether update is necessary
 		if(!heap.empty()) {
 			if(LocalKPrio) {
-				size_t pos = heap.peek().position;
+				auto peek = heap.peek();
+
+				size_t pos = peek.position;
 				ptrdiff_t diff = ((ptrdiff_t)head) - ((ptrdiff_t) pos);
 				if(diff >= 0) {
+					return;
+				}
+				if(pos != peek.item->position) {
 					return;
 				}
 			}
@@ -236,9 +267,7 @@ private:
 			}
 
 			Item* item = head_block->get_item(head);
-			if(item != nullptr && item->position == head) {
-				// TODO: skip locally created items (maybe first check with a performance counter how often this occurs)
-
+			if(item != nullptr && item->owner != this && item->position == head) {
 				// Push item to local heap
 				auto ip = item->item_push;
 				(this->*ip)(item, head);

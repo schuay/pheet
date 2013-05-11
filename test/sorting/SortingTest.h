@@ -43,7 +43,7 @@ private:
 };
 
 template <class Pheet, template <class P> class Sorter>
-char const* const SortingTest<Pheet, Sorter>::types[] = {"random", "gauss", "equal", "bucket", "staggered"};
+char const* const SortingTest<Pheet, Sorter>::types[] = {"random", "gauss", "equal", "bucket", "staggered", "ascending", "descending"};
 
 template <class Pheet, template <class P> class Sorter>
 SortingTest<Pheet, Sorter>::SortingTest(procs_t cpus, int type, size_t size, unsigned int seed)
@@ -178,6 +178,28 @@ unsigned int* SortingTest<Pheet, Sorter>::generate_data() {
 		for(;c<size;c++)
 		{
 			data[c]=rnd_st(rng);
+		}
+	}
+	break;
+	case 5:
+	{
+		boost::uniform_int<size_t> rnd_st(0, 0x3FFF);
+		size_t val = 0;
+		// Presorted ascending
+		for(size_t i = 0; i < size; i++) {
+			val += rnd_st(rng);
+			data[i] = val;
+		}
+	}
+	break;
+	case 6:
+	{
+		boost::uniform_int<size_t> rnd_st(0, 0x3FFF);
+		size_t val = std::numeric_limits<size_t>::max();
+		// Presorted descending
+		for(size_t i = 0; i < size; i++) {
+			val -= rnd_st(rng);
+			data[i] = val;
 		}
 	}
 	break;

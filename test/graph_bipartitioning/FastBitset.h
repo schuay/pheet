@@ -9,8 +9,13 @@
 #ifndef FASTBITSET_H_
 #define FASTBITSET_H_
 
-#include <immintrin.h>
+#ifndef __ICC
 #include <bitset>
+template <size_t SIZE>
+using FastBitset = std::bitset<SIZE>;
+
+#else
+#include <immintrin.h>
 
 namespace pheet {
 
@@ -95,5 +100,6 @@ public:
 };
 
 }
+#endif
 
 #endif /* FASTBITSET_H_ */

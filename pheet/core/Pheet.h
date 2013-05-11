@@ -295,10 +295,10 @@ T& PheetEnv<SchedulerT, SystemModelT, PrimitivesT, DataStructuresT, ConcurrentDa
 
 }
 
-#include "../sched/Priority/PriorityScheduler.h"
+#include "../sched/BStrategy/BStrategyScheduler.h"
 
 namespace pheet {
-typedef PheetEnv<PriorityScheduler, SystemModel, Primitives, DataStructures, ConcurrentDataStructures> Pheet;
+typedef PheetEnv<BStrategyScheduler, SystemModel, Primitives, DataStructures, ConcurrentDataStructures> Pheet;
 
 }
 

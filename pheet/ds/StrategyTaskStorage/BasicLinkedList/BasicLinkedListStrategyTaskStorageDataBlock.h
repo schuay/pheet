@@ -46,11 +46,11 @@ public:
 	size_t push(T&& item, TaskStorage* ts);
 
 	inline T& get_data(size_t index) {
-		pheet_assert(index < filled);
+		pheet_assert(index < BlockSize);
 		return data[index];
 	}
 	inline T const& get_data(size_t index) const {
-		pheet_assert(index < filled);
+		pheet_assert(index < BlockSize);
 		return data[index];
 	}
 	inline typename Pheet::Scheduler::BaseStrategy* get_strategy(size_t index, size_t stored_taken_offset) {
@@ -226,6 +226,7 @@ void BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, TaskStorage, BlockSi
 	// This leads to a complexity of O((n/(size_t_max + 1))*log(size_t_max)) for n > size_t max which isn't really bad
 	// and rare in any case (it's linear to the number of wraparounds and not logarithmic)
 
+	pheet_assert(active != 0 || next != nullptr);
 	if(active == 0 // Check if block is not used any more
 			&& (num_pred == 0 // Either no predecessor exists anymore
 					// Or make sure the next block is a higher power of two (to guarantee O(log(n)) access times

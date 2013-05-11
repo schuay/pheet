@@ -20,6 +20,8 @@
 #include "tristrip/TriStripTests.h"
 #include "prefix_sum/PrefixSumTests.h"
 #include "sssp/SsspTests.h"
+#include "set_bench/SetBench.h"
+#include "count_bench/CountBench.h"
 #include <map>
 #include <string>
 
@@ -78,9 +80,17 @@ int main(int argc, char* argv[]) {
 	UTSTests utss;
 	utss.run_test();
 	
+	PrefixSumTests pst;
+	pst.run_test();
 
 	SsspTests sssp;
 	sssp.run_test();*/
+
+	SetBench sb;
+	sb.run_test();
+
+	CountBench cb;
+	cb.run_test();
 
 	return 0;
 }

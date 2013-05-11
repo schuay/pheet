@@ -20,7 +20,7 @@ public:
 	typedef typename Pheet::Place Place;
 
 	LifoFifoBaseStrategy()
-	: place(Pheet::get_place()), task_id(place->next_task_id()), transitive_weight(64), k(0x100000)/*, memory_footprint(1024)*/ {
+	: place(Pheet::get_place()), task_id(place->next_task_id()), transitive_weight(64), k(0x10000000)/*, memory_footprint(1024)*/ {
 	//	pheet_assert(transitive_weight != 0);
 		pheet_assert(transitive_weight < ((std::numeric_limits<size_t>::max() >> 3)));
 	}
@@ -109,8 +109,11 @@ public:
 	}
 
 	inline void set_k(size_t k) {
-		pheet_assert(k > 0);
 		this->k = k;
+	}
+
+	inline bool dead_task() {
+		return false;
 	}
 
 /*

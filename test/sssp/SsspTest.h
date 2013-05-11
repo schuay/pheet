@@ -27,7 +27,7 @@ namespace pheet {
 template <class Pheet, template <class P> class Algorithm>
 class SsspTest : Test {
 public:
-	SsspTest(procs_t cpus, int type, size_t size, float p, size_t max_w, unsigned int seed);
+	SsspTest(procs_t cpus, int type, size_t k, size_t size, float p, size_t max_w, unsigned int seed);
 	~SsspTest();
 
 	void run_test();
@@ -40,6 +40,7 @@ private:
 
 	procs_t cpus;
 	int type;
+	size_t k;
 	size_t size;
 	float p;
 	size_t max_w;
@@ -52,8 +53,8 @@ template <class Pheet, template <class P> class Algorithm>
 char const* const SsspTest<Pheet, Algorithm>::types[] = {"random"};
 
 template <class Pheet, template <class P> class Algorithm>
-SsspTest<Pheet, Algorithm>::SsspTest(procs_t cpus, int type, size_t size, float p, size_t max_w, unsigned int seed)
-: cpus(cpus), type(type), size(size), p(p), max_w(max_w), seed(seed) {
+SsspTest<Pheet, Algorithm>::SsspTest(procs_t cpus, int type, size_t k, size_t size, float p, size_t max_w, unsigned int seed)
+: cpus(cpus), type(type), k(k), size(size), p(p), max_w(max_w), seed(seed) {
 
 }
 
@@ -67,28 +68,29 @@ void SsspTest<Pheet, Algorithm>::run_test() {
 	SsspGraphVertex* data = generate_data();
 
 	typename Pheet::Environment::PerformanceCounters pc;
-//	typename Algorithm<Pheet>::PerformanceCounters ppc;
+	typename Algorithm<Pheet>::PerformanceCounters ppc;
 
 	Time start, end;
 	{typename Pheet::Environment env(cpus, pc);
+		Algorithm<Pheet>::set_k(k);
 		check_time(start);
 		Pheet::template
-			finish<Algorithm<Pheet> >(data, size);
+			finish<Algorithm<Pheet> >(data, size, ppc);
 		check_time(end);
 	}
 
 	bool correct = check_solution(data);
 	double seconds = calculate_seconds(start, end);
-	std::cout << "test\talgorithm\tscheduler\ttype\tsize\tp\tmax_w\tseed\tcpus\ttotal_time\tcorrect\t";
+	std::cout << "test\talgorithm\tscheduler\ttype\tsize\tp\tmax_w\tk\tseed\tcpus\ttotal_time\tcorrect\t";
 //	Algorithm<Pheet>::print_headers();
-//	Algorithm<Pheet>::PerformanceCounters::print_headers();
+	Algorithm<Pheet>::PerformanceCounters::print_headers();
 	Pheet::Environment::PerformanceCounters::print_headers();
 	std::cout << std::endl;
 	std::cout << "sssp\t" << Algorithm<Pheet>::name << "\t";
 	Pheet::Environment::print_name();
-	std::cout << "\t" << types[type] << "\t" << size << "\t" << p << "\t" << max_w << "\t" << seed << "\t" << cpus << "\t" << seconds << "\t" << correct << "\t";
+	std::cout << "\t" << types[type] << "\t" << size << "\t" << p << "\t" << max_w << "\t" << k << "\t" << seed << "\t" << cpus << "\t" << seconds << "\t" << correct << "\t";
 //	Algorithm<Pheet>::print_configuration();
-//	ppc.print_values();
+	ppc.print_values();
 	pc.print_values();
 	std::cout << std::endl;
 

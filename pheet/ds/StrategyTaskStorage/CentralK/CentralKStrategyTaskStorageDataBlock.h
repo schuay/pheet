@@ -9,6 +9,7 @@
 #define CENTRALKSTRATEGYTASKSTORAGEDATABLOCK_H_
 
 #include "CentralKStrategyTaskStorageItem.h"
+#include "CentralKStrategyTaskStorageDataBlockPerformanceCounters.h"
 #include <pheet/misc/atomics.h>
 
 namespace pheet {
@@ -18,7 +19,10 @@ class CentralKStrategyTaskStorageDataBlock {
 public:
 	typedef CentralKStrategyTaskStorageDataBlock<Pheet, Place, TT, BlockSize, Tests> Self;
 
+	typedef TT T;
+
 	typedef CentralKStrategyTaskStorageItem<Pheet, Place, TT> Item;
+	typedef CentralKStrategyTaskStorageDataBlockPerformanceCounters<Pheet> PerformanceCounters;
 
 	CentralKStrategyTaskStorageDataBlock()
 	:offset(0), next(nullptr), active_threads(0), active(false) {
@@ -26,9 +30,14 @@ public:
 			data[i] = nullptr;
 		}
 	}
-	~CentralKStrategyTaskStorageDataBlock() {}
+	~CentralKStrategyTaskStorageDataBlock() {
+	//	if(active_threads > 0) {
+			// Last added block is never cleaned up. Clean it up on destruction
+			// Cleanup happens at item level, otherwise we have a race condition
+	//	}
+	}
 
-	bool put(size_t* head, size_t* tail, size_t& cur_tail, Item* item) {
+	bool put(size_t* head, size_t* tail, size_t& cur_tail, Item* item, PerformanceCounters& pc) {
 		// Take care not to break correct wraparounds when changing anything
 		size_t k = item->strategy->get_k();
 	//	size_t next_offset = offset + BlockSize;
@@ -37,12 +46,14 @@ public:
 		size_t array_offset = cur_tail - offset;
 
 		while(array_offset < BlockSize) {
-			size_t cur_k = std::min(k, BlockSize - array_offset);
+			pc.num_put_tests.incr();
 
-			size_t to_add = Pheet::template rand_int<size_t>(cur_k - 1);
-			size_t i_limit = to_add + std::min(Tests, cur_k);
+			size_t cur_k = std::min(k, BlockSize - array_offset - 1);
+
+			size_t to_add = Pheet::template rand_int<size_t>(cur_k);
+			size_t i_limit = to_add + std::min(Tests, cur_k + 1);
 			for(size_t i = to_add; i != i_limit; ++i) {
-				size_t wrapped_i = i % cur_k;
+				size_t wrapped_i = i % (cur_k + 1);
 				if(data[array_offset + wrapped_i] == nullptr) {
 					item->orig_position = cur_tail + wrapped_i;
 					item->position = item->orig_position;
@@ -64,7 +75,7 @@ public:
 				}
 			}
 
-			cur_tail += cur_k;
+			cur_tail += cur_k + 1;
 			array_offset = cur_tail - offset;
 		}
 	//	update_tail(tail, old_tail, cur_tail);
@@ -133,7 +144,7 @@ public:
 		return next;
 	}
 
-	Item* take_rand_filled(size_t position) {
+	T take_rand_filled(size_t position, PerformanceCounters& pc, BasicPerformanceCounter<Pheet, task_storage_count_unsuccessful_takes>& num_unsuccessful_takes, BasicPerformanceCounter<Pheet, task_storage_count_successful_takes>& num_successful_takes) {
 		// Take care not to break correct wraparounds when changing anything
 		size_t array_offset = position - offset;
 
@@ -144,6 +155,7 @@ public:
 		size_t limit = to_add + std::min(max, Tests);
 
 		for(size_t i = to_add; i < limit; ++i) {
+			pc.num_take_tests.incr();
 			size_t index = array_offset + (i % max);
 
 			Item* item = data[index];
@@ -153,15 +165,20 @@ public:
 					size_t k = item->strategy->get_k();
 					// If k is smaller than the distance to position, tail must have been updated in the meantime.
 					// We can't just take this item in this case or we might violate k-ordering
-					if((i % limit) < k) {
+					if((i % limit) <= k) {
+						T ret = item->data;
 						if(SIZET_CAS(&(item->position), g_index, g_index + 1)) {
-							return item;
+							num_successful_takes.incr();
+							return ret;
+						}
+						else {
+							num_unsuccessful_takes.incr();
 						}
 					}
 				}
 			}
 		}
-		return nullptr;
+		return nullable_traits<T>::null_value;
 	}
 //	void verify(Item* item, size_t position);
 

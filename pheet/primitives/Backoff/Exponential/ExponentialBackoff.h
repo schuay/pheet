@@ -30,13 +30,8 @@ public:
 	}
 private:
 	unsigned int limit;
-
-//	static thread_local boost::mt19937 rng;
 };
-/*
-template <unsigned int MIN_BACKOFF, unsigned int MAX_BACKOFF>
-thread_local boost::mt19937 ExponentialBackoffImpl<MIN_BACKOFF, MAX_BACKOFF>::rng;
-*/
+
 template <class Pheet, unsigned int MIN_BACKOFF, unsigned int MAX_BACKOFF>
 ExponentialBackoffImpl<Pheet, MIN_BACKOFF, MAX_BACKOFF>::ExponentialBackoffImpl() {
 	limit = MIN_BACKOFF;
@@ -48,7 +43,6 @@ ExponentialBackoffImpl<Pheet, MIN_BACKOFF, MAX_BACKOFF>::~ExponentialBackoffImpl
 
 template <class Pheet, unsigned int MIN_BACKOFF, unsigned int MAX_BACKOFF>
 void ExponentialBackoffImpl<Pheet, MIN_BACKOFF, MAX_BACKOFF>::backoff() {
-//	boost::uniform_int<unsigned int> rnd_gen(0, limit);
 	Pheet p;
 	unsigned int sleep = p.rand_int(limit); //rnd_gen(rng);
 

@@ -11,7 +11,9 @@
 
 #include "../Test.h"
 #include "../init.h"
+#ifdef NQUEENS_TEST
 #include "NQueensTest.h"
+#endif
 
 namespace pheet {
 
@@ -30,6 +32,7 @@ private:
 
 template <class Solver>
 void NQueensTests::run_solver() {
+#ifdef NQUEENS_TEST
   for(size_t n = 0; n < sizeof(nqueens_test_n)/sizeof(nqueens_test_n[0]); n++) {
     for(size_t c = 0; c < sizeof(nqueens_test_cpus)/sizeof(nqueens_test_cpus[0]); c++) {
       if(nqueens_test_cpus[c] <= Solver::max_cpus) {
@@ -38,6 +41,7 @@ void NQueensTests::run_solver() {
       }
     }
   }
+#endif
 }
 
 }

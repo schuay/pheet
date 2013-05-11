@@ -78,7 +78,10 @@ public:
 
 	template <class Strategy>
 	void push(StreamRef stream_ref) {
-		items.template push<Strategy>(stream_ref);
+	//	StreamRefStrategyRetriever sr;
+	//	if(!reinterpret_cast<Strategy*>(sr(stream_ref))->dead_task()) {
+			items.template push<Strategy>(stream_ref);
+	//	}
 	}
 
 private:

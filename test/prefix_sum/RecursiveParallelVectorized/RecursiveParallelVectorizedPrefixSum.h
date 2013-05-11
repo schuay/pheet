@@ -2,7 +2,7 @@
  * RecursiveParallelVectorizedPrefixSum.h
  *
  *  Created on: Nov 06, 2012
- *      Author: Martin Wimmer, Manuel Pöter
+ *      Author: Martin Wimmer, Manuel Pï¿½ter
  *	   License: Boost Software License 1.0
  */
 
@@ -201,8 +201,8 @@ void RecursiveParallelVectorizedPrefixSumImpl<Pheet, BlockSize>::calcLocalPrefix
 template <class Pheet, size_t BlockSize>
 __m128i RecursiveParallelVectorizedPrefixSumImpl<Pheet, BlockSize>::calcVectorPrefixSumSSE(__m128i  v)
 {
-	const size_t elemsPerVector = sizeof(__m128i) / sizeof(data[0]);
-	pheet_assert(elemsPerVector == 4);
+//	const size_t elemsPerVector = sizeof(__m128i) / sizeof(data[0]);
+	static_assert(/* elemsPerVector */ sizeof(__m128i) / sizeof(data[0]) == 4, "Only 32 bit integers are supported");
 
 	__m128i t = _mm_slli_si128(v, sizeof(data[0]));
 	v = _mm_add_epi32(v, t);
@@ -224,14 +224,14 @@ void RecursiveParallelVectorizedPrefixSumImpl<Pheet, BlockSize>::calcLocalPrefix
 
 	const size_t remainingLength = length % elemsPerVector;
 	length -= remainingLength; // make length a multiple of elemsPerVector
-	const size_t iterations = length / elemsPerVector;
+//	const size_t iterations = length / elemsPerVector;
 
 	pheet_assert(step == 1);
 	pheet_assert(elemsPerVector == 4); // this implementation supports only 4 32-bit integer elements
 	pheet_assert(length % elemsPerVector == 0);
 	pheet_assert((size_t)data % sizeof(__m128i) == 0); // pointer must be aligned to vector size
 
-	__m128i zero = _mm_setzero_si128();
+//	__m128i zero = _mm_setzero_si128();
 	__m128i prev = _mm_setzero_si128();
 	auto p = data;
 	for (auto end = p + length; p != end; p += elemsPerVector)

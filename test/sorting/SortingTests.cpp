@@ -19,6 +19,7 @@
 
 //#include <pheet/ds/StealingDeque/CircularArray11/CircularArrayStealingDeque11.h>
 #include <pheet/ds/PriorityQueue/Heap/Heap.h>
+#include <pheet/ds/PriorityQueue/Merge/MergeHeap.h>
 #include <pheet/ds/PriorityQueue/STLPriorityQueueWrapper/STLPriorityQueueWrapper.h>
 //#include <pheet/ds/PriorityQueue/SortedArrayHeap/SortedArrayHeap.h>
 #include <pheet/ds/PriorityQueue/Fibonacci/FibonacciHeap.h>
@@ -27,6 +28,8 @@
 #include <pheet/ds/Queue/GlobalLock/GlobalLockQueue.h>
 #include <pheet/ds/MultiSet/GlobalLock/GlobalLockMultiSet.h>
 #include <pheet/ds/StrategyHeap/Volatile/VolatileStrategyHeap.h>
+#include <pheet/ds/StrategyTaskStorage/CentralK/CentralKStrategyTaskStorage.h>
+#include <pheet/ds/StrategyTaskStorage/DistK/DistKStrategyTaskStorage.h>
 
 #include <pheet/primitives/Mutex/TASLock/TASLock.h>
 #include <pheet/primitives/Mutex/TTASLock/TTASLock.h>
@@ -37,6 +40,7 @@
 #include <pheet/sched/Centralized/CentralizedScheduler.h>
 #include <pheet/sched/CentralizedPriority/CentralizedPriorityScheduler.h>
 #include <pheet/sched/Strategy/StrategyScheduler.h>
+#include <pheet/sched/BStrategy/BStrategyScheduler.h>
 #include <pheet/sched/Synchroneous/SynchroneousScheduler.h>
 #include <pheet/sched/MixedMode/MixedModeScheduler.h>
 
@@ -62,42 +66,51 @@ void SortingTests::run_test() {
 //	this->run_sorter<	Pheet::WithScheduler<BasicScheduler>::WithTaskStorage<YourImplementation>,
 //						DagQuicksort>();
 	this->run_sorter<	Pheet::WithScheduler<BasicScheduler>,
-						DagQuicksort>();
+						DagQuicksortNoCut>();
 
 #elif AMP_QUEUE_STACK_TEST
 
 	this->run_sorter<	Pheet::WithScheduler<CentralizedScheduler>,
-						DagQuicksort>();
+						DagQuicksortNoCut>();
 	this->run_sorter<	Pheet::WithScheduler<CentralizedScheduler>::WithTaskStorage<GlobalLockQueue>,
-						DagQuicksort>();
+						DagQuicksortNoCut>();
 	this->run_sorter<	Pheet::WithScheduler<BasicScheduler>,
-						DagQuicksort>();
-#elif AMP_SKIPLIST_TEST
-	this->run_sorter<	Pheet::WithScheduler<CentralizedPriorityScheduler>,
-						DagQuicksort>();
-	this->run_sorter<	Pheet::WithScheduler<CentralizedPriorityScheduler>::WithPriorityTaskStorage<GlobalLockMultiSetPriorityQueue>,
-						DagQuicksort>();
+						DagQuicksortNoCut>();
 	this->run_sorter<	Pheet,
-						DagQuicksort>();
+						DagQuicksortNoCut>();
+#elif AMP_HEAP_TEST
+	this->run_sorter<	Pheet::WithScheduler<CentralizedPriorityScheduler>,
+						DagQuicksortNoCut>();
+	this->run_sorter<	Pheet::WithScheduler<CentralizedPriorityScheduler>::WithPriorityTaskStorage<GlobalLockMultiSetPriorityQueue>,
+						DagQuicksortNoCut>();
+	this->run_sorter<	Pheet,
+						DagQuicksortNoCut>();
 	this->run_sorter<	Pheet::WithScheduler<BasicScheduler>,
-						DagQuicksort>();
+						DagQuicksortNoCut>();
 
 #elif AMP_LOCK_TEST
 
 	this->run_sorter<	Pheet::WithScheduler<CentralizedScheduler>,
-						DagQuicksort>();
+						DagQuicksortNoCut>();
 	this->run_sorter<	Pheet::WithScheduler<CentralizedScheduler>::WithMutex<TASLock>,
-						DagQuicksort>();
+						DagQuicksortNoCut>();
 	this->run_sorter<	Pheet::WithScheduler<CentralizedScheduler>::WithMutex<TTASLock>,
-						DagQuicksort>();
+						DagQuicksortNoCut>();
 	this->run_sorter<	Pheet::WithScheduler<BasicScheduler>,
-						DagQuicksort>();
+						DagQuicksortNoCut>();
+	this->run_sorter<	Pheet,
+						DagQuicksortNoCut>();
 #else
 	// default tests
-//	this->run_sorter<	Pheet,
-//						DagQuicksort>();
-//	this->run_sorter<	typename Pheet::WithScheduler<StrategyScheduler>::template WithTaskStorage<Pheet::WithScheduler<StrategyScheduler>::Environment::TaskStorage::WithStrategyHeap<VolatileStrategyHeap>::template BT >,
-//						StrategyQuicksort>();
+	this->run_sorter<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<DistKStrategyTaskStorage>,
+						StrategyQuicksort>();
+	this->run_sorter<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<DistKStrategyTaskStorageLocalK>,
+						StrategyQuicksort>();
+	this->run_sorter<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<CentralKStrategyTaskStorage>,
+						StrategyQuicksort>();
+	this->run_sorter<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<CentralKStrategyTaskStorageLocalK>,
+						StrategyQuicksort>();
+
 	this->run_sorter<	Pheet::WithScheduler<StrategyScheduler>,
 						StrategyQuicksort>();
 	this->run_sorter<	Pheet::WithScheduler<StrategyScheduler>,
@@ -112,18 +125,20 @@ void SortingTests::run_test() {
 						ReferenceSTLSort>();
 	this->run_sorter<	Pheet::WithScheduler<SynchroneousScheduler>,
 						ReferenceQuicksort>();
-	this->run_sorter<	Pheet::WithScheduler<SynchroneousScheduler>,
-						ReferenceQuicksortLoop>();
+/*	this->run_sorter<	Pheet::WithScheduler<SynchroneousScheduler>,
+						ReferenceQuicksortLoop>();*/
 //	this->run_sorter<	Pheet::WithScheduler<SynchroneousScheduler>,
 //						ReferenceHeapSort<Pheet>::WithPriorityQueue<FibonacciSameHeap>::template BT >();
 //	this->run_sorter<	Pheet::WithScheduler<SynchroneousScheduler>,
 //						ReferenceHeapSort<Pheet>::WithPriorityQueue<FibolikeHeap>::template BT >();
 //	this->run_sorter<	Pheet::WithScheduler<SynchroneousScheduler>,
 //						ReferenceHeapSort<Pheet>::WithPriorityQueue<FibonacciHeap>::template BT >();
-//	this->run_sorter<	Pheet::WithScheduler<SynchroneousScheduler>,
-//						ReferenceHeapSort>();
-	this->run_sorter<	Pheet::WithScheduler<MixedModeScheduler>,
-						MixedModeQuicksort>();
+/*	this->run_sorter<	Pheet::WithScheduler<SynchroneousScheduler>,
+						ReferenceHeapSort<Pheet>::WithPriorityQueue<MergeHeap>::template BT >();
+	this->run_sorter<	Pheet::WithScheduler<SynchroneousScheduler>,
+						ReferenceHeapSort>();*/
+//	this->run_sorter<	Pheet::WithScheduler<MixedModeScheduler>,
+//						MixedModeQuicksort>();
 //	this->run_sorter<	Pheet::WithScheduler<FinisherScheduler>,
 //						DagQuicksort>();
 #endif

@@ -20,6 +20,7 @@ public:
 	StrategyRecursiveParallelPrefixSumStrategy(unsigned int* data, size_t length, bool in_order, bool no_call)
 	:data(data), length(length), in_order(in_order), no_call(no_call) {
 		this->set_transitive_weight((length >> 11) + 1);
+		this->set_k(1024);
 //		place_id = this->get_place()->get_id();
 	}
 	~StrategyRecursiveParallelPrefixSumStrategy() {}

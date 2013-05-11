@@ -17,10 +17,10 @@ public:
 	typename StreamRef::BaseStrategy* operator()(StreamRef const& sr) {
 		return sr.get_strategy();
 	}
-
+/*
 	void drop_item(StreamRef&& sr) {
 
-	}
+	}*/
 };
 
 template <class Pheet, class DataBlock>
@@ -133,7 +133,7 @@ private:
 	DataBlock* acquire_block(DataBlock* const& block) {
 		DataBlock* tmp = block;
 		DataBlock* tmp2;
-		typename Pheet::Backoff bo;
+//		typename Pheet::Backoff bo;
 		tmp->acquire_block();
 		tmp2 = block;
 		while(tmp2 != tmp) {

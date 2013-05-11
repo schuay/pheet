@@ -10,8 +10,8 @@
 #define PHEET_TEST_SETTINGS_H_
 
 //#define PHEET_DEBUG_MODE
-//#define PHEET_ALL_PERFORMANCE_COUNTERS
-#define ACTIVE_TEST 	"test_variants/mtaap2013.h"
+// #define PHEET_ALL_PERFORMANCE_COUNTERS
+#define ACTIVE_TEST 	"test_variants/standard.h"
 
 bool const graph_bipartitioning_test_count_irrelevant_tasks = false;
 bool const graph_bipartitioning_test_count_upper_bound_changes = false;
@@ -33,5 +33,8 @@ bool const sor_slices_rescheduled_at_same_place = false;
 bool const prefix_sum_log_pf_blocks = false;
 bool const prefix_sum_log_pf_preprocessed_blocks = false;
 bool const prefix_sum_log_schedule = false;
+
+bool const sssp_count_dead_tasks = false;
+bool const sssp_count_actual_tasks = false;
 
 #endif /* PHEET_TEST_SETTINGS_H_ */
