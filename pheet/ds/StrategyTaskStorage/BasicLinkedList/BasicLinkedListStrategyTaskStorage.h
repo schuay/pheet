@@ -95,11 +95,23 @@ public:
 	typedef BasicLinkedListStrategyTaskStorageImpl<Pheet, TT, StealerT, StrategyHeapT, BlockSize> Self;
 
 	typedef TT T;
+
+	template <class UnassignedStealer>
+	using StreamT = BasicLinkedListStrategyTaskStorageStream<Pheet, Self, UnassignedStealer>;
+
+	template <class UnassignedStream, class UnassignedStealerRef>
+	using ItemT = BasicLinkedListStrategyTaskStorageItem<Pheet, T, Self, UnassignedStream, UnassignedStealerRef>;
+
+	template <class UnassignedItem>
+	using DataBlockT = BasicLinkedListStrategyTaskStorageDataBlock<Pheet, UnassignedItem, Self, BlockSize>;
+
 	typedef StealerT<Pheet, Self> Stealer;
 	typedef typename Stealer::StealerRef StealerRef;
-	typedef BasicLinkedListStrategyTaskStorageStream<Pheet, Self, StealerRef> Stream;
-	typedef BasicLinkedListStrategyTaskStorageItem<Pheet, T, Self, Stream, StealerRef> Item;
-	typedef BasicLinkedListStrategyTaskStorageDataBlock<Pheet, Item, Self, BlockSize> DataBlock;
+
+	typedef StreamT<StealerRef> Stream;
+
+	typedef ItemT<Stream, StealerRef> Item;
+	typedef DataBlockT<Item> DataBlock;
 
 	typedef BasicLinkedListStrategyTaskStorageLocalReference<Pheet, DataBlock> LocalRef;
 	typedef BasicLinkedListStrategyTaskStorageStrategyRetriever<Pheet, Self> StrategyRetriever;

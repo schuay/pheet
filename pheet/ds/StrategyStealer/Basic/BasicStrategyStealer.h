@@ -23,7 +23,8 @@ struct BasicStrategyStealerPerformanceCounters {
 template <class Pheet, class TaskStorage>
 class BasicStrategyStealerPlace {
 public:
-	typedef typename TaskStorage::Stream Stream;
+	typedef BasicStrategyStealerPlace<Pheet, TaskStorage> Self;
+	typedef typename TaskStorage::template StreamT<Self> Stream;
 	typedef typename Stream::StreamRef StreamRef;
 	typedef typename StreamRef::StrategyRetriever StreamRefStrategyRetriever;
 	typedef VolatileStrategyHeap2<Pheet, StreamRef, StreamRefStrategyRetriever> StrategyHeap;

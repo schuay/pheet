@@ -56,9 +56,10 @@ public:
 template <class Pheet, class TaskStorage, class StealerRef>
 class BasicLinkedListStrategyTaskStorageStream {
 public:
-	typedef typename TaskStorage::Item Item;
+	typedef BasicLinkedListStrategyTaskStorageStream<Pheet, TaskStorage, StealerRef> Self;
+	typedef typename TaskStorage::template ItemT<Self, StealerRef> Item;
 //	typedef typename TaskStorage::View View;
-	typedef typename TaskStorage::DataBlock DataBlock;
+	typedef typename TaskStorage::template DataBlockT<Item> DataBlock;
 	typedef typename Pheet::Scheduler::BaseStrategy BaseStrategy;
 	typedef BasicLinkedListStrategyTaskStorageStreamRef<Pheet, DataBlock> StreamRef;
 
