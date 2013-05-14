@@ -62,6 +62,9 @@ public:
 		std::vector<size_t> h_hist;
 		h_hist.push_back(0);
 
+		std::vector<double> active_p_hist;
+		active_p_hist.push_back(0);
+
 		graph[0].distance = 0;
 
 		std::vector<SsspAnalysisNode> v;
@@ -130,6 +133,52 @@ public:
 			}
 			if(processed_samples > 0) {
 				std::cout << "Avg. Weight (incl processed > dist): " << ((sum + processed_sum) / (processed_samples + samples)) << " for " << (processed_samples + samples) << " nodes" << std::endl;
+			}
+#endif
+
+#ifdef SSSP_SIM_DEP_CHECK
+			{
+				std::vector<size_t> active_nodes;
+				for(size_t i = offset; i < v.size(); ++i) {
+					n = v[i];
+					size_t node = n.node_id;
+					size_t d = graph[node].distance;
+					if(d == n.distance && !n.processed) {
+						active_nodes.push_back(n.node_id);
+					}
+				}
+
+				size_t tested = 0;
+				size_t found = 0;
+				for(size_t i = 0; i < active_nodes.size() - 1; ++i) {
+					for(size_t j = i + 1; j < active_nodes.size(); ++j) {
+						++tested;
+						auto first = graph[active_nodes[i]].edges;
+						auto last = graph[active_nodes[i]].edges + graph[active_nodes[i]].num_edges - 1;
+						while(first != last) {
+							auto middle = first + ((last - first) >> 1);
+							if(middle->target == active_nodes[j]) {
+								first = last = middle;
+							}
+							else if(middle->target < active_nodes[j]) {
+								first = middle + 1;
+							}
+							else {
+								last = middle;
+							}
+						}
+						if(first->target == active_nodes[j]) {
+							++found;
+						}
+					}
+				}
+
+				active_p_hist.push_back((double)found/(double)tested);
+#ifndef SSSP_SIM_STRUCTURED
+				std::cout << "Connections in active set: " << found << " out of " << tested << " possible connections. Ratio: " << (double)found/(double)tested << std::endl;
+#else
+				active_p_hist.push_back((double)found/(double)tested);
+#endif
 			}
 #endif
 
@@ -261,7 +310,11 @@ public:
 #ifndef SSSP_SIM_STRUCTURED
 			std::cout << "Nodes settled in phase " << i << ": " << counter << std::endl;
 #else
+#ifdef SSSP_SIM_DEP_CHECK
+			std::cout << "SSSP_SIM_DATA\t" << i << "\t" << counter << "\t" << h_hist[i] << "\t" << active_p_hist[i] << std::endl;
+#else
 			std::cout << "SSSP_SIM_DATA\t" << i << "\t" << counter << "\t" << h_hist[i] << std::endl;
+#endif
 #endif
 		}
 		delete[] settled;
