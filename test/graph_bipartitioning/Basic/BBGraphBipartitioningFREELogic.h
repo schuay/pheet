@@ -258,7 +258,7 @@ size_t BBGraphBipartitioningFREELogic<Pheet, SubProblem>::cc_w() {
 	      cc[w] = c;
 	      cs++; // could break already here
 	      queue[t++] = w;
-	    } else pheet_assert(cc[w]==c);
+	    } else pheet_assert(cc[w]==static_cast<ptrdiff_t>(c));
 	  }
 	}
       }

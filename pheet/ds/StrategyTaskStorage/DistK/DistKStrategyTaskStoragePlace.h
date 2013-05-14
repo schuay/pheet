@@ -48,10 +48,10 @@ public:
 private:
 };
 
-template <class Pheet, class TaskStorage, typename TT, template <class SP, typename ST, class SR> class StrategyHeapT, size_t BlockSize, bool LocalKPrio>
+template <class Pheet, class TaskStorage, typename TT, template <class SP, typename ST, class SR> class StrategyHeapT, size_t BlockSize, bool DelayedKPrio>
 class DistKStrategyTaskStoragePlace {
 public:
-	typedef DistKStrategyTaskStoragePlace<Pheet, TaskStorage, TT, StrategyHeapT, BlockSize, LocalKPrio> Self;
+	typedef DistKStrategyTaskStoragePlace<Pheet, TaskStorage, TT, StrategyHeapT, BlockSize, DelayedKPrio> Self;
 
 	typedef DistKStrategyTaskStorageDataBlock<Pheet, Self, TT, BlockSize> DataBlock;
 
@@ -70,7 +70,7 @@ public:
 	typedef typename Pheet::Scheduler::Place SchedulerPlace;
 
 	DistKStrategyTaskStoragePlace(TaskStorage* task_storage, SchedulerPlace* scheduler_place, PerformanceCounters pc)
-	:pc(pc), task_storage(task_storage), heap(sr, pc.strategy_heap_performance_counters), local_offset(0), remaining_k(std::numeric_limits<size_t>::max()),
+	:pc(pc), task_storage(task_storage), heap(sr, pc.strategy_heap_performance_counters), update_offset(0), tasks_taken_since_update(0), remaining_k(std::numeric_limits<size_t>::max()),
 	 local_head(&(data_blocks.acquire_item())), local_tail(local_head), last_steal_head(nullptr), scheduler_place(scheduler_place)  {
 		local_head->reset(0);
 
@@ -152,6 +152,8 @@ public:
 
 			while(heap.size() > 0) {
 				Ref r = heap.pop();
+				if(DelayedKPrio)
+					++tasks_taken_since_update;
 
 				pheet_assert(r.strategy != nullptr);
 				bool local = r.type == 0;
@@ -210,7 +212,7 @@ public:
 			}
 
 		// Heap is empty. Try work-stealing (without actual stealing, just copying)
-		} while(steal_work());
+		} while(spy());
 		while(local_head != local_tail && local_head->is_empty()) {
 			pheet_assert(local_head->get_state() == 0);
 			pheet_assert(local_head->get_next() != nullptr);
@@ -251,18 +253,24 @@ private:
 	void update_heap() {
 		// Check whether update is necessary
 		if(!heap.empty()) {
-			if(LocalKPrio) {
+			if(DelayedKPrio) {
 				auto peek = heap.peek();
 				if(peek.position == peek.item->position) {
 					if(peek.type == 2) { // stolen
 						process_global_queue();
 					}
 					else if(peek.type == 0) {
-						ptrdiff_t diff = ((ptrdiff_t)local_offset) - ((ptrdiff_t) peek.position);
+						ptrdiff_t diff = ((ptrdiff_t)update_offset) - ((ptrdiff_t) peek.position);
 						if(diff < 0) {
 							// Might process queue for more items than necessary, but difficult to filter otherwise
 							process_global_queue();
 						}
+						else if(peek.strategy->get_k() < tasks_taken_since_update) {
+							process_global_queue();
+						}
+					}
+					else if(peek.strategy->get_k() < tasks_taken_since_update) {
+						process_global_queue();
 					}
 				}
 			}
@@ -281,7 +289,7 @@ private:
 			DataBlock* new_list = &(data_blocks.acquire_item());
 			pheet_assert(new_list != nullptr);
 			new_list->reset(local_tail->get_offset() + BlockSize);
-			local_offset = local_tail->get_offset() + BlockSize;
+			update_offset = local_tail->get_offset() + BlockSize;
 
 			size_t np = task_storage->get_num_places() - 1;
 			DataBlock* block = local_head;
@@ -331,9 +339,13 @@ private:
 			global_tail = next;
 			next = next->get_next();
 		}
+		if(DelayedKPrio) {
+			update_offset = local_tail->get_offset() + local_tail->get_filled();
+			tasks_taken_since_update = 0;
+		}
 	}
 
-	bool steal_work() {
+	bool spy() {
 		procs_t num_levels = scheduler_place->get_num_levels();
 		// Finalize elements in stack
 		// We do not steal from the last level as there are no partners
@@ -402,7 +414,8 @@ private:
 	StrategyRetriever sr;
 	StrategyHeap heap;
 
-	size_t local_offset;
+	size_t update_offset;
+	size_t tasks_taken_since_update;
 	size_t remaining_k;
 	DataBlock* local_head;
 	DataBlock* local_tail;

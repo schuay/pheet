@@ -285,11 +285,9 @@ void BBGraphBipartitioningLogic<Pheet, SubProblem>::complete_solution() {
 	if(sub_problem->sets[0].count() == sub_problem->k-1) {
 		s = 0;
 	}
-	else if(sub_problem->sets[1].count() == (sub_problem->size - sub_problem->k)-1) {
-		s = 1;
-	}
 	else {
-		pheet_assert(true);
+		pheet_assert(sub_problem->sets[1].count() == (sub_problem->size - sub_problem->k)-1);
+		s = 1;
 	}
 
 	//std::cout<<'#';
