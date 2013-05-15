@@ -14,6 +14,7 @@
 #include "SsspAnalysisPerformanceCounters.h"
 
 #include <vector>
+#include <math.h>
 
 //#include <pheet/ds/PriorityQueue/Merge/MergeHeap.h>
 
@@ -64,6 +65,11 @@ public:
 
 		std::vector<double> active_p_hist;
 		active_p_hist.push_back(0);
+
+#ifdef SSSP_SIM_VERIFY_THEORY
+		std::vector<double> Wt_hist;
+		Wt_hist.push_back(0);
+#endif
 
 		graph[0].distance = 0;
 
@@ -182,6 +188,10 @@ public:
 			}
 #endif
 
+#ifdef SSSP_SIM_VERIFY_THEORY
+			std::vector<size_t> processed_ref;
+			std::vector<size_t> base_d;
+#endif
 			// Go through list and only process nodes visible to all threads and the first node (which is always processed)
 			size_t orig_size = v.size();
 			size_t sum_new = 0;
@@ -193,12 +203,20 @@ public:
 				size_t node = n.node_id;
 				size_t d = graph[node].distance;
 				size_t a = n.added;
-
+#ifdef SSSP_SIM_VERIFY_THEORY
+				if(d == n.distance && !n.processed) {
+					base_d.push_back(d);
+				}
+#endif
 				// Node is visible to all threads or the first node
 				if(j == 0 || a + k < orig_size) {
 					// Node has not been processed, and no better distance value has been found
 					if(d == n.distance && !n.processed) {
 						pc.num_actual_tasks.incr();
+
+#ifdef SSSP_SIM_VERIFY_THEORY
+						processed_ref.push_back(base_d.size());
+#endif
 
 						size_t h = d - base;
 						if(h > max_h) {
@@ -249,6 +267,16 @@ public:
 						if(d == n.distance && !n.processed) {
 							pc.num_actual_tasks.incr();
 
+#ifdef SSSP_SIM_VERIFY_THEORY
+							for(size_t bdi = 0; bdi < base_d.size(); ++bdi) {
+								if(base_d[bdi] == d) {
+									processed_ref.push_back(bdi + 1);
+									break;
+								}
+								pheet_assert(bdi != base_d.size());
+							}
+#endif
+
 							size_t h = d - base;
 							if(h > max_h_rnd) {
 								max_h_rnd = h;
@@ -281,6 +309,38 @@ public:
 				}
 			}
 
+#ifdef SSSP_SIM_VERIFY_THEORY
+			double Wt = 0;
+			std::sort(processed_ref.begin(), processed_ref.end());
+			for(size_t tjr = 1; tjr <= processed_ref.size(); ++tjr) {
+				size_t tj = processed_ref[tjr - 1];
+				double qt = 1.0;
+				for(size_t ti = 1; ti < tj; ++ti) {
+					for(size_t L = 1; L <= size; ++L) {
+						pheet_assert(base_d[tj-1] >= base_d[ti-1]);
+						double iptL = 0;
+						double h = ((double)(base_d[tj-1] - base_d[ti-1]))/sssp_sim_theory_div;
+						double tmp = pow(sssp_sim_theory_p * h, (double)L);
+						for(size_t L_fac = L; L_fac > 1; --L_fac) {
+							tmp /= (double) L_fac;
+						}
+						iptL = 1 - tmp;
+						for(size_t ptLexp = 1; ptLexp < L; ++ptLexp) {
+							iptL = pow(iptL, (double)(size - ptLexp - 1));
+						}
+//						std::cout << "tj " << tj << " ti " << ti << " L " << L << " h " << h << " tmp " << tmp << " iptL " << iptL << std::endl;
+						qt *= iptL;
+					}
+				}
+//				std::cout << "qt " << qt << std::endl;
+				Wt += 1.0 - qt;
+			}
+			Wt_hist.push_back(((double)processed_ref.size()) - Wt);
+		//	std::cout << "Wt " << Wt << std::endl;
+			processed_ref.clear();
+			base_d.clear();
+#endif
+
 			// Shuffle newly added nodes so the nodes not visible to all threads are really random
 			std::random_shuffle(v.begin() + orig_size, v.end());
 			for(size_t i2 = orig_size; i2 < v.size(); ++i2) {
@@ -309,12 +369,18 @@ public:
 			}
 #ifndef SSSP_SIM_STRUCTURED
 			std::cout << "Nodes settled in phase " << i << ": " << counter << std::endl;
-#else
-#ifdef SSSP_SIM_DEP_CHECK
-			std::cout << "SSSP_SIM_DATA\t" << i << "\t" << counter << "\t" << h_hist[i] << "\t" << active_p_hist[i] << std::endl;
-#else
-			std::cout << "SSSP_SIM_DATA\t" << i << "\t" << counter << "\t" << h_hist[i] << std::endl;
+#ifdef SSSP_SIM_VERIFY_THEORY
+			std::cout << "Expected settled nodes " << Wt_hist[i] << std::endl;
 #endif
+#else
+			std::cout << "SSSP_SIM_DATA\t" << i << "\t" << counter << "\t" << h_hist[i];
+#ifdef SSSP_SIM_DEP_CHECK
+			std::cout << "\t" << active_p_hist[i];
+#endif
+#ifdef SSSP_SIM_VERIFY_THEORY
+			std::cout << "\t" << Wt_hist[i] << std::endl;
+#endif
+			std::cout << std::endl;
 #endif
 		}
 		delete[] settled;

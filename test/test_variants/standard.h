@@ -61,8 +61,13 @@ const size_t sssp_test_k[] = {1024};// {1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1
 
 //#define SSSP_SIM true
 //#define SSSP_SIM_STRUCTURED true
+//#define SSSP_SIM_DEP_CHECK true
+//#define SSSP_SIM_VERIFY_THEORY true
 const size_t sssp_sim_k = 1000;
 const size_t sssp_sim_p = 200;
+
+const double sssp_sim_theory_p = 0.1;
+const double sssp_sim_theory_div = 100000000;
 
 
 
