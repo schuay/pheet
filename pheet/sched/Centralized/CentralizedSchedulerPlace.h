@@ -178,7 +178,7 @@ private:
 };
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, uint8_t CallThreshold>
-size_t const CentralizedSchedulerPlace<Pheet, TaskStorageT, CallThreshold>::stack_size = 8192;
+size_t const CentralizedSchedulerPlace<Pheet, TaskStorageT, CallThreshold>::stack_size = 262144;
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, uint8_t CallThreshold>
 thread_local CentralizedSchedulerPlace<Pheet, TaskStorageT, CallThreshold>* CentralizedSchedulerPlace<Pheet, TaskStorageT, CallThreshold>::local_place = NULL;
@@ -669,14 +669,14 @@ template<class CallTaskType, typename ... TaskParams>
 void CentralizedSchedulerPlace<Pheet, TaskStorageT, CallThreshold>::spawn(TaskParams&& ... params) {
 	performance_counters.num_spawns.incr();
 
-	size_t limit = call_mode?preferred_queue_length:max_queue_length;
+/*	size_t limit = call_mode?preferred_queue_length:max_queue_length;
 	if(task_storage.get_length() >= limit) {
 		call_mode = true;
 		performance_counters.num_spawns_to_call.incr();
 		call<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 	}
 	else {
-		call_mode = false;
+		call_mode = false;*/
 		performance_counters.num_actual_spawns.incr();
 
 		CallTaskType* task = new CallTaskType(params ...);
@@ -686,7 +686,7 @@ void CentralizedSchedulerPlace<Pheet, TaskStorageT, CallThreshold>::spawn(TaskPa
 		di.task = task;
 		di.stack_element = current_task_parent;
 		task_storage.push(di);
-	}
+//	}
 }
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, uint8_t CallThreshold>
@@ -694,14 +694,14 @@ template<typename F, typename ... TaskParams>
 void CentralizedSchedulerPlace<Pheet, TaskStorageT, CallThreshold>::spawn(F&& f, TaskParams&& ... params) {
 	performance_counters.num_spawns.incr();
 
-	size_t limit = call_mode?preferred_queue_length:max_queue_length;
+/*	size_t limit = call_mode?preferred_queue_length:max_queue_length;
 	if(task_storage.get_length() >= limit) {
 		call_mode = true;
 		performance_counters.num_spawns_to_call.incr();
 		call(f, std::forward<TaskParams&&>(params) ...);
 	}
 	else {
-		call_mode = false;
+		call_mode = false;*/
 		performance_counters.num_actual_spawns.incr();
 
 		auto bound = std::bind(f, params ...);
@@ -713,7 +713,7 @@ void CentralizedSchedulerPlace<Pheet, TaskStorageT, CallThreshold>::spawn(F&& f,
 		di.task = task;
 		di.stack_element = current_task_parent;
 		task_storage.push(di);
-	}
+//	}
 }
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, uint8_t CallThreshold>

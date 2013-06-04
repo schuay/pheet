@@ -171,7 +171,7 @@ private:
 };
 
 template <class Pheet, uint8_t CallThreshold>
-size_t const CentralizedPrioritySchedulerPlace<Pheet, CallThreshold>::stack_size = (8192 > (64 << CallThreshold))?8192:(64 << CallThreshold);
+size_t const CentralizedPrioritySchedulerPlace<Pheet, CallThreshold>::stack_size = (262144 > (64 << CallThreshold))?262144:(64 << CallThreshold);
 
 template <class Pheet, uint8_t CallThreshold>
 thread_local CentralizedPrioritySchedulerPlace<Pheet, CallThreshold>*
@@ -709,7 +709,7 @@ void CentralizedPrioritySchedulerPlace<Pheet, CallThreshold>::spawn_prio(Strateg
 	else*/ {
 		// Limit dependent on currently not executed tasks of the current finish_stack element
 		// to ensure repeated finish calls don't let the queues explode, each blocking finish call reduces the limit by 1
-		size_t current_tasks = (current_task_parent->num_spawned - current_task_parent->num_finished_remote);
+/*		size_t current_tasks = (current_task_parent->num_spawned - current_task_parent->num_finished_remote);
 		size_t blocking_finish_depth = (stack_size - stack_filled_right);
 		size_t limit = call_mode?preferred_queue_length:max_queue_length;
 		if(blocking_finish_depth >= limit || current_tasks >= (limit - blocking_finish_depth)) {
@@ -718,7 +718,7 @@ void CentralizedPrioritySchedulerPlace<Pheet, CallThreshold>::spawn_prio(Strateg
 			call<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 		}
 		else {
-			call_mode = false;
+			call_mode = false;*/
 			performance_counters.num_actual_spawns.incr();
 			CallTaskType* task = new CallTaskType(params ...);
 			pheet_assert(current_task_parent != NULL);
@@ -729,7 +729,7 @@ void CentralizedPrioritySchedulerPlace<Pheet, CallThreshold>::spawn_prio(Strateg
 			di.stack_element = current_task_parent;
 			di.priority = s.get_pop_priority(task_id++);
 			task_storage.push(di);
-		}
+//		}
 	}
 }
 
@@ -746,7 +746,7 @@ void CentralizedPrioritySchedulerPlace<Pheet, CallThreshold>::spawn_prio(Strateg
 	else*/ {
 		// Limit dependent on currently not executed tasks of the current finish_stack element
 		// to ensure repeated finish calls don't let the queues explode, each blocking finish call reduces the limit by 1
-		size_t current_tasks = (current_task_parent->num_spawned - current_task_parent->num_finished_remote);
+/*		size_t current_tasks = (current_task_parent->num_spawned - current_task_parent->num_finished_remote);
 		size_t blocking_finish_depth = (stack_size - stack_filled_right);
 		size_t limit = call_mode?preferred_queue_length:max_queue_length;
 		if(blocking_finish_depth >= limit || current_tasks >= (limit - blocking_finish_depth)) {
@@ -755,7 +755,7 @@ void CentralizedPrioritySchedulerPlace<Pheet, CallThreshold>::spawn_prio(Strateg
 			call(f, std::forward<TaskParams&&>(params) ...);
 		}
 		else {
-			call_mode = false;
+			call_mode = false;*/
 			performance_counters.num_actual_spawns.incr();
 			auto bound = std::bind(f, params ...);
 
@@ -768,7 +768,7 @@ void CentralizedPrioritySchedulerPlace<Pheet, CallThreshold>::spawn_prio(Strateg
 			di.stack_element = current_task_parent;
 			di.priority = s.get_pop_priority(task_id++);
 			task_storage.push(di);
-		}
+	//	}
 	}
 }
 

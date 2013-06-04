@@ -609,14 +609,14 @@ template<class CallTaskType, typename ... TaskParams>
 void FinisherSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::spawn(TaskParams&& ... params) {
 	performance_counters.num_spawns.incr();
 
-	size_t limit = call_mode?preferred_queue_length:max_queue_length;
+/*	size_t limit = call_mode?preferred_queue_length:max_queue_length;
 	if(stealing_deque.get_length() >= limit) {
 		call_mode = true;
 		performance_counters.num_spawns_to_call.incr();
 		call<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 	}
 	else {
-		call_mode = false;
+		call_mode = false;*/
 		performance_counters.num_actual_spawns.incr();
 
 		CallTaskType* task = new CallTaskType(params ...);
@@ -627,7 +627,7 @@ void FinisherSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::spawn(TaskPar
 		di.task = task;
 //		di.stack_element = current_task_parent;
 		stealing_deque.push(di);
-	}
+//	}
 }
 
 template <class Pheet, template <class P, typename T> class StealingDequeT, uint8_t CallThreshold>
@@ -635,14 +635,14 @@ template<typename F, typename ... TaskParams>
 void FinisherSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::spawn(F&& f, TaskParams&& ... params) {
 	performance_counters.num_spawns.incr();
 
-	size_t limit = call_mode?preferred_queue_length:max_queue_length;
+/*	size_t limit = call_mode?preferred_queue_length:max_queue_length;
 	if(stealing_deque.get_length() >= limit) {
 		call_mode = true;
 		performance_counters.num_spawns_to_call.incr();
 		call(f, std::forward<TaskParams&&>(params) ...);
 	}
 	else {
-		call_mode = false;
+		call_mode = false;*/
 		performance_counters.num_actual_spawns.incr();
 
 		auto bound = std::bind(f, params ...);
@@ -655,7 +655,7 @@ void FinisherSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::spawn(F&& f, 
 		di.task = task;
 //		di.stack_element = current_task_parent;
 		stealing_deque.push(di);
-	}
+//	}
 }
 
 template <class Pheet, template <class P, typename T> class StealingDequeT, uint8_t CallThreshold>
