@@ -178,7 +178,7 @@ private:
 };
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, uint8_t CallThreshold>
-size_t const CentralizedSchedulerPlace<Pheet, TaskStorageT, CallThreshold>::stack_size = 262144;
+size_t const CentralizedSchedulerPlace<Pheet, TaskStorageT, CallThreshold>::stack_size = 1048576;
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, uint8_t CallThreshold>
 thread_local CentralizedSchedulerPlace<Pheet, TaskStorageT, CallThreshold>* CentralizedSchedulerPlace<Pheet, TaskStorageT, CallThreshold>::local_place = NULL;
