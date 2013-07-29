@@ -33,10 +33,6 @@ const GraphBipartitioningProblem graph_bipartitioning_test_problems[] = {
 };
 const int graph_bipartitioning_test_types[] = {0};
 
-const bool    nqueens_test        = false;
-const procs_t nqueens_test_cpus[] = {1, 2, 4, 8, 16, 32, 64, 128};
-const size_t  nqueens_test_n[]    = {24, 32, 48};
-
 #define LUPIV_TEST	true
 const procs_t lupiv_test_cpus[] = {1, 2, 3, 6, 12, 24, 48};
 const unsigned int lupiv_test_seeds[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
