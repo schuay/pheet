@@ -56,12 +56,12 @@ public:
 	typedef typename Place::PerformanceCounters PerformanceCounters;
 
 	template <class NP>
-	using BT = BasicSchedulerImpl<NP, StealingDeque, CallThreshold>;
+	using BT = FinisherSchedulerImpl<NP, StealingDeque, CallThreshold>;
 
 	template<uint8_t NewVal>
 		using WithCallThreshold = FinisherSchedulerImpl<Pheet, StealingDeque, NewVal>;
 	template <template <class, typename> class NewTS>
-		using WithTaskStorage = BasicSchedulerImpl<Pheet, NewTS, CallThreshold>;
+		using WithTaskStorage = FinisherSchedulerImpl<Pheet, NewTS, CallThreshold>;
 	template <template <class, typename, typename> class NewTS>
 		using WithPriorityTaskStorage = Self;
 	template <template <class, typename, template <class, class> class> class NewTS>

@@ -16,6 +16,7 @@
 #include "../common/CPUThreadExecutor.h"
 #include "../common/DummyBaseStrategy.h"
 #include "../../models/MachineModel/BinaryTree/BinaryTreeMachineModel.h"
+#include <pheet/ds/FinishStack/Basic/BasicFinishStack.h>
 
 #include <stdint.h>
 #include <limits>
@@ -40,17 +41,17 @@ BasicSchedulerState<Pheet>::BasicSchedulerState()
 /*
  * May only be used once
  */
-template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
+template <class Pheet, template <class P, typename T> class StealingDeque, template <class> class FinishStack, uint8_t CallThreshold>
 class BasicSchedulerImpl {
 public:
 	typedef typename Pheet::Backoff Backoff;
 	typedef typename Pheet::MachineModel MachineModel;
 	typedef BinaryTreeMachineModel<Pheet, MachineModel> InternalMachineModel;
-	typedef BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold> Self;
+	typedef BasicSchedulerImpl<Pheet, StealingDeque, FinishStack, CallThreshold> Self;
 	typedef SchedulerTask<Pheet> Task;
 	template <typename F>
 		using FunctorTask = SchedulerFunctorTask<Pheet, F>;
-	typedef BasicSchedulerPlace<Pheet, StealingDeque, CallThreshold> Place;
+	typedef BasicSchedulerPlace<Pheet, StealingDeque, FinishStack, CallThreshold> Place;
 	typedef BasicSchedulerState<Pheet> State;
 	typedef FinishRegion<Pheet> Finish;
 	typedef typename Place::PerformanceCounters PerformanceCounters;
@@ -58,12 +59,12 @@ public:
 	typedef DummyBaseStrategy<Pheet> BaseStrategy;
 
 	template <class NP>
-	using BT = BasicSchedulerImpl<NP, StealingDeque, CallThreshold>;
+	using BT = BasicSchedulerImpl<NP, StealingDeque, FinishStack, CallThreshold>;
 
 	template<uint8_t NewVal>
-		using WithCallThreshold = BasicSchedulerImpl<Pheet, StealingDeque, NewVal>;
+		using WithCallThreshold = BasicSchedulerImpl<Pheet, StealingDeque, FinishStack, NewVal>;
 	template <template <class, typename> class NewTS>
-		using WithTaskStorage = BasicSchedulerImpl<Pheet, NewTS, CallThreshold>;
+		using WithTaskStorage = BasicSchedulerImpl<Pheet, NewTS, FinishStack, CallThreshold>;
 	template <template <class, typename, typename> class NewTS>
 		using WithPriorityTaskStorage = Self;
 	template <template <class, typename, template <class, class> class> class NewTS>
@@ -126,14 +127,14 @@ private:
 	PerformanceCounters performance_counters;
 };
 
-template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
-char const BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::name[] = "BasicScheduler";
+template <class Pheet, template <class P, typename T> class StealingDeque, template <class> class FinishStack, uint8_t CallThreshold>
+char const BasicSchedulerImpl<Pheet, StealingDeque, FinishStack, CallThreshold>::name[] = "BasicScheduler";
 
-template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
-procs_t const BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::max_cpus = std::numeric_limits<procs_t>::max() >> 1;
+template <class Pheet, template <class P, typename T> class StealingDeque, template <class> class FinishStack, uint8_t CallThreshold>
+procs_t const BasicSchedulerImpl<Pheet, StealingDeque, FinishStack, CallThreshold>::max_cpus = std::numeric_limits<procs_t>::max() >> 1;
 
-template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
-BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::BasicSchedulerImpl()
+template <class Pheet, template <class P, typename T> class StealingDeque, template <class> class FinishStack, uint8_t CallThreshold>
+BasicSchedulerImpl<Pheet, StealingDeque, FinishStack, CallThreshold>::BasicSchedulerImpl()
 : num_places(machine_model.get_num_leaves()) {
 
 	places = new Place*[num_places];
@@ -141,8 +142,8 @@ BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::BasicSchedulerImpl()
 	places[0]->prepare_root();
 }
 
-template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
-BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::BasicSchedulerImpl(typename Place::PerformanceCounters& performance_counters)
+template <class Pheet, template <class P, typename T> class StealingDeque, template <class> class FinishStack, uint8_t CallThreshold>
+BasicSchedulerImpl<Pheet, StealingDeque, FinishStack, CallThreshold>::BasicSchedulerImpl(typename Place::PerformanceCounters& performance_counters)
 : num_places(machine_model.get_num_leaves()) {
 
 	places = new Place*[num_places];
@@ -150,8 +151,8 @@ BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::BasicSchedulerImpl(type
 	places[0]->prepare_root();
 }
 
-template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
-BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::BasicSchedulerImpl(procs_t num_places)
+template <class Pheet, template <class P, typename T> class StealingDeque, template <class> class FinishStack, uint8_t CallThreshold>
+BasicSchedulerImpl<Pheet, StealingDeque, FinishStack, CallThreshold>::BasicSchedulerImpl(procs_t num_places)
 : num_places(num_places) {
 
 	places = new Place*[num_places];
@@ -159,8 +160,8 @@ BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::BasicSchedulerImpl(proc
 	places[0]->prepare_root();
 }
 
-template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
-BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::BasicSchedulerImpl(procs_t num_places, typename Place::PerformanceCounters& performance_counters)
+template <class Pheet, template <class P, typename T> class StealingDeque, template <class> class FinishStack, uint8_t CallThreshold>
+BasicSchedulerImpl<Pheet, StealingDeque, FinishStack, CallThreshold>::BasicSchedulerImpl(procs_t num_places, typename Place::PerformanceCounters& performance_counters)
 : num_places(num_places) {
 
 	places = new Place*[num_places];
@@ -168,90 +169,90 @@ BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::BasicSchedulerImpl(proc
 	places[0]->prepare_root();
 }
 
-template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
-BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::~BasicSchedulerImpl() {
+template <class Pheet, template <class P, typename T> class StealingDeque, template <class> class FinishStack, uint8_t CallThreshold>
+BasicSchedulerImpl<Pheet, StealingDeque, FinishStack, CallThreshold>::~BasicSchedulerImpl() {
 	delete places[0];
 	delete[] places;
 }
 
-template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
-void BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::print_name() {
+template <class Pheet, template <class P, typename T> class StealingDeque, template <class> class FinishStack, uint8_t CallThreshold>
+void BasicSchedulerImpl<Pheet, StealingDeque, FinishStack, CallThreshold>::print_name() {
 	std::cout << name;
 }
 
-template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
-typename BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::Place*
-BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::get_place() {
+template <class Pheet, template <class P, typename T> class StealingDeque, template <class> class FinishStack, uint8_t CallThreshold>
+typename BasicSchedulerImpl<Pheet, StealingDeque, FinishStack, CallThreshold>::Place*
+BasicSchedulerImpl<Pheet, StealingDeque, FinishStack, CallThreshold>::get_place() {
 	return Place::get();
 }
 
-template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
-procs_t BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::get_place_id() {
+template <class Pheet, template <class P, typename T> class StealingDeque, template <class> class FinishStack, uint8_t CallThreshold>
+procs_t BasicSchedulerImpl<Pheet, StealingDeque, FinishStack, CallThreshold>::get_place_id() {
 	return Place::get()->get_id();
 }
 
-template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
-typename BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::Place*
-BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::get_place_at(procs_t place_id) {
+template <class Pheet, template <class P, typename T> class StealingDeque, template <class> class FinishStack, uint8_t CallThreshold>
+typename BasicSchedulerImpl<Pheet, StealingDeque, FinishStack, CallThreshold>::Place*
+BasicSchedulerImpl<Pheet, StealingDeque, FinishStack, CallThreshold>::get_place_at(procs_t place_id) {
 	pheet_assert(place_id < num_places);
 	return places[place_id];
 }
 
-template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
+template <class Pheet, template <class P, typename T> class StealingDeque, template <class> class FinishStack, uint8_t CallThreshold>
 template<class CallTaskType, typename ... TaskParams>
-void BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::finish(TaskParams&& ... params) {
+void BasicSchedulerImpl<Pheet, StealingDeque, FinishStack, CallThreshold>::finish(TaskParams&& ... params) {
 	Place* p = get_place();
 	pheet_assert(p != NULL);
 	p->template finish<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 }
 
-template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
+template <class Pheet, template <class P, typename T> class StealingDeque, template <class> class FinishStack, uint8_t CallThreshold>
 template<typename F, typename ... TaskParams>
-void BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::finish(F&& f, TaskParams&& ... params) {
+void BasicSchedulerImpl<Pheet, StealingDeque, FinishStack, CallThreshold>::finish(F&& f, TaskParams&& ... params) {
 	Place* p = get_place();
 	pheet_assert(p != NULL);
 	p->finish(f, std::forward<TaskParams&&>(params) ...);
 }
 
-template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
+template <class Pheet, template <class P, typename T> class StealingDeque, template <class> class FinishStack, uint8_t CallThreshold>
 template<class CallTaskType, typename ... TaskParams>
-void BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::spawn(TaskParams&& ... params) {
+void BasicSchedulerImpl<Pheet, StealingDeque, FinishStack, CallThreshold>::spawn(TaskParams&& ... params) {
 	Place* p = get_place();
 	pheet_assert(p != NULL);
 	p->template spawn<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 }
 
-template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
+template <class Pheet, template <class P, typename T> class StealingDeque, template <class> class FinishStack, uint8_t CallThreshold>
 template<typename F, typename ... TaskParams>
-void BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::spawn(F&& f, TaskParams&& ... params) {
+void BasicSchedulerImpl<Pheet, StealingDeque, FinishStack, CallThreshold>::spawn(F&& f, TaskParams&& ... params) {
 	Place* p = get_place();
 	pheet_assert(p != NULL);
 	p->spawn(f, std::forward<TaskParams&&>(params) ...);
 }
 
-template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
+template <class Pheet, template <class P, typename T> class StealingDeque, template <class> class FinishStack, uint8_t CallThreshold>
 template<class CallTaskType, class Strategy, typename ... TaskParams>
-void BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::spawn_prio(Strategy s, TaskParams&& ... params) {
+void BasicSchedulerImpl<Pheet, StealingDeque, FinishStack, CallThreshold>::spawn_prio(Strategy s, TaskParams&& ... params) {
 	spawn<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 }
 
-template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
+template <class Pheet, template <class P, typename T> class StealingDeque, template <class> class FinishStack, uint8_t CallThreshold>
 template<class Strategy, typename F, typename ... TaskParams>
-void BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::spawn_prio(Strategy s, F&& f, TaskParams&& ... params) {
+void BasicSchedulerImpl<Pheet, StealingDeque, FinishStack, CallThreshold>::spawn_prio(Strategy s, F&& f, TaskParams&& ... params) {
 	spawn(f, std::forward<TaskParams&&>(params) ...);
 }
 
-template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
+template <class Pheet, template <class P, typename T> class StealingDeque, template <class> class FinishStack, uint8_t CallThreshold>
 template<class CallTaskType, typename ... TaskParams>
-void BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::call(TaskParams&& ... params) {
+void BasicSchedulerImpl<Pheet, StealingDeque, FinishStack, CallThreshold>::call(TaskParams&& ... params) {
 	Place* p = get_place();
 	pheet_assert(p != NULL);
 	p->template call<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 }
 
-template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
+template <class Pheet, template <class P, typename T> class StealingDeque, template <class> class FinishStack, uint8_t CallThreshold>
 template<typename F, typename ... TaskParams>
-void BasicSchedulerImpl<Pheet, StealingDeque, CallThreshold>::call(F&& f, TaskParams&& ... params) {
+void BasicSchedulerImpl<Pheet, StealingDeque, FinishStack, CallThreshold>::call(F&& f, TaskParams&& ... params) {
 	Place* p = get_place();
 	pheet_assert(p != NULL);
 	p->call(f, std::forward<TaskParams&&>(params) ...);
@@ -261,7 +262,7 @@ template<class Pheet, typename T>
 using BasicSchedulerDefaultStealingDeque = typename Pheet::CDS::template StealingDeque<T>;
 
 template<class Pheet>
-using BasicScheduler = BasicSchedulerImpl<Pheet, BasicSchedulerDefaultStealingDeque, 3>;
+using BasicScheduler = BasicSchedulerImpl<Pheet, BasicSchedulerDefaultStealingDeque, BasicFinishStack, 3>;
 
 }
 
