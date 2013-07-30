@@ -79,6 +79,7 @@ bool const stealer_count_stolen_tasks = pc_all | false;
 
 bool const scheduler_measure_finish_stack_nonblocking_max = pc_all | 	false;
 bool const scheduler_measure_finish_stack_blocking_min = pc_all | 		false;
+bool const finish_stack_count_mm_accesses = pc_all | 		false;
 
 }
 

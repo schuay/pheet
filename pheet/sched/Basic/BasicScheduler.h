@@ -16,7 +16,9 @@
 #include "../common/CPUThreadExecutor.h"
 #include "../common/DummyBaseStrategy.h"
 #include "../../models/MachineModel/BinaryTree/BinaryTreeMachineModel.h"
-#include <pheet/ds/FinishStack/Basic/BasicFinishStack.h>
+//#include <pheet/ds/FinishStack/Basic/BasicFinishStack.h>
+//#include <pheet/ds/FinishStack/Safer/SaferFinishStack.h>
+#include <pheet/ds/FinishStack/MM/MMFinishStack.h>
 
 #include <stdint.h>
 #include <limits>
@@ -69,6 +71,8 @@ public:
 		using WithPriorityTaskStorage = Self;
 	template <template <class, typename, template <class, class> class> class NewTS>
 		using WithStrategyTaskStorage = Self;
+	template <template <class> class NewFS>
+		using WithFinishStack = BasicSchedulerImpl<Pheet, StealingDeque, NewFS, CallThreshold>;
 
 	/*
 	 * Uses complete machine
@@ -262,7 +266,7 @@ template<class Pheet, typename T>
 using BasicSchedulerDefaultStealingDeque = typename Pheet::CDS::template StealingDeque<T>;
 
 template<class Pheet>
-using BasicScheduler = BasicSchedulerImpl<Pheet, BasicSchedulerDefaultStealingDeque, BasicFinishStack, 3>;
+using BasicScheduler = BasicSchedulerImpl<Pheet, BasicSchedulerDefaultStealingDeque, MMFinishStack, 3>;
 
 }
 

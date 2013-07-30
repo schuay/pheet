@@ -12,7 +12,7 @@
 #include "CentralKStrategyTaskStorageItem.h"
 #include "CentralKStrategyTaskStoragePerformanceCounters.h"
 
-#include <pheet/memory/ItemReuse/ItemReuseMemoryManager.h>
+#include <pheet/memory/BlockItemReuse/BlockItemReuseMemoryManager.h>
 
 namespace pheet {
 
@@ -72,8 +72,8 @@ public:
 	typedef CentralKStrategyTaskStoragePerformanceCounters<Pheet, typename StrategyHeap::PerformanceCounters>
 			PerformanceCounters;
 
-	typedef ItemReuseMemoryManager<Pheet, Item, CentralKStrategyTaskStorageItemReuseCheck<Item> > ItemMemoryManager;
-	typedef ItemReuseMemoryManager<Pheet, DataBlock, CentralKStrategyTaskStorageDataBlockReuseCheck<DataBlock> > DataBlockMemoryManager;
+	typedef BlockItemReuseMemoryManager<Pheet, Item, CentralKStrategyTaskStorageItemReuseCheck<Item> > ItemMemoryManager;
+	typedef BlockItemReuseMemoryManager<Pheet, DataBlock, CentralKStrategyTaskStorageDataBlockReuseCheck<DataBlock> > DataBlockMemoryManager;
 
 	typedef typename Pheet::Scheduler::Place SchedulerPlace;
 
@@ -193,6 +193,7 @@ public:
 		// TODO: check whether the position is still valid, otherwise end function
 
 		Strategy* s = new Strategy(*reinterpret_cast<Strategy*>(item->strategy));
+		s->rebase();
 		r.strategy = s;
 
 		heap.template push<Strategy>(std::move(r));

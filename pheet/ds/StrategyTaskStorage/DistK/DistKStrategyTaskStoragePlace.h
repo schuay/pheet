@@ -13,7 +13,7 @@
 #include "DistKStrategyTaskStorageItem.h"
 #include "DistKStrategyTaskStoragePerformanceCounters.h"
 
-#include <pheet/memory/ItemReuse/ItemReuseMemoryManager.h>
+#include <pheet/memory/BlockItemReuse/BlockItemReuseMemoryManager.h>
 
 #include <limits>
 
@@ -64,8 +64,8 @@ public:
 	typedef DistKStrategyTaskStoragePerformanceCounters<Pheet, typename StrategyHeap::PerformanceCounters>
 			PerformanceCounters;
 
-	typedef ItemReuseMemoryManager<Pheet, Item, DistKStrategyTaskStorageItemReuseCheck<Item> > ItemMemoryManager;
-	typedef ItemReuseMemoryManager<Pheet, DataBlock, DistKStrategyTaskStorageDataBlockReuseCheck<DataBlock> > DataBlockMemoryManager;
+	typedef BlockItemReuseMemoryManager<Pheet, Item, DistKStrategyTaskStorageItemReuseCheck<Item> > ItemMemoryManager;
+	typedef BlockItemReuseMemoryManager<Pheet, DataBlock, DistKStrategyTaskStorageDataBlockReuseCheck<DataBlock> > DataBlockMemoryManager;
 
 	typedef typename Pheet::Scheduler::Place SchedulerPlace;
 
@@ -105,7 +105,8 @@ public:
 	template <class Strategy>
 	void push(Strategy&& s, T data) {
 		Item& it = items.acquire_item();
-		pheet_assert(it.strategy == nullptr);
+		// Cannot check this since item may be uninitialized if it has been newly allocated
+//		pheet_assert(it.strategy == nullptr);
 		size_t k = s.get_k();
 		pheet_assert(k > 0);
 
@@ -233,6 +234,7 @@ public:
 		r.type = type;
 
 		Strategy* s = new Strategy(*reinterpret_cast<Strategy*>(item->strategy));
+		s->rebase();
 		r.strategy = s;
 
 		heap.template push<Strategy>(std::move(r));

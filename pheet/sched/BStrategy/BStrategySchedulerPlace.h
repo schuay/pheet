@@ -18,7 +18,7 @@
 
 namespace pheet {
 
-
+/*
 struct BStrategySchedulerPlaceStackElement {
 	// Modified by local thread. Incremented when task is spawned, decremented when finished
 	size_t num_spawned;
@@ -37,7 +37,7 @@ struct BStrategySchedulerPlaceStackElement {
 	// instead we just increment this counter
 	// unused on the left side
 	size_t reused_finish_depth;
-};
+};*/
 
 
 template <class Place>
@@ -52,23 +52,24 @@ struct BStrategySchedulerPlaceLevelDescription {
 
 
 
-template <class Pheet, uint8_t CallThreshold>
+template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
 class BStrategySchedulerPlace : public PlaceBase<Pheet> {
 public:
-	typedef BStrategySchedulerPlace<Pheet, CallThreshold> Self;
+	typedef BStrategySchedulerPlace<Pheet, FinishStackT, CallThreshold> Self;
 	typedef Self Place;
 	typedef BStrategySchedulerPlaceLevelDescription<Self> LevelDescription;
 	typedef typename Pheet::Backoff Backoff;
 	typedef typename Pheet::Scheduler::Task Task;
 	template <typename F>
 		using FunctorTask = typename Pheet::Scheduler::template FunctorTask<F>;
-	typedef BStrategySchedulerPlaceStackElement StackElement;
+	typedef FinishStackT<Pheet> FinishStack;
+	typedef typename FinishStack::Element StackElement;
 	typedef typename Pheet::Scheduler::TaskStorageItem TaskStorageItem;
 	typedef typename Pheet::Scheduler::TaskStorage CentralTaskStorage;
 	typedef typename Pheet::Scheduler::TaskStorage::Place TaskStorage;
 //	typedef typename Pheet::Scheduler::TaskDesc TaskDesc;
 //	typedef typename Pheet::Scheduler::PlaceDesc PlaceDesc;
-	typedef BStrategySchedulerPerformanceCounters<Pheet, typename TaskStorage::PerformanceCounters> PerformanceCounters;
+	typedef BStrategySchedulerPerformanceCounters<Pheet, typename TaskStorage::PerformanceCounters, typename FinishStack::PerformanceCounters> PerformanceCounters;
 	typedef typename Pheet::Scheduler::InternalMachineModel InternalMachineModel;
 	typedef typename Pheet::Scheduler::BaseStrategy BaseStrategy;
 
@@ -114,7 +115,6 @@ public:
 //	procs_t get_distance(Self* other, procs_t max_granularity_level);
 //	procs_t get_max_distance() const;
 //	procs_t get_max_distance(procs_t max_granularity_level);
-	size_t get_current_finish_stack_depth();
 
 	void start_finish_region();
 	void end_finish_region();
@@ -151,25 +151,12 @@ private:
 	void main_loop();
 	void wait_for_finish(StackElement* parent);
 
-	void empty_stack();
-	StackElement* create_non_blocking_finish_region(StackElement* parent);
-	void signal_task_completion(StackElement* stack_element);
-	void finalize_stack_element(StackElement* element, StackElement* parent, size_t version, bool local);
-
 	InternalMachineModel machine_model;
 	procs_t num_initialized_levels;
 	procs_t num_levels;
 	LevelDescription* levels;
 
-	static size_t const stack_size;
-	StackElement* stack;
 	StackElement* current_task_parent;
-	size_t stack_filled_left;
-	size_t stack_filled_right;
-	size_t stack_init_left;
-//	size_t stack_init_right;
-	// The use of the freed_stack_elements vector should lead to less usage of the stack by non-blocking tasks
-	std::vector<StackElement*> freed_stack_elements;
 
 	typename Pheet::Scheduler::State* scheduler_state;
 
@@ -177,6 +164,7 @@ private:
 
 //	PlaceDesc place_desc;
 	TaskStorage task_storage;
+	FinishStack finish_stack;
 
 //	size_t spawn2call_counter;
 
@@ -192,22 +180,19 @@ private:
 	friend void* execute_cpu_thread(void* param);
 };
 
-template <class Pheet, uint8_t CallThreshold>
-size_t const BStrategySchedulerPlace<Pheet, CallThreshold>::stack_size = (16384 > (64 << CallThreshold))?16384:(64 << CallThreshold);
+template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
+thread_local BStrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>*
+BStrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::local_place = nullptr;
 
-template <class Pheet, uint8_t CallThreshold>
-thread_local BStrategySchedulerPlace<Pheet, CallThreshold>*
-BStrategySchedulerPlace<Pheet, CallThreshold>::local_place = nullptr;
-
-template <class Pheet, uint8_t CallThreshold>
-BStrategySchedulerPlace<Pheet, CallThreshold>::BStrategySchedulerPlace(InternalMachineModel model, CentralTaskStorage* ctask_storage, Place** places, procs_t num_places, typename Pheet::Scheduler::State* scheduler_state, PerformanceCounters& perf_count)
+template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
+BStrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::BStrategySchedulerPlace(InternalMachineModel model, CentralTaskStorage* ctask_storage, Place** places, procs_t num_places, typename Pheet::Scheduler::State* scheduler_state, PerformanceCounters& perf_count)
 : machine_model(model),
   num_initialized_levels(1), num_levels(find_last_bit_set(num_places)), levels(new LevelDescription[num_levels]),
   current_task_parent(nullptr),
-  stack_filled_left(0), stack_filled_right(stack_size), stack_init_left(0),
   scheduler_state(scheduler_state),
   performance_counters(perf_count),
   task_storage(ctask_storage, this, performance_counters.task_storage_performance_counters),
+  finish_stack(performance_counters.finish_stack_performance_counters),
 //  spawn2call_counter(0),
   thread_executor(this),
   task_id(0) {
@@ -228,16 +213,16 @@ BStrategySchedulerPlace<Pheet, CallThreshold>::BStrategySchedulerPlace(InternalM
 	initialize_levels();
 }
 
-template <class Pheet, uint8_t CallThreshold>
-BStrategySchedulerPlace<Pheet, CallThreshold>::BStrategySchedulerPlace(CentralTaskStorage* ctask_storage, LevelDescription* levels, procs_t num_initialized_levels, InternalMachineModel model, typename Pheet::Scheduler::State* scheduler_state, PerformanceCounters& perf_count)
+template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
+BStrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::BStrategySchedulerPlace(CentralTaskStorage* ctask_storage, LevelDescription* levels, procs_t num_initialized_levels, InternalMachineModel model, typename Pheet::Scheduler::State* scheduler_state, PerformanceCounters& perf_count)
 : machine_model(model),
   num_initialized_levels(num_initialized_levels), num_levels(num_initialized_levels + find_last_bit_set(levels[num_initialized_levels - 1].size >> 1)),
   levels(new LevelDescription[num_levels]),
   current_task_parent(nullptr),
-  stack_filled_left(0), stack_filled_right(stack_size), stack_init_left(0),
   scheduler_state(scheduler_state),
   performance_counters(perf_count),
   task_storage(ctask_storage, this, performance_counters.task_storage_performance_counters),
+  finish_stack(performance_counters.finish_stack_performance_counters),
 //  spawn2call_counter(0),
   thread_executor(this) {
 
@@ -248,8 +233,8 @@ BStrategySchedulerPlace<Pheet, CallThreshold>::BStrategySchedulerPlace(CentralTa
 	thread_executor.run();
 }
 
-template <class Pheet, uint8_t CallThreshold>
-BStrategySchedulerPlace<Pheet, CallThreshold>::~BStrategySchedulerPlace() {
+template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
+BStrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::~BStrategySchedulerPlace() {
 	if(get_id() == 0) {
 		end_finish_region();
 
@@ -271,22 +256,16 @@ BStrategySchedulerPlace<Pheet, CallThreshold>::~BStrategySchedulerPlace() {
 		machine_model.unbind();
 		local_place = NULL;
 	}
-	delete[] stack;
 	delete[] levels;
 }
 
-template <class Pheet, uint8_t CallThreshold>
-void BStrategySchedulerPlace<Pheet, CallThreshold>::prepare_root() {
-	stack = new StackElement[stack_size];
+template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
+void BStrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::prepare_root() {
 
 	scheduler_state->state_barrier.signal(0);
 
 	pheet_assert(local_place == NULL);
 	local_place = this;
-
-
-	performance_counters.finish_stack_blocking_min.add_value(stack_size);
-	performance_counters.finish_stack_nonblocking_max.add_value(0);
 
 	scheduler_state->state_barrier.wait(0, levels[0].size);
 
@@ -294,8 +273,8 @@ void BStrategySchedulerPlace<Pheet, CallThreshold>::prepare_root() {
 	start_finish_region();
 }
 
-template <class Pheet, uint8_t CallThreshold>
-void BStrategySchedulerPlace<Pheet, CallThreshold>::initialize_levels() {
+template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
+void BStrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::initialize_levels() {
 	procs_t base_offset;
 	procs_t size;
 
@@ -346,8 +325,8 @@ void BStrategySchedulerPlace<Pheet, CallThreshold>::initialize_levels() {
 	machine_model.bind();
 }
 
-template <class Pheet, uint8_t CallThreshold>
-void BStrategySchedulerPlace<Pheet, CallThreshold>::grow_levels_structure() {
+template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
+void BStrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::grow_levels_structure() {
 	if(num_initialized_levels == num_levels) {
 		// We have allocated to little levels
 		procs_t new_size = num_levels + find_last_bit_set(levels[num_levels - 1].size >> 1);
@@ -360,34 +339,31 @@ void BStrategySchedulerPlace<Pheet, CallThreshold>::grow_levels_structure() {
 	}
 }
 
-template <class Pheet, uint8_t CallThreshold>
-void BStrategySchedulerPlace<Pheet, CallThreshold>::join() {
+template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
+void BStrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::join() {
 	thread_executor.join();
 }
 
-template <class Pheet, uint8_t CallThreshold>
-BStrategySchedulerPlace<Pheet, CallThreshold>*
-BStrategySchedulerPlace<Pheet, CallThreshold>::get() {
+template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
+BStrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>*
+BStrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::get() {
 	return local_place;
 }
 
-template <class Pheet, uint8_t CallThreshold>
+template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
 procs_t
-BStrategySchedulerPlace<Pheet, CallThreshold>::get_id() {
+BStrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::get_id() {
 	return levels[0].local_id;
 }
 
-template <class Pheet, uint8_t CallThreshold>
-void BStrategySchedulerPlace<Pheet, CallThreshold>::run() {
+template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
+void BStrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::run() {
 	local_place = this;
 	initialize_levels();
-	stack = new StackElement[stack_size];
 
 	scheduler_state->state_barrier.signal(0);
 
 	performance_counters.total_time.start_timer();
-	performance_counters.finish_stack_blocking_min.add_value(stack_size);
-	performance_counters.finish_stack_nonblocking_max.add_value(0);
 
 	scheduler_state->state_barrier.wait(0, levels[0].size);
 
@@ -413,14 +389,9 @@ void BStrategySchedulerPlace<Pheet, CallThreshold>::run() {
 	// Now we can safely finish execution
 }
 
-template <class Pheet, uint8_t CallThreshold>
-void BStrategySchedulerPlace<Pheet, CallThreshold>::execute_task(Task* task, StackElement* parent) {
-	if(parent < stack || (parent >= (stack + stack_size))) {
-		// to prevent thrashing on the parent finish block (owned by another thread), we create a new finish block local to the thread
-
-		// Create new stack element for finish
-		parent = create_non_blocking_finish_region(parent);
-	}
+template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
+void BStrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::execute_task(Task* task, StackElement* parent) {
+	parent = finish_stack.active_element(parent);
 
 	// Store parent (needed for spawns inside the task)
 	current_task_parent = parent;
@@ -434,11 +405,11 @@ void BStrategySchedulerPlace<Pheet, CallThreshold>::execute_task(Task* task, Sta
 	pheet_assert(current_task_parent == parent);
 
 	// Signal that we finished executing this task
-	signal_task_completion(parent);
+	finish_stack.signal_completion(parent);
 }
 
-template <class Pheet, uint8_t CallThreshold>
-void BStrategySchedulerPlace<Pheet, CallThreshold>::main_loop() {
+template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
+void BStrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::main_loop() {
 	Backoff bo;
 	while(true) {
 		TaskStorageItem di = task_storage.pop();
@@ -462,8 +433,8 @@ void BStrategySchedulerPlace<Pheet, CallThreshold>::main_loop() {
 	}
 }
 
-template <class Pheet, uint8_t CallThreshold>
-void BStrategySchedulerPlace<Pheet, CallThreshold>::wait_for_finish(StackElement* parent) {
+template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
+void BStrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::wait_for_finish(StackElement* parent) {
 	Backoff bo;
 	while(true) {
 		TaskStorageItem di = task_storage.pop();
@@ -474,154 +445,27 @@ void BStrategySchedulerPlace<Pheet, CallThreshold>::wait_for_finish(StackElement
 			// which is bad for balancing
 			execute_task(di.task, di.stack_element);
 			delete di.task;
-			if(parent->num_spawned == parent->num_finished_remote + 1) {
+			if(finish_stack.unique(parent)) {
 				return;
 			}
 			di = task_storage.pop();
 		}
 
-		if(parent->num_finished_remote + 1 == parent->num_spawned) {
+		if(finish_stack.unique(parent)) {
 			return;
 		}
 		bo.backoff();
 	}
 }
 
-template <class Pheet, uint8_t CallThreshold>
-typename BStrategySchedulerPlace<Pheet, CallThreshold>::StackElement*
-BStrategySchedulerPlace<Pheet, CallThreshold>::create_non_blocking_finish_region(StackElement* parent) {
-	if(freed_stack_elements.empty()) {
-		// Perform cleanup on finish stack
-		empty_stack();
-
-		pheet_assert(stack_filled_left < stack_filled_right);
-
-		if(stack_filled_left >= stack_init_left/* && stack_filled_left < stack_init_right*/) {
-			stack[stack_filled_left].version = 0;
-			++stack_init_left;
-		}
-		else {
-			pheet_assert((stack[stack_filled_left].version & 1) == 1);
-			++(stack[stack_filled_left].version);
-		}
-		pheet_assert((stack[stack_filled_left].version & 1) == 0);
-
-		stack[stack_filled_left].num_finished_remote = 0;
-		// As we create it out of a parent region that is waiting for completion of a single task, we can already add this one task here
-		stack[stack_filled_left].num_spawned = 1;
-		stack[stack_filled_left].parent = parent;
-
-		++stack_filled_left;
-		performance_counters.finish_stack_nonblocking_max.add_value(stack_filled_left);
-
-		return &(stack[stack_filled_left - 1]);
-	}
-	else {
-		StackElement* ret = freed_stack_elements.back();
-		freed_stack_elements.pop_back();
-
-		pheet_assert(ret->num_finished_remote == 0);
-		pheet_assert((ret->version & 1) == 1);
-		++(ret->version);
-		pheet_assert((ret->version & 1) == 0);
-
-		ret->num_spawned = 1;
-		ret->parent = parent;
-
-		return ret;
-	}
-}
-
-/*
- * empty stack but not below limit
- */
-template <class Pheet, uint8_t CallThreshold>
-void BStrategySchedulerPlace<Pheet, CallThreshold>::empty_stack() {
-	pheet_assert(freed_stack_elements.empty());
-
-	while(stack_filled_left > 0) {
-		size_t se = stack_filled_left - 1;
-		if(stack[se].num_spawned == stack[se].num_finished_remote
-				&& (stack[se].version & 1)) {
-	//		finalize_stack_element(&(stack[se]), stack[se].parent);
-
-			stack_filled_left = se;
-
-			// When parent is set to NULL, some thread is finalizing/has finalized this stack element (otherwise we would have an error)
-			// Actually we have to check before whether parent has already been set to NULL, or we might have a race
-		//	pheet_assert(stack[stack_filled_left].parent == NULL);
-		}
-		else {
-			break;
-		}
-	}
-}
-
-template <class Pheet, uint8_t CallThreshold>
-void BStrategySchedulerPlace<Pheet, CallThreshold>::signal_task_completion(StackElement* stack_element) {
-	StackElement* parent = stack_element->parent;
-	size_t version = stack_element->version;
-
-	pheet_assert(stack_element->num_spawned > stack_element->num_finished_remote);
-
-	bool local = stack_element >= stack && (stack_element < (stack + stack_size));
-	if(local) {
-		--(stack_element->num_spawned);
-
-		// Memory fence is unfortunately required to guarantee that some thread finalizes the stack_element
-		// TODO: prove that the fence is enough
-		MEMORY_FENCE();
-	}
-	else {
-		// Increment num_finished_remote of parent
-		SIZET_ATOMIC_ADD(&(stack_element->num_finished_remote), 1);
-	}
-	if(stack_element->num_spawned == stack_element->num_finished_remote) {
-		finalize_stack_element(stack_element, parent, version, local);
-	}
-}
-
-template <class Pheet, uint8_t CallThreshold>
-inline void BStrategySchedulerPlace<Pheet, CallThreshold>::finalize_stack_element(StackElement* element, StackElement* parent, size_t version, bool local) {
-	if(parent != NULL) {
-		// We have to check if we are local too!
-		// (otherwise the owner might already have modified element, and then num_spawned might be 0)
-		// Rarely happens, but it happens!
-		if(local && element->num_spawned == 0) {
-			pheet_assert(element->num_finished_remote == 0);
-			// No tasks processed remotely - no need for atomic ops
-		//	element->parent = NULL;
-			pheet_assert((element->version & 1) == 0);
-			++(element->version);
-			pheet_assert((element->version & 1) == 1);
-			pheet_assert(element->version == version + 1);
-			pheet_assert(element >= stack && (element < (stack + stack_size)));
-			if((unsigned)(element - stack) + 1 == stack_filled_left) {
-				--stack_filled_left;
-			}
-			else {
-				freed_stack_elements.push_back(element);
-			}
-			signal_task_completion(parent);
-		}
-		else {
-			pheet_assert((version & 1) == 0);
-			if(SIZET_CAS(&(element->version), version, version + 1)) {
-				signal_task_completion(parent);
-			}
-		}
-	}
-/*	else {
-		// Root element - we can shut down the scheduler
-		scheduler_state->current_state = 2;
-	}*/
-}
-
-template <class Pheet, uint8_t CallThreshold>
-void BStrategySchedulerPlace<Pheet, CallThreshold>::start_finish_region() {
+template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
+void BStrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::start_finish_region() {
 	performance_counters.task_time.stop_timer();
 	performance_counters.num_finishes.incr();
 
+	current_task_parent = finish_stack.create_blocking(current_task_parent);
+
+	/*
 	// Perform cleanup on left side of finish stack
 	// Not allowed any more. may only be called if freed_stack_elements is empty
 //	empty_stack();
@@ -640,22 +484,27 @@ void BStrategySchedulerPlace<Pheet, CallThreshold>::start_finish_region() {
 		stack[stack_filled_right].parent = current_task_parent;
 		stack[stack_filled_right].reused_finish_depth = 0;
 
-		// version not needed for finish, as finish blocks anyway
-	/*
-		if(stack_filled_right >= stack_init_left && stack_filled_right < stack_init_right) {
-			stack[stack_filled_left].version = 0;
-			--stack_init_right;
-		}*/
-
 		current_task_parent = stack + stack_filled_right;
 	}
+*/
+
 	performance_counters.task_time.start_timer();
 }
 
-template <class Pheet, uint8_t CallThreshold>
-void BStrategySchedulerPlace<Pheet, CallThreshold>::end_finish_region() {
+template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
+void BStrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::end_finish_region() {
 	performance_counters.task_time.stop_timer();
 
+	// Make backup of parent since parent might change while waiting
+	StackElement* parent = current_task_parent;
+
+	// Process other tasks until this task has been finished
+	wait_for_finish(parent);
+
+	// Restore old parent
+	current_task_parent = finish_stack.destroy_blocking(parent);
+
+	/*
 	// Make sure current_task_parent has the correct value
 	pheet_assert(current_task_parent == &(stack[stack_filled_right]));
 
@@ -678,12 +527,14 @@ void BStrategySchedulerPlace<Pheet, CallThreshold>::end_finish_region() {
 		// Remove stack element
 		++stack_filled_right;
 	}
+	*/
+
 	performance_counters.task_time.start_timer();
 }
 
-template <class Pheet, uint8_t CallThreshold>
+template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
 template<class CallTaskType, typename ... TaskParams>
-void BStrategySchedulerPlace<Pheet, CallThreshold>::finish(TaskParams&& ... params) {
+void BStrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::finish(TaskParams&& ... params) {
 	start_finish_region();
 
 	call<CallTaskType>(std::forward<TaskParams&&>(params) ...);
@@ -691,9 +542,9 @@ void BStrategySchedulerPlace<Pheet, CallThreshold>::finish(TaskParams&& ... para
 	end_finish_region();
 }
 
-template <class Pheet, uint8_t CallThreshold>
+template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
 template<typename F, typename ... TaskParams>
-void BStrategySchedulerPlace<Pheet, CallThreshold>::finish(F&& f, TaskParams&& ... params) {
+void BStrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::finish(F&& f, TaskParams&& ... params) {
 	start_finish_region();
 
 	call(f, std::forward<TaskParams&&>(params) ...);
@@ -701,21 +552,21 @@ void BStrategySchedulerPlace<Pheet, CallThreshold>::finish(F&& f, TaskParams&& .
 	end_finish_region();
 }
 
-template <class Pheet, uint8_t CallThreshold>
+template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
 template<class CallTaskType, typename ... TaskParams>
-void BStrategySchedulerPlace<Pheet, CallThreshold>::spawn(TaskParams&& ... params) {
+void BStrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::spawn(TaskParams&& ... params) {
 	spawn_s<CallTaskType>(BaseStrategy(), std::forward<TaskParams&&>(params) ...);
 }
 
-template <class Pheet, uint8_t CallThreshold>
+template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
 template<typename F, typename ... TaskParams>
-void BStrategySchedulerPlace<Pheet, CallThreshold>::spawn(F&& f, TaskParams&& ... params) {
+void BStrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::spawn(F&& f, TaskParams&& ... params) {
 	spawn_s(BaseStrategy(), f, std::forward<TaskParams&&>(params) ...);
 }
 
-template <class Pheet, uint8_t CallThreshold>
+template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
 template<class Strategy>
-inline bool BStrategySchedulerPlace<Pheet, CallThreshold>::spawn_to_call_check(Strategy&& s) {
+inline bool BStrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::spawn_to_call_check(Strategy&& s) {
 	size_t weight = (s.get_transitive_weight());
 	size_t current_tasks = task_storage.size();
 	size_t threshold = (current_tasks * current_tasks);
@@ -723,9 +574,9 @@ inline bool BStrategySchedulerPlace<Pheet, CallThreshold>::spawn_to_call_check(S
 	return weight <= threshold;
 }
 
-template <class Pheet, uint8_t CallThreshold>
+template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
 template<class CallTaskType, class Strategy, typename ... TaskParams>
-inline void BStrategySchedulerPlace<Pheet, CallThreshold>::spawn_s(Strategy&& s, TaskParams&& ... params) {
+inline void BStrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::spawn_s(Strategy&& s, TaskParams&& ... params) {
 	performance_counters.num_spawns.incr();
 
 	if(task_storage.is_full()) {
@@ -741,8 +592,7 @@ inline void BStrategySchedulerPlace<Pheet, CallThreshold>::spawn_s(Strategy&& s,
 			performance_counters.num_actual_spawns.incr();
 			CallTaskType* task = new CallTaskType(params ...);
 			pheet_assert(current_task_parent != NULL);
-			pheet_assert(current_task_parent >= stack && (current_task_parent < (stack + stack_size)));
-			++(current_task_parent->num_spawned);
+			finish_stack.spawn(current_task_parent);
 			TaskStorageItem di;
 			di.task = task;
 			di.stack_element = current_task_parent;
@@ -755,9 +605,9 @@ inline void BStrategySchedulerPlace<Pheet, CallThreshold>::spawn_s(Strategy&& s,
 	}
 }
 
-template <class Pheet, uint8_t CallThreshold>
+template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
 template<class Strategy, typename F, typename ... TaskParams>
-inline void BStrategySchedulerPlace<Pheet, CallThreshold>::spawn_s(Strategy&& s, F&& f, TaskParams&& ... params) {
+inline void BStrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::spawn_s(Strategy&& s, F&& f, TaskParams&& ... params) {
 	performance_counters.num_spawns.incr();
 
 	if(task_storage.is_full()) {
@@ -776,8 +626,7 @@ inline void BStrategySchedulerPlace<Pheet, CallThreshold>::spawn_s(Strategy&& s,
 
 			FunctorTask<decltype(bound)>* task = new FunctorTask<decltype(bound)>(bound);
 			pheet_assert(current_task_parent != NULL);
-			pheet_assert(current_task_parent >= stack && (current_task_parent < (stack + stack_size)));
-			++(current_task_parent->num_spawned);
+			finish_stack.spawn(current_task_parent);
 			TaskStorageItem di;
 			di.task = task;
 			di.stack_element = current_task_parent;
@@ -790,9 +639,9 @@ inline void BStrategySchedulerPlace<Pheet, CallThreshold>::spawn_s(Strategy&& s,
 	}
 }
 
-template <class Pheet, uint8_t CallThreshold>
+template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
 template<class CallTaskType, typename ... TaskParams>
-void BStrategySchedulerPlace<Pheet, CallThreshold>::call(TaskParams&& ... params) {
+void BStrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::call(TaskParams&& ... params) {
 	performance_counters.num_calls.incr();
 	// Create task
 	CallTaskType task(std::forward<TaskParams&&>(params) ...);
@@ -800,16 +649,16 @@ void BStrategySchedulerPlace<Pheet, CallThreshold>::call(TaskParams&& ... params
 	task();
 }
 
-template <class Pheet, uint8_t CallThreshold>
+template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
 template<typename F, typename ... TaskParams>
-void BStrategySchedulerPlace<Pheet, CallThreshold>::call(F&& f, TaskParams&& ... params) {
+void BStrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::call(F&& f, TaskParams&& ... params) {
 	performance_counters.num_calls.incr();
 	// Execute task
 	f(std::forward<TaskParams&&>(params) ...);
 }
 
-template <class Pheet, uint8_t CallThreshold>
-procs_t BStrategySchedulerPlace<Pheet, CallThreshold>::get_distance(Self* other) const {
+template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
+procs_t BStrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::get_distance(Self* other) const {
 	if(other == this) {
 		return 0;
 	}
@@ -825,8 +674,8 @@ procs_t BStrategySchedulerPlace<Pheet, CallThreshold>::get_distance(Self* other)
 }
 
 /*
-template <class Pheet, uint8_t CallThreshold>
-procs_t BStrategySchedulerPlace<Pheet, CallThreshold>::get_distance(Self* other, procs_t max_granularity_level) {
+template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
+procs_t BStrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::get_distance(Self* other, procs_t max_granularity_level) {
 	pheet_assert(max_granularity_level < num_levels);
 
 	procs_t offset = std::max(levels[max_granularity_level].memory_level, other->levels[max_granularity_level].memory_level);
@@ -840,23 +689,18 @@ procs_t BStrategySchedulerPlace<Pheet, CallThreshold>::get_distance(Self* other,
 }
 */
 /*
-template <class Pheet, uint8_t CallThreshold>
-inline procs_t BStrategySchedulerPlace<Pheet, CallThreshold>::get_max_distance() {
+template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
+inline procs_t BStrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::get_max_distance() {
 	return this->levels[num_levels - 1].memory_level - this->levels[0].memory_level;
 }
 */
 /*
-template <class Pheet, uint8_t CallThreshold>
-inline procs_t BStrategySchedulerPlace<Pheet, CallThreshold>::get_max_distance(procs_t max_granularity_level) {
+template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
+inline procs_t BStrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::get_max_distance(procs_t max_granularity_level) {
 	pheet_assert(max_granularity_level < num_levels);
 
 	return this->levels[max_granularity_level].memory_level;
 }*/
-
-template <class Pheet, uint8_t CallThreshold>
-inline procs_t BStrategySchedulerPlace<Pheet, CallThreshold>::get_current_finish_stack_depth() {
-	return stack_size - stack_filled_right;
-}
 
 }
 

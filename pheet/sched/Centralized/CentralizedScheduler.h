@@ -16,6 +16,8 @@
 #include "../common/CPUThreadExecutor.h"
 #include "../../models/MachineModel/BinaryTree/BinaryTreeMachineModel.h"
 
+#include <pheet/ds/FinishStack/MM/MMFinishStack.h>
+
 #include <stdint.h>
 #include <limits>
 
@@ -39,17 +41,17 @@ CentralizedSchedulerState<Pheet>::CentralizedSchedulerState()
 /*
  * May only be used once
  */
-template <class Pheet, template <class P, typename T> class TaskStorageT, uint8_t CallThreshold>
+template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack, uint8_t CallThreshold>
 class CentralizedSchedulerImpl {
 public:
 	typedef typename Pheet::Backoff Backoff;
 	typedef typename Pheet::MachineModel MachineModel;
 	typedef BinaryTreeMachineModel<Pheet, MachineModel> InternalMachineModel;
-	typedef CentralizedSchedulerImpl<Pheet, TaskStorageT, CallThreshold> Self;
+	typedef CentralizedSchedulerImpl<Pheet, TaskStorageT, FinishStack, CallThreshold> Self;
 	typedef SchedulerTask<Pheet> Task;
 	template <typename F>
 		using FunctorTask = SchedulerFunctorTask<Pheet, F>;
-	typedef CentralizedSchedulerPlace<Pheet, TaskStorageT, CallThreshold> Place;
+	typedef CentralizedSchedulerPlace<Pheet, TaskStorageT, FinishStack, CallThreshold> Place;
 	typedef CentralizedSchedulerState<Pheet> State;
 	typedef FinishRegion<Pheet> Finish;
 	typedef typename Place::PerformanceCounters PerformanceCounters;
@@ -57,16 +59,18 @@ public:
 	typedef typename Place::TaskStorage TaskStorage;
 
 	template <class NP>
-	using BT = CentralizedSchedulerImpl<NP, TaskStorageT, CallThreshold>;
+	using BT = CentralizedSchedulerImpl<NP, TaskStorageT, FinishStack, CallThreshold>;
 
 	template<uint8_t NewVal>
-		using WithCallThreshold = CentralizedSchedulerImpl<Pheet, TaskStorageT, NewVal>;
+		using WithCallThreshold = CentralizedSchedulerImpl<Pheet, TaskStorageT, FinishStack, NewVal>;
 	template <template <class, typename> class NewTS>
-	using WithTaskStorage = CentralizedSchedulerImpl<Pheet, NewTS, CallThreshold>;
+	using WithTaskStorage = CentralizedSchedulerImpl<Pheet, NewTS, FinishStack, CallThreshold>;
 	template <template <class, typename, typename> class NewTS>
 		using WithPriorityTaskStorage = Self;
 	template <template <class, typename, template <class, class> class> class NewTS>
 		using WithStrategyTaskStorage = Self;
+	template <template <class> class NewFS>
+		using WithFinishStack = CentralizedSchedulerImpl<Pheet, TaskStorageT, NewFS, CallThreshold>;
 
 	/*
 	 * Uses complete machine
@@ -127,14 +131,14 @@ private:
 	PerformanceCounters performance_counters;
 };
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, uint8_t CallThreshold>
-char const CentralizedSchedulerImpl<Pheet, TaskStorageT, CallThreshold>::name[] = "CentralizedScheduler";
+template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack, uint8_t CallThreshold>
+char const CentralizedSchedulerImpl<Pheet, TaskStorageT, FinishStack, CallThreshold>::name[] = "CentralizedScheduler";
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, uint8_t CallThreshold>
-procs_t const CentralizedSchedulerImpl<Pheet, TaskStorageT, CallThreshold>::max_cpus = std::numeric_limits<procs_t>::max() >> 1;
+template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack, uint8_t CallThreshold>
+procs_t const CentralizedSchedulerImpl<Pheet, TaskStorageT, FinishStack, CallThreshold>::max_cpus = std::numeric_limits<procs_t>::max() >> 1;
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, uint8_t CallThreshold>
-CentralizedSchedulerImpl<Pheet, TaskStorageT, CallThreshold>::CentralizedSchedulerImpl()
+template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack, uint8_t CallThreshold>
+CentralizedSchedulerImpl<Pheet, TaskStorageT, FinishStack, CallThreshold>::CentralizedSchedulerImpl()
 : num_places(machine_model.get_num_leaves()) {
 
 	places = new Place*[num_places];
@@ -142,8 +146,8 @@ CentralizedSchedulerImpl<Pheet, TaskStorageT, CallThreshold>::CentralizedSchedul
 	places[0]->prepare_root();
 }
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, uint8_t CallThreshold>
-CentralizedSchedulerImpl<Pheet, TaskStorageT, CallThreshold>::CentralizedSchedulerImpl(typename Place::PerformanceCounters& performance_counters)
+template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack, uint8_t CallThreshold>
+CentralizedSchedulerImpl<Pheet, TaskStorageT, FinishStack, CallThreshold>::CentralizedSchedulerImpl(typename Place::PerformanceCounters& performance_counters)
 : num_places(machine_model.get_num_leaves()) {
 
 	places = new Place*[num_places];
@@ -151,8 +155,8 @@ CentralizedSchedulerImpl<Pheet, TaskStorageT, CallThreshold>::CentralizedSchedul
 	places[0]->prepare_root();
 }
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, uint8_t CallThreshold>
-CentralizedSchedulerImpl<Pheet, TaskStorageT, CallThreshold>::CentralizedSchedulerImpl(procs_t num_places)
+template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack, uint8_t CallThreshold>
+CentralizedSchedulerImpl<Pheet, TaskStorageT, FinishStack, CallThreshold>::CentralizedSchedulerImpl(procs_t num_places)
 : num_places(num_places) {
 
 	places = new Place*[num_places];
@@ -160,8 +164,8 @@ CentralizedSchedulerImpl<Pheet, TaskStorageT, CallThreshold>::CentralizedSchedul
 	places[0]->prepare_root();
 }
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, uint8_t CallThreshold>
-CentralizedSchedulerImpl<Pheet, TaskStorageT, CallThreshold>::CentralizedSchedulerImpl(procs_t num_places, typename Place::PerformanceCounters& performance_counters)
+template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack, uint8_t CallThreshold>
+CentralizedSchedulerImpl<Pheet, TaskStorageT, FinishStack, CallThreshold>::CentralizedSchedulerImpl(procs_t num_places, typename Place::PerformanceCounters& performance_counters)
 : num_places(num_places) {
 
 	places = new Place*[num_places];
@@ -169,92 +173,92 @@ CentralizedSchedulerImpl<Pheet, TaskStorageT, CallThreshold>::CentralizedSchedul
 	places[0]->prepare_root();
 }
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, uint8_t CallThreshold>
-CentralizedSchedulerImpl<Pheet, TaskStorageT, CallThreshold>::~CentralizedSchedulerImpl() {
+template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack, uint8_t CallThreshold>
+CentralizedSchedulerImpl<Pheet, TaskStorageT, FinishStack, CallThreshold>::~CentralizedSchedulerImpl() {
 	delete places[0];
 	delete[] places;
 }
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, uint8_t CallThreshold>
-void CentralizedSchedulerImpl<Pheet, TaskStorageT, CallThreshold>::print_name() {
+template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack, uint8_t CallThreshold>
+void CentralizedSchedulerImpl<Pheet, TaskStorageT, FinishStack, CallThreshold>::print_name() {
 	std::cout << name  << "<";
 	Place::TaskStorage::print_name();
 	std::cout << ", " << (int)CallThreshold << ">";
 }
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, uint8_t CallThreshold>
-typename CentralizedSchedulerImpl<Pheet, TaskStorageT, CallThreshold>::Place*
-CentralizedSchedulerImpl<Pheet, TaskStorageT, CallThreshold>::get_place() {
+template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack, uint8_t CallThreshold>
+typename CentralizedSchedulerImpl<Pheet, TaskStorageT, FinishStack, CallThreshold>::Place*
+CentralizedSchedulerImpl<Pheet, TaskStorageT, FinishStack, CallThreshold>::get_place() {
 	return Place::get();
 }
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, uint8_t CallThreshold>
-procs_t CentralizedSchedulerImpl<Pheet, TaskStorageT, CallThreshold>::get_place_id() {
+template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack, uint8_t CallThreshold>
+procs_t CentralizedSchedulerImpl<Pheet, TaskStorageT, FinishStack, CallThreshold>::get_place_id() {
 	return Place::get()->get_id();
 }
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, uint8_t CallThreshold>
-typename CentralizedSchedulerImpl<Pheet, TaskStorageT, CallThreshold>::Place*
-CentralizedSchedulerImpl<Pheet, TaskStorageT, CallThreshold>::get_place_at(procs_t place_id) {
+template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack, uint8_t CallThreshold>
+typename CentralizedSchedulerImpl<Pheet, TaskStorageT, FinishStack, CallThreshold>::Place*
+CentralizedSchedulerImpl<Pheet, TaskStorageT, FinishStack, CallThreshold>::get_place_at(procs_t place_id) {
 	pheet_assert(place_id < num_places);
 	return places[place_id];
 }
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, uint8_t CallThreshold>
+template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack, uint8_t CallThreshold>
 template<class CallTaskType, typename ... TaskParams>
-void CentralizedSchedulerImpl<Pheet, TaskStorageT, CallThreshold>::finish(TaskParams&& ... params) {
+void CentralizedSchedulerImpl<Pheet, TaskStorageT, FinishStack, CallThreshold>::finish(TaskParams&& ... params) {
 	Place* p = get_place();
 	pheet_assert(p != NULL);
 	p->template finish<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 }
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, uint8_t CallThreshold>
+template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack, uint8_t CallThreshold>
 template<typename F, typename ... TaskParams>
-void CentralizedSchedulerImpl<Pheet, TaskStorageT, CallThreshold>::finish(F&& f, TaskParams&& ... params) {
+void CentralizedSchedulerImpl<Pheet, TaskStorageT, FinishStack, CallThreshold>::finish(F&& f, TaskParams&& ... params) {
 	Place* p = get_place();
 	pheet_assert(p != NULL);
 	p->finish(f, std::forward<TaskParams&&>(params) ...);
 }
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, uint8_t CallThreshold>
+template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack, uint8_t CallThreshold>
 template<class CallTaskType, typename ... TaskParams>
-void CentralizedSchedulerImpl<Pheet, TaskStorageT, CallThreshold>::spawn(TaskParams&& ... params) {
+void CentralizedSchedulerImpl<Pheet, TaskStorageT, FinishStack, CallThreshold>::spawn(TaskParams&& ... params) {
 	Place* p = get_place();
 	pheet_assert(p != NULL);
 	p->template spawn<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 }
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, uint8_t CallThreshold>
+template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack, uint8_t CallThreshold>
 template<typename F, typename ... TaskParams>
-void CentralizedSchedulerImpl<Pheet, TaskStorageT, CallThreshold>::spawn(F&& f, TaskParams&& ... params) {
+void CentralizedSchedulerImpl<Pheet, TaskStorageT, FinishStack, CallThreshold>::spawn(F&& f, TaskParams&& ... params) {
 	Place* p = get_place();
 	pheet_assert(p != NULL);
 	p->spawn(f, std::forward<TaskParams&&>(params) ...);
 }
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, uint8_t CallThreshold>
+template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack, uint8_t CallThreshold>
 template<class CallTaskType, class Strategy, typename ... TaskParams>
-void CentralizedSchedulerImpl<Pheet, TaskStorageT, CallThreshold>::spawn_prio(Strategy s, TaskParams&& ... params) {
+void CentralizedSchedulerImpl<Pheet, TaskStorageT, FinishStack, CallThreshold>::spawn_prio(Strategy s, TaskParams&& ... params) {
 	spawn<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 }
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, uint8_t CallThreshold>
+template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack, uint8_t CallThreshold>
 template<class Strategy, typename F, typename ... TaskParams>
-void CentralizedSchedulerImpl<Pheet, TaskStorageT, CallThreshold>::spawn_prio(Strategy s, F&& f, TaskParams&& ... params) {
+void CentralizedSchedulerImpl<Pheet, TaskStorageT, FinishStack, CallThreshold>::spawn_prio(Strategy s, F&& f, TaskParams&& ... params) {
 	spawn(f, std::forward<TaskParams&&>(params) ...);
 }
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, uint8_t CallThreshold>
+template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack, uint8_t CallThreshold>
 template<class CallTaskType, typename ... TaskParams>
-void CentralizedSchedulerImpl<Pheet, TaskStorageT, CallThreshold>::call(TaskParams&& ... params) {
+void CentralizedSchedulerImpl<Pheet, TaskStorageT, FinishStack, CallThreshold>::call(TaskParams&& ... params) {
 	Place* p = get_place();
 	pheet_assert(p != NULL);
 	p->template call<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 }
 
-template <class Pheet, template <class P, typename T> class TaskStorageT, uint8_t CallThreshold>
+template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack, uint8_t CallThreshold>
 template<typename F, typename ... TaskParams>
-void CentralizedSchedulerImpl<Pheet, TaskStorageT, CallThreshold>::call(F&& f, TaskParams&& ... params) {
+void CentralizedSchedulerImpl<Pheet, TaskStorageT, FinishStack, CallThreshold>::call(F&& f, TaskParams&& ... params) {
 	Place* p = get_place();
 	pheet_assert(p != NULL);
 	p->call(f, std::forward<TaskParams&&>(params) ...);
@@ -264,7 +268,7 @@ template<class Pheet, typename T>
 using CentralizedSchedulerDefaultTaskStorageT = typename Pheet::CDS::template Stack<T>;
 
 template<class Pheet>
-using CentralizedScheduler = CentralizedSchedulerImpl<Pheet, CentralizedSchedulerDefaultTaskStorageT, 3>;
+using CentralizedScheduler = CentralizedSchedulerImpl<Pheet, CentralizedSchedulerDefaultTaskStorageT, MMFinishStack, 3>;
 
 }
 

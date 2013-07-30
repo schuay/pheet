@@ -17,11 +17,11 @@
 
 namespace pheet {
 
-template <class Pheet, class TaskStoragePerformanceCounters>
+template <class Pheet, class TaskStoragePerformanceCounters, class FinishStackPerformanceCounters>
 class BStrategySchedulerPerformanceCounters {
 public:
 	BStrategySchedulerPerformanceCounters() {}
-	BStrategySchedulerPerformanceCounters(BStrategySchedulerPerformanceCounters<Pheet, TaskStoragePerformanceCounters>& other)
+	BStrategySchedulerPerformanceCounters(BStrategySchedulerPerformanceCounters<Pheet, TaskStoragePerformanceCounters, FinishStackPerformanceCounters>& other)
 		: num_spawns(other.num_spawns), num_actual_spawns(other.num_actual_spawns),
 		  num_spawns_to_call(other.num_spawns_to_call),
 		  num_calls(other.num_calls), num_finishes(other.num_finishes),
@@ -29,9 +29,8 @@ public:
 		  num_unsuccessful_steal_calls(other.num_unsuccessful_steal_calls),
 		  total_time(other.total_time), task_time(other.task_time),
 		  idle_time(other.idle_time), steal_time(other.steal_time),
-		  finish_stack_nonblocking_max(other.finish_stack_nonblocking_max),
-		  finish_stack_blocking_min(other.finish_stack_blocking_min),
-		  task_storage_performance_counters(other.task_storage_performance_counters)
+		  task_storage_performance_counters(other.task_storage_performance_counters),
+		  finish_stack_performance_counters(other.finish_stack_performance_counters)
 		  {}
 
 	static void print_headers();
@@ -52,14 +51,12 @@ public:
 	TimePerformanceCounter<Pheet, scheduler_measure_idle_time> idle_time;
 	TimePerformanceCounter<Pheet, scheduler_measure_idle_time> steal_time;
 
-	MaxPerformanceCounter<Pheet, size_t, scheduler_measure_finish_stack_nonblocking_max> finish_stack_nonblocking_max;
-	MinPerformanceCounter<Pheet, size_t, scheduler_measure_finish_stack_blocking_min> finish_stack_blocking_min;
-
 	TaskStoragePerformanceCounters task_storage_performance_counters;
+	FinishStackPerformanceCounters finish_stack_performance_counters;
 };
 
-template <class Pheet, class TaskStoragePerformanceCounters>
-inline void BStrategySchedulerPerformanceCounters<Pheet, TaskStoragePerformanceCounters>::print_headers() {
+template <class Pheet, class TaskStoragePerformanceCounters, class FinishStackPerformanceCounters>
+inline void BStrategySchedulerPerformanceCounters<Pheet, TaskStoragePerformanceCounters, FinishStackPerformanceCounters>::print_headers() {
 	BasicPerformanceCounter<Pheet, scheduler_count_spawns>::print_header("spawns\t");
 	BasicPerformanceCounter<Pheet, scheduler_count_actual_spawns>::print_header("actual_spawns\t");
 	BasicPerformanceCounter<Pheet, scheduler_count_calls>::print_header("calls\t");
@@ -74,14 +71,12 @@ inline void BStrategySchedulerPerformanceCounters<Pheet, TaskStoragePerformanceC
 	TimePerformanceCounter<Pheet, scheduler_measure_idle_time>::print_header("total_idle_time\t");
 	TimePerformanceCounter<Pheet, scheduler_measure_steal_time>::print_header("total_steal_time\t");
 
-	MaxPerformanceCounter<Pheet, size_t, scheduler_measure_finish_stack_nonblocking_max>::print_header("finish_stack_nonblocking_max\t");
-	MinPerformanceCounter<Pheet, size_t, scheduler_measure_finish_stack_blocking_min>::print_header("finish_stack_blocking_min\t");
-
 	TaskStoragePerformanceCounters::print_headers();
+	FinishStackPerformanceCounters::print_headers();
 }
 
-template <class Pheet, class TaskStoragePerformanceCounters>
-inline void BStrategySchedulerPerformanceCounters<Pheet, TaskStoragePerformanceCounters>::print_values() {
+template <class Pheet, class TaskStoragePerformanceCounters, class FinishStackPerformanceCounters>
+inline void BStrategySchedulerPerformanceCounters<Pheet, TaskStoragePerformanceCounters, FinishStackPerformanceCounters>::print_values() {
 	num_spawns.print("%lu\t");
 	num_actual_spawns.print("%lu\t");
 	num_calls.print("%lu\t");
@@ -94,10 +89,8 @@ inline void BStrategySchedulerPerformanceCounters<Pheet, TaskStoragePerformanceC
 	idle_time.print("%f\t");
 	steal_time.print("%f\t");
 
-	finish_stack_nonblocking_max.print("%lu\t");
-	finish_stack_blocking_min.print("%lu\t");
-
 	task_storage_performance_counters.print_values();
+	finish_stack_performance_counters.print_values();
 }
 
 }

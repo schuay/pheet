@@ -1,20 +1,22 @@
 /*
- * BasicFinishStack.h
+ * SaferFinishStack.h
  *
- *  Created on: Jul 17, 2013
+ *  Created on: Jul 30, 2013
  *      Author: Martin Wimmer
  *	   License: Boost Software License 1.0
  */
 
-#ifndef BASICFINISHSTACK_H_
-#define BASICFINISHSTACK_H_
+#ifndef SAFERFINISHSTACK_H_
+#define SAFERFINISHSTACK_H_
 
 #include <atomic>
-#include "BasicFinishStackPerformanceCounters.h"
+#include <vector>
+
+#include "SaferFinishStackPerformanceCounters.h"
 
 namespace pheet {
 
-struct BasicFinishStackElement {
+struct SaferFinishStackElement {
 	// Modified by local thread. Incremented when task is spawned, decremented when finished
 	std::atomic<size_t> num_spawned;
 
@@ -22,26 +24,30 @@ struct BasicFinishStackElement {
 	std::atomic<size_t> num_finished_remote;
 
 	// Pointer to num_finished_remote of another thread (the one we stole tasks from)
-	BasicFinishStackElement* parent;
+	SaferFinishStackElement* parent;
 
 	// Counter to update atomically when finalizing this element (ABA problem)
 	std::atomic<size_t> version;
 };
 
+/*
+ * Similar to BasicFinishStack, but is less likely to run out of bounds with task execution orders
+ * other than LIFO
+ */
 template <class Pheet, size_t StackSize>
-class BasicFinishStackImpl {
+class SaferFinishStackImpl {
 public:
-	typedef BasicFinishStackElement Element;
-	typedef BasicFinishStackPerformanceCounters<Pheet> PerformanceCounters;
+	typedef SaferFinishStackElement Element;
+	typedef SaferFinishStackPerformanceCounters<Pheet> PerformanceCounters;
 
-	BasicFinishStackImpl()
+	SaferFinishStackImpl()
 	: stack_filled_left(0),
 	  stack_filled_right(StackSize),
 	  stack_init_left(0) {
 
 	}
 
-	BasicFinishStackImpl(PerformanceCounters& pcs)
+	SaferFinishStackImpl(PerformanceCounters& pcs)
 	: performance_counters(pcs),
 	  stack_filled_left(0),
 	  stack_filled_right(StackSize),
@@ -49,7 +55,7 @@ public:
 
 	}
 
-	~BasicFinishStackImpl() {
+	~SaferFinishStackImpl() {
 
 	}
 
@@ -157,6 +163,8 @@ private:
 	}
 
 	void empty_stack() {
+		pheet_assert(reuse.empty());
+
 		while(stack_filled_left > 0) {
 			size_t se = stack_filled_left - 1;
 			if((stack[se].version.load(std::memory_order_relaxed) & 1)) {
@@ -180,11 +188,15 @@ private:
 			//	element->parent = NULL;
 				// No races when writing
 				element->version.store(version + 1, std::memory_order_relaxed);
+				reuse.push_back(element);
 				performance_counters.num_chained_completion_signals.incr();
 				signal_completion(parent);
 			}
 			else {
 				if(element->version.compare_exchange_strong(version, version + 1, std::memory_order_release, std::memory_order_relaxed)) {
+					if(local) {
+						reuse.push_back(element);
+					}
 					performance_counters.num_chained_completion_signals.incr();
 					performance_counters.num_remote_chained_completion_signals.incr();
 					signal_completion(parent);
@@ -199,36 +211,50 @@ private:
 
 		performance_counters.num_non_blocking_finish_regions.incr();
 
-		// Perform cleanup on finish stack
-		empty_stack();
+		Element* el;
 
-		pheet_assert(stack_filled_left < stack_filled_right);
+		if(!reuse.empty()) {
+			el = reuse.back();
+			reuse.pop_back();
 
-		// As we create it out of a parent region that is waiting for completion of a single task, we can already add this one task here
-		stack[stack_filled_left].num_spawned.store(1, std::memory_order_relaxed);
-		stack[stack_filled_left].parent = parent;
-
-		if(stack_filled_left >= stack_init_left) {
-			stack[stack_filled_left].version.store(0, std::memory_order_relaxed);
-			++stack_init_left;
+			size_t v = el->version.load(std::memory_order_relaxed);
+			pheet_assert(v & 1);
+			el->version.store(v + 1, std::memory_order_relaxed);
 		}
 		else {
-			size_t v = stack[stack_filled_left].version.load(std::memory_order_relaxed);
-			stack[stack_filled_left].version.store(v + 1, std::memory_order_relaxed);
+			// Perform cleanup on finish stack
+			empty_stack();
+
+			pheet_assert(stack_filled_left < stack_filled_right);
+
+			el = stack + stack_filled_left;
+
+			if(stack_filled_left >= stack_init_left) {
+				el->version.store(0, std::memory_order_relaxed);
+				++stack_init_left;
+			}
+			else {
+				size_t v = el->version.load(std::memory_order_relaxed);
+				el->version.store(v + 1, std::memory_order_relaxed);
+			}
+			++stack_filled_left;
 		}
 
-		stack[stack_filled_left].num_finished_remote.store(0, std::memory_order_relaxed);
+		// As we create it out of a parent region that is waiting for completion of a single task, we can already add this one task here
+		el->num_spawned.store(1, std::memory_order_relaxed);
+		el->parent = parent;
+		el->num_finished_remote.store(0, std::memory_order_relaxed);
 
-		pheet_assert((stack[stack_filled_left].version & 1) == 0);
+		pheet_assert((el->version & 1) == 0);
 
-		++stack_filled_left;
 		performance_counters.finish_stack_nonblocking_max.add_value(stack_filled_left);
 
-		return &(stack[stack_filled_left - 1]);
+		return el;
 	}
 
 	PerformanceCounters performance_counters;
 
+	std::vector<Element*> reuse;
 	Element stack[StackSize];
 
 	size_t stack_filled_left;
@@ -237,8 +263,7 @@ private:
 };
 
 template <class Pheet>
-using BasicFinishStack = BasicFinishStackImpl<Pheet, 8192>;
-
+using SaferFinishStack = SaferFinishStackImpl<Pheet, 8192>;
 
 } /* namespace pheet */
-#endif /* BASICFINISHSTACK_H_ */
+#endif /* SAFERFINISHSTACK_H_ */

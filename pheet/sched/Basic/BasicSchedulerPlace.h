@@ -84,7 +84,7 @@ public:
 	typedef typename FinishStack::Element StackElement;
 	typedef BasicSchedulerPlaceDequeItem<Pheet> DequeItem;
 	typedef StealingDequeT<Pheet, DequeItem> StealingDeque;
-	typedef BasicSchedulerPerformanceCounters<Pheet, typename StealingDeque::PerformanceCounters> PerformanceCounters;
+	typedef BasicSchedulerPerformanceCounters<Pheet, typename StealingDeque::PerformanceCounters, typename FinishStack::PerformanceCounters> PerformanceCounters;
 	typedef typename Pheet::Scheduler::InternalMachineModel InternalMachineModel;
 
 	BasicSchedulerPlace(InternalMachineModel model, Place** places, procs_t num_places, typename Pheet::Scheduler::State* scheduler_state, PerformanceCounters& perf_count);
@@ -145,7 +145,6 @@ private:
 	procs_t num_levels;
 	LevelDescription* levels;
 
-	FinishStack finish_stack;
 	StackElement* current_task_parent;
 
 	typename Pheet::Scheduler::State* scheduler_state;
@@ -156,6 +155,7 @@ private:
 	size_t max_queue_length;
 	bool call_mode;
 	StealingDeque stealing_deque;
+	FinishStack finish_stack;
 
 	CPUThreadExecutor<Self> thread_executor;
 
@@ -181,6 +181,7 @@ BasicSchedulerPlace<Pheet, StealingDequeT, FinishStackT, CallThreshold>::BasicSc
   preferred_queue_length(find_last_bit_set(num_places) << CallThreshold),
   max_queue_length(preferred_queue_length << 1),
   call_mode(false), stealing_deque(max_queue_length, performance_counters.stealing_deque_performance_counters),
+  finish_stack(performance_counters.finish_stack_performance_counters),
   thread_executor(this),
   task_id(0){
 
@@ -210,6 +211,7 @@ BasicSchedulerPlace<Pheet, StealingDequeT, FinishStackT, CallThreshold>::BasicSc
   preferred_queue_length(find_last_bit_set(levels[0].size) << CallThreshold),
   max_queue_length(preferred_queue_length << 1),
   call_mode(false), stealing_deque(max_queue_length, performance_counters.stealing_deque_performance_counters),
+  finish_stack(performance_counters.finish_stack_performance_counters),
   thread_executor(this) {
 
 	memcpy(this->levels, levels, sizeof(LevelDescription) * num_initialized_levels);
@@ -409,6 +411,7 @@ void BasicSchedulerPlace<Pheet, StealingDequeT, FinishStackT, CallThreshold>::ex
 	(*task)();
 	performance_counters.task_time.stop_timer();
 
+	// Check whether current_task_parent still is parent (if not, there is some error)
 	pheet_assert(current_task_parent == parent);
 
 	// Signal that we finished executing this task
@@ -625,7 +628,7 @@ void BasicSchedulerPlace<Pheet, StealingDequeT, FinishStackT, CallThreshold>::sp
 
 		CallTaskType* task = new CallTaskType(params ...);
 		pheet_assert(current_task_parent != NULL);
-		++(current_task_parent->num_spawned);
+		finish_stack.spawn(current_task_parent);
 		DequeItem di;
 		di.task = task;
 		di.stack_element = current_task_parent;
@@ -652,7 +655,7 @@ void BasicSchedulerPlace<Pheet, StealingDequeT, FinishStackT, CallThreshold>::sp
 
 		FunctorTask<decltype(bound)>* task = new FunctorTask<decltype(bound)>(bound);
 		pheet_assert(current_task_parent != NULL);
-		++(current_task_parent->num_spawned);
+		finish_stack.spawn(current_task_parent);
 		DequeItem di;
 		di.task = task;
 		di.stack_element = current_task_parent;

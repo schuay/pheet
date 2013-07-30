@@ -17,10 +17,10 @@
 
 namespace pheet {
 
-template <class Pheet, class StealingDequePerformanceCounters>
+template <class Pheet, class StealingDequePerformanceCounters, class FinishStackPerformanceCounters>
 class BasicSchedulerPerformanceCounters {
 public:
-	typedef BasicSchedulerPerformanceCounters<Pheet, StealingDequePerformanceCounters> Self;
+	typedef BasicSchedulerPerformanceCounters<Pheet, StealingDequePerformanceCounters, FinishStackPerformanceCounters> Self;
 
 	BasicSchedulerPerformanceCounters() {}
 	BasicSchedulerPerformanceCounters(Self& other)
@@ -40,7 +40,8 @@ public:
 		  idle_time(other.idle_time),
 //		  finish_stack_nonblocking_max(other.finish_stack_nonblocking_max),
 //		  finish_stack_blocking_min(other.finish_stack_blocking_min),
-		  stealing_deque_performance_counters(other.stealing_deque_performance_counters) {}
+		  stealing_deque_performance_counters(other.stealing_deque_performance_counters),
+		  finish_stack_performance_counters(other.finish_stack_performance_counters) {}
 
 	static void print_headers();
 	void print_values();
@@ -72,10 +73,11 @@ public:
 //	MinPerformanceCounter<Pheet, size_t, scheduler_measure_finish_stack_blocking_min> finish_stack_blocking_min;
 
 	StealingDequePerformanceCounters stealing_deque_performance_counters;
+	FinishStackPerformanceCounters finish_stack_performance_counters;
 };
 
-template <class Pheet, class StealingDequePerformanceCounters>
-inline void BasicSchedulerPerformanceCounters<Pheet, StealingDequePerformanceCounters>::print_headers() {
+template <class Pheet, class StealingDequePerformanceCounters, class FinishStackPerformanceCounters>
+inline void BasicSchedulerPerformanceCounters<Pheet, StealingDequePerformanceCounters, FinishStackPerformanceCounters>::print_headers() {
 	BasicPerformanceCounter<Pheet, scheduler_count_spawns>::print_header("spawns\t");
 	BasicPerformanceCounter<Pheet, scheduler_count_actual_spawns>::print_header("actual_spawns\t");
 	BasicPerformanceCounter<Pheet, scheduler_count_spawns_to_call>::print_header("calls\t");
@@ -102,10 +104,11 @@ inline void BasicSchedulerPerformanceCounters<Pheet, StealingDequePerformanceCou
 //	MinPerformanceCounter<Pheet, size_t, scheduler_measure_finish_stack_blocking_min>::print_header("finish_stack_blocking_min\t");
 
 	StealingDequePerformanceCounters::print_headers();
+	FinishStackPerformanceCounters::print_headers();
 }
 
-template <class Pheet, class StealingDequePerformanceCounters>
-inline void BasicSchedulerPerformanceCounters<Pheet, StealingDequePerformanceCounters>::print_values() {
+template <class Pheet, class StealingDequePerformanceCounters, class FinishStackPerformanceCounters>
+inline void BasicSchedulerPerformanceCounters<Pheet, StealingDequePerformanceCounters, FinishStackPerformanceCounters>::print_values() {
 	num_spawns.print("%lu\t");
 	num_actual_spawns.print("%lu\t");
 	num_calls.print("%lu\t");
@@ -129,6 +132,7 @@ inline void BasicSchedulerPerformanceCounters<Pheet, StealingDequePerformanceCou
 //	finish_stack_blocking_min.print("%lu\t");
 
 	stealing_deque_performance_counters.print_values();
+	finish_stack_performance_counters.print_values();
 }
 
 }

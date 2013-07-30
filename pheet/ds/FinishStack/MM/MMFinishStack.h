@@ -1,20 +1,28 @@
 /*
- * BasicFinishStack.h
+ * MMFinishStack.h
  *
- *  Created on: Jul 17, 2013
+ *  Created on: Jul 30, 2013
  *      Author: Martin Wimmer
  *	   License: Boost Software License 1.0
  */
 
-#ifndef BASICFINISHSTACK_H_
-#define BASICFINISHSTACK_H_
+#ifndef MMFINISHSTACK_H_
+#define MMFINISHSTACK_H_
 
 #include <atomic>
-#include "BasicFinishStackPerformanceCounters.h"
+#include <vector>
+
+#include <pheet/memory/BlockItemReuse/BlockItemReuseMemoryManager.h>
+
+#include "MMFinishStackPerformanceCounters.h"
 
 namespace pheet {
 
-struct BasicFinishStackElement {
+template <class Pheet>
+struct MMFinishStackElement {
+	MMFinishStackElement()
+	: version(1), reuse_count(0) {}
+
 	// Modified by local thread. Incremented when task is spawned, decremented when finished
 	std::atomic<size_t> num_spawned;
 
@@ -22,34 +30,46 @@ struct BasicFinishStackElement {
 	std::atomic<size_t> num_finished_remote;
 
 	// Pointer to num_finished_remote of another thread (the one we stole tasks from)
-	BasicFinishStackElement* parent;
+	MMFinishStackElement* parent;
 
 	// Counter to update atomically when finalizing this element (ABA problem)
 	std::atomic<size_t> version;
+
+	// Allows to reuse element if no task was spawned yet
+	size_t reuse_count;
+
+	// Owner of the element
+	typename Pheet::Place* owner;
 };
 
-template <class Pheet, size_t StackSize>
-class BasicFinishStackImpl {
+template <class Element>
+struct MMFinishStackElementReuseCheck {
+	bool operator()(Element& element) {
+		return element.version.load(std::memory_order_relaxed) & 1;
+	}
+};
+
+/*
+ * Similar to BasicFinishStack, but is less likely to run out of bounds with task execution orders
+ * other than LIFO
+ */
+template <class Pheet, template <class, class, class> class MMT>
+class MMFinishStackImpl {
 public:
-	typedef BasicFinishStackElement Element;
-	typedef BasicFinishStackPerformanceCounters<Pheet> PerformanceCounters;
+	typedef MMFinishStackElement<Pheet> Element;
+	typedef MMFinishStackPerformanceCounters<Pheet> PerformanceCounters;
+	typedef MMT<Pheet, Element, MMFinishStackElementReuseCheck<Element> > MM;
 
-	BasicFinishStackImpl()
-	: stack_filled_left(0),
-	  stack_filled_right(StackSize),
-	  stack_init_left(0) {
+	MMFinishStackImpl() {
 
 	}
 
-	BasicFinishStackImpl(PerformanceCounters& pcs)
-	: performance_counters(pcs),
-	  stack_filled_left(0),
-	  stack_filled_right(StackSize),
-	  stack_init_left(0) {
+	MMFinishStackImpl(PerformanceCounters& pcs)
+	: performance_counters(pcs) {
 
 	}
 
-	~BasicFinishStackImpl() {
+	~MMFinishStackImpl() {
 
 	}
 
@@ -57,29 +77,51 @@ public:
 		// All operations can be relaxed, since remote access to the new element can only be
 		// established by a synchronizes-with relationship
 
-		// Perform cleanup on left side of finish stack
-		empty_stack();
+		// Reuse parent if possible
+		if(parent != nullptr && is_local(parent) && parent->num_spawned.load(std::memory_order_relaxed) == 1) {
+			pheet_assert(parent->num_finished_remote.load(std::memory_order_relaxed) == 0);
+			++(parent->reuse_count);
+			return parent;
+		}
 
-		pheet_assert(stack_filled_left < stack_filled_right);
+		Element* el;
+		if(reuse.empty()) {
+			el = &(mm.acquire_item());
+			el->owner = Pheet::get_place();
 
-		--stack_filled_right;
+			performance_counters.num_finish_stack_mm_accesses.incr();
+		}
+		else {
+			el = reuse.back();
+			reuse.pop_back();
+
+			pheet_assert(is_local(el));
+		}
 
 		// As we create it out of a parent region that is waiting for completion of a single task, we can already add this one task here
-		stack[stack_filled_right].num_spawned.store(1, std::memory_order_relaxed);
-		stack[stack_filled_right].parent = parent;
-		stack[stack_filled_right].num_finished_remote.store(0, std::memory_order_relaxed);
+		el->num_spawned.store(1, std::memory_order_relaxed);
+		el->parent = parent;
+		el->num_finished_remote.store(0, std::memory_order_relaxed);
+		auto v = el->version.load(std::memory_order_relaxed);
+		pheet_assert(v & 1);
+		el->version.store(v + 1, std::memory_order_relaxed);
 
-		performance_counters.finish_stack_blocking_min.add_value(stack_filled_right);
-
-		return &(stack[stack_filled_right]);
+		return el;
 	}
 
 	Element* destroy_blocking(Element* element) {
 		pheet_assert(unique(element));
-		pheet_assert(element == stack + stack_filled_right);
+		pheet_assert(element->owner == Pheet::get_place());
+
+		if(element->reuse_count > 0) {
+			--(element->reuse_count);
+			return element;
+		}
 
 		Element* parent = element->parent;
-		++stack_filled_right;
+		auto v = element->version.load(std::memory_order_relaxed);
+		element->version.store(v + 1, std::memory_order_relaxed);
+		reuse.push_back(element);
 
 		return parent;
 	}
@@ -127,7 +169,7 @@ public:
 			r = element->num_finished_remote.fetch_add(1, std::memory_order_seq_cst) + 1;
 			l = element->num_spawned.load(std::memory_order_relaxed);
 		}
-		pheet_assert(l >= r);
+		pheet_assert(l >= r || (!local && element->version.load(std::memory_order_relaxed) != version));
 		if(l == r) {
 			finalize(element, parent, version, local);
 		}
@@ -153,19 +195,7 @@ public:
 
 private:
 	bool is_local(Element* element) {
-		return element >= stack && (element < (stack + StackSize));
-	}
-
-	void empty_stack() {
-		while(stack_filled_left > 0) {
-			size_t se = stack_filled_left - 1;
-			if((stack[se].version.load(std::memory_order_relaxed) & 1)) {
-				stack_filled_left = se;
-			}
-			else {
-				break;
-			}
-		}
+		return element->owner == Pheet::get_place();
 	}
 
 	void finalize(Element* element, Element* parent, size_t version, bool local) {
@@ -175,16 +205,21 @@ private:
 			// Rarely happens, but it happens!
 
 			if(local && element->num_spawned == 0) {
-				pheet_assert(element >= stack && element < (stack + StackSize));
+				pheet_assert(is_local(element));
+				pheet_assert(element->version.load(std::memory_order_relaxed) == version);
 				// No tasks processed remotely - no need for atomic ops
 			//	element->parent = NULL;
 				// No races when writing
 				element->version.store(version + 1, std::memory_order_relaxed);
+				reuse.push_back(element);
 				performance_counters.num_chained_completion_signals.incr();
 				signal_completion(parent);
 			}
-			else {
+			else if(element->version.load(std::memory_order_relaxed) == version) {
 				if(element->version.compare_exchange_strong(version, version + 1, std::memory_order_release, std::memory_order_relaxed)) {
+					if(local) {
+						reuse.push_back(element);
+					}
 					performance_counters.num_chained_completion_signals.incr();
 					performance_counters.num_remote_chained_completion_signals.incr();
 					signal_completion(parent);
@@ -199,46 +234,44 @@ private:
 
 		performance_counters.num_non_blocking_finish_regions.incr();
 
-		// Perform cleanup on finish stack
-		empty_stack();
+		Element* el;
 
-		pheet_assert(stack_filled_left < stack_filled_right);
+		if(reuse.empty()) {
+			el = &(mm.acquire_item());
+			el->owner = Pheet::get_place();
 
-		// As we create it out of a parent region that is waiting for completion of a single task, we can already add this one task here
-		stack[stack_filled_left].num_spawned.store(1, std::memory_order_relaxed);
-		stack[stack_filled_left].parent = parent;
-
-		if(stack_filled_left >= stack_init_left) {
-			stack[stack_filled_left].version.store(0, std::memory_order_relaxed);
-			++stack_init_left;
+			performance_counters.num_finish_stack_mm_accesses.incr();
 		}
 		else {
-			size_t v = stack[stack_filled_left].version.load(std::memory_order_relaxed);
-			stack[stack_filled_left].version.store(v + 1, std::memory_order_relaxed);
+			el = reuse.back();
+			reuse.pop_back();
+
+			pheet_assert(is_local(el));
 		}
 
-		stack[stack_filled_left].num_finished_remote.store(0, std::memory_order_relaxed);
+		// As we create it out of a parent region that is waiting for completion of a single task, we can already add this one task here
+		el->num_spawned.store(1, std::memory_order_relaxed);
+		el->parent = parent;
+		el->num_finished_remote.store(0, std::memory_order_relaxed);
 
-		pheet_assert((stack[stack_filled_left].version & 1) == 0);
+		auto v = el->version.load(std::memory_order_relaxed);
+		pheet_assert(v & 1);
+		el->version.store(v + 1, std::memory_order_relaxed);
 
-		++stack_filled_left;
-		performance_counters.finish_stack_nonblocking_max.add_value(stack_filled_left);
+		pheet_assert((el->version & 1) == 0);
 
-		return &(stack[stack_filled_left - 1]);
+		return el;
 	}
 
 	PerformanceCounters performance_counters;
 
-	Element stack[StackSize];
+	std::vector<Element*> reuse;
 
-	size_t stack_filled_left;
-	size_t stack_filled_right;
-	size_t stack_init_left;
+	MM mm;
 };
 
 template <class Pheet>
-using BasicFinishStack = BasicFinishStackImpl<Pheet, 8192>;
-
+using MMFinishStack = MMFinishStackImpl<Pheet, BlockItemReuseMemoryManager>;
 
 } /* namespace pheet */
-#endif /* BASICFINISHSTACK_H_ */
+#endif /* MMFINISHSTACK_H_ */
