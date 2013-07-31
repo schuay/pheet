@@ -57,13 +57,13 @@ public:
 //	BasicPerformanceCounter<Pheet, scheduler_count_remote_chained_completion_signals> num_remote_chained_completion_signals;
 //	BasicPerformanceCounter<Pheet, scheduler_count_non_blocking_finish_regions> num_non_blocking_finish_regions;
 
-	BasicPerformanceCounter<Pheet, stealing_deque_count_steals> num_steals;
-	BasicPerformanceCounter<Pheet, stealing_deque_count_steal_calls> num_steal_calls;
-	BasicPerformanceCounter<Pheet, stealing_deque_count_unsuccessful_steal_calls> num_unsuccessful_steal_calls;
-	BasicPerformanceCounter<Pheet, stealing_deque_count_pop_cas> num_stealing_deque_pop_cas;
+	BasicPerformanceCounter<Pheet, task_storage_count_steals> num_steals;
+	BasicPerformanceCounter<Pheet, task_storage_count_steal_calls> num_steal_calls;
+	BasicPerformanceCounter<Pheet, task_storage_count_unsuccessful_steal_calls> num_unsuccessful_steal_calls;
+	BasicPerformanceCounter<Pheet, task_storage_count_pop_cas> num_stealing_deque_pop_cas;
 
-	BasicPerformanceCounter<Pheet, stealing_deque_count_dequeued_tasks> num_dequeued_tasks;
-	BasicPerformanceCounter<Pheet, stealing_deque_count_steal_executed_tasks> num_steal_executed_tasks;
+	BasicPerformanceCounter<Pheet, task_storage_count_dequeued_tasks> num_dequeued_tasks;
+	BasicPerformanceCounter<Pheet, task_storage_count_steal_executed_tasks> num_steal_executed_tasks;
 
 	TimePerformanceCounter<Pheet, scheduler_measure_total_time> total_time;
 	TimePerformanceCounter<Pheet, scheduler_measure_task_time> task_time;
@@ -88,13 +88,13 @@ inline void BasicSchedulerPerformanceCounters<Pheet, StealingDequePerformanceCou
 //	BasicPerformanceCounter<Pheet, scheduler_count_remote_chained_completion_signals>::print_header("num_remote_chained_completion_signals\t");
 //	BasicPerformanceCounter<Pheet, scheduler_count_non_blocking_finish_regions>::print_header("num_non_blocking_finish_regions\t");
 
-	BasicPerformanceCounter<Pheet, stealing_deque_count_steals>::print_header("stolen\t");
-	BasicPerformanceCounter<Pheet, stealing_deque_count_steal_calls>::print_header("steal_calls\t");
-	BasicPerformanceCounter<Pheet, stealing_deque_count_unsuccessful_steal_calls>::print_header("unsuccessful_steal_calls\t");
-	BasicPerformanceCounter<Pheet, stealing_deque_count_pop_cas>::print_header("stealing_deque_pop_cas\t");
+	BasicPerformanceCounter<Pheet, task_storage_count_steals>::print_header("stolen\t");
+	BasicPerformanceCounter<Pheet, task_storage_count_steal_calls>::print_header("steal_calls\t");
+	BasicPerformanceCounter<Pheet, task_storage_count_unsuccessful_steal_calls>::print_header("unsuccessful_steal_calls\t");
+	BasicPerformanceCounter<Pheet, task_storage_count_pop_cas>::print_header("stealing_deque_pop_cas\t");
 
-	BasicPerformanceCounter<Pheet, stealing_deque_count_dequeued_tasks>::print_header("num_dequeued_tasks\t");
-	BasicPerformanceCounter<Pheet, stealing_deque_count_steal_executed_tasks>::print_header("num_steal_executed_tasks\t");
+	BasicPerformanceCounter<Pheet, task_storage_count_dequeued_tasks>::print_header("num_dequeued_tasks\t");
+	BasicPerformanceCounter<Pheet, task_storage_count_steal_executed_tasks>::print_header("num_steal_executed_tasks\t");
 
 	TimePerformanceCounter<Pheet, scheduler_measure_total_time>::print_header("scheduler_total_time\t");
 	TimePerformanceCounter<Pheet, scheduler_measure_task_time>::print_header("total_task_time\t");

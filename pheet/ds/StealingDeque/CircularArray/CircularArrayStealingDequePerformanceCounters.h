@@ -26,14 +26,14 @@ public:
 	static void print_headers();
 	void print_values();
 
-	BasicPerformanceCounter<Pheet, stealing_deque_count_steals> num_stolen;
-	BasicPerformanceCounter<Pheet, stealing_deque_count_pop_cas> num_pop_cas;
+	BasicPerformanceCounter<Pheet, task_storage_count_steals> num_stolen;
+	BasicPerformanceCounter<Pheet, task_storage_count_pop_cas> num_pop_cas;
 };
 
 template <class Pheet>
 inline void CircularArrayStealingDequePerformanceCounters<Pheet>::print_headers() {
-	BasicPerformanceCounter<Pheet, stealing_deque_count_steals>::print_header("stolen\t");
-	BasicPerformanceCounter<Pheet, stealing_deque_count_pop_cas>::print_header("pop_cas\t");
+	BasicPerformanceCounter<Pheet, task_storage_count_steals>::print_header("stolen\t");
+	BasicPerformanceCounter<Pheet, task_storage_count_pop_cas>::print_header("pop_cas\t");
 }
 
 template <class Pheet>

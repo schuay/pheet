@@ -36,24 +36,24 @@ public:
 	void print_values();
 
 //private:
-	BasicPerformanceCounter<Pheet, scheduler_count_completion_signals> num_completion_signals;
-	BasicPerformanceCounter<Pheet, scheduler_count_chained_completion_signals> num_chained_completion_signals;
-	BasicPerformanceCounter<Pheet, scheduler_count_remote_chained_completion_signals> num_remote_chained_completion_signals;
-	BasicPerformanceCounter<Pheet, scheduler_count_non_blocking_finish_regions> num_non_blocking_finish_regions;
+	BasicPerformanceCounter<Pheet, finish_stack_count_completion_signals> num_completion_signals;
+	BasicPerformanceCounter<Pheet, finish_stack_count_chained_completion_signals> num_chained_completion_signals;
+	BasicPerformanceCounter<Pheet, finish_stack_count_remote_chained_completion_signals> num_remote_chained_completion_signals;
+	BasicPerformanceCounter<Pheet, finish_stack_count_non_blocking_finish_regions> num_non_blocking_finish_regions;
 
-	MaxPerformanceCounter<Pheet, size_t, scheduler_measure_finish_stack_nonblocking_max> finish_stack_nonblocking_max;
-	MinPerformanceCounter<Pheet, size_t, scheduler_measure_finish_stack_blocking_min> finish_stack_blocking_min;
+	MaxPerformanceCounter<Pheet, size_t, finish_stack_track_nonblocking_max> finish_stack_nonblocking_max;
+	MinPerformanceCounter<Pheet, size_t, finish_stack_track_blocking_min> finish_stack_blocking_min;
 };
 
 template <class Pheet>
 inline void BasicFinishStackPerformanceCounters<Pheet>::print_headers() {
-	BasicPerformanceCounter<Pheet, scheduler_count_completion_signals>::print_header("num_completion_signals\t");
-	BasicPerformanceCounter<Pheet, scheduler_count_chained_completion_signals>::print_header("num_chained_completion_signals\t");
-	BasicPerformanceCounter<Pheet, scheduler_count_remote_chained_completion_signals>::print_header("num_remote_chained_completion_signals\t");
-	BasicPerformanceCounter<Pheet, scheduler_count_non_blocking_finish_regions>::print_header("num_non_blocking_finish_regions\t");
+	BasicPerformanceCounter<Pheet, finish_stack_count_completion_signals>::print_header("num_completion_signals\t");
+	BasicPerformanceCounter<Pheet, finish_stack_count_chained_completion_signals>::print_header("num_chained_completion_signals\t");
+	BasicPerformanceCounter<Pheet, finish_stack_count_remote_chained_completion_signals>::print_header("num_remote_chained_completion_signals\t");
+	BasicPerformanceCounter<Pheet, finish_stack_count_non_blocking_finish_regions>::print_header("num_non_blocking_finish_regions\t");
 
-	MaxPerformanceCounter<Pheet, size_t, scheduler_measure_finish_stack_nonblocking_max>::print_header("finish_stack_nonblocking_max\t");
-	MinPerformanceCounter<Pheet, size_t, scheduler_measure_finish_stack_blocking_min>::print_header("finish_stack_blocking_min\t");
+	MaxPerformanceCounter<Pheet, size_t, finish_stack_track_nonblocking_max>::print_header("finish_stack_nonblocking_max\t");
+	MinPerformanceCounter<Pheet, size_t, finish_stack_track_blocking_min>::print_header("finish_stack_blocking_min\t");
 }
 
 template <class Pheet>

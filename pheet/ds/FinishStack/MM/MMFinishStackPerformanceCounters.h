@@ -35,19 +35,19 @@ public:
 	void print_values();
 
 //private:
-	BasicPerformanceCounter<Pheet, scheduler_count_completion_signals> num_completion_signals;
-	BasicPerformanceCounter<Pheet, scheduler_count_chained_completion_signals> num_chained_completion_signals;
-	BasicPerformanceCounter<Pheet, scheduler_count_remote_chained_completion_signals> num_remote_chained_completion_signals;
-	BasicPerformanceCounter<Pheet, scheduler_count_non_blocking_finish_regions> num_non_blocking_finish_regions;
+	BasicPerformanceCounter<Pheet, finish_stack_count_completion_signals> num_completion_signals;
+	BasicPerformanceCounter<Pheet, finish_stack_count_chained_completion_signals> num_chained_completion_signals;
+	BasicPerformanceCounter<Pheet, finish_stack_count_remote_chained_completion_signals> num_remote_chained_completion_signals;
+	BasicPerformanceCounter<Pheet, finish_stack_count_non_blocking_finish_regions> num_non_blocking_finish_regions;
 	BasicPerformanceCounter<Pheet, finish_stack_count_mm_accesses> num_finish_stack_mm_accesses;
 };
 
 template <class Pheet>
 inline void MMFinishStackPerformanceCounters<Pheet>::print_headers() {
-	BasicPerformanceCounter<Pheet, scheduler_count_completion_signals>::print_header("num_completion_signals\t");
-	BasicPerformanceCounter<Pheet, scheduler_count_chained_completion_signals>::print_header("num_chained_completion_signals\t");
-	BasicPerformanceCounter<Pheet, scheduler_count_remote_chained_completion_signals>::print_header("num_remote_chained_completion_signals\t");
-	BasicPerformanceCounter<Pheet, scheduler_count_non_blocking_finish_regions>::print_header("num_non_blocking_finish_regions\t");
+	BasicPerformanceCounter<Pheet, finish_stack_count_completion_signals>::print_header("num_completion_signals\t");
+	BasicPerformanceCounter<Pheet, finish_stack_count_chained_completion_signals>::print_header("num_chained_completion_signals\t");
+	BasicPerformanceCounter<Pheet, finish_stack_count_remote_chained_completion_signals>::print_header("num_remote_chained_completion_signals\t");
+	BasicPerformanceCounter<Pheet, finish_stack_count_non_blocking_finish_regions>::print_header("num_non_blocking_finish_regions\t");
 	BasicPerformanceCounter<Pheet, finish_stack_count_mm_accesses>::print_header("num_finish_stack_mm_accesses\t");
 }
 

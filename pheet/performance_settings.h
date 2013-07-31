@@ -25,17 +25,6 @@ bool const scheduler_count_actual_spawns = pc_all | false;
 bool const scheduler_count_spawns_to_call = pc_all | false;
 bool const scheduler_count_calls = pc_all | false;
 bool const scheduler_count_finishes = pc_all | false;
-bool const scheduler_count_completion_signals = pc_all | false;
-bool const scheduler_count_chained_completion_signals = pc_all | false;
-bool const scheduler_count_remote_chained_completion_signals = pc_all | false;
-bool const scheduler_count_non_blocking_finish_regions = pc_all | false;
-bool const stealing_deque_count_steals = pc_all | false;
-bool const stealing_deque_count_steal_calls = pc_all | false;
-bool const stealing_deque_count_unsuccessful_steal_calls = pc_all | false;
-bool const stealing_deque_count_pop_cas = pc_all | false;
-
-bool const stealing_deque_count_dequeued_tasks = pc_all | false;
-bool const stealing_deque_count_steal_executed_tasks = pc_all | false;
 
 bool const scheduler_measure_total_time = pc_all | false;
 bool const scheduler_measure_task_time = pc_all | false;
@@ -48,6 +37,8 @@ bool const scheduler_measure_wait_for_finish_time = pc_all | false;
 bool const scheduler_measure_wait_for_coordinator_time = pc_all | false;
 
 bool const task_storage_count_steals = pc_all | false;
+bool const task_storage_count_steal_calls = pc_all | false;
+bool const task_storage_count_unsuccessful_steal_calls = pc_all | false;
 bool const task_storage_count_unsuccessful_pops = pc_all | false;
 bool const task_storage_count_successful_pops = pc_all | false;
 bool const task_storage_count_unsuccessful_takes = pc_all | false;
@@ -56,6 +47,7 @@ bool const task_storage_count_unsuccessful_steals = pc_all | false;
 bool const task_storage_count_successful_steals = pc_all | false;
 bool const task_storage_count_size_pop = pc_all | false;
 bool const task_storage_count_size_steal = pc_all | false;
+bool const task_storage_count_pop_cas = pc_all | false;
 bool const task_storage_measure_push_time = pc_all | false;
 bool const task_storage_measure_pop_time = pc_all | false;
 bool const task_storage_measure_clean_time = pc_all | false;
@@ -66,19 +58,25 @@ bool const task_storage_measure_put_time = pc_all | false;
 bool const task_storage_measure_strategy_alloc_time = pc_all | false;
 bool const task_storage_measure_steal_time = pc_all | false;
 bool const task_storage_count_skipped_cleanups = pc_all | false;
-bool const task_storage_measure_max_control_block_items = pc_all | 		false;
-bool const task_storage_measure_max_heap_length = pc_all | 				false;
+bool const task_storage_track_max_control_block_items = pc_all | 		false;
+bool const task_storage_track_max_heap_length = pc_all | 				false;
 bool const task_storage_count_blocks_created = pc_all | false;
 bool const task_storage_count_global_blocks = pc_all | false;
 bool const task_storage_count_take_tests = pc_all | false;
 bool const task_storage_count_put_tests = pc_all | false;
 bool const task_storage_count_taken_heap_items = pc_all | false;
+bool const task_storage_count_dequeued_tasks = pc_all | false;
+bool const task_storage_count_steal_executed_tasks = pc_all | false;
 
 bool const stealer_count_stream_tasks = pc_all | false;
 bool const stealer_count_stolen_tasks = pc_all | false;
 
-bool const scheduler_measure_finish_stack_nonblocking_max = pc_all | 	false;
-bool const scheduler_measure_finish_stack_blocking_min = pc_all | 		false;
+bool const finish_stack_count_completion_signals = pc_all | false;
+bool const finish_stack_count_chained_completion_signals = pc_all | false;
+bool const finish_stack_count_remote_chained_completion_signals = pc_all | false;
+bool const finish_stack_count_non_blocking_finish_regions = pc_all | false;
+bool const finish_stack_track_nonblocking_max = pc_all | 	false;
+bool const finish_stack_track_blocking_min = pc_all | 		false;
 bool const finish_stack_count_mm_accesses = pc_all | 		false;
 
 }

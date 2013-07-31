@@ -35,8 +35,8 @@ public:
 	TimePerformanceCounter<Pheet, task_storage_measure_put_time> put_time;
 	TimePerformanceCounter<Pheet, task_storage_measure_strategy_alloc_time> strategy_alloc_time;
 	BasicPerformanceCounter<Pheet, task_storage_count_skipped_cleanups> num_skipped_cleanups;
-	MaxPerformanceCounter<Pheet, size_t, task_storage_measure_max_control_block_items> max_control_block_items;
-	MaxPerformanceCounter<Pheet, size_t, task_storage_measure_max_heap_length> max_heap_length;
+	MaxPerformanceCounter<Pheet, size_t, task_storage_track_max_control_block_items> max_control_block_items;
+	MaxPerformanceCounter<Pheet, size_t, task_storage_track_max_heap_length> max_heap_length;
 };
 
 template <class Pheet>
@@ -87,8 +87,8 @@ void ArrayListHeapPrimaryTaskStoragePerformanceCounters<Pheet>::print_headers() 
 	TimePerformanceCounter<Pheet, task_storage_measure_put_time>::print_header("put_time\t");
 	TimePerformanceCounter<Pheet, task_storage_measure_strategy_alloc_time>::print_header("strategy_alloc_time\t");
 	TimePerformanceCounter<Pheet, task_storage_count_skipped_cleanups>::print_header("num_skipped_cleanups\t");
-	MaxPerformanceCounter<Pheet, size_t, task_storage_measure_max_control_block_items>::print_header("max_control_block_items\t");
-	MaxPerformanceCounter<Pheet, size_t, task_storage_measure_max_heap_length>::print_header("max_heap_length\t");
+	MaxPerformanceCounter<Pheet, size_t, task_storage_track_max_control_block_items>::print_header("max_control_block_items\t");
+	MaxPerformanceCounter<Pheet, size_t, task_storage_track_max_heap_length>::print_header("max_heap_length\t");
 }
 
 template <class Pheet>

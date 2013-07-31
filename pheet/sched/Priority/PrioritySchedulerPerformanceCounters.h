@@ -43,16 +43,16 @@ public:
 	BasicPerformanceCounter<Pheet, scheduler_count_calls> num_calls;
 	BasicPerformanceCounter<Pheet, scheduler_count_finishes> num_finishes;
 
-	BasicPerformanceCounter<Pheet, stealing_deque_count_steal_calls> num_steal_calls;
-	BasicPerformanceCounter<Pheet, stealing_deque_count_unsuccessful_steal_calls> num_unsuccessful_steal_calls;
+	BasicPerformanceCounter<Pheet, task_storage_count_steal_calls> num_steal_calls;
+	BasicPerformanceCounter<Pheet, task_storage_count_unsuccessful_steal_calls> num_unsuccessful_steal_calls;
 
 	TimePerformanceCounter<Pheet, scheduler_measure_total_time> total_time;
 	TimePerformanceCounter<Pheet, scheduler_measure_task_time> task_time;
 	TimePerformanceCounter<Pheet, scheduler_measure_idle_time> idle_time;
 	TimePerformanceCounter<Pheet, scheduler_measure_idle_time> steal_time;
 
-	MaxPerformanceCounter<Pheet, size_t, scheduler_measure_finish_stack_nonblocking_max> finish_stack_nonblocking_max;
-	MinPerformanceCounter<Pheet, size_t, scheduler_measure_finish_stack_blocking_min> finish_stack_blocking_min;
+	MaxPerformanceCounter<Pheet, size_t, finish_stack_track_nonblocking_max> finish_stack_nonblocking_max;
+	MinPerformanceCounter<Pheet, size_t, finish_stack_track_blocking_min> finish_stack_blocking_min;
 
 	TaskStoragePerformanceCounters task_storage_performance_counters;
 };
@@ -65,16 +65,16 @@ inline void PrioritySchedulerPerformanceCounters<Pheet, TaskStoragePerformanceCo
 	BasicPerformanceCounter<Pheet, scheduler_count_spawns_to_call>::print_header("spawns->call\t");
 	BasicPerformanceCounter<Pheet, scheduler_count_finishes>::print_header("finishes\t");
 
-	BasicPerformanceCounter<Pheet, stealing_deque_count_steal_calls>::print_header("steal_calls\t");
-	BasicPerformanceCounter<Pheet, stealing_deque_count_unsuccessful_steal_calls>::print_header("unsuccessful_steal_calls\t");
+	BasicPerformanceCounter<Pheet, task_storage_count_steal_calls>::print_header("steal_calls\t");
+	BasicPerformanceCounter<Pheet, task_storage_count_unsuccessful_steal_calls>::print_header("unsuccessful_steal_calls\t");
 
 	TimePerformanceCounter<Pheet, scheduler_measure_total_time>::print_header("scheduler_total_time\t");
 	TimePerformanceCounter<Pheet, scheduler_measure_task_time>::print_header("total_task_time\t");
 	TimePerformanceCounter<Pheet, scheduler_measure_idle_time>::print_header("total_idle_time\t");
 	TimePerformanceCounter<Pheet, scheduler_measure_steal_time>::print_header("total_steal_time\t");
 
-	MaxPerformanceCounter<Pheet, size_t, scheduler_measure_finish_stack_nonblocking_max>::print_header("finish_stack_nonblocking_max\t");
-	MinPerformanceCounter<Pheet, size_t, scheduler_measure_finish_stack_blocking_min>::print_header("finish_stack_blocking_min\t");
+	MaxPerformanceCounter<Pheet, size_t, finish_stack_track_nonblocking_max>::print_header("finish_stack_nonblocking_max\t");
+	MinPerformanceCounter<Pheet, size_t, finish_stack_track_blocking_min>::print_header("finish_stack_blocking_min\t");
 
 	TaskStoragePerformanceCounters::print_headers();
 }

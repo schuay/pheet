@@ -11,6 +11,8 @@
 
 #include "../../../settings.h"
 
+#include <pheet/primitives/PerformanceCounter/DummyPerformanceCounters.h>
+
 #include <string.h>
 #include <iostream>
 
@@ -22,6 +24,8 @@ namespace pheet {
 template <class Pheet, typename TT, class Comparator = std::less<TT> >
 class GlobalLockHeap {
 public:
+	typedef DummyPerformanceCounters<Pheet> PerformanceCounters;
+
 	typedef typename Pheet::Mutex Mutex;
 	typedef typename Pheet::LockGuard LockGuard;
 	typedef TT T;

@@ -43,8 +43,8 @@ public:
 	BasicPerformanceCounter<Pheet, scheduler_count_calls> num_calls;
 	BasicPerformanceCounter<Pheet, scheduler_count_finishes> num_finishes;
 
-	BasicPerformanceCounter<Pheet, stealing_deque_count_steal_calls> num_steal_calls;
-	BasicPerformanceCounter<Pheet, stealing_deque_count_unsuccessful_steal_calls> num_unsuccessful_steal_calls;
+	BasicPerformanceCounter<Pheet, task_storage_count_steal_calls> num_steal_calls;
+	BasicPerformanceCounter<Pheet, task_storage_count_unsuccessful_steal_calls> num_unsuccessful_steal_calls;
 
 	TimePerformanceCounter<Pheet, scheduler_measure_total_time> total_time;
 	TimePerformanceCounter<Pheet, scheduler_measure_task_time> task_time;
@@ -63,8 +63,8 @@ inline void BStrategySchedulerPerformanceCounters<Pheet, TaskStoragePerformanceC
 	BasicPerformanceCounter<Pheet, scheduler_count_spawns_to_call>::print_header("spawns->call\t");
 	BasicPerformanceCounter<Pheet, scheduler_count_finishes>::print_header("finishes\t");
 
-	BasicPerformanceCounter<Pheet, stealing_deque_count_steal_calls>::print_header("steal_calls\t");
-	BasicPerformanceCounter<Pheet, stealing_deque_count_unsuccessful_steal_calls>::print_header("unsuccessful_steal_calls\t");
+	BasicPerformanceCounter<Pheet, task_storage_count_steal_calls>::print_header("steal_calls\t");
+	BasicPerformanceCounter<Pheet, task_storage_count_unsuccessful_steal_calls>::print_header("unsuccessful_steal_calls\t");
 
 	TimePerformanceCounter<Pheet, scheduler_measure_total_time>::print_header("scheduler_total_time\t");
 	TimePerformanceCounter<Pheet, scheduler_measure_task_time>::print_header("total_task_time\t");
