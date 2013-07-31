@@ -13,9 +13,6 @@
 #include "TriStripResult.h"
 
 #include "TriStripTasks.h"
-#include <boost/random/uniform_real.hpp>
-#include <boost/random/variate_generator.hpp>
-#include <boost/generator_iterator.hpp>
 #include <iostream>
 #include <fstream>
 //#include "TriStripPerformanceCounters.h"

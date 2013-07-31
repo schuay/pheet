@@ -49,7 +49,7 @@ public:
 
 	TT peek() {
 		pheet_assert(!empty());
-		return max;
+		return fields[max_pos].data;
 	}
 
 	TT pop() {

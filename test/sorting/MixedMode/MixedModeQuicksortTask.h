@@ -13,6 +13,8 @@
 #include "../MixedMode/MixedModeQuicksortTask.h"
 #include "../Dag/DagQuicksort.h"
 
+#include <algorithm>
+
 namespace pheet {
 
 template <class Pheet, size_t BLOCK_SIZE = 4096>
@@ -112,14 +114,14 @@ void MixedModeQuicksortTask<Pheet, BLOCK_SIZE>::operator()() {
 	MEMORY_FENCE();
 	assert_is_partitioned();
 	size_t len = pivotPosition;
-	procs_t procs = min((len * team_size) / length, ((len / BLOCK_SIZE) / 8) + 1);
+	procs_t procs = std::min((len * team_size) / length, ((len / BLOCK_SIZE) / 8) + 1);
 	if(procs == 0) {
 		procs = 1;
 	}
 	pheet_assert(procs == 1 || (len / procs) > BLOCK_SIZE * 2);
 	Pheet::Environment::template spawn_nt<MixedModeQuicksortTask<Pheet, BLOCK_SIZE> >(procs, data, len);
 	len = length - pivotPosition - 1;
-	procs = min(team_size - procs, ((len / BLOCK_SIZE) / 8) + 1);
+	procs = std::min(team_size - procs, ((len / BLOCK_SIZE) / 8) + 1);
 	if(procs == 0) {
 		procs = 1;
 	}
@@ -305,7 +307,7 @@ void MixedModeQuicksortTask<Pheet, BLOCK_SIZE>::partition() {
 						break;
 					}
 					else {
-						swap(data[pp], data[rightPos]);
+						std::swap(data[pp], data[rightPos]);
 					}
 				}
 			}
@@ -360,7 +362,7 @@ void MixedModeQuicksortTask<Pheet, BLOCK_SIZE>::partition() {
 						break;
 					}
 					else {
-						swap(data[leftPos], data[pp]);
+						std::swap(data[leftPos], data[pp]);
 					}
 				}
 			}
@@ -375,7 +377,7 @@ void MixedModeQuicksortTask<Pheet, BLOCK_SIZE>::partition() {
 		pheet_assert(pp == 0 || data[pp-1] <= pivot);
 
 		if(pp < (((ptrdiff_t)length) - 1)) {
-			swap(data[length - 1], data[pp]);
+			std::swap(data[length - 1], data[pp]);
 		}
 		MEMORY_FENCE();
 		pivotPosition = pp;
@@ -401,7 +403,7 @@ void MixedModeQuicksortTask<Pheet, BLOCK_SIZE>::neutralize(ptrdiff_t &leftPos, p
 		if(leftPos == leftEnd || rightPos == rightEnd)
 			break;
 		pheet_assert(leftPos < rightPos && leftPos >= 0 && rightPos < (((ptrdiff_t)length) - 1));
-		swap(data[leftPos], data[rightPos]);
+		std::swap(data[leftPos], data[rightPos]);
 	}
 }
 

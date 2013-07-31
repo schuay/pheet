@@ -15,9 +15,6 @@
 #include "../Test.h"
 #include <exception>
 
-#include <boost/random/uniform_int.hpp>
-#include <boost/random/mersenne_twister.hpp>
-
 using namespace std;
 
 namespace pheet {
@@ -107,7 +104,7 @@ template <class Pheet, template <class P> class Algorithm>
 unsigned int* PrefixSumTest<Pheet, Algorithm>::generate_data() {
 	unsigned int* data = new unsigned int[size];
 
-//	boost::mt19937 rng;
+//	std::mt19937 rng;
 //	rng.seed(seed);
 
 	switch(type) {

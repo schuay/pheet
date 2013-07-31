@@ -17,9 +17,7 @@
 #include <stdlib.h>
 #include <vector>
 #include <iostream>
-#include <boost/random/uniform_int.hpp>
-#include <boost/random/uniform_real.hpp>
-#include <boost/random/mersenne_twister.hpp>
+#include <random>
 #include <limits>
 
 namespace pheet {
@@ -101,10 +99,10 @@ template <class Pheet, template <class P> class Algorithm>
 SsspGraphVertex* SsspTest<Pheet, Algorithm>::generate_data() {
 	SsspGraphVertex* data = new SsspGraphVertex[size];
 
-	boost::mt19937 rng;
+	std::mt19937 rng;
 	rng.seed(seed);
-    boost::uniform_real<float> rnd_f(0.0, 1.0);
-    boost::uniform_int<size_t> rnd_st(1, max_w);
+    std::uniform_real_distribution<float> rnd_f(0.0, 1.0);
+    std::uniform_int_distribution<size_t> rnd_st(1, max_w);
 
 	std::vector<SsspGraphEdge>* edges = new std::vector<SsspGraphEdge>[size];
 	for(size_t i = 0; i < size; ++i) {

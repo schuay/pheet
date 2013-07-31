@@ -12,9 +12,7 @@
 #include "pheet/misc/types.h"
 #include <vector>
 
-#include <boost/random/uniform_int.hpp>
-#include <boost/random/uniform_real.hpp>
-#include <boost/random/mersenne_twister.hpp>
+#include <random>
 
 namespace pheet {
 
@@ -160,9 +158,9 @@ class GraphDual
 		for(size_t i=0;i<size;i++)
 			nodes[i] = new GraphNode();
 
-		boost::mt19937 rng;
+		std::mt19937 rng;
 		rng.seed(seed);
-	    boost::uniform_real<float> rnd_f(0.0, 1.0);
+	    std::uniform_real_distribution<float> rnd_f(0.0, 1.0);
 
 		std::vector<GraphNode*>* edges = new std::vector<GraphNode*>[size];
 		for(size_t i = 0; i < size; ++i) {

@@ -11,8 +11,7 @@
 
 #include <iostream>
 
-#include <boost/random/uniform_real.hpp>
-#include <boost/random/mersenne_twister.hpp>
+#include <random>
 
 #include "../Test.h"
 
@@ -98,14 +97,14 @@ template <class Pheet, template <class P> class Kernel>
 double* LUPivTest<Pheet, Kernel>::generate_data() {
 	double* data = new double[size*size];
 
-	boost::mt19937 rng;
+	std::mt19937 rng;
 	rng.seed(seed);
 
 	switch(type) {
 	case 0:
 		// Random
 		{
-			boost::uniform_real<double> rnd_st(-1.0, 1.0);
+			std::uniform_real_distribution<double> rnd_st(-1.0, 1.0);
 
 			for(size_t i = 0; i < size*size; i++) {
 				data[i] = rnd_st(rng);

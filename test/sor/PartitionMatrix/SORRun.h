@@ -11,9 +11,7 @@
 
 #include <pheet/pheet.h>
 #include "SORTasks.h"
-#include <boost/random/uniform_real.hpp>
-#include <boost/random/variate_generator.hpp>
-#include <boost/generator_iterator.hpp>
+#include <random>
 #include <iostream>
 #include <fstream>
 #include "SORPerformanceCounters.h"
@@ -73,10 +71,8 @@ cpus(cpus), iterations(iterations),runuts(runuts),runsor(runsor),usestrat(usestr
 
 	ppc.slices_rescheduled_at_same_place.add(slices);
 
-	typedef std::mt19937 base_generator_type;
-	base_generator_type generator(42);
-	boost::uniform_real<> uni_dist(0,1);
-	boost::variate_generator<base_generator_type&, boost::uniform_real<> > uni(generator, uni_dist);
+	std::mt19937 rng(42);
+	std::uniform_real_distribution<> uni(0,1);
 
 	sp.G = new double*[M];
 	backend = new double[M*N];
@@ -86,7 +82,7 @@ cpus(cpus), iterations(iterations),runuts(runuts),runsor(runsor),usestrat(usestr
 	for (int i=0; i<M; i++)
 		for (int j=0; j<N; j++)
 		{
-			sp.G[i][j] = uni() * 1e-6;
+			sp.G[i][j] = uni(rng) * 1e-6;
 		}      
 
 /*	

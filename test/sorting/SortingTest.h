@@ -15,10 +15,7 @@
 #include "../Test.h"
 #include <exception>
 
-#include <boost/random/uniform_int.hpp>
-#include <boost/random/mersenne_twister.hpp>
-
-using namespace std;
+#include <random>
 
 namespace pheet {
 
@@ -76,11 +73,11 @@ void SortingTest<Pheet, Sorter>::run_test() {
 	std::cout << "test\tsorter\tscheduler\ttype\tsize\tseed\tcpus\ttotal_time\truns\t";
 	Pheet::Environment::PerformanceCounters::print_headers();
 	std::cout << std::endl;
-	cout << "sorting\t" << Sorter<Pheet>::name << "\t";
+	std::cout << "sorting\t" << Sorter<Pheet>::name << "\t";
 	Pheet::Environment::print_name();
 	std::cout << "\t" << types[type] << "\t" << size << "\t" << seed << "\t" << cpus << "\t" << seconds << "\t" << runs << "\t";
 	pc.print_values();
-	cout << endl;
+	std::cout << std::endl;
 	delete[] data;
 }
 
@@ -89,14 +86,14 @@ template <class Pheet, template <class P> class Sorter>
 unsigned int* SortingTest<Pheet, Sorter>::generate_data() {
 	unsigned int* data = new unsigned int[size];
 
-	boost::mt19937 rng;
+	std::mt19937 rng;
 	rng.seed(seed);
 
 	switch(type) {
 	case 0:
 		// Random
 	{
-		boost::uniform_int<size_t> rnd_st(0, 0x3FFFFFF - 1);
+		std::uniform_int_distribution<size_t> rnd_st(0, 0x3FFFFFF - 1);
 
 		for(size_t i = 0; i < size; i++) {
 			data[i] = rnd_st(rng);
@@ -107,7 +104,7 @@ unsigned int* SortingTest<Pheet, Sorter>::generate_data() {
 	{
 		// Gauss ?
 		int temp;
-		boost::uniform_int<size_t> rnd_st(0, 0x0FFFFFF - 1);
+		std::uniform_int_distribution<size_t> rnd_st(0, 0x0FFFFFF - 1);
 		for(size_t i = 0; i < size; i++) {
 			temp=0;
 			for (int j=0;j<4;j++)
@@ -119,7 +116,7 @@ unsigned int* SortingTest<Pheet, Sorter>::generate_data() {
 		break;
 	case 2:
 	{
-		boost::uniform_int<size_t> rnd_st(0, 0x3FFFFFF - 1);
+		std::uniform_int_distribution<size_t> rnd_st(0, 0x3FFFFFF - 1);
 		// All the same
 		int temp = rnd_st(rng);
 		for(size_t i = 0; i < size; i++) {
@@ -129,7 +126,7 @@ unsigned int* SortingTest<Pheet, Sorter>::generate_data() {
 		break;
 	case 3:
 	{
-		boost::uniform_int<size_t> rnd_st(0, 0x3FFFFFF - 1);
+		std::uniform_int_distribution<size_t> rnd_st(0, 0x3FFFFFF - 1);
 		// Bucket
 		size_t temp = 0x3FFFFFF / cpus + 1;
 		size_t c=0;
@@ -156,7 +153,7 @@ unsigned int* SortingTest<Pheet, Sorter>::generate_data() {
 		break;
 	case 4:
 	{
-		boost::uniform_int<size_t> rnd_st(0, 0x3FFFFFF - 1);
+		std::uniform_int_distribution<size_t> rnd_st(0, 0x3FFFFFF - 1);
 		// Staggered
 		size_t c=0, temp;
 		for(procs_t i=0;i<cpus;i++)
@@ -183,7 +180,7 @@ unsigned int* SortingTest<Pheet, Sorter>::generate_data() {
 	break;
 	case 5:
 	{
-		boost::uniform_int<size_t> rnd_st(0, 0x3FFF);
+		std::uniform_int_distribution<size_t> rnd_st(0, 0x3FFF);
 		size_t val = 0;
 		// Presorted ascending
 		for(size_t i = 0; i < size; i++) {
@@ -194,7 +191,7 @@ unsigned int* SortingTest<Pheet, Sorter>::generate_data() {
 	break;
 	case 6:
 	{
-		boost::uniform_int<size_t> rnd_st(0, 0x3FFF);
+		std::uniform_int_distribution<size_t> rnd_st(0, 0x3FFF);
 		size_t val = std::numeric_limits<size_t>::max();
 		// Presorted descending
 		for(size_t i = 0; i < size; i++) {
