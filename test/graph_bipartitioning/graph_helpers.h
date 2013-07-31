@@ -10,6 +10,7 @@
 #define GRAPH_HELPERS_H_
 
 #include "../init.h"
+#include "FastBitset.h"
 #include "pheet/misc/types.h"
 #include "pheet/primitives/Reducer/Max/MaxReducer.h"
 
@@ -57,7 +58,8 @@ struct GraphBipartitioningSolution {
 	GraphBipartitioningSolution<MAX_SIZE>& operator=(GraphBipartitioningSolution<MAX_SIZE>& other);
 
 	size_t weight;
-	std::bitset<MAX_SIZE> sets[2];
+	//std::bitset<MAX_SIZE> sets[2];
+	FastBitset<MAX_SIZE> sets[2];
 };
 
 template <size_t MAX_SIZE>
@@ -100,6 +102,19 @@ GraphBipartitioningSolution<MAX_SIZE> MaxOperation<GraphBipartitioningSolution<M
 	GraphBipartitioningSolution<MAX_SIZE> ret;
 	ret.weight = std::numeric_limits<size_t>::max();
 	return ret;
+}
+
+// note: data must have space for length + 1 elements 
+template <typename T>
+static inline void insert(T elem, T *data, int length)
+{
+	T* p = data + length - 1;
+	while ((size_t)p >= (size_t)data && *p > elem)
+	{
+		p[1] = p[0];
+		--p;
+	}
+	p[1] = elem;
 }
 
 }

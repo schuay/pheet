@@ -1,9 +1,9 @@
 /*
  * BBGraphBipartitioningFREELogic.h
  *
- *  Created on: Jan 13, 2012
- *      Author: Martin Wimmer, JLT
- *	   License: Boost Software License 1.0 (BSL1.0)
+ *	Created on: Jan 13, 2012
+ *			Author: Martin Wimmer, JLT
+ *		 License: Boost Software License 1.0 (BSL1.0)
  */
 
 #ifndef BBGRAPHBIPARTITIONINGFREELOGIC_H_
@@ -67,221 +67,261 @@ private:
 	size_t* fweight[2];
 	size_t deg0; // number of free nodes with no edges
 	size_t max_free; // largest degree of free node (approx)
+	
+	size_t* data;
 };
 
 template <class Pheet, class SubProblem>
 BBGraphBipartitioningFREELogic<Pheet, SubProblem>::BBGraphBipartitioningFREELogic(SubProblem* sub_problem)
-  : sub_problem(sub_problem), cut(0), lb(0), nv(0), contrib_sum(0) {
-  for (int i=0; i<2; i++) {
-    weights[i] = new size_t[sub_problem->size];
-    memset(weights[i], 0, sizeof(size_t)*sub_problem->size); // don't like
-    scanned[i] = new size_t[sub_problem->size];
-    seen[i]  = new size_t[sub_problem->size];
-    fweight[i] = new size_t[sub_problem->size];
-  }
-  contributions = new size_t[sub_problem->size];
-  free_edges = new size_t[sub_problem->size];
-  
-  deg0 = 0; max_free = 0;
-  size_t best_contrib = 0;
-  size_t best_contrib_i = 0;
-  for(size_t i = 0; i < sub_problem->size; ++i) {
-    contributions[i] = 0;
-    for(size_t j = 0; j < sub_problem->graph[i].num_edges; ++j) {
-      contributions[i] += sub_problem->graph[i].edges[j].weight;
-    }
-    contrib_sum += contributions[i];
-    if(contributions[i] > best_contrib) {
-      best_contrib = contributions[i];
-			best_contrib_i = i;
-    }
-    free_edges[i] = sub_problem->graph[i].num_edges; // all edges free
-    if (free_edges[i]>max_free) max_free = free_edges[i];
-    else if (free_edges[i]==0) deg0++;
+	: sub_problem(sub_problem), cut(0), lb(0), nv(0), contrib_sum(0)
+{
+	auto numElems = sub_problem->size;
+	data = new size_t[numElems * 10];
+	size_t* p = data;
+	
+	// zero out the memory for weights, scanned, seen and fweight
+	memset(p, 0, sizeof(size_t) * numElems * 8);
+	weights[0] = p; p += numElems;
+	weights[1] = p; p += numElems;
+	scanned[0] = p; p += numElems;
+	scanned[1] = p; p += numElems;
+	seen[0] = p; p += numElems;
+	seen[1] = p; p += numElems;
+	fweight[0] = p; p += numElems;
+	fweight[1] = p; p += numElems;
+	
+	contributions = p; p += numElems;
+	free_edges = p; p += numElems;
+	pheet_assert(p == data + numElems * 10);
 
-    for (size_t s=0; s<2; s++) {
-      scanned[s][i] = 0;
-      seen[s][i]  = 0;
-      fweight[s][i] = 0;
-    }
-  }
-  nv = best_contrib_i;
-  contrib_sum >>= 1;
+	deg0 = 0;
+	max_free = 0;
+	size_t best_contrib = 0;
+	size_t best_contrib_i = 0;
+	for(size_t i = 0; i < sub_problem->size; ++i)
+	{
+		contributions[i] = 0;
+		for(size_t j = 0; j < sub_problem->graph[i].num_edges; ++j)
+			contributions[i] += sub_problem->graph[i].edges[j].weight;
+		contrib_sum += contributions[i];
+
+		if(contributions[i] > best_contrib)
+		{
+			best_contrib = contributions[i];
+			best_contrib_i = i;
+		}
+		free_edges[i] = sub_problem->graph[i].num_edges; // all edges free
+		if (free_edges[i]>max_free)
+			max_free = free_edges[i];
+		else if (free_edges[i]==0)
+			deg0++;
+	}
+	nv = best_contrib_i;
+	contrib_sum >>= 1;
 }
 
 template <class Pheet, class SubProblem>
 BBGraphBipartitioningFREELogic<Pheet, SubProblem>::BBGraphBipartitioningFREELogic(SubProblem* sub_problem, Self const& other)
-  : sub_problem(sub_problem), cut(other.cut), lb(other.lb), nv(other.nv), contrib_sum(other.contrib_sum), deg0(other.deg0), max_free(other.max_free) {
-    for (int i=0; i<2; i++) {
-      weights[i] = new size_t[sub_problem->size];
-      memcpy(weights[i], other.weights[i], sizeof(size_t)*sub_problem->size);
-      scanned[i] = new size_t[sub_problem->size];
-      memcpy(scanned[i], other.scanned[i], sizeof(size_t)*sub_problem->size);
-      seen[i] = new size_t[sub_problem->size];
-      memcpy(seen[i], other.seen[i], sizeof(size_t)*sub_problem->size);
-      fweight[i] = new size_t[sub_problem->size];
-      memcpy(fweight[i], other.fweight[i], sizeof(size_t)*sub_problem->size);
-    }
-    contributions = new size_t[sub_problem->size];
-    memcpy(contributions, other.contributions, sizeof(size_t)*sub_problem->size);
-    free_edges = new size_t[sub_problem->size];
-    memcpy(free_edges,other.free_edges,sizeof(size_t)*sub_problem->size);
+	: sub_problem(sub_problem), cut(other.cut), lb(other.lb), nv(other.nv), contrib_sum(other.contrib_sum), deg0(other.deg0), max_free(other.max_free)
+{
+	auto numElems = sub_problem->size;
+	data = new size_t[numElems * 10];
+	size_t* p = data;
+
+	weights[0] = p; p += numElems;
+	weights[1] = p; p += numElems;
+	scanned[0] = p; p += numElems;
+	scanned[1] = p; p += numElems;
+	seen[0] = p; p += numElems;
+	seen[1] = p; p += numElems;
+	fweight[0] = p; p += numElems;
+	fweight[1] = p; p += numElems;
+
+	contributions = p; p += numElems;
+	free_edges = p; p += numElems;
+	pheet_assert(p == data + numElems * 10);
+	
+	memcpy(data, other.data, sizeof(size_t) * numElems * 10); // copy all data
 }
 
 template <class Pheet, class SubProblem>
-BBGraphBipartitioningFREELogic<Pheet, SubProblem>::~BBGraphBipartitioningFREELogic() {
-  for (int i=0; i<2; i++) {
-    delete[] weights[i];
-    delete[] scanned[i];
-    delete[] seen[i];
-    delete[] fweight[i];
-  }
-  delete[] contributions;
-  delete[] free_edges;
+BBGraphBipartitioningFREELogic<Pheet, SubProblem>::~BBGraphBipartitioningFREELogic()
+{
+	delete[] data;
 }
 
 template <class Pheet, class SubProblem>
-void BBGraphBipartitioningFREELogic<Pheet, SubProblem>::init_root() {
-
-}
+void BBGraphBipartitioningFREELogic<Pheet, SubProblem>::init_root()
+{}
 
 template <class Pheet, class SubProblem>
-size_t BBGraphBipartitioningFREELogic<Pheet, SubProblem>::get_next_vertex() {
+size_t BBGraphBipartitioningFREELogic<Pheet, SubProblem>::get_next_vertex()
+{
 	pheet_assert(sub_problem->sets[2].test(nv));
 	return nv;
 }
 
 template <class Pheet, class SubProblem>
-size_t BBGraphBipartitioningFREELogic<Pheet, SubProblem>::get_cut() {
+size_t BBGraphBipartitioningFREELogic<Pheet, SubProblem>::get_cut()
+{
 	return cut;
 }
 
 template <class Pheet, class SubProblem>
-size_t BBGraphBipartitioningFREELogic<Pheet, SubProblem>::get_lower_bound() {
+size_t BBGraphBipartitioningFREELogic<Pheet, SubProblem>::get_lower_bound()
+{
 	return cut + lb;
 }
 
 template <class Pheet, class SubProblem>
-size_t BBGraphBipartitioningFREELogic<Pheet, SubProblem>::get_lowdeg_lower() {
-  size_t subrem[2];
-  subrem[0] = sub_problem->k-sub_problem->sets[0].count();
-  subrem[1] = (sub_problem->size-sub_problem->k)-sub_problem->sets[1].count();
+size_t BBGraphBipartitioningFREELogic<Pheet, SubProblem>::get_lowdeg_lower()
+{
+	size_t subrem[2];
+	subrem[0] = sub_problem->k-sub_problem->sets[0].count();
+	subrem[1] = (sub_problem->size-sub_problem->k)-sub_problem->sets[1].count();
 
-  size_t largest_subset = (subrem[0] > subrem[1]) ? subrem[0] : subrem[1];
+	size_t largest_subset = (subrem[0] > subrem[1]) ? subrem[0] : subrem[1];
 
-  if (max_free<largest_subset) return cut + lb; else return 0;
+	if (max_free<largest_subset)
+		return cut + lb; else return 0;
 }
 
 template <class Pheet, class SubProblem>
-size_t BBGraphBipartitioningFREELogic<Pheet, SubProblem>::get_estimate() {
+size_t BBGraphBipartitioningFREELogic<Pheet, SubProblem>::get_estimate()
+{
 	pheet_assert(est + contrib_sum >= lb);
 	return get_cut() + est + contrib_sum;
 }
 
 template <class Pheet, class SubProblem>
-size_t BBGraphBipartitioningFREELogic<Pheet, SubProblem>::get_upper_bound() {
+size_t BBGraphBipartitioningFREELogic<Pheet, SubProblem>::get_upper_bound()
+{
 	return get_cut() + ub + contrib_sum;
 }
 
 template <class Pheet, class SubProblem>
-size_t BBGraphBipartitioningFREELogic<Pheet, SubProblem>::get_minnode(uint8_t set) {
-  // only one free
+size_t BBGraphBipartitioningFREELogic<Pheet, SubProblem>::get_minnode(uint8_t set)
+{
+	// only one free
+	Set bitset = sub_problem->sets[2];
+	size_t w = bitset._Find_first();
+	
+	size_t mincut, sumcut = 0;
+	size_t v = bitset._Find_next(w);
+	while(v != bitset.size())
+	{
+		sumcut += weights[set][v];
+		v = bitset._Find_next(v);
+	}
+	mincut = sumcut+weights[set^1][w]+fweight[set][w];
 
-  size_t w = sub_problem->sets[2]._Find_first();
-  
-  size_t mincut, sumcut = 0;
-  size_t v = sub_problem->sets[2]._Find_next(w);
-  while(v != sub_problem->sets[2].size()) {
-    sumcut += weights[set][v];
-    v = sub_problem->sets[2]._Find_next(v);
-  }
-  mincut = sumcut+weights[set^1][w]+fweight[set][w];
+	v = bitset._Find_first();
+	while (v != bitset.size())
+	{
+		sumcut += weights[set][v];
+		v = bitset._Find_next(v);
+		if (v != bitset.size())
+		{
+			sumcut -= weights[set][v];
+			if (sumcut + weights[set^1][v] + fweight[set][v] < mincut)
+			{
+				mincut = sumcut + weights[set^1][v] + fweight[set][v];
+				w = v;
+			}
+		}
+	}
 
-  v = sub_problem->sets[2]._Find_first();
-  while(v != sub_problem->sets[2].size()) {
-    sumcut += weights[set][v];
-    v = sub_problem->sets[2]._Find_next(v);
-    if (v!=sub_problem->sets[2].size()) {
-      sumcut -= weights[set][v];
-      if (sumcut+weights[set^1][v]+fweight[set][v]<mincut) {
-	mincut = sumcut+weights[set^1][v]+fweight[set][v];
-	w = v;
-      }
-    }
-  }
-
-  return w;
+	return w;
 }
 
 template <class Pheet, class SubProblem>
-size_t BBGraphBipartitioningFREELogic<Pheet, SubProblem>::cc_w() {
-  // determine smallest weight edge in cc with more edges than missing in smallest subset
+size_t BBGraphBipartitioningFREELogic<Pheet, SubProblem>::cc_w()
+{
+	// determine smallest weight edge in cc with more edges than missing in smallest subset
 	size_t largest_w = std::numeric_limits<size_t>::max();
 
-  size_t h, t;  // head and tail of queue
-  size_t c = 0; // component number
-  size_t cs;    // component size
-  size_t queue[sub_problem->sets[2].count()];
-  int cc[sub_problem->size];
+	size_t h, t;	// head and tail of queue
+	size_t c = 0; // component number
+	size_t cs;		// component size
+	size_t queue[sub_problem->sets[2].count()];
+	int cc[sub_problem->size];
 
-  size_t subrem[2];
-  subrem[0] = sub_problem->k-sub_problem->sets[0].count();
-  subrem[1] = (sub_problem->size-sub_problem->k)-sub_problem->sets[1].count();
+	size_t subrem[2];
+	subrem[0] = sub_problem->k-sub_problem->sets[0].count();
+	subrem[1] = (sub_problem->size-sub_problem->k)-sub_problem->sets[1].count();
 
-  size_t largest_subset = (subrem[0] > subrem[1]) ? subrem[0] : subrem[1];
+	size_t largest_subset = (subrem[0] > subrem[1]) ? subrem[0] : subrem[1];
 
-  size_t v, v0 = sub_problem->sets[2]._Find_first();
-  
-  size_t minw;
+	size_t v, v0 = sub_problem->sets[2]._Find_first();
+	
+	size_t minw;
 
-  v = v0;
-  while (v!=sub_problem->sets[2].size()) {
-    cc[v] = -1;
-    v = sub_problem->sets[2]._Find_next(v);
-  }
-
-  h = 0; t = 0;
-  v = v0;
-  while (v!=sub_problem->sets[2].size()) {
-    if (cc[v]==-1) {
-      // new component
-      cc[v] = c; queue[t++] = v; cs = 1;
-      minw = largest_w;
-      while (h<t) {
-	size_t u = queue[h++];
-	for(size_t i = 0; i<sub_problem->graph[u].num_edges; i++) {
-	  size_t w = sub_problem->graph[u].edges[i].target;
-	  if (sub_problem->sets[2].test(w)) {
-	    if (sub_problem->graph[u].edges[i].weight<minw) 
-	      minw = sub_problem->graph[u].edges[i].weight;
-	    if (cc[w]==-1) {
-	      cc[w] = c;
-	      cs++; // could break already here
-	      queue[t++] = w;
-	    } else pheet_assert(cc[w]==static_cast<ptrdiff_t>(c));
-	  }
+	Set bitset = sub_problem->sets[2];
+	v = v0;
+	while (v != bitset.size())
+	{
+		cc[v] = -1;
+		v = bitset._Find_next(v);
 	}
-      }
-      if (cs>largest_subset) {
-	//std::cout<<minw<<':'<<cs<<'\n';
-	return minw;
-      }
 
-      c++; // next component
-    }
-    v = sub_problem->sets[2]._Find_next(v);
-  }
+	h = 0; t = 0;
+	v = v0;
+	while (v != bitset.size())
+	{
+		if (cc[v]==-1)
+		{
+			// new component
+			cc[v] = c;
+			queue[t++] = v;
+			cs = 1;
+			minw = largest_w;
+			while (h<t)
+			{
+				size_t u = queue[h++];
+				const GraphVertex vertex = sub_problem->graph[u];
+				for(size_t i = 0; i < vertex.num_edges; ++i)
+				{
+					GraphEdge edge = vertex.edges[i];
+					size_t w = edge.target;
+					if (bitset.test(w))
+					{
+						if (edge.weight < minw)
+							minw = edge.weight;
+						if (cc[w]==-1)
+						{
+							cc[w] = c;
+							cs++; // could break already here
+							queue[t++] = w;
+						}
+						else
+							pheet_assert(cc[w]==c);
+					}
+				}
+			}
 
-  return 0;
+			if (cs>largest_subset)
+			{
+				//std::cout<<minw<<':'<<cs<<'\n';
+				return minw;
+			}
+
+			c++; // next component
+		}
+		v = bitset._Find_next(v);
+	}
+
+	return 0;
+}
+
+template <class Pheet, class SubProblem>
+bool BBGraphBipartitioningFREELogic<Pheet, SubProblem>::no_edges()
+{
+	return (deg0 == sub_problem->sets[2].count());
  }
 
 template <class Pheet, class SubProblem>
-bool BBGraphBipartitioningFREELogic<Pheet, SubProblem>::no_edges() {
-  return (deg0 == sub_problem->sets[2].count());
- }
-
-template <class Pheet, class SubProblem>
-void BBGraphBipartitioningFREELogic<Pheet, SubProblem>::update(uint8_t set, size_t pos) {
+void BBGraphBipartitioningFREELogic<Pheet, SubProblem>::update(uint8_t set, size_t pos)
+{
 	pheet_assert((set & 1) == set);
 	pheet_assert(pos < sub_problem->size);
 	pheet_assert(!sub_problem->sets[set].test(pos));
@@ -294,7 +334,8 @@ void BBGraphBipartitioningFREELogic<Pheet, SubProblem>::update(uint8_t set, size
 }
 
 template <class Pheet, class SubProblem>
-void BBGraphBipartitioningFREELogic<Pheet, SubProblem>::update_data(uint8_t set, size_t pos) {
+void BBGraphBipartitioningFREELogic<Pheet, SubProblem>::update_data(uint8_t set, size_t pos)
+{
 	cut += weights[set ^ 1][pos];
 
 	size_t f, j;
@@ -302,47 +343,63 @@ void BBGraphBipartitioningFREELogic<Pheet, SubProblem>::update_data(uint8_t set,
 	subrem[0] = sub_problem->k-sub_problem->sets[0].count();
 	subrem[1] = (sub_problem->size-sub_problem->k)-sub_problem->sets[1].count();
 
-	pheet_assert(subrem[0]+subrem[1]==sub_problem->sets[2].count());
+	Set bitset = sub_problem->sets[2];
+	pheet_assert(subrem[0] + subrem[1] == bitset.count());
 
-	if (free_edges[pos]==0) deg0--;
-	for(size_t i = 0; i < sub_problem->graph[pos].num_edges; ++i) {
-		size_t v = sub_problem->graph[pos].edges[i].target;
+	if (free_edges[pos]==0)
+		deg0--;
 
-		weights[set][v] += sub_problem->graph[pos].edges[i].weight;
+	const GraphVertex* graph = sub_problem->graph;
+	const GraphVertex vertex = graph[pos];
+	for(size_t i = 0; i < vertex.num_edges; ++i)
+	{
+		GraphEdge current_edge = vertex.edges[i];
+		size_t v = current_edge.target;
+		GraphEdge* other_edges = graph[v].edges;
+		weights[set][v] += current_edge.weight;
 
-		if (sub_problem->sets[2].test(v)) {
-		  pheet_assert(contributions[v] >= sub_problem->graph[pos].edges[i].weight);
+		if (bitset.test(v))
+		{
+			pheet_assert(contributions[v] >= current_edge.weight);
 
-		  contributions[v] -= sub_problem->graph[pos].edges[i].weight;
-		  contrib_sum -= sub_problem->graph[pos].edges[i].weight;
+			contributions[v] -= current_edge.weight;
+			contrib_sum -= current_edge.weight;
 
-		  if (--free_edges[v]==0) deg0++;
+			if (--free_edges[v]==0)
+				deg0++;
 
-		  for (size_t s=0; s<2; s++) {
-		if (sub_problem->graph[pos].edges[i].reverse<scanned[s][v]) {
-		  pheet_assert(fweight[s][v]>=sub_problem->graph[pos].edges[i].weight);
+			for (size_t s = 0; s < 2; ++s)
+			{
+				if (current_edge.reverse < scanned[s][v])
+				{
+					pheet_assert(fweight[s][v] >= current_edge.weight);
 
-		  fweight[s][v] -= sub_problem->graph[pos].edges[i].weight;
-		  seen[s][v]--;
-		} else {
-		  f = seen[s][v]; j = scanned[s][v];
-		  while (f>0&&f+subrem[s]>free_edges[v]) { // note >
-			j--;
-			if (sub_problem->sets[2].test(sub_problem->graph[v].edges[j].target)) {
-
-			  fweight[s][v] -= sub_problem->graph[v].edges[j].weight;
-			  f--;
+					fweight[s][v] -= current_edge.weight;
+					seen[s][v]--;
+				}
+				else
+				{
+					f = seen[s][v];
+					j = scanned[s][v];
+					while (f > 0 && f + subrem[s] > free_edges[v]) // note >
+					{
+						j--;
+						if (bitset.test(other_edges[j].target))
+						{
+							fweight[s][v] -= other_edges[j].weight;
+							f--;
+						}
+					}
+					seen[s][v] = f;
+					scanned[s][v] = j;
+				}
 			}
-		  }
-		  seen[s][v] = f; scanned[s][v] = j;
-		}
-		  }
 		}
 	}
 
-	//if (deg0==sub_problem->sets[2].count()) std::cout<<'*';
+	//if (deg0==bitset.count()) std::cout<<'*';
 
-	size_t nf =  sub_problem->sets[2].count();
+	size_t nf =  bitset.count();
 	ptrdiff_t delta[nf];
 
 	size_t di = 0;
@@ -350,44 +407,54 @@ void BBGraphBipartitioningFREELogic<Pheet, SubProblem>::update_data(uint8_t set,
 	est = 0;
 	ub = 0;
 	lb_ub_contrib = 0;
-	size_t v, v0 = sub_problem->sets[2]._Find_first();
+	size_t v, v0 = bitset._Find_first();
 	nv = v0;
 	size_t best_contrib = 0;
 
 	v = v0;
-	while(v != sub_problem->sets[2].size()) {
-	ptrdiff_t d = (ptrdiff_t)weights[1][v] - (ptrdiff_t)weights[0][v];
-	if(std::abs(d) + contributions[v] >= best_contrib) {
-	  best_contrib = std::abs(d) + contributions[v];
-	  nv = v;
-	}
+	while (v != bitset.size())
+	{
+		size_t weight0 = weights[0][v];
+		size_t weight1 = weights[1][v];
+		ptrdiff_t d = (ptrdiff_t)weight1 - (ptrdiff_t)weight0;
+		if (std::abs(d) + contributions[v] >= best_contrib)
+		{
+			best_contrib = std::abs(d) + contributions[v];
+			nv = v;
+		}
 
-	delta[di++] = d;
-	lb += std::min(weights[0][v], weights[1][v]);
-	est += std::min(weights[0][v], weights[1][v]);
-	ub += std::max(weights[0][v], weights[1][v]);
+		delta[di++] = d;
+		lb += std::min(weight0, weight1);
+		est += std::min(weight0, weight1);
+		ub += std::max(weight0, weight1);
 
-	v = sub_problem->sets[2]._Find_next(v);
+		v = bitset._Find_next(v);
 	}
 	std::sort(delta, delta + di);
 
 	//size_t pivot = (/*sub_problem->size - */sub_problem->k) - sub_problem->sets[0].count();
 	size_t pivot = subrem[0];
-	if(pivot < di && delta[pivot] < 0) {
-	do {
-	  lb += -delta[pivot];
-	  est += -delta[pivot];
-	  ub -= -delta[pivot];
-	  ++pivot;
-	} while(pivot < di && delta[pivot] < 0);
+	if(pivot < di && delta[pivot] < 0)
+	{
+		auto d = delta[pivot];
+		do
+		{
+			lb += -d;
+			est += -d;
+			ub -= -d;
+			++pivot;
+			d = delta[pivot];
+		} while(pivot < di && d < 0);
 	}
-	else if(pivot > 0 && delta[pivot - 1] > 0) {
-	do {
-	  --pivot;
-	  lb += delta[pivot];
-	  est += delta[pivot];
-	  ub -= delta[pivot];
-	} while(pivot > 0 && delta[pivot - 1] > 0);
+	else if(pivot > 0 && delta[pivot - 1] > 0)
+	{
+		do
+		{
+			--pivot;
+			lb += delta[pivot];
+			est += delta[pivot];
+			ub -= delta[pivot];
+		} while(pivot > 0 && delta[pivot - 1] > 0);
 	}
 
 	ptrdiff_t gamma[nf];
@@ -397,58 +464,74 @@ void BBGraphBipartitioningFREELogic<Pheet, SubProblem>::update_data(uint8_t set,
 	size_t fw = 0;
 
 	v = v0;
-	if (max_free>=subrem[ss]) { // trigger
-	max_free = 0;
-	while(v != sub_problem->sets[2].size()) {
-	  pheet_assert(free_edges[v]<nf);
+	if (max_free>=subrem[ss]) // trigger
+	{
+		max_free = 0;
+		while (v != bitset.size())
+		{
+			const GraphVertex vertex = graph[v];
+			pheet_assert(free_edges[v]<nf);
 
-	  if (free_edges[v]>max_free) max_free = free_edges[v];
+			if (free_edges[v] > max_free)
+				max_free = free_edges[v];
 
-	  for (size_t s=0; s<2; s++) {
-	if (subrem[s]>0) { // JLT: update should only be called when this is true
-	  f = seen[s][v]; j = scanned[s][v];
-	  //comment in next two lines to deactivate incremental computation
-	  //f = 0; j = 0;
-	  //fweight[s][v] = 0;
-	  while (f+subrem[s]<=free_edges[v]) { // note <=
-		if (sub_problem->sets[2].test(sub_problem->graph[v].edges[j].target)) {
-		  fweight[s][v] += sub_problem->graph[v].edges[j].weight;
-		  f++;
+			for (size_t s=0; s<2; s++)
+			{
+				if (subrem[s] > 0) // JLT: update should only be called when this is true
+				{
+					f = seen[s][v];
+					j = scanned[s][v];
+					//comment in next two lines to deactivate incremental computation
+					//f = 0; j = 0;
+					//fweight[s][v] = 0;
+					while (f + subrem[s] <= free_edges[v]) // note <=
+					{
+						if (bitset.test(vertex.edges[j].target))
+						{
+							fweight[s][v] += vertex.edges[j].weight;
+							f++;
+						}
+						j++;
+					}
+					seen[s][v] = f;
+					scanned[s][v] = j;
+				}
+			}
+
+			fw += fweight[1-ss][v];
+			size_t g = fweight[ss][v]-fweight[1-ss][v];
+			pheet_assert(g>=0);
+			if (g>0)
+				gamma[gi++] = g;
+		//if (g>0) std::cout<<g<<'#'<<'\n';
+
+			v = bitset._Find_next(v);
 		}
-		j++;
-	  }
-	  seen[s][v] = f; scanned[s][v] = j;
-	}
-	  }
 
-	  fw += fweight[1-ss][v];
-	  size_t g = fweight[ss][v]-fweight[1-ss][v];
-	  pheet_assert(g>=0);
-	  if (g>0) gamma[gi++] = g;
-	  //if (g>0) std::cout<<g<<'#'<<'\n';
-
-	  v = sub_problem->sets[2]._Find_next(v);
+		if (nf-gi<subrem[ss])
+		{
+			std::sort(gamma,gamma+gi);
+			for (size_t i=0; i<subrem[ss]-(nf-gi); i++)
+				fw += gamma[i];
+		}
+		fw >>= 1;
+		lb += fw;
 	}
 
-	if (nf-gi<subrem[ss]) {
-	  std::sort(gamma,gamma+gi);
-	  for (size_t i=0; i<subrem[ss]-(nf-gi); i++) fw += gamma[i];
-	}
-	fw >>= 1;
-	lb += fw;
-	}
-
-	if (max_free<subrem[1-ss]) {
-	  if (cut+lb<=sub_problem->get_global_upper_bound()&&cut+lb+1000>sub_problem->get_global_upper_bound()) {
-		  // How do I transform this?
-		  lb += +cc_w();
-/*		  if (get_lowdeg_lower()+cc_w(1000)>=sub_problem->get_global_upper_bound()) {
-			  return; // actually irrelevant
-		  }*/
-		  //std::cout<<'#';
+	if (max_free<subrem[1-ss])
+	{
+		if (cut+lb<=sub_problem->get_global_upper_bound()&&cut+lb+1000>sub_problem->get_global_upper_bound())
+		{
+			// How do I transform this?
+			lb += +cc_w();
+/*			if (get_lowdeg_lower()+cc_w(1000)>=sub_problem->get_global_upper_bound())
+			{
+				return; // actually irrelevant
+			}*/
+			//std::cout<<'#';
 			// trigger
 			// cc_w should go here
-	  }
+		}
 	}
 
 	//est += fw;
@@ -457,102 +540,109 @@ void BBGraphBipartitioningFREELogic<Pheet, SubProblem>::update_data(uint8_t set,
 }
 
 template <class Pheet, class SubProblem>
-void BBGraphBipartitioningFREELogic<Pheet, SubProblem>::bulk_update(uint8_t set, Set positions) {
-  size_t v = positions._Find_first();
-  while(v != positions.size()) {
-    //update(set, v); // JLT: can be done cheaper
-    sub_problem->sets[2].set(v, false);
-    sub_problem->sets[set].set(v);
+void BBGraphBipartitioningFREELogic<Pheet, SubProblem>::bulk_update(uint8_t set, Set positions)
+{
+	size_t v = positions._Find_first();
+	while(v != positions.size())
+	{
+		//update(set, v); // JLT: can be done cheaper
+		sub_problem->sets[2].set(v, false);
+		sub_problem->sets[set].set(v);
 
-    cut += weights[set ^ 1][v];
-	    
-    for(size_t i = 0; i < sub_problem->graph[v].num_edges; ++i) {
-      size_t w = sub_problem->graph[v].edges[i].target;
-	    
-      weights[set][w] += sub_problem->graph[v].edges[i].weight;
-    }
-    v = positions._Find_next(v);
-  }
+		cut += weights[set ^ 1][v];
+			
+		for(size_t i = 0; i < sub_problem->graph[v].num_edges; ++i)
+		{
+			size_t w = sub_problem->graph[v].edges[i].target;
+			weights[set][w] += sub_problem->graph[v].edges[i].weight;
+		}
+		v = positions._Find_next(v);
+	}
 
-  lb = 0;
-  est = 0;
-  ub = 0;
-  lb_ub_contrib = 0;
+	lb = 0;
+	est = 0;
+	ub = 0;
+	lb_ub_contrib = 0;
 }
 
 template <class Pheet, class SubProblem>
-void BBGraphBipartitioningFREELogic<Pheet, SubProblem>::assign_deltabound() {
-  size_t subrem[2];
-  subrem[0] = sub_problem->k-sub_problem->sets[0].count();
-  subrem[1] = (sub_problem->size-sub_problem->k)-sub_problem->sets[1].count();
+void BBGraphBipartitioningFREELogic<Pheet, SubProblem>::assign_deltabound()
+{
+	size_t subrem[2];
+	subrem[0] = sub_problem->k-sub_problem->sets[0].count();
+	subrem[1] = (sub_problem->size-sub_problem->k)-sub_problem->sets[1].count();
 
-  size_t nf =  sub_problem->sets[2].count();
-  VertexDelta delta[nf];
+	size_t nf =	sub_problem->sets[2].count();
+	VertexDelta delta[nf];
 
-  size_t di = 0;
-  size_t v = sub_problem->sets[2]._Find_first();
-  while(v != sub_problem->sets[2].size()) {
-    delta[di].delta = (ptrdiff_t)weights[1][v] - (ptrdiff_t)weights[0][v];
-    delta[di].target = v;
-    di++;
+	size_t di = 0;
+	size_t v = sub_problem->sets[2]._Find_first();
+	while(v != sub_problem->sets[2].size())
+	{
+		delta[di].delta = (ptrdiff_t)weights[1][v] - (ptrdiff_t)weights[0][v];
+		delta[di].target = v;
+		di++;
 
-    v = sub_problem->sets[2]._Find_next(v);
-  }
-  std::sort(delta, delta + di, delta_compare());
+		v = sub_problem->sets[2]._Find_next(v);
+	}
+	std::sort(delta, delta + di, delta_compare());
 
-  size_t i;
-  // assign to set 0
-  for (i=0; i<subrem[0]; i++) {
-    v = delta[i].target;
-    sub_problem->sets[2].set(v, false);
-    sub_problem->sets[0].set(v);
+	size_t i;
+	// assign to set 0
+	for (i = 0; i < subrem[0]; ++i)
+	{
+		v = delta[i].target;
+		sub_problem->sets[2].set(v, false);
+		sub_problem->sets[0].set(v);
 
-    cut += weights[1][v];
-    
-    // not needed
-    for(size_t i = 0; i < sub_problem->graph[v].num_edges; ++i) {
-      size_t w = sub_problem->graph[v].edges[i].target;
-      weights[0][w] += sub_problem->graph[v].edges[i].weight;
-      pheet_assert(!sub_problem->sets[2].test(w));
-      if (sub_problem->sets[2].test(w)) std::cout<<"TROUBLE!!";
-    }
-  }
-  // assign to set 1
-  for (; i<di; i++) {
-    v = delta[i].target;
-    sub_problem->sets[2].set(v, false);
-    sub_problem->sets[1].set(v);
+		cut += weights[1][v];
+		
+		// not needed
+		for(size_t i = 0; i < sub_problem->graph[v].num_edges; ++i)
+		{
+			size_t w = sub_problem->graph[v].edges[i].target;
+			weights[0][w] += sub_problem->graph[v].edges[i].weight;
+			pheet_assert(!sub_problem->sets[2].test(w));
+		}
+	}
 
-    cut += weights[0][v];
-    
-    // not needed
-    for(size_t i = 0; i < sub_problem->graph[v].num_edges; ++i) {
-      size_t w = sub_problem->graph[v].edges[i].target;
-      weights[1][w] += sub_problem->graph[v].edges[i].weight;
-      pheet_assert(!sub_problem->sets[2].test(w));
-      if (sub_problem->sets[2].test(w)) std::cout<<"TROUBLE!!";
-    }
-  }
- }
+	// assign to set 1
+	for (; i < di; ++i)
+	{
+		v = delta[i].target;
+		sub_problem->sets[2].set(v, false);
+		sub_problem->sets[1].set(v);
 
+		cut += weights[0][v];
+		
+		// not needed
+		for(size_t i = 0; i < sub_problem->graph[v].num_edges; ++i)
+		{
+			size_t w = sub_problem->graph[v].edges[i].target;
+			weights[1][w] += sub_problem->graph[v].edges[i].weight;
+			pheet_assert(!sub_problem->sets[2].test(w));
+		}
+	}
+}
 
 template <class Pheet, class SubProblem>
-bool BBGraphBipartitioningFREELogic<Pheet, SubProblem>::can_complete() {
+bool BBGraphBipartitioningFREELogic<Pheet, SubProblem>::can_complete()
+{
 	return ((sub_problem->sets[0].count() == sub_problem->k-1) ||
 			(sub_problem->sets[1].count() == (sub_problem->size - sub_problem->k)-1)) ||
 			no_edges();
 }
 
 template <class Pheet, class SubProblem>
-void BBGraphBipartitioningFREELogic<Pheet, SubProblem>::complete_solution() {
+void BBGraphBipartitioningFREELogic<Pheet, SubProblem>::complete_solution()
+{
 	size_t s;
-	if(sub_problem->sets[0].count() == sub_problem->k-1) {
+	if(sub_problem->sets[0].count() == sub_problem->k-1)
 		s = 0;
-	}
-	else if(sub_problem->sets[1].count() == (sub_problem->size - sub_problem->k)-1) {
+	else if(sub_problem->sets[1].count() == (sub_problem->size - sub_problem->k)-1)
 		s = 1;
-	}
-	else {
+	else
+	{
 		pheet_assert(no_edges());
 
 		assign_deltabound();
@@ -560,7 +650,6 @@ void BBGraphBipartitioningFREELogic<Pheet, SubProblem>::complete_solution() {
 	}
 
 	//std::cout<<'#';
-
 	size_t v = get_minnode(s);
 
 	update(s,v);
@@ -572,7 +661,8 @@ void BBGraphBipartitioningFREELogic<Pheet, SubProblem>::complete_solution() {
 }
 
 template <class Pheet, class SubProblem>
-void BBGraphBipartitioningFREELogic<Pheet, SubProblem>::print_name() {
+void BBGraphBipartitioningFREELogic<Pheet, SubProblem>::print_name()
+{
 	std::cout << "FREELogic";
 }
 

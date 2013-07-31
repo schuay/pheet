@@ -17,7 +17,7 @@ bool const graph_bipartitioning_test_count_irrelevant_tasks = false;
 bool const graph_bipartitioning_test_count_upper_bound_changes = false;
 bool const graph_bipartitioning_test_count_allocated_subproblems = false;
 bool const graph_bipartitioning_test_measure_memory_allocation_time = false;
-bool const graph_bipartitioning_test_measure_last_update_time = false;
+bool const graph_bipartitioning_test_measure_last_update_time = true;
 
 bool const lupiv_track_locality = false;
 bool const lupiv_count_locality_misses = false;

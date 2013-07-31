@@ -44,6 +44,13 @@ void GraphBipartitioningTests::run_partitioner() {
 			procs_t cpus;
 			for(size_t c = 0; c < sizeof(graph_bipartitioning_test_cpus)/sizeof(graph_bipartitioning_test_cpus[0]); c++) {
 				cpus = graph_bipartitioning_test_cpus[c];
+				if (mm.supports_SMT()) // with SMT we only want to run with all cores
+				{
+					cpus = max_cpus;
+					c = sizeof(graph_bipartitioning_test_cpus); // break the loop on next iteration
+				}
+				if (cpus > max_cpus)
+					continue;
 				if(cpus >= max_cpus) {
 					if(!max_processed) {
 						cpus = max_cpus;

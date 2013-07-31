@@ -11,7 +11,9 @@
 
 #include "../settings.h"
 
-#ifdef ENV_GCC
+#ifdef __ICC
+#include "atomics_icc.h"
+#elif ENV_GCC
 // Working with g++
 
 #include "atomics_gnu.h"

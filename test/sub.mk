@@ -1,5 +1,6 @@
 
 TEST_OBJS += lib/pheet_tests.o lib/Test.o
+TEST_OBJS_MIC += lib_mic/pheet_tests.o lib_mic/Test.o
 
 include test/graph_bipartitioning/sub.mk
 include test/sorting/sub.mk

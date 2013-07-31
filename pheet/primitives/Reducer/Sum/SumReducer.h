@@ -44,7 +44,7 @@ private:
 };
 
 template <class Pheet, typename T, template <typename S> class Op>
-SumReducer<Pheet, T, Op>::SumReducer() {
+SumReducer<Pheet, T, Op>::SumReducer(): reducer() {
 
 }
 

@@ -54,7 +54,7 @@ private:
 };
 
 template <class Pheet, typename T, template <typename S> class M>
-MaxReducer<Pheet, T, M>::MaxReducer() {
+MaxReducer<Pheet, T, M>::MaxReducer() : reducer() {
 
 }
 

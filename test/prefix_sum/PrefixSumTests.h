@@ -42,6 +42,13 @@ void PrefixSumTests::run_prefix_sum() {
 				procs_t cpus;
 				for(size_t c = 0; c < sizeof(prefix_sum_test_cpus)/sizeof(prefix_sum_test_cpus[0]); c++) {
 					cpus = prefix_sum_test_cpus[c];
+					if (mm.supports_SMT()) // with SMT we only want to run with all cores
+					{
+						cpus = max_cpus;
+						c = sizeof(prefix_sum_test_cpus); // break the loop on next iteration
+					}
+					if (cpus > max_cpus)
+						continue;
 					if(cpus >= max_cpus) {
 						if(!max_processed) {
 							cpus = max_cpus;

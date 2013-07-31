@@ -21,6 +21,7 @@ namespace pheet {
 template <class Pheet, typename T>
 class BasicStrategyHeapBase {
 public:
+	BasicStrategyHeapBase(): parent_index() {}
 	virtual ~BasicStrategyHeapBase() {}
 
 //	virtual bool is_empty() = 0;
@@ -29,7 +30,7 @@ public:
 	}
 	virtual T pop(/*size_t& total_size*/) = 0;
 
-	size_t parent_index = 0;
+	size_t parent_index;
 	T top;
 };
 

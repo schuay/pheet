@@ -113,6 +113,8 @@ public:
 //	procs_t get_node_id();
 	procs_t get_num_leaves();
 	procs_t get_memory_level();
+ 
+	bool supports_SMT() const { return true; }
 
 	void bind();
 	void unbind();
