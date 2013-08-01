@@ -1,7 +1,5 @@
 include settings.mk
 
-LIBS =		-lpthread -lhwloc
-
 TEST_OBJS =
 TEST_OBJS_MIC =  
 
@@ -18,10 +16,10 @@ lib_mic/%.o : test/%.cpp test/settings.h
 
 
 $(TEST_TARGET):	$(TEST_OBJS)
-	$(CXX) -o $(TEST_TARGET) $(TEST_OBJS) $(LIB_PATH) $(LIBS) $(TEST_LIBS)
+	$(CXX) -o $(TEST_TARGET) $(TEST_OBJS) $(LIB_PATH) $(LIBS)
 
 $(TEST_TARGET_MIC):	$(TEST_OBJS_MIC)
-	$(CXX) -mmic -o $(TEST_TARGET_MIC) $(TEST_OBJS_MIC) $(LIB_PATH_MIC) $(LIBS) $(TEST_LIBS)
+	$(CXX) -mmic -o $(TEST_TARGET_MIC) $(TEST_OBJS_MIC) $(LIB_PATH_MIC) $(LIBS)
   	
 all:		$(TEST_TARGET)
 all_mic:	$(TEST_TARGET) $(TEST_TARGET_MIC)

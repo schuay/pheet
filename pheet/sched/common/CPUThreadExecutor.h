@@ -9,14 +9,14 @@
 #ifndef CPUTHREADEXECUTOR_H_
 #define CPUTHREADEXECUTOR_H_
 
-#include <pthread.h>
+#include <thread>
 #include <vector>
 #include <iostream>
 
 namespace pheet {
 
 template <class Executor>
-void* execute_cpu_thread(void *param);
+void execute_cpu_thread(Executor* param);
 
 template <class T>
 class CPUThreadExecutor {
@@ -31,10 +31,10 @@ private:
 	void execute();
 
 	T* work;
-	pthread_t thread;
+	std::thread thread;
 
-	template <class Executor>
-	friend void* execute_cpu_thread(void* param);
+/*	template <class Executor>
+	friend void* execute_cpu_thread(void* param);*/
 };
 
 template <class T>
@@ -51,20 +51,23 @@ CPUThreadExecutor<T>::~CPUThreadExecutor() {
 template <class T>
 void CPUThreadExecutor<T>::run() {
 //	std::cout << "calling run" << std::endl;
-	pthread_create(&thread, NULL, execute_cpu_thread<T>, work);
+//	pthread_create(&thread, NULL, execute_cpu_thread<T>, work);
+	std::thread t(execute_cpu_thread<T>, work);
+	thread = std::move(t);
 }
 
 template <class T>
 void CPUThreadExecutor<T>::join() {
-	pthread_join(thread, NULL);
+//	pthread_join(thread, NULL);
+	thread.join();
 }
 
 template <class T>
-void *execute_cpu_thread(void *param) {
+void execute_cpu_thread(T* exec) {
 //	std::cout << "exec cpu thread " << param << std::endl;
-	T* exec = (T*) param;
+//	T* exec = (T*) param;
 	exec->run();
-	return NULL;
+//	return NULL;
 }
 
 }

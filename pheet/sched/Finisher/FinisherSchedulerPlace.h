@@ -156,7 +156,7 @@ private:
 	static thread_local Self* local_place;
 
 	template <class T>
-		friend void* execute_cpu_thread(void* param);
+	friend void execute_cpu_thread(T* param);
 };
 
 template <class Pheet, template <class P, typename T> class StealingDequeT, uint8_t CallThreshold>

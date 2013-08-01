@@ -321,7 +321,7 @@ private:
 	static thread_local Place* local_place;
 
 	template <class T>
-		friend void* execute_cpu_thread(void* param);
+		friend void execute_cpu_thread(T* param);
 //	friend class Pheet::Finish;
 };
 

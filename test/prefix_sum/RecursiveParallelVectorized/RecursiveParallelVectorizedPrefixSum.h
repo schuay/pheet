@@ -204,10 +204,14 @@ __m128i RecursiveParallelVectorizedPrefixSumImpl<Pheet, BlockSize>::calcVectorPr
 //	const size_t elemsPerVector = sizeof(__m128i) / sizeof(data[0]);
 	static_assert(/* elemsPerVector */ sizeof(__m128i) / sizeof(data[0]) == 4, "Only 32 bit integers are supported");
 
-	__m128i t = _mm_slli_si128(v, sizeof(data[0]));
+	// Need temporary or won't compile under GCC 4.8
+	size_t const tmp = sizeof(data[0]);
+	__m128i t = _mm_slli_si128(v, tmp);
 	v = _mm_add_epi32(v, t);
 
-	t = _mm_slli_si128(v, sizeof(data[0])*2);
+	// Need temporary or won't compile under GCC 4.8
+	size_t const tmp2 = sizeof(data[0])*2;
+	t = _mm_slli_si128(v, tmp2);
 	return _mm_add_epi32(v, t);
 }
 

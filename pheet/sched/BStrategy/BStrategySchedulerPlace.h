@@ -177,7 +177,7 @@ private:
 //	friend class Pheet::Scheduler::Finish;
 
 	template <class T>
-	friend void* execute_cpu_thread(void* param);
+	friend void execute_cpu_thread(T* param);
 };
 
 template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>

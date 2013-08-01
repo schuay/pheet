@@ -38,8 +38,8 @@ struct MMFinishStackElement {
 	// Allows to reuse element if no task was spawned yet
 	size_t reuse_count;
 
-	// Owner of the element
-	typename Pheet::Place* owner;
+	// Owner of the element (Should be Pheet::Place* but is a problem on GCC 4.8 since Pheet::Place is not defined at this point...)
+	void* /* typename Pheet::Place* */ owner;
 };
 
 template <class Element>
