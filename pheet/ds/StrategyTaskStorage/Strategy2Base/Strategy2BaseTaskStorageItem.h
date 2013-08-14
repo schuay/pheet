@@ -42,7 +42,6 @@ struct Strategy2BaseTaskStorageItem : Strategy2BaseTaskStorageBaseItem<Pheet, TT
 
 	DataBlock* data_block;
 	size_t offset;
-	BaseStrategy strategy_v;
 };
 
 template <class Item>

@@ -19,6 +19,12 @@ public:
 	StrategyScheduler2TaskStorageBase();
 	virtual ~StrategyScheduler2TaskStorageBase();
 
+	/**
+	 * Needs to contain at least one release statement or fence on success
+	 * to make sure the parent task storage is correct. Release has to occur at latest at
+	 * linearization point of success
+	 * No requirements for failure
+	 */
 	virtual TT pop(BaseItem* boundary, procs_t place_id) = 0;
 };
 

@@ -62,6 +62,17 @@ public:
 		return pos - offset < BlockSize;
 	}
 
+	int compare(size_t pos) {
+		ptrdiff_t diff = (ptrdiff_t)(pos - offset);
+		if(diff < 0) {
+			return -1;
+		}
+		else if(diff >= BlockSize) {
+			return 1;
+		}
+		return 0;
+	}
+
 	Self* get_next() {
 		return next.load(std::memory_order_relaxed);
 	}

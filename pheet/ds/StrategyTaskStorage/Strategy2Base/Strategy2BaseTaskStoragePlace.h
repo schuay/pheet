@@ -45,14 +45,9 @@ public:
 	:pc(pc), task_storage(task_storage),
 	 bottom(0), top(0), spy_bottom(0), spy_top(0),
 	 scheduler_place(scheduler_place)  {
-		local_bottom = &(data_blocks.acquire_item());
-		local_bottom->link(nullptr);
-		local_top->store(local_bottom, std::memory_order_relaxed);
-
-		spy_bottom_b = &(data_blocks.acquire_item());
-		spy_bottom_b->link(nullptr);
-		spy_top_b->store(local_bottom, std::memory_order_relaxed);
-
+		bottom_block = &(data_blocks.acquire_item());
+		bottom_block->link(nullptr);
+		top_block->store(bottom_block, std::memory_order_relaxed);
 		pc.num_blocks_created.incr();
 
 		// Full synchronization by scheduler before place becomes visible, happens-before for all initialization is satisfied
@@ -68,74 +63,90 @@ public:
 
 		size_t b = bottom.load(std::memory_order_relaxed);
 
-		it.strategy_v = std::move(s);
+//		it.strategy_v = std::move(s);
 		it.place = this;
 		it.data = data;
-		it.taken = false;
+		it.taken.store(false, std::memory_order_relaxed);
 		it.task_storage = task_storage;
 	//	it.item_push = &Self::template item_push<Strategy>;
 	//	it.block = local_tail;
 		it.offset = b;
 
-		if(!local_bottom->fits(b)) {
-			DataBlock* next = local_bottom->get_next();
+		if(!bottom_block->fits(b)) {
+			DataBlock* next = bottom_block->get_next();
 			if(next == nullptr) {
 				next = &(data_blocks.acquire_item());
-				next->link(local_bottom);
+				next->link(bottom_block);
 			}
-			local_bottom = next;
+			bottom_block = next;
 		}
 
-		local_bottom->put(it);
+		bottom_block->put(it);
 		// If the new value of bottom is visible, the put operation must have happened before
 		bottom.store(b + 1, std::memory_order_release);
 	}
 
 	T pop() {
+		// Current problem: Tasks for other task storages can trigger linear scans through the data-structure
+
 		size_t b = bottom.load(std::memory_order_relaxed);
 		size_t t = top.load(std::memory_order_relaxed);
-		if(b - t == 0) {
-			// Empty, try spying
-			if(!spy()) {
-				return pop_spied();
-			}
-		}
+		DataBlock* db = bottom_block;
 
-		BaseItem* ret = local_bottom->get(b);
+		BaseItem* ret;
 		while(true) {
-			while(ret->taken.load(std::memory_order_relaxed)) {
+			if(b == t) {
+				// Empty, first make sure top and bottom are equal, then try stealing
+				b = bottom.load(std::memory_order_relaxed);
+				while(t != b) {
+					top.compare_exchange_weak(t, b, std::memory_order_relaxed);
+				}
+
+				return steal();
+			}
+			if(!db->fits(b)) {
+				db = db->get_prev();
+				pheet_assert(db != nullptr);
+			}
+
+			ret = db->get(b);
+			if(ret->taken.load(std::memory_order_relaxed)) {
 				--b;
-				if(b - t == 0) {
-					return pop_spied();
-				}
-				if(!local_bottom->fits(b)) {
-					local_bottom = local_bottom->get_prev();
-					pheet_assert(local_bottom != nullptr);
-				}
-				ret = local_bottom->get(b);
+				continue;
 			}
 
 			if(ret->task_storage != task_storage) {
+				size_t b2 = bottom.load(std::memory_order_relaxed);
+				if(b2 != b) {
+					// If task_storage->pop has at least one release statement on success,
+					// this statement can be relaxed completely
+					// Otherwise it would need to be seq_cst
+					// Proof: write of new value for bottom happens before acquire of taken item
+					// If item was not taken, top cannot overtake bottom
+					// (On failure of pop, bottom is reset, no danger there, nothing
+					// to steal anyway, but some thread may change top, so bottom needs to be reset)
+					bottom.store(b, std::memory_order_relaxed);
+				}
+
 				// Try popping ret or some higher priority task from the sub task-storage
 				T ret_data = ret->task_storage->pop(ret, scheduler_place->get_id());
 				if(ret_data != nullable_traits<T>::null_value) {
+					bottom_block = db;
 					return ret_data;
 				}
 
+				// Need to reset bottom to make sure that top cannot overtake bottom
+				// (would be dangerous for push)
+				// Stealing threads may still see bottom < top but this is ok
+				// (will just lead to a failed steal attempt, and queue is empty in this case anyway)
+				bottom.store(b2, std::memory_order_relaxed);
+
 				--b;
-				if(b - t == 0) {
-					return pop_spied();
-				}
-				if(!local_bottom->fits(b)) {
-					local_bottom = local_bottom->get_prev();
-					pheet_assert(local_bottom != nullptr);
-				}
-				ret = local_bottom->get(b);
+				continue;
 			}
 			break;
 		}
-
-		T ret_data = ret->data;
+		bottom_block = db;
 
 		--b;
 		bottom.store(b, std::memory_order_seq_cst);
@@ -145,12 +156,14 @@ public:
 		ptrdiff_t diff = (ptrdiff_t)(b-t);
 
 		if(diff > 0) {
+			T ret_data = ret->data;
 			ret->taken.store(true, std::memory_order_relaxed);
 			return ret_data;
 		}
 		else if(diff == 0) {
 			bottom.store(b + 1, std::memory_order_relaxed);
 			if(top.compare_exchange_strong(t, t + 1, std::memory_order_relaxed)) {
+				T ret_data = ret->data;
 				ret->taken.store(true, std::memory_order_relaxed);
 				return ret_data;
 			}
@@ -159,24 +172,7 @@ public:
 			pheet_assert(diff == -1);
 			bottom.store(b + 1, std::memory_order_relaxed);
 		}
-		return pop_spied();
-	}
-
-	template <class Strategy>
-	void item_push(Item* item, size_t position, uint8_t type) {
-		if(reinterpret_cast<Strategy*>(item->strategy)->dead_task()) {
-			return;
-		}
-		Ref r;
-		r.item = item;
-		r.position = position;
-		r.type = type;
-
-		Strategy* s = new Strategy(*reinterpret_cast<Strategy*>(item->strategy));
-		s->rebase();
-		r.strategy = s;
-
-		heap.template push<Strategy>(std::move(r));
+		return steal();
 	}
 
 	bool is_full() {
@@ -191,7 +187,120 @@ public:
 		return bottom.load(std::memory_order_relaxed) - top.load(std::memory_order_relaxed);
 	}
 private:
-	T pop_spied() {
+	T steal() {
+		// Problem: top_block is never updated and such blocks never freed. How can we do this
+		// without ABA problem?
+
+		if(last_partner != nullptr) {
+			T ret = last_partner->steal_from();
+			if(ret != nullable_traits<T>::null_value) {
+				return ret;
+			}
+			last_partner = null;
+		}
+
+		procs_t num_levels = scheduler_place->get_num_levels();
+		// Finalize elements in stack
+		// We do not steal from the last level as there are no partners
+		procs_t level = num_levels - 1;
+		while(level > 0) {
+			Self& partner = scheduler_place->get_random_partner_at_level(level)->get_task_storage();
+
+			T ret = partner.steal_from();
+			if(ret != nullable_traits<T>::null_value) {
+				last_partner = &partner;
+				return ret;
+			}
+
+			if(partner.last_partner != nullptr) {
+				ret = partner.last_partner->steal_from();
+				if(ret != nullable_traits<T>::null_value) {
+					last_partner = partner.last_partner;
+					return ret;
+				}
+			}
+
+			--level;
+		}
+
+		return nullable_traits<T>::null_value;
+	}
+
+	/**
+	 * Executed in the context of the stealer, should only do thread-safe things
+	 */
+	T steal_from() {
+		size_t t = top.load(std::memory_order_acquire);
+
+		size_t b = bottom.load(std::memory_order_relaxed);
+
+		DataBlock* db = top_block.load(std::memory_order_relaxed);
+		int cmp;
+		while((cmp = db->compare(t)) != 0) {
+			if(cmp < 0) {
+				// To keep it wait-free, no retries
+				return nullable_traits<T>::null_value;
+			}
+			else if(cmp > 0) {
+				db = db->get_next();
+				pheet_assert(db != nullptr);
+			}
+		}
+
+		ptrdiff_t diff = (ptrdiff_t)(b-t);
+		if(diff <= 0) {
+			return nullable_traits<T>::null_value;
+		}
+
+		BaseItem* ret = db->get(t);
+		while(ret->taken.load(std::memory_order_acquire)) {
+			++t;
+
+			if(!db->fits(t)) {
+				db = db->get_next();
+				if(db == nullptr || !db->fits(t)) {
+					// Working on an old block, return
+					return nullable_traits<T>::null_value;
+				}
+			}
+		}
+
+		if(ret->task_storage != task_storage) {
+			return ret->task_storage->steal(ret, scheduler_place->get_id());
+		}
+
+		T ret_data = ret->data;
+
+		if(top.compare_exchange_strong(t, t + 1, std::memory_order_seq_cst, std::memory_order_relaxed)) {
+			ret->taken->store(true, std::memory_order_relaxed);
+			return ret_data;
+		}
+		return nullable_traits<T>::null_value;
+	}
+
+	/**
+	 * Corrects the top block pointer if necessary, and marks old blocks as reusable
+	 * Can be called by any thread
+	 */
+	void update_top_block() {
+		size_t t = top.load(std::memory_order_acquire);
+		DataBlock* db = top_block.load(std::memory_order_relaxed);
+
+		int cmp;
+		while((cmp = db->compare(t)) != 0) {
+			if(cmp < 0) {
+				// To keep it wait-free, no retries
+				return;
+			}
+			else if(cmp > 0) {
+				db = db->get_next();
+				pheet_assert(db != nullptr);
+			}
+		}
+	}
+
+
+/*	{
 		// All those variables are only written locally, so relaxed reading is enough
 		size_t b = spy_bottom.load(std::memory_order_relaxed);
 		size_t t = spy_top.load(std::memory_order_relaxed);
@@ -286,31 +395,7 @@ private:
 			T ret_data = ret->data;
 			// TODO: finish.
 		}
-	}
-
-	bool spy() {
-		procs_t num_levels = scheduler_place->get_num_levels();
-		// Finalize elements in stack
-		// We do not steal from the last level as there are no partners
-		procs_t level = num_levels - 1;
-		while(level > 0) {
-			Self& partner = scheduler_place->get_random_partner_at_level(level)->get_task_storage();
-
-			if(process_local_list(partner.local_head)) {
-				// Success when stealing!
-				last_steal_head = partner.local_head;
-				return true;
-			}
-			else if(process_local_list(partner.last_steal_head)) {
-				last_steal_head = partner.last_steal_head;
-				return true;
-			}
-
-			--level;
-		}
-
-		return false;
-	}
+	}*/
 
 	PerformanceCounters pc;
 
@@ -324,13 +409,10 @@ private:
 	std::atomic<size_t> bottom;
 	std::atomic<size_t> top;
 
-	DataBlock* local_bottom;
-	std::atomic<DataBlock*> local_top;
+	DataBlock* bottom_block;
+	std::atomic<DataBlock*> top_block;
 
-	std::atomic<size_t> spy_bottom;
-	std::atomic<size_t> spy_top;
-	DataBlock* spy_bottom_b;
-	std::atomic<DataBlock*> spy_top_b;
+	Self* last_partner;
 
 	SchedulerPlace* scheduler_place;
 };
