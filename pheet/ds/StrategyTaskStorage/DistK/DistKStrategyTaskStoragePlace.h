@@ -108,7 +108,7 @@ public:
 		// Cannot check this since item may be uninitialized if it has been newly allocated
 //		pheet_assert(it.strategy == nullptr);
 		size_t k = s.get_k();
-		pheet_assert(k > 0);
+//		pheet_assert(k > 0);
 
 		it.strategy = new Strategy(std::move(s));
 		it.data = data;
