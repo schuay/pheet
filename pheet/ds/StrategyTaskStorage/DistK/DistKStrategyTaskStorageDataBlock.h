@@ -75,8 +75,10 @@ public:
 	}
 
 	void init_global_first(size_t num_threads) {
+		// An empty dummy block for the beginning
 		state = 2;
 		global_id = 0;
+		active_items = 0;
 		this->active_threads = num_threads;
 //		this->target_active_threads = 0;
 	}
@@ -177,6 +179,7 @@ public:
 	void mark_processed_globally() {
 		SIZET_ATOMIC_SUB(&active_threads, 1);
 		pheet_assert(active_threads > 0 || next != nullptr);
+		perform_cleanup_check();
 	}
 
 	void register_locally() {
