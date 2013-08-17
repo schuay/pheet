@@ -22,7 +22,7 @@ public:
 	typedef DistKStrategyTaskStorageItem<Pheet, Place, TT> Item;
 
 	DistKStrategyTaskStorageDataBlock()
-	:offset(0), prev(nullptr), next(nullptr), filled(0), locally_active_threads(0), state(4), active_items(BlockSize) {
+	:offset(0), prev(nullptr), next(nullptr), filled(0), active_items(BlockSize), locally_active_threads(0), state(4) {
 		for(size_t i = 0; i < BlockSize; ++i) {
 			data[i] = nullptr;
 		}
