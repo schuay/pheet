@@ -15,6 +15,11 @@ struct CentralKStrategyTaskStorageItem {
 	typedef CentralKStrategyTaskStorageItem<Pheet, Place, TT> Self;
 	typedef TT Data;
 
+	CentralKStrategyTaskStorageItem()
+	:strategy(nullptr) {
+
+	}
+
 	~CentralKStrategyTaskStorageItem() {
 		// Some items may not be cleaned up at the end, and cannot be cleaned up at data-block level
 		// due to race conditions. Therefore delete at the item level.
