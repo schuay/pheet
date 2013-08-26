@@ -43,7 +43,7 @@ BasicPerformanceCounter<Pheet, false>::BasicPerformanceCounter() {
 
 template <class Pheet>
 inline
-BasicPerformanceCounter<Pheet, false>::BasicPerformanceCounter(BasicPerformanceCounter<Pheet, false>& other) {
+BasicPerformanceCounter<Pheet, false>::BasicPerformanceCounter(BasicPerformanceCounter<Pheet, false>&) {
 
 }
 

@@ -217,7 +217,7 @@ public:
 	typedef BasicStrategyHeapBase<Pheet, T> Item;
 	typedef BasicStrategyHeapBase<Pheet, T> Base;
 
-	BasicStrategyHeapHeap(StrategyRetriever& sr, std::map<std::type_index, Base*>& heap_heaps)
+	BasicStrategyHeapHeap(StrategyRetriever& sr, std::map<std::type_index, Base*>&)
 	:comp(sr) {
 
 	}

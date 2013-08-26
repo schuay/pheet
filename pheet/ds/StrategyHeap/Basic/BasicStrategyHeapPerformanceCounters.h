@@ -31,7 +31,7 @@ inline BasicStrategyHeapPerformanceCounters<Pheet>::BasicStrategyHeapPerformance
 }
 
 template <class Pheet>
-BasicStrategyHeapPerformanceCounters<Pheet>::BasicStrategyHeapPerformanceCounters(BasicStrategyHeapPerformanceCounters& other)
+BasicStrategyHeapPerformanceCounters<Pheet>::BasicStrategyHeapPerformanceCounters(BasicStrategyHeapPerformanceCounters&)
 {
 
 }

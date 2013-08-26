@@ -44,7 +44,7 @@ TimePerformanceCounter<Pheet, false>::TimePerformanceCounter() {
 
 template <class Pheet>
 inline
-TimePerformanceCounter<Pheet, false>::TimePerformanceCounter(TimePerformanceCounter<Pheet, false> const& other) {
+TimePerformanceCounter<Pheet, false>::TimePerformanceCounter(TimePerformanceCounter<Pheet, false> const&) {
 
 }
 
