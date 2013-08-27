@@ -28,21 +28,21 @@ class TriStripRun {
 public:
   TriStripRun(procs_t cpus, GraphDual& graph, bool withstrat);
   ~TriStripRun();
-  
+
   void run();
-  
+
   void print_results();
   void print_headers();
-  
+
   static void print_name();
   static void print_scheduler_name();
-  
+
   static char const name[];
-  
-  
+
+
   size_t getTriStripCount();
   size_t getNodeTriStripCount();
-  
+
 
 private:
 	unsigned int cpus;
@@ -77,7 +77,7 @@ size_t TriStripRun<Pheet>::getTriStripCount()
 template <class Pheet>
   TriStripRun<Pheet>::TriStripRun(procs_t cpus, GraphDual& graph, bool withstrat):
  cpus(cpus), graph(graph),withstrat(withstrat) {
-	
+
 }
 
 template <class Pheet>

@@ -59,7 +59,7 @@ void UTSTest<Impl>::run_test() {
 	std::vector<char*> v2;
 	while (ss >> arg)
 	{
-	   v1.push_back(arg); 
+	   v1.push_back(arg);
 	   v2.push_back(const_cast<char*>(v1.back().c_str()));
 	}
 	v2.push_back(0);

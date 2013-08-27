@@ -12,7 +12,7 @@
 #include <pheet/sched/strategies/BaseStrategy.h>
 
 namespace pheet {
-  
+
   template <class Pheet>
     class RunLastStealFirstStrategy :  public Pheet::Environment::BaseStrategy {
   public:
@@ -34,14 +34,14 @@ namespace pheet {
       : BaseStrategy(other),runlast(other.runlast),localplace(other.localplace)
       {
       }
-    
+
   RunLastStealFirstStrategy(Self&& other)
     : BaseStrategy(other), runlast(other.runlast),localplace(other.localplace)
       {
       }
-    
+
     ~RunLastStealFirstStrategy() {}
-    
+
     inline bool prioritize(Self& other) {
       if(runlast != other.runlast)
 	{
@@ -53,22 +53,22 @@ namespace pheet {
 
       return BaseStrategy::prioritize(other);
     }
-    
+
     inline bool forbid_call_conversion() const {
       return true;
     }
   };
-  
+
   template <class Pheet>
     class LowDegreeStrategy : public  RunLastStealFirstStrategy<Pheet> {
     GraphNode* node;
     size_t degree;
     size_t taken;
   public:
-    
+
     typedef LowDegreeStrategy<Pheet> Self;
     typedef RunLastStealFirstStrategy<Pheet> BaseStrategy;
-   
+
 
 
   LowDegreeStrategy(/*GraphDual& graph,*/ GraphNode* node, size_t degree,size_t taken):/*graph(graph),*/node(node),degree(degree),taken(taken)
@@ -82,7 +82,7 @@ namespace pheet {
 	  : BaseStrategy(other), /*graph(other.graph),*/node(other.node),degree(other.degree),taken(other.taken)
 	{
 	  degree = node->getExtendedDegree();
-	  
+
 }
 
 	LowDegreeStrategy(Self&& other)
