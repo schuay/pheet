@@ -21,7 +21,7 @@ public:
 	typedef StrategySsspStrategy<Pheet> Strategy;
 	typedef StrategySsspPerformanceCounters<Pheet> PerformanceCounters;
 
-	StrategySssp(SsspGraphVertex* graph, size_t size, PerformanceCounters& pc)
+	StrategySssp(SsspGraphVertex* graph, size_t, PerformanceCounters& pc)
 	:graph(graph), node(0), distance(0), pc(pc) {}
 	StrategySssp(SsspGraphVertex* graph, size_t node, size_t distance, PerformanceCounters& pc)
 	:graph(graph), node(node), distance(distance), pc(pc) {}

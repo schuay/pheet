@@ -53,12 +53,12 @@ public:
 	typedef ListPerformanceCounter<Pheet, E, false> Self;
 
 	ListPerformanceCounter() {}
-	ListPerformanceCounter(Self& other) {}
+	ListPerformanceCounter(Self&) {}
 	~ListPerformanceCounter() {}
 
-	void add(E const& item) {}
-	void print(char const* const prefix, char const* const postfix) {}
-	static void print_header(char const* const string) {}
+	void add(E const&) {}
+	void print(char const* const, char const* const) {}
+	static void print_header(char const* const) {}
 };
 
 } /* namespace pheet */

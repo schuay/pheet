@@ -22,7 +22,7 @@ template <class Pheet>
 class SynchroneousSchedulerPerformanceCounters {
 public:
 	SynchroneousSchedulerPerformanceCounters() {}
-	SynchroneousSchedulerPerformanceCounters(SynchroneousSchedulerPerformanceCounters<Pheet>& other)
+	SynchroneousSchedulerPerformanceCounters(SynchroneousSchedulerPerformanceCounters<Pheet>&)
 		/*: num_calls(other.num_calls)*/ {}
 
 	static void print_headers();

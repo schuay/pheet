@@ -24,7 +24,7 @@
 namespace pheet {
 
 template<class Test>
-void TriStripTests::test(bool prio) {
+void TriStripTests::test(bool) {
 #ifdef TriStrip_TEST
 	for (size_t nc = 0; nc< sizeof(tristrip_test_nodecount)/ sizeof(tristrip_test_nodecount[0]); nc++) {
 //		for(size_t sl = 0; sl < sizeof(sor_test_slices)/sizeof(sor_test_slices[0]); sl++) {
@@ -42,7 +42,7 @@ void TriStripTests::test(bool prio) {
 #endif
 }
 
-void TriStripTests::run_test(bool usestrategy) {
+void TriStripTests::run_test(bool) {
 #ifdef TriStrip_TEST
 	if (tristrip_test) {
 

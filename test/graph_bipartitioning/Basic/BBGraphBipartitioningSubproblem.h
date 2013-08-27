@@ -67,10 +67,10 @@ public:
 	~BBGraphBipartitioningSubproblem();
 
 	Self* split(PerformanceCounters& pc);
-	bool can_complete(PerformanceCounters& pc) {
+	bool can_complete(PerformanceCounters&) {
 		return logic.can_complete();
 	}
-	void complete_solution(PerformanceCounters& pc) {
+	void complete_solution(PerformanceCounters&) {
 		logic.complete_solution();
 	}
 //	bool is_solution();

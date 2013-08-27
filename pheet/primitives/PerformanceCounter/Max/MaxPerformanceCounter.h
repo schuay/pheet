@@ -30,7 +30,7 @@ public:
 	~MaxPerformanceCounter();
 
 	void add_value(size_t const& value);
-	void add(size_t const& value) {}
+	void add(size_t const&) {}
 	void print(char const* const formatting_string);
 	static void print_header(char const* const string);
 };
@@ -41,7 +41,7 @@ inline MaxPerformanceCounter<Pheet, T, false>::MaxPerformanceCounter() {
 }
 
 template <class Pheet, typename T>
-inline MaxPerformanceCounter<Pheet, T, false>::MaxPerformanceCounter(MaxPerformanceCounter<Pheet, T, false> const& other) {
+inline MaxPerformanceCounter<Pheet, T, false>::MaxPerformanceCounter(MaxPerformanceCounter<Pheet, T, false> const&) {
 
 }
 
@@ -53,19 +53,19 @@ MaxPerformanceCounter<Pheet, T, false>::~MaxPerformanceCounter() {
 
 template <class Pheet, typename T>
 inline
-void MaxPerformanceCounter<Pheet, T, false>::add_value(size_t const& value) {
+void MaxPerformanceCounter<Pheet, T, false>::add_value(size_t const&) {
 
 }
 
 template <class Pheet, typename T>
 inline
-void MaxPerformanceCounter<Pheet, T, false>::print(char const* const formatting_string) {
+void MaxPerformanceCounter<Pheet, T, false>::print(char const* const) {
 
 }
 
 template <class Pheet, typename T>
 inline
-void MaxPerformanceCounter<Pheet, T, false>::print_header(char const* const string) {
+void MaxPerformanceCounter<Pheet, T, false>::print_header(char const* const) {
 
 }
 

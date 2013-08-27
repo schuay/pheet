@@ -75,12 +75,12 @@ namespace pheet {
 	{
 	}
       
-      inline EventsList(EventsList<Pheet, E, false> const& other)
+      inline EventsList(EventsList<Pheet, E, false> const&)
       {
 	
       }
       
-      void add(E const& value)
+      void add(E const&)
       {
       }
       
