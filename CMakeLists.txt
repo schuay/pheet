@@ -8,6 +8,10 @@ find_package(Threads)
 include(FindPkgConfig)
 pkg_search_module(HWLOC REQUIRED hwloc)
 
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    add_definitions("-Wall -Wextra -pedantic -std=c++11 -fmessage-length=0 -fno-omit-frame-pointer")
+endif()
+
 FILE(GLOB_RECURSE ALL_CPP_SRCS test/*.cpp)
 FILE(GLOB_RECURSE ALL_HEADERS *.h)
 FILE(GLOB_RECURSE Nonworking_Tests test/inarow/*.cpp test/uts/*.cpp  test/sor/*.cpp)
@@ -23,5 +27,4 @@ target_link_libraries(pheet_test
     ${HWLOC_LIBRARIES}
     ${LAPACK_LIBRARIES}
 )
-set(CMAKE_CXX_FLAGS "-std=c++0x -Wall -fmessage-length=0 -fno-omit-frame-pointer")
 SET_TARGET_PROPERTIES(pheet_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "bin")
