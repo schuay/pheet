@@ -7,6 +7,7 @@
 #include "MspTests.h"
 
 #include "Strategy/StrategyMspStrategy.h"
+#include "Strategy/StrategyMspTask.h"
 
 namespace pheet {
 
@@ -16,6 +17,7 @@ void MspTests::run_test() {
 
 	Pheet::Environment env;
 	StrategyMspStrategy<Pheet, 3> strategy({1, 2, 3}); /* Just to catch syntax errors for now. */
+	StrategyMspTask<Pheet, 3> task;
 #endif
 }
 
