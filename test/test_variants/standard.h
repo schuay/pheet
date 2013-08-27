@@ -69,11 +69,9 @@ const size_t sssp_sim_p = 200;
 const double sssp_sim_theory_p = 0.1;
 const double sssp_sim_theory_div = 100000000;
 
-
-
+#define MSP_TEST (true)
 
 //#define SORANDUTS
-
 
 }
 
