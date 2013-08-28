@@ -10,6 +10,7 @@
 namespace pheet
 {
 
+template <class Pheet>
 class SequentialMsp
 {
 public:
@@ -19,6 +20,8 @@ public:
 	sp::ShortestPaths*
 	operator()();
 
+	static char const name[];
+
 private:
 	const graph::Graph* graph;
 	const graph::Node* start;
@@ -26,6 +29,9 @@ private:
 	pareto::less dominates;
 	pareto::PriorityLinkedQueue m_queue;
 };
+
+template <class Pheet>
+char const SequentialMsp<Pheet>::name[] = "Sequential Msp";
 
 }
 

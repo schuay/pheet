@@ -32,7 +32,8 @@ public:
 
 private:
 	procs_t cpus;
-	graph::Graph *g;
+	graph::Graph* g;
+	graph::Node* src;
 
 	static char const* const types[];
 };
@@ -49,6 +50,7 @@ MspTest<Pheet, Algorithm>::MspTest(const procs_t cpus,
 	: cpus(cpus)
 {
 	g = graph::Generator::directed("test", nodes, edges, true, weight_limits, seed);
+	src = g->nodes().front();
 }
 
 template <class Pheet, template <class P> class Algorithm>
@@ -67,7 +69,7 @@ void MspTest<Pheet, Algorithm>::run_test() {
 		typename Pheet::Environment env(cpus, pc);
 
 		check_time(start);
-//		Pheet::template finish<Algorithm<Pheet>>(data, size, ppc);
+		Pheet::template finish<Algorithm<Pheet>>(g, src);
 		check_time(end);
 	}
 
@@ -76,7 +78,8 @@ void MspTest<Pheet, Algorithm>::run_test() {
 	std::cout << "headers here";
 	Pheet::Environment::PerformanceCounters::print_headers();
 	std::cout << std::endl;
-	std::cout << "msp\t" << Algorithm<Pheet>::name << "\t";
+	std::cout << "msp\t" << Algorithm<Pheet>::name << "\t"
+			  << seconds;
 	Pheet::Environment::print_name();
 	pc.print_values();
 	std::cout << std::endl;
