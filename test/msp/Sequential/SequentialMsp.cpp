@@ -2,21 +2,26 @@
 
 #include <memory>
 
+#include "pheet/pheet.h"
+#include "pheet/sched/Synchroneous/SynchroneousScheduler.h"
+
 using namespace graph;
 using namespace sp;
 
 namespace pheet
 {
 
-SequentialMsp::
+template <class Pheet>
+SequentialMsp<Pheet>::
 SequentialMsp(const Graph* graph,
               const Node* start)
 	: graph(graph), start(start)
 {
 }
 
+template <class Pheet>
 ShortestPaths*
-SequentialMsp::
+SequentialMsp<Pheet>::
 operator()()
 {
 	ShortestPaths* sp = new ShortestPaths();
@@ -71,5 +76,13 @@ operator()()
 
 	return sp;
 }
+
+template class SequentialMsp<
+		pheet::PheetEnv<
+			pheet::SynchroneousScheduler,
+			pheet::SystemModel,
+			pheet::Primitives,
+			pheet::DataStructures,
+			pheet::ConcurrentDataStructures>>;
 
 }
