@@ -24,10 +24,6 @@ class MspTests
 {
 public:
 	void run_test();
-
-private:
-	template<class Pheet, template <class P> class Partitioner>
-	void run_algorithm();
 };
 
 } /* namespace pheet */
