@@ -35,6 +35,7 @@ public:
 private:
 	procs_t cpus;
 	graph::Graph* g;
+	unsigned int seed;
 	graph::Node* src;
 
 	static char const* const types[];
@@ -49,7 +50,7 @@ MspTest<Pheet, Algorithm>::MspTest(const procs_t cpus,
                                    const size_t edges,
                                    const graph::Generator::Wl& weight_limits,
                                    const unsigned int seed)
-	: cpus(cpus)
+	: cpus(cpus), seed(seed)
 {
 	g = graph::Generator::directed("test", nodes, edges, true, weight_limits, seed);
 	src = g->nodes().front();
@@ -78,13 +79,34 @@ void MspTest<Pheet, Algorithm>::run_test()
 
 	const double seconds = calculate_seconds(start, end);
 
-	std::cout << "headers here";
-	Pheet::Environment::PerformanceCounters::print_headers();
+	std::cout << "test\t";
+	std::cout << "algorithm\t";
+	std::cout << "scheduler\t";
+	std::cout << "type\t";
+	std::cout << "nodes\t";
+	std::cout << "edges\t";
+	std::cout << "seed\t";
+	std::cout << "cpus\t";
+	std::cout << "total_time\t";
+	std::cout << "correct";
+
+	/*TODO: doesn't print anything for SynchronousScheduler
+	    see: /pheet/sched/Synchroneous/SynchroneousSchedulerPerformanceCounters.h
+	*/
+	//Pheet::Environment::PerformanceCounters::print_headers();
 	std::cout << std::endl;
-	std::cout << "msp\t" << Algorithm<Pheet>::name << "\t"
-	          << seconds;
+	std::cout << "msp";
+	std::cout << "\t" << Algorithm<Pheet>::name;
+	std::cout << "\t";
 	Pheet::Environment::print_name();
-	pc.print_values();
+	std::cout << "\ttpye";
+	std::cout << "\t" << g->node_count();
+	std::cout << "\t" << g->edge_count();
+	std::cout << "\t" << seed;
+	std::cout << "\t" << cpus;
+	std::cout << "\t" << seconds;
+	std::cout << "\t";
+	//pc.print_values();
 	std::cout << std::endl;
 }
 
