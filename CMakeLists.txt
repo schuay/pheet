@@ -1,6 +1,8 @@
 PROJECT(Pheet)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
+find_library(LIBCGRAPH_LIBRARY cgraph)
+
 find_package(BLAS)
 find_package(LAPACK)
 find_package(Threads)
@@ -26,5 +28,6 @@ target_link_libraries(pheet_test
     ${CMAKE_THREAD_LIBS_INIT}
     ${HWLOC_LIBRARIES}
     ${LAPACK_LIBRARIES}
+    ${LIBCGRAPH_LIBRARY}
 )
 SET_TARGET_PROPERTIES(pheet_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "bin")

@@ -10,7 +10,8 @@
 #include <algorithm>
 #include <array>
 
-namespace pheet {
+namespace pheet
+{
 
 /**
  * Multi-criteria shortest path strategy for use with a priority queue scheduler.
@@ -24,13 +25,14 @@ namespace pheet {
  */
 
 template <class Pheet, int K>
-class StrategyMspStrategy : public Pheet::Environment::BaseStrategy {
+class StrategyMspStrategy : public Pheet::Environment::BaseStrategy
+{
 public:
 	typedef StrategyMspStrategy<Pheet, K> Self;
 	typedef typename Pheet::Environment::BaseStrategy BaseStrategy;
 	typedef std::array<int, K> Weights;
 
-	StrategyMspStrategy(const Weights &weights);
+	StrategyMspStrategy(const Weights& weights);
 	StrategyMspStrategy(Self& other);
 	StrategyMspStrategy(Self&& other);
 
@@ -49,7 +51,7 @@ size_t StrategyMspStrategy<Pheet, K>::default_k = 1024;
 
 template <class Pheet, int K>
 StrategyMspStrategy<Pheet, K>::
-StrategyMspStrategy(const Weights &weights)
+StrategyMspStrategy(const Weights& weights)
 	: weights(weights)
 {
 	this->set_k(default_k);
@@ -74,13 +76,18 @@ StrategyMspStrategy(Self&& other)
 template <class Pheet, int K>
 inline bool
 StrategyMspStrategy<Pheet, K>::
-prioritize(Self& other) const {
+prioritize(Self& other) const
+{
 	/* TODO: The importance assigned to each weight component depends on the place.
 	 * How can we access these here? */
 
 	int lhs = 0, rhs = 0;
-	std::for_each(weights.begin(), weights.end(), [&lhs](int w) { lhs += w; });
-	std::for_each(other.weights.begin(), other.weights.end(), [&rhs](int w) { rhs += w; });
+	std::for_each(weights.begin(), weights.end(), [&lhs](int w) {
+		lhs += w;
+	});
+	std::for_each(other.weights.begin(), other.weights.end(), [&rhs](int w) {
+		rhs += w;
+	});
 
 	return (lhs < rhs);
 }
@@ -88,14 +95,16 @@ prioritize(Self& other) const {
 template <class Pheet, int K>
 inline bool
 StrategyMspStrategy<Pheet, K>::
-forbid_call_conversion() const {
+forbid_call_conversion() const
+{
 	return true;
 }
 
 template <class Pheet, int K>
 inline bool
 StrategyMspStrategy<Pheet, K>::
-dead_task() {
+dead_task()
+{
 	return false; /* TODO */
 }
 

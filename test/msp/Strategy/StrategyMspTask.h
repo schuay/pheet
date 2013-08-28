@@ -9,7 +9,8 @@
 
 #include "StrategyMspStrategy.h"
 
-namespace pheet {
+namespace pheet
+{
 
 /**
  * Called by the scheduler for each selected path taken from the Pareto queue.
@@ -38,7 +39,8 @@ namespace pheet {
  */
 
 template <class Pheet, int K>
-class StrategyMspTask : public Pheet::Task {
+class StrategyMspTask : public Pheet::Task
+{
 public:
 	typedef StrategyMspTask<Pheet, K> Self;
 	typedef StrategyMspStrategy<Pheet, K> Strategy;
@@ -58,14 +60,16 @@ char const StrategyMspTask<Pheet, K>::name[] = "Strategy Msp";
 template <class Pheet, int K>
 void
 StrategyMspTask<Pheet, K>::
-operator()() {
+operator()()
+{
 	/* Nothing to see here (yet). */
 }
 
 template <class Pheet, int K>
 void
 StrategyMspTask<Pheet, K>::
-set_k(size_t k) {
+set_k(size_t k)
+{
 	Strategy::default_k = k;
 }
 
