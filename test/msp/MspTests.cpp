@@ -38,6 +38,18 @@ namespace pheet
 void MspTests::run_test()
 {
 #ifdef MSP_TEST
+	/* Print header information. */
+	std::cout << "test\t"
+	          << "algorithm\t"
+	          << "scheduler\t"
+	          << "type\t"
+	          << "nodes\t"
+	          << "edges\t"
+	          << "seed\t"
+	          << "cpus\t"
+	          << "total_time\t"
+	          << "correct";
+
 	::run_algorithm < Pheet::WithScheduler<SynchroneousScheduler>,
 	SequentialMsp > ();
 #endif
