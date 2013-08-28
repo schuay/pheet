@@ -118,6 +118,14 @@ node_count() const
 	return agnnodes(g);
 }
 
+size_t
+Graph::
+edge_count() const
+{
+	return agnedges(g);
+}
+
+
 Node*
 Graph::
 get_node(const ulong id) const
