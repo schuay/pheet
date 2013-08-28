@@ -84,6 +84,14 @@ degree() const
 	return m_degree;
 }
 
+std::string
+Graph::
+name() const
+{
+	std::string name(agnameof(g));
+	return name;
+}
+
 bool
 Graph::
 contains_edge(const Node* tail,
