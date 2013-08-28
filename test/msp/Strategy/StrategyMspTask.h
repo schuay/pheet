@@ -8,6 +8,7 @@
 #define STRATEGYMSPTASK_H_
 
 #include "StrategyMspStrategy.h"
+#include "StrategyMspPerformanceCounter.h"
 
 namespace pheet
 {
@@ -44,6 +45,7 @@ class StrategyMspTask : public Pheet::Task
 public:
 	typedef StrategyMspTask<Pheet, K> Self;
 	typedef StrategyMspStrategy<Pheet, K> Strategy;
+	typedef StrategyMspPerformanceCounters<Pheet> PerformanceCounters;
 
 	virtual void operator()();
 
@@ -52,6 +54,7 @@ public:
 	static char const name[];
 
 private:
+	PerformanceCounters pc;
 };
 
 template <class Pheet, int K>
@@ -63,6 +66,11 @@ StrategyMspTask<Pheet, K>::
 operator()()
 {
 	/* Nothing to see here (yet). */
+	/* use
+	 * pc.num_actual_tasks.incr()
+	 * pc.num_dead_tasks.incr()
+	 * to count tasks
+	 */
 }
 
 template <class Pheet, int K>
