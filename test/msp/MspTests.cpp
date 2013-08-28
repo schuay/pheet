@@ -9,9 +9,11 @@
 #include "Strategy/StrategyMspStrategy.h"
 #include "Strategy/StrategyMspTask.h"
 
-namespace pheet {
+namespace pheet
+{
 
-void MspTests::run_test() {
+void MspTests::run_test()
+{
 #ifdef MSP_TEST
 	std::cout << "Hello World!" << std::endl;
 
