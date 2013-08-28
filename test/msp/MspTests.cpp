@@ -7,8 +7,17 @@
 #include "MspTests.h"
 
 #include "MspTest.h"
+#include "pheet/sched/Synchroneous/SynchroneousScheduler.h"
+#include "Sequential/SequentialMsp.h"
 #include "Strategy/StrategyMspStrategy.h"
 #include "Strategy/StrategyMspTask.h"
+
+namespace
+{
+const size_t NODES      = 50;
+const size_t EDGES      = 500;
+const unsigned int SEED = 42;
+}
 
 namespace pheet
 {
@@ -16,17 +25,18 @@ namespace pheet
 void MspTests::run_test()
 {
 #ifdef MSP_TEST
-	std::cout << "Hello World!" << std::endl;
-
-	Pheet::Environment env;
-	StrategyMspStrategy<Pheet, 3> strategy({1, 2, 3}); /* Just to catch syntax errors for now. */
-	StrategyMspTask<Pheet, 3> task;
+	run_algorithm<Pheet::WithScheduler<SynchroneousScheduler>,
+				  SequentialMsp>();
 #endif
 }
 
 template <class Pheet, template <class P> class Partitioner>
 void MspTests::run_algorithm() {
-	MspTest<Pheet, Partitioner> gbt;
+	typename Pheet::MachineModel mm;
+	const procs_t max_cpus = std::min(mm.get_num_leaves(), Pheet::Environment::max_cpus);
+
+	MspTest<Pheet, Partitioner> gbt(max_cpus, NODES, EDGES,
+									graph::Generator::default_weights(), SEED);
 	gbt.run_test();
 }
 
