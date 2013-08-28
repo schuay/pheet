@@ -1,11 +1,11 @@
 PROJECT(Pheet)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
-find_library(LIBCGRAPH_LIBRARY cgraph)
+find_library(LIBCGRAPH_LIBRARY cgraph REQUIRED)
 
-find_package(BLAS)
-find_package(LAPACK)
-find_package(Threads)
+find_package(BLAS REQUIRED)
+find_package(LAPACK REQUIRED)
+find_package(Threads REQUIRED)
 
 include(FindPkgConfig)
 pkg_search_module(HWLOC REQUIRED hwloc)
