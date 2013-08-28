@@ -6,6 +6,7 @@
 
 #include "MspTests.h"
 
+#include "MspTest.h"
 #include "Strategy/StrategyMspStrategy.h"
 #include "Strategy/StrategyMspTask.h"
 
@@ -21,6 +22,12 @@ void MspTests::run_test()
 	StrategyMspStrategy<Pheet, 3> strategy({1, 2, 3}); /* Just to catch syntax errors for now. */
 	StrategyMspTask<Pheet, 3> task;
 #endif
+}
+
+template <class Pheet, template <class P> class Partitioner>
+void MspTests::run_algorithm() {
+	MspTest<Pheet, Partitioner> gbt;
+	gbt.run_test();
 }
 
 } /* namespace pheet */
