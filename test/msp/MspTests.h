@@ -12,6 +12,14 @@
 namespace pheet
 {
 
+/**
+ * MSP stands for the Multi-criteria (single source) Shortest Path problem.
+ *
+ * In short, given a graph G = (V, E), a weight vector c(e) of dimension k for each
+ * edge e <- E, as well as a start node s, the algorithm returns all Pareto optimal paths
+ * to all nodes reachable from s.
+ */
+
 class MspTests
 {
 public:
