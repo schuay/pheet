@@ -9,9 +9,11 @@
 
 #include "../init.h"
 
-namespace pheet {
+namespace pheet
+{
 
-class MspTests {
+class MspTests
+{
 public:
 	void run_test();
 
