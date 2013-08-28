@@ -54,6 +54,7 @@ public:
 	               const weight_vector_t& weights);
 
 	size_t node_count() const;
+	size_t edge_count() const;
 
 	Node* get_node(const ulong id) const;
 	std::vector<Node*> nodes() const;
