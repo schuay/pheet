@@ -79,17 +79,6 @@ void MspTest<Pheet, Algorithm>::run_test()
 
 	const double seconds = calculate_seconds(start, end);
 
-	std::cout << "test\t";
-	std::cout << "algorithm\t";
-	std::cout << "scheduler\t";
-	std::cout << "type\t";
-	std::cout << "nodes\t";
-	std::cout << "edges\t";
-	std::cout << "seed\t";
-	std::cout << "cpus\t";
-	std::cout << "total_time\t";
-	std::cout << "correct";
-
 	/*TODO: doesn't print anything for SynchronousScheduler
 	    see: /pheet/sched/Synchroneous/SynchroneousSchedulerPerformanceCounters.h
 	*/
