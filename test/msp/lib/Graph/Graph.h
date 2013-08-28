@@ -44,7 +44,7 @@ public:
 	bool write(FILE* f);
 
 	size_t degree() const;
-
+	std::string name() const;
 	bool contains_edge(const Node* tail,
 	                   const Node* head) const;
 
