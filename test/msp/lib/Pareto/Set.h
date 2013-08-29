@@ -25,8 +25,10 @@ public:
 	 * For all elements e in paths:
 	 * 1) If e is dominated within its current node set, do nothing.
 	 * 2) Otherwise, add e and prune all dominated elements of the node set.
+	 *
+	 * Return the set of inserted paths.
 	 */
-	virtual void insert(sp::Paths& paths) = 0;
+	virtual sp::Paths insert(sp::Paths& paths) = 0;
 };
 
 }
