@@ -89,7 +89,15 @@ void
 StrategyMspTask<Pheet>::
 operator()()
 {
-	/* Nothing to see here (yet). */
+	/* Generate candidates. */
+
+	const graph::Node* head = path->head();
+
+	std::vector<sp::PathPtr> candidates;
+	for (auto & e : head->out_edges()) {
+		sp::PathPtr to(path->step(e));
+		candidates.push_back(to);
+	}
 }
 
 template <class Pheet>
