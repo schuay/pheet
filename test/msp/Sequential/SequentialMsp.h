@@ -11,6 +11,7 @@
 #include "../lib/Graph/Graph.h"
 #include "../lib/Pareto/Less.h"
 #include "../lib/Pareto/PriorityLinkedQueue.h"
+#include "../lib/Pareto/Set.h"
 #include "../lib/ShortestPath/ShortestPaths.h"
 #include "../MspPerformanceCounters.h"
 
@@ -25,6 +26,7 @@ public:
 
 	SequentialMsp(const graph::Graph* graph,
 	              const graph::Node* start,
+	              pareto::Set* q,
 	              PerformanceCounters& pc);
 
 	sp::ShortestPaths*
