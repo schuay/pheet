@@ -13,9 +13,8 @@ void
 LockedSet::
 insert(sp::Paths paths)
 {
-	m_mutex.lock();
+	std::lock_guard<std::mutex> lock(m_mutex);
 	NaiveSet::insert(paths);
-	m_mutex.unlock();
 }
 
 }
