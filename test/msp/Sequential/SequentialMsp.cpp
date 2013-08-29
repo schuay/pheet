@@ -76,11 +76,9 @@ operator()()
 				}
 			}
 
-			if (dominated) {
-				continue;
+			if (!dominated) {
+				m_queue.insert(q);
 			}
-
-			m_queue.insert(q);
 		}
 	}
 
