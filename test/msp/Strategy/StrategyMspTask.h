@@ -8,7 +8,7 @@
 #define STRATEGYMSPTASK_H_
 
 #include "StrategyMspStrategy.h"
-#include "StrategyMspPerformanceCounter.h"
+#include "../MspPerformanceCounters.h"
 
 namespace pheet
 {
@@ -45,7 +45,7 @@ class StrategyMspTask : public Pheet::Task
 public:
 	typedef StrategyMspTask<Pheet, K> Self;
 	typedef StrategyMspStrategy<Pheet, K> Strategy;
-	typedef StrategyMspPerformanceCounters<Pheet> PerformanceCounters;
+	typedef MspPerformanceCounters<Pheet> PerformanceCounters;
 
 	virtual void operator()();
 
