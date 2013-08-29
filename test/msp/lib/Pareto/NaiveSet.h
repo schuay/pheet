@@ -17,7 +17,7 @@ namespace pareto
 class NaiveSet : public Set
 {
 public:
-	void insert(sp::Paths paths) override;
+	void insert(sp::Paths& paths) override;
 
 private:
 	virtual void insert(sp::PathPtr path);
