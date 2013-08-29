@@ -8,9 +8,9 @@
 #define MSPTEST_H_
 
 #include "../Test.h"
-#include "pheet/pheet.h"
-
 #include "lib/Generator/Generator.h"
+#include "lib/Pareto/LockedSet.h"
+#include "pheet/pheet.h"
 
 namespace pheet
 {
@@ -73,8 +73,10 @@ void MspTest<Pheet, Algorithm>::run_test()
 	{
 		typename Pheet::Environment env(cpus, pc);
 
+		pareto::LockedSet q;
+
 		check_time(start);
-		Pheet::template finish<Algorithm<Pheet>>(g, src, ppc);
+		Pheet::template finish<Algorithm<Pheet>>(g, src, &q, ppc);
 		check_time(end);
 	}
 
