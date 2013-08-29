@@ -39,12 +39,12 @@ namespace pheet
  * bulk updates, since individual tasks do not communicate with each other.
  */
 
-template <class Pheet, int K>
+template <class Pheet>
 class StrategyMspTask : public Pheet::Task
 {
 public:
-	typedef StrategyMspTask<Pheet, K> Self;
-	typedef StrategyMspStrategy<Pheet, K> Strategy;
+	typedef StrategyMspTask<Pheet> Self;
+	typedef StrategyMspStrategy<Pheet> Strategy;
 	typedef MspPerformanceCounters<Pheet> PerformanceCounters;
 
 	virtual void operator()();
@@ -57,25 +57,20 @@ private:
 	PerformanceCounters pc;
 };
 
-template <class Pheet, int K>
-char const StrategyMspTask<Pheet, K>::name[] = "Strategy Msp";
+template <class Pheet>
+char const StrategyMspTask<Pheet>::name[] = "Strategy Msp";
 
-template <class Pheet, int K>
+template <class Pheet>
 void
-StrategyMspTask<Pheet, K>::
+StrategyMspTask<Pheet>::
 operator()()
 {
 	/* Nothing to see here (yet). */
-	/* use
-	 * pc.num_actual_tasks.incr()
-	 * pc.num_dead_tasks.incr()
-	 * to count tasks
-	 */
 }
 
-template <class Pheet, int K>
+template <class Pheet>
 void
-StrategyMspTask<Pheet, K>::
+StrategyMspTask<Pheet>::
 set_k(size_t k)
 {
 	Strategy::default_k = k;
