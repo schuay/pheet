@@ -7,9 +7,9 @@
 #include "MspTests.h"
 
 #include "MspTest.h"
+#include "pheet/sched/BStrategy/BStrategyScheduler.h"
 #include "pheet/sched/Synchroneous/SynchroneousScheduler.h"
 #include "Sequential/SequentialMsp.h"
-#include "Strategy/StrategyMspStrategy.h"
 #include "Strategy/StrategyMspTask.h"
 
 namespace
@@ -38,8 +38,10 @@ namespace pheet
 void MspTests::run_test()
 {
 #ifdef MSP_TEST
-	::run_algorithm < Pheet::WithScheduler<SynchroneousScheduler>,
-	SequentialMsp > ();
+	::run_algorithm<Pheet::WithScheduler<SynchroneousScheduler>, SequentialMsp>();
+
+	::run_algorithm < Pheet::WithScheduler<BStrategyScheduler>
+	::WithTaskStorage<DistKStrategyTaskStorage>, StrategyMspTask > ();
 #endif
 }
 
