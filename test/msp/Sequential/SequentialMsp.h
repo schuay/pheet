@@ -29,6 +29,7 @@ public:
 	              pareto::Set* set,
 	              PerformanceCounters& pc);
 
+	/* TODO: Change the way results are returned. */
 	sp::ShortestPaths*
 	operator()();
 
