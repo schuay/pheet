@@ -80,23 +80,31 @@ void MspTest<Pheet, Algorithm>::run_test()
 
 	const double seconds = calculate_seconds(start, end);
 
-	/*TODO: doesn't print anything for SynchronousScheduler
-	    see: /pheet/sched/Synchroneous/SynchroneousSchedulerPerformanceCounters.h
-	*/
-	//Pheet::Environment::PerformanceCounters::print_headers();
+	/* Headers. */
+
+	std::cout << "test\t"
+	          << "algorithm\t"
+	          << "scheduler\t"
+	          << "nodes\t"
+	          << "edges\t"
+	          << "seed\t"
+	          << "cpus\t"
+	          << "total_time\t";
+	ppc.print_headers();
 	std::cout << std::endl;
-	std::cout << "msp";
-	std::cout << "\t" << Algorithm<Pheet>::name;
-	std::cout << "\t";
+
+	/* Values. */
+
+	std::cout << "msp" << "\t"
+	          << Algorithm<Pheet>::name << "\t";
 	Pheet::Environment::print_name();
-	std::cout << "\ttpye";
-	std::cout << "\t" << g->node_count();
-	std::cout << "\t" << g->edge_count();
-	std::cout << "\t" << seed;
-	std::cout << "\t" << cpus;
-	std::cout << "\t" << seconds;
-	std::cout << "\t";
-	//pc.print_values();
+	std::cout << "\t"
+	          << g->node_count() << "\t"
+	          << g->edge_count() << "\t"
+	          << seed << "\t"
+	          << cpus << "\t"
+	          << seconds << "\t";
+	ppc.print_values();
 	std::cout << std::endl;
 }
 
