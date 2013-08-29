@@ -20,8 +20,9 @@ namespace pheet
 template <class Pheet>
 SequentialMsp<Pheet>::
 SequentialMsp(const Graph* graph,
-              const Node* start)
-	: graph(graph), start(start)
+              const Node* start,
+              PerformanceCounters& pc)
+	: graph(graph), start(start), pc(pc)
 {
 }
 
