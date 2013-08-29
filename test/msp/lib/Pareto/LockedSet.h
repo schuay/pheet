@@ -18,7 +18,7 @@ namespace pareto
 class LockedSet : public NaiveSet
 {
 public:
-	void insert(sp::Paths paths) override;
+	void insert(sp::Paths& paths) override;
 
 private:
 	std::mutex m_mutex;
