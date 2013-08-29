@@ -14,7 +14,7 @@ namespace pareto
 
 void
 NaiveSet::
-insert(sp::Paths paths)
+insert(sp::Paths& paths)
 {
 	for (auto it : paths) {
 		insert(it);

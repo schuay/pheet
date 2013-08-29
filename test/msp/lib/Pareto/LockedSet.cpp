@@ -11,7 +11,7 @@ namespace pareto
 
 void
 LockedSet::
-insert(sp::Paths paths)
+insert(sp::Paths& paths)
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
 	NaiveSet::insert(paths);
