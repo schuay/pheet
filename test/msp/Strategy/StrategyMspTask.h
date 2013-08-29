@@ -93,11 +93,21 @@ operator()()
 
 	const graph::Node* head = path->head();
 
-	std::vector<sp::PathPtr> candidates;
+	sp::Paths candidates;
 	for (auto & e : head->out_edges()) {
 		sp::PathPtr to(path->step(e));
 		candidates.push_back(to);
 	}
+
+	/* TODO: The current set functionality is not what we need in this case.
+	 * Requirements are:
+	 * * A way of finding out which elements were actually inserted, so we
+	 *   can spawn a new task for them. Either return success/failure, or
+	 *   return the set of successfully inserted elements.
+	 * * A way of marking pruned tasks as dead. We need to find out if we can
+	 *   actually (safely) access the strategy object after insertion into the
+	 *   scheduler, or if we should do it implicitly (like Sssp).
+	 */
 }
 
 template <class Pheet>
