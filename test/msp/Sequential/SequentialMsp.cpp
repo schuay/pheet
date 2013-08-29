@@ -42,6 +42,8 @@ operator()()
 		PathPtr p = m_queue.first(1)[0];
 		const Node* head = p->head();
 
+		pc.num_actual_tasks.incr();
+
 		/* We've expanded up to head. The path is therefore optimal and must
 		 * be added to our global shortest paths. */
 
