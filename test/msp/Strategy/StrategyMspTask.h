@@ -7,8 +7,11 @@
 #ifndef STRATEGYMSPTASK_H_
 #define STRATEGYMSPTASK_H_
 
-#include "StrategyMspStrategy.h"
+#include "../lib/Graph/Edge.h"
+#include "../lib/Graph/Graph.h"
+#include "../lib/ShortestPath/ShortestPaths.h"
 #include "../MspPerformanceCounters.h"
+#include "StrategyMspStrategy.h"
 
 namespace pheet
 {
@@ -47,6 +50,10 @@ public:
 	typedef StrategyMspStrategy<Pheet> Strategy;
 	typedef MspPerformanceCounters<Pheet> PerformanceCounters;
 
+	StrategyMspTask(const graph::Graph* graph,
+	                const graph::Node* start,
+	                PerformanceCounters& pc);
+
 	virtual void operator()();
 
 	static void set_k(size_t k);
@@ -54,11 +61,23 @@ public:
 	static char const name[];
 
 private:
-	PerformanceCounters pc;
+	const graph::Graph* graph;
+	const graph::Node* start;
+
+	PerformanceCounters& pc;
 };
 
 template <class Pheet>
 char const StrategyMspTask<Pheet>::name[] = "Strategy Msp";
+
+template <class Pheet>
+StrategyMspTask<Pheet>::
+StrategyMspTask(const graph::Graph* graph,
+                const graph::Node* start,
+                PerformanceCounters& pc)
+	: graph(graph), start(start), pc(pc)
+{
+}
 
 template <class Pheet>
 void
