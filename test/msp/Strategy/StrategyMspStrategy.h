@@ -8,7 +8,7 @@
 #define STRATEGYMSPSTRATEGY_H_
 
 #include <algorithm>
-#include <array>
+#include <vector>
 
 namespace pheet
 {
@@ -16,21 +16,18 @@ namespace pheet
 /**
  * Multi-criteria shortest path strategy for use with a priority queue scheduler.
  *
- * The template parameter K is the dimension of the weight array, which is defined as
- * std::array<int, K>.
- *
  * A total order is induced on the weights by creating a linear combination of all
  * weight elements: h(ws) = ws[0] * f[0] + ... + ws[K - 1] * f[K - s]. f is an array
  * of random double factors <- ]0., 1.] assigned statically to each place.
  */
 
-template <class Pheet, int K>
+template <class Pheet>
 class StrategyMspStrategy : public Pheet::Environment::BaseStrategy
 {
 public:
-	typedef StrategyMspStrategy<Pheet, K> Self;
+	typedef StrategyMspStrategy<Pheet> Self;
 	typedef typename Pheet::Environment::BaseStrategy BaseStrategy;
-	typedef std::array<int, K> Weights;
+	typedef std::vector<int> Weights;
 
 	StrategyMspStrategy(const Weights& weights);
 	StrategyMspStrategy(Self& other);
@@ -46,36 +43,36 @@ private:
 	Weights weights;
 };
 
-template <class Pheet, int K>
-size_t StrategyMspStrategy<Pheet, K>::default_k = 1024;
+template <class Pheet>
+size_t StrategyMspStrategy<Pheet>::default_k = 1024;
 
-template <class Pheet, int K>
-StrategyMspStrategy<Pheet, K>::
+template <class Pheet>
+StrategyMspStrategy<Pheet>::
 StrategyMspStrategy(const Weights& weights)
 	: weights(weights)
 {
 	this->set_k(default_k);
 }
 
-template <class Pheet, int K>
-StrategyMspStrategy<Pheet, K>::
+template <class Pheet>
+StrategyMspStrategy<Pheet>::
 StrategyMspStrategy(Self& other)
 	: BaseStrategy(other),
 	  weights(other.weights)
 {
 }
 
-template <class Pheet, int K>
-StrategyMspStrategy<Pheet, K>::
+template <class Pheet>
+StrategyMspStrategy<Pheet>::
 StrategyMspStrategy(Self&& other)
 	: BaseStrategy(other),
 	  weights(other.weights)
 {
 }
 
-template <class Pheet, int K>
+template <class Pheet>
 inline bool
-StrategyMspStrategy<Pheet, K>::
+StrategyMspStrategy<Pheet>::
 prioritize(Self& other) const
 {
 	/* TODO: The importance assigned to each weight component depends on the place.
@@ -92,17 +89,17 @@ prioritize(Self& other) const
 	return (lhs < rhs);
 }
 
-template <class Pheet, int K>
+template <class Pheet>
 inline bool
-StrategyMspStrategy<Pheet, K>::
+StrategyMspStrategy<Pheet>::
 forbid_call_conversion() const
 {
 	return true;
 }
 
-template <class Pheet, int K>
+template <class Pheet>
 inline bool
-StrategyMspStrategy<Pheet, K>::
+StrategyMspStrategy<Pheet>::
 dead_task()
 {
 	return false; /* TODO */
