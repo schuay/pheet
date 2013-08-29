@@ -66,6 +66,7 @@ template <class Pheet, template <class P> class Algorithm>
 void MspTest<Pheet, Algorithm>::run_test()
 {
 	typename Pheet::Environment::PerformanceCounters pc;
+	typename Algorithm<Pheet>::PerformanceCounters ppc;
 
 	Time start, end;
 
@@ -73,7 +74,7 @@ void MspTest<Pheet, Algorithm>::run_test()
 		typename Pheet::Environment env(cpus, pc);
 
 		check_time(start);
-		Pheet::template finish<Algorithm<Pheet>>(g, src);
+		Pheet::template finish<Algorithm<Pheet>>(g, src, ppc);
 		check_time(end);
 	}
 
