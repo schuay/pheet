@@ -52,8 +52,8 @@ public:
 	typedef MspPerformanceCounters<Pheet> PerformanceCounters;
 
 	StrategyMspTask(const graph::Graph* graph,
-	                const graph::Node* start,
-	                pareto::Set* q,
+	                const sp::PathPtr path,
+	                pareto::Set* set,
 	                PerformanceCounters& pc);
 
 	virtual void operator()();
@@ -64,9 +64,9 @@ public:
 
 private:
 	const graph::Graph* graph;
-	const graph::Node* start;
+	const sp::PathPtr path;
 
-	pareto::Set* q;
+	pareto::Set* set;
 
 	PerformanceCounters& pc;
 };
@@ -77,10 +77,10 @@ char const StrategyMspTask<Pheet>::name[] = "Strategy Msp";
 template <class Pheet>
 StrategyMspTask<Pheet>::
 StrategyMspTask(const graph::Graph* graph,
-                const graph::Node* start,
-                pareto::Set* q,
+                const sp::PathPtr path,
+                pareto::Set* set,
                 PerformanceCounters& pc)
-	: graph(graph), start(start), q(q), pc(pc)
+	: graph(graph), path(path), set(set), pc(pc)
 {
 }
 

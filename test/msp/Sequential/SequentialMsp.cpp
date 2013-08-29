@@ -20,10 +20,10 @@ namespace pheet
 template <class Pheet>
 SequentialMsp<Pheet>::
 SequentialMsp(const Graph* graph,
-              const Node* start,
+              const sp::PathPtr path,
               pareto::Set* /* Unused */,
               PerformanceCounters& pc)
-	: graph(graph), start(start), pc(pc)
+	: graph(graph), path(path), pc(pc)
 {
 }
 
@@ -34,7 +34,7 @@ operator()()
 {
 	ShortestPaths* sp = new ShortestPaths();
 
-	PathPtr init(new Path(start));
+	PathPtr init = path;
 	m_queue.insert(init);
 
 	while (!m_queue.empty()) {
