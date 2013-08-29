@@ -12,6 +12,7 @@
 #include "../lib/Pareto/Less.h"
 #include "../lib/Pareto/PriorityLinkedQueue.h"
 #include "../lib/ShortestPath/ShortestPaths.h"
+#include "../MspPerformanceCounters.h"
 
 namespace pheet
 {
@@ -20,8 +21,11 @@ template <class Pheet>
 class SequentialMsp
 {
 public:
+	typedef MspPerformanceCounters<Pheet> PerformanceCounters;
+
 	SequentialMsp(const graph::Graph* graph,
-	              const graph::Node* start);
+	              const graph::Node* start,
+	              PerformanceCounters& pc);
 
 	sp::ShortestPaths*
 	operator()();
@@ -34,6 +38,8 @@ private:
 
 	pareto::less dominates;
 	pareto::PriorityLinkedQueue m_queue;
+
+	PerformanceCounters& pc;
 };
 
 template <class Pheet>
