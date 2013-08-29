@@ -9,6 +9,7 @@
 
 #include "../lib/Graph/Edge.h"
 #include "../lib/Graph/Graph.h"
+#include "../lib/Pareto/LockedSet.h"
 #include "../lib/ShortestPath/ShortestPaths.h"
 #include "../MspPerformanceCounters.h"
 #include "StrategyMspStrategy.h"
@@ -52,6 +53,7 @@ public:
 
 	StrategyMspTask(const graph::Graph* graph,
 	                const graph::Node* start,
+	                pareto::Set* q,
 	                PerformanceCounters& pc);
 
 	virtual void operator()();
@@ -64,6 +66,8 @@ private:
 	const graph::Graph* graph;
 	const graph::Node* start;
 
+	pareto::Set* q;
+
 	PerformanceCounters& pc;
 };
 
@@ -74,8 +78,9 @@ template <class Pheet>
 StrategyMspTask<Pheet>::
 StrategyMspTask(const graph::Graph* graph,
                 const graph::Node* start,
+                pareto::Set* q,
                 PerformanceCounters& pc)
-	: graph(graph), start(start), pc(pc)
+	: graph(graph), start(start), q(q), pc(pc)
 {
 }
 
