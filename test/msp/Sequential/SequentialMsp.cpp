@@ -83,12 +83,10 @@ operator()()
 	return sp;
 }
 
-template class SequentialMsp<
-		pheet::PheetEnv<
-			pheet::SynchroneousScheduler,
-			pheet::SystemModel,
-			pheet::Primitives,
-			pheet::DataStructures,
-			pheet::ConcurrentDataStructures>>;
+template class SequentialMsp < pheet::PheetEnv < pheet::SynchroneousScheduler,
+         pheet::SystemModel,
+         pheet::Primitives,
+         pheet::DataStructures,
+         pheet::ConcurrentDataStructures >>;
 
 }
