@@ -74,9 +74,10 @@ void MspTest<Pheet, Algorithm>::run_test()
 		typename Pheet::Environment env(cpus, pc);
 
 		pareto::LockedSet q;
+		sp::PathPtr init(new sp::Path(src));
 
 		check_time(start);
-		Pheet::template finish<Algorithm<Pheet>>(g, src, &q, ppc);
+		Pheet::template finish<Algorithm<Pheet>>(g, init, &q, ppc);
 		check_time(end);
 	}
 
