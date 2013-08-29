@@ -25,8 +25,8 @@ public:
 	typedef MspPerformanceCounters<Pheet> PerformanceCounters;
 
 	SequentialMsp(const graph::Graph* graph,
-	              const graph::Node* start,
-	              pareto::Set* q,
+	              const sp::PathPtr path,
+	              pareto::Set* set,
 	              PerformanceCounters& pc);
 
 	sp::ShortestPaths*
@@ -36,7 +36,7 @@ public:
 
 private:
 	const graph::Graph* graph;
-	const graph::Node* start;
+	const sp::PathPtr path;
 
 	pareto::less dominates;
 	pareto::PriorityLinkedQueue m_queue;
