@@ -31,6 +31,9 @@ out_edges() const
 {
 	std::vector<Edge*> edges;
 
+	/* TODO: Cache or precompute results to avoid repeated locks. */
+	std::lock_guard<std::mutex> lock(m_graph->m_lock);
+
 	for (Agedge_t* e = agfstout(m_graph->g, n); e != nullptr; e = agnxtout(m_graph->g, e)) {
 		edges.push_back(m_graph->get_edge(AGID(e)));
 	}
