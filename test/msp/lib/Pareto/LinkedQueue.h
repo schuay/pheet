@@ -26,7 +26,7 @@ public:
 	LinkedQueue();
 	virtual ~LinkedQueue();
 
-	std::vector<sp::PathPtr> first(const size_t n) override = 0;
+	std::vector<sp::PathPtr> first(size_t const  n) override = 0;
 	void insert(sp::PathPtr path) override;
 	bool empty() const override;
 
@@ -36,7 +36,7 @@ protected:
 		sp::PathPtr path;
 	} elem_t;
 
-	typedef std::unordered_map<const graph::Node*, std::unordered_set<elem_t*>>
+	typedef std::unordered_map<graph::Node const*, std::unordered_set<elem_t*>>
 	        node_ptrs_t;
 
 protected:

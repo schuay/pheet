@@ -16,7 +16,7 @@ namespace sp
 {
 
 Path::
-Path(const graph::Node* init)
+Path(graph::Node const* init)
 	: m_tail(init), m_head(init)
 {
 	m_weight.resize(init->graph()->degree(), 0);
@@ -24,7 +24,7 @@ Path(const graph::Node* init)
 
 Path*
 Path::
-step(const Edge* edge) const
+step(Edge const* edge) const
 {
 	graph::weight_vector_t ws = edge->weights();
 	assert(ws.size() == m_weight.size());
@@ -46,31 +46,31 @@ Path::
 print() const
 {
 	printf("%lu", m_tail->id());
-	for (const auto e : m_edges) {
+	for (auto const e : m_edges) {
 		printf(" -> %lu", e->head()->id());
 	}
 	printf(" (");
-	for (const auto & w : m_weight) {
+	for (auto const & w : m_weight) {
 		printf("%d ", w);
 	}
 	printf(")\n");
 }
 
-const Node*
+Node const*
 Path::
 tail() const
 {
 	return m_tail;
 }
 
-const Node*
+Node const*
 Path::
 head() const
 {
 	return m_head;
 }
 
-vector<const Edge*>
+vector<Edge const*>
 Path::
 edges() const
 {

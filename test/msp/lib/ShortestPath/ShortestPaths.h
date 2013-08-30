@@ -21,7 +21,7 @@ public:
 	void print() const;
 
 public:
-	std::unordered_map<const graph::Node*, Paths> paths;
+	std::unordered_map<graph::Node const*, Paths> paths;
 };
 
 }

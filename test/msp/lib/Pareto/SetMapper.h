@@ -27,7 +27,7 @@ public:
 	sp::Paths insert(sp::Paths& paths);
 
 private:
-	std::unordered_map<const graph::Node*, Set*> map;
+	std::unordered_map<graph::Node const*, Set*> map;
 
 };
 }

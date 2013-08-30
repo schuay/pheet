@@ -15,7 +15,7 @@ SetMapper(graph::Graph const& g)
 {
 	for (auto node : g.nodes()) {
 		Set* set = new LockedSet();
-		map.insert(std::pair<const graph::Node*, Set*>(node, set));
+		map.insert(std::pair<graph::Node const*, Set*>(node, set));
 	}
 }
 
@@ -34,12 +34,11 @@ insert(sp::Paths& paths)
 {
 	sp::Paths non_dominated;
 	for (auto p : paths) {
-		const graph::Node* node = p->head();
+		graph::Node const* node = p->head();
 		if (map[node]->insert(p)) {
 			non_dominated.push_back(p);
 		}
 	}
 	return non_dominated;
 }
-
 }

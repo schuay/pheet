@@ -22,23 +22,23 @@ typedef std::vector<PathPtr> Paths;
 class Path
 {
 public:
-	Path(const graph::Node* init);
+	Path(graph::Node const* init);
 
 	/** Returns a new path object which represents the path generated
 	 *  by appending the given edge to the current path. */
-	Path* step(const graph::Edge* edge) const;
+	Path* step(graph::Edge const* edge) const;
 
 	void print() const;
 
-	const graph::Node* tail() const;
-	const graph::Node* head() const;
-	std::vector<const graph::Edge*> edges() const;
+	graph::Node const* tail() const;
+	graph::Node const* head() const;
+	std::vector<graph::Edge const*> edges() const;
 	std::vector<graph::weight_t> weight() const;
 
 private:
-	const graph::Node* m_tail;
-	const graph::Node* m_head;
-	std::vector<const graph::Edge*> m_edges;
+	graph::Node const* m_tail;
+	graph::Node const* m_head;
+	std::vector<graph::Edge const*> m_edges;
 	std::vector<graph::weight_t> m_weight;
 };
 

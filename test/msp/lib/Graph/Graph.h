@@ -39,8 +39,8 @@ class Graph
 	friend class Edge;
 
 public:
-	Graph(const std::string& name,
-	      const size_t degree);
+	Graph(std::string const& name,
+	      size_t const degree);
 	virtual ~Graph();
 
 	static Graph* read(FILE* f);
@@ -48,28 +48,28 @@ public:
 
 	size_t degree() const;
 	std::string name() const;
-	bool contains_edge(const Node* tail,
-	                   const Node* head) const;
+	bool contains_edge(Node const* tail,
+	                   Node const* head) const;
 
 	Node* add_node();
 	Edge* add_edge(Node* tail,
 	               Node* head,
-	               const weight_vector_t& weights);
+	               weight_vector_t const& weights);
 
 	size_t node_count() const;
 	size_t edge_count() const;
 
-	Node* get_node(const ulong id) const;
+	Node* get_node(ulong const id) const;
 	std::vector<Node*> nodes() const;
 
 private:
 	Graph(Agraph_t* g);
 
-	Edge* get_edge(const ulong id) const;
+	Edge* get_edge(ulong const id) const;
 
-	void add_node(const ulong id,
+	void add_node(ulong const id,
 	              Node* n);
-	void add_edge(const ulong id,
+	void add_edge(ulong const id,
 	              Edge* e);
 
 private:
