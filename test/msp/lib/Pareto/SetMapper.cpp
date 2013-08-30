@@ -14,8 +14,8 @@ SetMapper::
 SetMapper(graph::Graph const& g)
 {
 	for (auto node : g.nodes()) {
-		LockedSet* set = new LockedSet();
-		map.insert(std::pair<const graph::Node*, LockedSet*>(node, set));
+		Set* set = new LockedSet();
+		map.insert(std::pair<const graph::Node*, Set*>(node, set));
 	}
 }
 
