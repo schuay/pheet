@@ -26,7 +26,7 @@ public:
 	 * queue.size() = n' < n, n' elements are returned and the queue is
 	 * cleared.
 	 */
-	virtual std::vector<sp::PathPtr> first(const size_t n) = 0;
+	virtual std::vector<sp::PathPtr> first(size_t const n) = 0;
 
 	/**
 	 * Inserts path into the queue.

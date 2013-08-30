@@ -16,15 +16,15 @@ namespace pareto
 
 bool
 PriorityLinkedQueue::elem_lexic_greater::
-operator()(const elem_t* lhs, const elem_t* rhs) const
+operator()(elem_t const* lhs, elem_t const* rhs) const
 {
 	assert(lhs && rhs);
 
-	const std::vector<graph::weight_t> l = lhs->path->weight();
-	const std::vector<graph::weight_t> r = rhs->path->weight();
+	std::vector<graph::weight_t> const l = lhs->path->weight();
+	std::vector<graph::weight_t> const r = rhs->path->weight();
 
 	assert(l.size() == r.size());
-	const int dims = l.size();
+	int const dims = l.size();
 
 	for (int i = 0; i < dims; i++) {
 		if (l[i] == r[i]) {
@@ -38,7 +38,7 @@ operator()(const elem_t* lhs, const elem_t* rhs) const
 
 std::vector<PathPtr>
 PriorityLinkedQueue::
-first(const size_t n)
+first(size_t const n)
 {
 	assert(n == 1);
 

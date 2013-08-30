@@ -18,16 +18,16 @@ namespace pareto
 
 bool
 less::
-operator()(const Path* lhs,
-           const Path* rhs) const
+operator()(Path const* lhs,
+           Path const* rhs) const
 {
 	assert(lhs && rhs);
 
-	const vector<graph::weight_t> l = lhs->weight();
-	const vector<graph::weight_t> r = rhs->weight();
+	vector<graph::weight_t> const l = lhs->weight();
+	vector<graph::weight_t> const r = rhs->weight();
 
 	assert(l.size() == r.size());
-	const int dims = l.size();
+	int const dims = l.size();
 
 	for (int i = 0; i < dims; i++) {
 		if (l[i] > r[i]) {

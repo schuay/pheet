@@ -17,12 +17,12 @@ using namespace graph;
 
 Graph*
 Generator::
-directed(const std::string& name,
-         const size_t& n,
-         const size_t& m,
-         const bool& allow_parallel_edges,
-         const std::vector<std::pair<int, int>>& weight_limits,
-         const unsigned short seed)
+directed(std::string const& name,
+         size_t const& n,
+         size_t const& m,
+         bool const& allow_parallel_edges,
+         std::vector<std::pair<int, int>> const& weight_limits,
+         unsigned short const seed)
 {
 	assert(n > 0);
 	assert(m >= n - 1);
@@ -79,7 +79,7 @@ directed(const std::string& name,
 
 Graph*
 Generator::
-basic(const unsigned short seed)
+basic(unsigned short const seed)
 {
 	Wl wl;
 	wl.push_back(std::pair<int, int>(0, 5));
@@ -90,7 +90,7 @@ basic(const unsigned short seed)
 
 std::vector<int>
 Generator::
-generate_weight_vector(const Wl& weight_limits)
+generate_weight_vector(Wl const& weight_limits)
 {
 	std::vector<int> weights;
 	for (auto & it : weight_limits) {

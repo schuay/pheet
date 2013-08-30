@@ -17,8 +17,8 @@ namespace graph
 {
 
 Graph::
-Graph(const std::string& name,
-      const size_t degree)
+Graph(std::string const& name,
+      size_t const degree)
 	: m_degree(degree)
 {
 	g = agopen(const_cast<char*>(name.c_str()), Agdirected, NULL);
@@ -94,8 +94,8 @@ name() const
 
 bool
 Graph::
-contains_edge(const Node* tail,
-              const Node* head) const
+contains_edge(Node const* tail,
+              Node const* head) const
 {
 	Agedge_t* e = agedge(g, tail->n, head->n, NULL, FALSE);
 	return (e != nullptr);
@@ -113,7 +113,7 @@ Edge*
 Graph::
 add_edge(Node* tail,
          Node* head,
-         const weight_vector_t& weights)
+         weight_vector_t const& weights)
 {
 	Edge* e = new Edge(tail, head, weights);
 	return e;
@@ -136,11 +136,11 @@ edge_count() const
 
 Node*
 Graph::
-get_node(const ulong id) const
+get_node(ulong const id) const
 {
 	try {
 		return m_nodes.at(id);
-	} catch (const std::out_of_range&) {
+	} catch (std::out_of_range const&) {
 		return nullptr;
 	}
 }
@@ -158,18 +158,18 @@ nodes() const
 
 Edge*
 Graph::
-get_edge(const ulong id) const
+get_edge(ulong const id) const
 {
 	try {
 		return m_edges.at(id);
-	} catch (const std::out_of_range&) {
+	} catch (std::out_of_range const&) {
 		return nullptr;
 	}
 }
 
 void
 Graph::
-add_node(const ulong id,
+add_node(ulong const id,
          Node* n)
 {
 	m_nodes.emplace(id, n);
@@ -177,7 +177,7 @@ add_node(const ulong id,
 
 void
 Graph::
-add_edge(const ulong id,
+add_edge(ulong const id,
          Edge* e)
 {
 	m_edges.emplace(id, e);

@@ -16,7 +16,7 @@ namespace graph
 Edge::
 Edge(Node* t,
      Node* h,
-     const weight_vector_t& ws)
+     weight_vector_t const& ws)
 	: t(t), h(h), ws(ws)
 {
 	assert(t->graph() == h->graph());
