@@ -15,8 +15,8 @@ void
 ShortestPaths::
 print() const
 {
-	for (const auto & p : paths) {
-		for (const auto & path : p.second) {
+	for (auto const & p : paths) {
+		for (auto const & path : p.second) {
 			path->print();
 		}
 		printf("\n");

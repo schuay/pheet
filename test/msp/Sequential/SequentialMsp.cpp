@@ -19,8 +19,8 @@ namespace pheet
 
 template <class Pheet>
 SequentialMsp<Pheet>::
-SequentialMsp(const Graph* graph,
-              const sp::PathPtr path,
+SequentialMsp(Graph const* graph,
+              sp::PathPtr const path,
               pareto::SetMapper* /* Unused */,
               PerformanceCounters& pc)
 	: graph(graph), path(path), pc(pc)
@@ -41,7 +41,7 @@ operator()()
 		/* Retrieve our next optimal candidate path. */
 
 		PathPtr p = m_queue.first(1)[0];
-		const Node* head = p->head();
+		Node const* head = p->head();
 
 		pc.num_actual_tasks.incr();
 
@@ -63,13 +63,13 @@ operator()()
 			 *     Add p to queue.
 			 */
 			std::shared_ptr<Path> q(p->step(e));
-			const Node* qhead = q->head();
+			Node const* qhead = q->head();
 
 			/* A (somewhat ugly) special case for paths which are dominated by
 			 * already final paths stored in ShortestPaths. */
 
 			bool dominated = false;
-			for (const auto & final_path : sp->paths[qhead]) {
+			for (auto const & final_path : sp->paths[qhead]) {
 				if (dominates(final_path.get(), q.get())) {
 					dominated = true;
 					break;

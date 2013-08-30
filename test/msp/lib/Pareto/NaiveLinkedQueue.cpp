@@ -16,7 +16,7 @@ namespace pareto
 
 std::vector<PathPtr>
 NaiveLinkedQueue::
-first(const size_t n)
+first(size_t const n)
 {
 	std::unordered_set<elem_t*> elems;
 	for (elem_t* m = m_list; m != nullptr; m = m->next) {

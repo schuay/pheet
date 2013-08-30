@@ -21,13 +21,13 @@ namespace pareto
 class PriorityLinkedQueue : public LinkedQueue
 {
 public:
-	std::vector<sp::PathPtr> first(const size_t n) override;
+	std::vector<sp::PathPtr> first(size_t const n) override;
 
 private:
 	class elem_lexic_greater
 	{
 	public:
-		bool operator()(const elem_t* lhs, const elem_t* rhs) const;
+		bool operator()(elem_t const* lhs, elem_t const* rhs) const;
 	};
 };
 

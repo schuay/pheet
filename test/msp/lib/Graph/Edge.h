@@ -26,7 +26,7 @@ public:
 private:
 	Edge(Node* t,
 	     Node* h,
-	     const graph::weight_vector_t& ws);
+	     graph::weight_vector_t const& ws);
 	Edge(Graph* graph,
 	     Agedge_t* e);
 

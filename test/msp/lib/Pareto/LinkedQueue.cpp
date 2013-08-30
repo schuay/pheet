@@ -37,7 +37,7 @@ void
 LinkedQueue::
 insert(PathPtr path)
 {
-	const Node* head = path->head();
+	Node const* head = path->head();
 	std::unordered_set<elem_t*>& elems = m_elems_by_head[head];
 
 	/* First, insert the new element. */
