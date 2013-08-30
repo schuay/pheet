@@ -89,16 +89,21 @@ void
 StrategyMspTask<Pheet>::
 operator()()
 {
+	pc.num_actual_tasks.incr();
+
 	/* Generate candidates. */
 	const graph::Node* head = path->head();
 
-	sp::Paths candidates, non_dominated;
+	sp::Paths candidates;
 	for (auto & e : head->out_edges()) {
 		sp::PathPtr to(path->step(e));
 		candidates.push_back(to);
 	}
 
-	non_dominated = set->insert(candidates);
+	sp::Paths non_dominated = set->insert(candidates);
+	for (sp::PathPtr & p : non_dominated) {
+		Pheet::template spawn_s<Self>(Strategy(p->weight()), graph, p, set, pc);
+	}
 }
 
 template <class Pheet>
