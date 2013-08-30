@@ -17,10 +17,10 @@ namespace pareto
 class NaiveSet : public Set
 {
 public:
-	sp::Paths insert(sp::Paths& paths) override;
+	virtual sp::Paths insert(sp::Paths& paths) override;
+	virtual bool insert(sp::PathPtr& path) override;
 
 private:
-	virtual bool insert(sp::PathPtr& path);
 	typedef sp::PathPtr elem_t;
 	std::unordered_set<elem_t> m_set;
 };
