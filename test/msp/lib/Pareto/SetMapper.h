@@ -9,7 +9,7 @@
 
 #include "test/msp/lib/Graph/Graph.h"
 #include <unordered_map>
-#include "LockedSet.h"
+#include "Set.h"
 
 namespace pareto
 {
@@ -27,7 +27,7 @@ public:
 	sp::Paths insert(sp::Paths& paths);
 
 private:
-	std::unordered_map<const graph::Node*, LockedSet*> map;
+	std::unordered_map<const graph::Node*, Set*> map;
 
 };
 }
