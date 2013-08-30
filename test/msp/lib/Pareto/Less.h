@@ -30,8 +30,8 @@ namespace pareto
 class less
 {
 public:
-	bool operator()(const sp::Path* lhs,
-	                const sp::Path* rhs) const;
+	bool operator()(sp::Path const*  lhs,
+	                sp::Path const* rhs) const;
 };
 
 }

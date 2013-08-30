@@ -19,7 +19,7 @@ namespace pareto
 class NaiveLinkedQueue : public LinkedQueue
 {
 public:
-	std::vector<sp::PathPtr> first(const size_t n) override;
+	std::vector<sp::PathPtr> first(size_t const n) override;
 };
 
 }
