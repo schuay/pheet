@@ -31,6 +31,8 @@ public:
 	virtual sp::Paths insert(sp::Paths& paths) = 0;
 
 	virtual bool insert(sp::PathPtr& path) = 0;
+
+	virtual ~Set() {};
 };
 
 }
