@@ -34,9 +34,9 @@ public:
 
 private:
 	procs_t cpus;
-	graph::Graph* g;
+	graph::Graph const* g;
 	unsigned int seed;
-	graph::Node* src;
+	graph::Node const* src;
 
 	static char const* const types[];
 };
