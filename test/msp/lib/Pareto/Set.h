@@ -29,6 +29,8 @@ public:
 	 * Return the set of inserted paths.
 	 */
 	virtual sp::Paths insert(sp::Paths& paths) = 0;
+
+	virtual bool insert(sp::PathPtr& path) = 0;
 };
 
 }
