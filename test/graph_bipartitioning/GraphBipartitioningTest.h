@@ -39,7 +39,7 @@ private:
 
 	procs_t cpus;
 	int type;
-	size_t size;
+	size_t const size;
 	float p;
 	size_t max_w;
 	unsigned int seed;
@@ -142,21 +142,22 @@ GraphVertex* GraphBipartitioningTest<Pheet, Partitioner>::generate_data() {
 
 	// create reverse edges, O(n+m), space O(n^2)
 	// should be factored out
-	size_t eix[size][size];
+	size_t* eix = new size_t[size * size];
 	for (size_t i = 0; i < size; i++) {
 	  for (size_t j = 0; j < data[i].num_edges; j++) {
-	    eix[i][data[i].edges[j].target] = j;
+	    eix[i*size + data[i].edges[j].target] = j;
 	  }
 	}
 	for (size_t i = 0; i < size; i++) {
 	  for (size_t j = 0; j < data[i].num_edges; j++) {
-	    data[i].edges[j].reverse = eix[data[i].edges[j].target][i];
+	    data[i].edges[j].reverse = eix[data[i].edges[j].target*size + i];
 
 	    //std::cout << '(' << i << ',' << data[i].edges[j].target << "):" << data[i].edges[j].reverse << ' ';
 	
 	  }
 	  //std::cout << '\n' << '\n';
 	}
+	delete[] eix;
 
 	return data;
 }

@@ -241,10 +241,12 @@ size_t BBGraphBipartitioningFREELogic<Pheet, SubProblem>::cc_w()
 	size_t largest_w = std::numeric_limits<size_t>::max();
 
 	size_t h, t;	// head and tail of queue
-	size_t c = 0; // component number
+	ptrdiff_t c = 0; // component number
 	size_t cs;		// component size
-	size_t queue[sub_problem->sets[2].count()];
-	int cc[sub_problem->size];
+	// Switched length of array from nf to SubProblem::max_size to have a const expression which
+	// is required by the C++ standard
+	size_t queue[SubProblem::max_size];
+	ptrdiff_t cc[SubProblem::max_size];
 
 	size_t subrem[2];
 	subrem[0] = sub_problem->k-sub_problem->sets[0].count();
@@ -400,7 +402,9 @@ void BBGraphBipartitioningFREELogic<Pheet, SubProblem>::update_data(uint8_t set,
 	//if (deg0==bitset.count()) std::cout<<'*';
 
 	size_t nf =  bitset.count();
-	ptrdiff_t delta[nf];
+	// Switched length of array from nf to SubProblem::max_size to have a const expression which
+	// is required by the C++ standard
+	ptrdiff_t delta[SubProblem::max_size];
 
 	size_t di = 0;
 	lb = 0;
@@ -457,7 +461,9 @@ void BBGraphBipartitioningFREELogic<Pheet, SubProblem>::update_data(uint8_t set,
 		} while(pivot > 0 && delta[pivot - 1] > 0);
 	}
 
-	ptrdiff_t gamma[nf];
+	// Switched length of array from nf to SubProblem::max_size to have a const expression which
+	// is required by the C++ standard
+	ptrdiff_t gamma[SubProblem::max_size];
 	size_t gi = 0;
 
 	size_t ss = (subrem[0] < subrem[1]) ? 0 : 1;
@@ -572,8 +578,10 @@ void BBGraphBipartitioningFREELogic<Pheet, SubProblem>::assign_deltabound()
 	subrem[0] = sub_problem->k-sub_problem->sets[0].count();
 	subrem[1] = (sub_problem->size-sub_problem->k)-sub_problem->sets[1].count();
 
-	size_t nf =	sub_problem->sets[2].count();
-	VertexDelta delta[nf];
+//	size_t nf =	sub_problem->sets[2].count();
+	// Switched length of array from nf to SubProblem::max_size to have a const expression which
+	// is required by the C++ standard
+	VertexDelta delta[SubProblem::max_size];
 
 	size_t di = 0;
 	size_t v = sub_problem->sets[2]._Find_first();

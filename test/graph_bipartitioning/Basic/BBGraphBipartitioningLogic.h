@@ -253,8 +253,10 @@ void BBGraphBipartitioningLogic<Pheet, SubProblem>::update_data(uint8_t set, siz
 		}
 	}
 
-	size_t nf =  bitset.count();
-	ptrdiff_t delta[nf];
+//	size_t nf =  bitset.count();
+	// Switched length of array from nf to SubProblem::max_size to have a const expression which
+	// is required by the C++ standard
+	ptrdiff_t delta[SubProblem::max_size];
 	//ptrdiff_t* delta = new ptrdiff_t[bitset.count()];
 
 	size_t di = 0;

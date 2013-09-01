@@ -1,7 +1,7 @@
 
 OPTIMIZATION = -O3
 #OPTIMIZATION = -O0 -g
-CXXFLAGS = $(OPTIMIZATION) -Wall -fmessage-length=0 -std=c++11
+CXXFLAGS = $(OPTIMIZATION) -pedantic -Wall -fmessage-length=0 -std=c++11
 CXX = g++
 
 LIB_PATH =

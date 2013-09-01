@@ -28,6 +28,8 @@ protected:
 	: graph(graph), size(size), k(k), upper_bound(upper_bound) {}
 
 public:
+	static size_t const max_size = MaxSize;
+
 	//typedef std::bitset<MaxSize> Set;
 	typedef FastBitset<MaxSize> Set;
 

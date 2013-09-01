@@ -72,7 +72,6 @@ public:
 				new_block = false;
 			}
 			offset = 0;
-			pheet_assert(total_size < 1000000);
 		}
 	}
 
@@ -114,7 +113,7 @@ public:
 				new_block = false;
 			}
 			offset = 0;
-			pheet_assert(total_size < 1000000);
+//			pheet_assert(total_size < 1000000);
 		}
 	}
 
@@ -156,7 +155,7 @@ public:
 				new_block = false;
 			}
 			offset = 0;
-			pheet_assert(total_size < 1000000);
+//			pheet_assert(total_size < 1000000);
 		}
 	}
 

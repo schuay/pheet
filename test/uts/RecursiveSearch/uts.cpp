@@ -155,7 +155,7 @@ void uts_initRoot(Node * root, int type) {
   rng_init(root->state.state, rootId);
 
   if (debug & 1)
-    printf("root node of type %d at %p\n",type, root);
+    printf("root node of type %d at %p\n",type, (void*)root);
 }
 
 
