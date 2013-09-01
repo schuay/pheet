@@ -54,6 +54,7 @@ public:
 			size_t i_limit = to_add + std::min(Tests, cur_k + 1);
 			for(size_t i = to_add; i != i_limit; ++i) {
 				size_t wrapped_i = i % (cur_k + 1);
+				pheet_assert(array_offset + wrapped_i < BlockSize);
 				if(data[array_offset + wrapped_i] == nullptr) {
 					item->orig_position = cur_tail + wrapped_i;
 					item->position = item->orig_position;
@@ -62,7 +63,7 @@ public:
 						if(diff < 0) {
 							data[array_offset + wrapped_i] = nullptr;
 						//	size_t old_pos = cur_tail + wrapped_i;
-							if(!SIZET_CAS(&(item->position), item->orig_position, item->orig_position + 1)) {
+							if(!SIZET_CAS(&(item->position), item->orig_position, item->orig_position + (std::numeric_limits<size_t>::max() >> 1))) {
 								// Item got eliminated by other thread, success
 								// I think linearization point is when item was put into array
 								return true;
@@ -171,7 +172,7 @@ public:
 					// We can't just take this item in this case or we might violate k-ordering
 					if(wrapped_i <= k) {
 						T ret = item->data;
-						if(SIZET_CAS(&(item->position), g_index, g_index + 1)) {
+						if(SIZET_CAS(&(item->position), g_index, g_index + (std::numeric_limits<size_t>::max() >> 1))) {
 							num_successful_takes.incr();
 							return ret;
 						}

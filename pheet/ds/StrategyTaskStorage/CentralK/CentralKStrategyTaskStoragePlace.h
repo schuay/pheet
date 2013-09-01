@@ -160,7 +160,7 @@ public:
 
 			if(r.item->position == r.position) {
 				T ret = r.item->data;
-				if(SIZET_CAS(&(r.item->position), r.position, r.position + 1)) {
+				if(SIZET_CAS(&(r.item->position), r.position, r.position + (std::numeric_limits<size_t>::max() >> 1))) {
 					pc.num_successful_takes.incr();
 					return ret;
 				}
