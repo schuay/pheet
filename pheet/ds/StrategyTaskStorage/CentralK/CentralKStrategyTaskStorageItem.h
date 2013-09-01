@@ -16,7 +16,7 @@ struct CentralKStrategyTaskStorageItem {
 	typedef TT Data;
 
 	CentralKStrategyTaskStorageItem()
-	:strategy(nullptr) {
+	:strategy(nullptr), position(1), orig_position(0) {
 
 	}
 

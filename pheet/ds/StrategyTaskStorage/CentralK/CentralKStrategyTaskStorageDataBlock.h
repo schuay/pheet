@@ -146,26 +146,30 @@ public:
 
 	T take_rand_filled(size_t position, PerformanceCounters& pc, BasicPerformanceCounter<Pheet, task_storage_count_unsuccessful_takes>& num_unsuccessful_takes, BasicPerformanceCounter<Pheet, task_storage_count_successful_takes>& num_successful_takes) {
 		// Take care not to break correct wraparounds when changing anything
-		size_t array_offset = position - offset;
+		size_t off = offset;
+		size_t array_offset = position - off;
 
 		pheet_assert(array_offset < BlockSize);
-		size_t max = BlockSize - array_offset;
 
-		size_t to_add = Pheet::template rand_int<size_t>(max - 1);
-		size_t limit = to_add + std::min(max, Tests);
+		size_t max = BlockSize - array_offset - 1;
 
-		for(size_t i = to_add; i < limit; ++i) {
+		size_t to_add = Pheet::template rand_int<size_t>(max);
+		size_t i_limit = to_add + std::min(Tests, max + 1);
+
+		for(size_t i = to_add; i != i_limit; ++i) {
 			pc.num_take_tests.incr();
-			size_t index = array_offset + (i % max);
+			size_t wrapped_i = i % (max + 1);
+			size_t index = array_offset + wrapped_i;
+			pheet_assert(index < BlockSize);
 
 			Item* item = data[index];
 			if(item != nullptr) {
-				size_t g_index = offset + index;
+				size_t g_index = off + index;
 				if(item->position == g_index) {
 					size_t k = item->strategy->get_k();
 					// If k is smaller than the distance to position, tail must have been updated in the meantime.
 					// We can't just take this item in this case or we might violate k-ordering
-					if((i % limit) <= k) {
+					if(wrapped_i <= k) {
 						T ret = item->data;
 						if(SIZET_CAS(&(item->position), g_index, g_index + 1)) {
 							num_successful_takes.incr();
