@@ -17,7 +17,7 @@ class SetMapper
 {
 public:
 
-	SetMapper(graph::Graph const& g);
+	SetMapper(graph::Graph const* g);
 	~SetMapper();
 	/*
 	 * For p <- paths, insert e into the pareto set attached to p->head()

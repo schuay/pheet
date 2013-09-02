@@ -11,9 +11,9 @@ namespace pareto
 {
 
 SetMapper::
-SetMapper(graph::Graph const& g)
+SetMapper(graph::Graph const* g)
 {
-	for (auto node : g.nodes()) {
+	for (auto node : g->nodes()) {
 		Set* set = new LockedSet();
 		map.insert(std::pair<graph::Node const*, Set*>(node, set));
 	}
