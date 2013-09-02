@@ -1,7 +1,7 @@
 FILE(GLOB_RECURSE ALL_CPP_SRCS *.cpp)
 
 include_directories(${HWLOC_INCLUDE_DIR} ${CMAKE_SOURCE_DIR})
-add_executable(uts ${ALL_CPP_SRCS})
+add_executable(uts ${ALL_CPP_SRCS} ../Test.cpp)
 target_link_libraries(uts
     ${CMAKE_THREAD_LIBS_INIT}
     ${HWLOC_LIBRARIES}
