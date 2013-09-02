@@ -1,1 +1,0 @@
-OBJS += lib/em/CPUHierarchy/Simple/SimpleCPUHierarchy.o lib/em/CPUHierarchy/Simple/SimpleCPUHierarchyCPUDescriptor.o
