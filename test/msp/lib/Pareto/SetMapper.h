@@ -4,11 +4,12 @@
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  */
 
-#ifndef __NODE_LOCAL_SET_H
-#define __NODE_LOCAL_SET_H
+#ifndef __SET_MAPPER_H
+#define __SET_MAPPER_H
+
+#include <unordered_map>
 
 #include "test/msp/lib/Graph/Graph.h"
-#include <unordered_map>
 #include "Set.h"
 
 namespace pareto
@@ -31,4 +32,4 @@ private:
 
 };
 }
-#endif /*  __NODE_LOCAL_SET_H*/
+#endif /*  __SET_MAPPER_H*/
