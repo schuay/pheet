@@ -9,14 +9,14 @@
 #ifndef TEST_H_
 #define TEST_H_
 
-#include "init.h"
 #include <chrono>
-
 #include <stdlib.h>
 
-namespace pheet {
+namespace pheet
+{
 
-class Test {
+class Test
+{
 public:
 	typedef std::chrono::high_resolution_clock Timer;
 	typedef Timer::time_point Time;
