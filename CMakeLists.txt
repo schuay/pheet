@@ -14,3 +14,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 endif()
 
 add_subdirectory(test)
+
+# A silly hack to make all files (including headers) show up in QtCreator.
+FILE(GLOB_RECURSE ALL_HEADERS *.h)
+add_library(qtcreator_dummy ${ALL_HEADERS} test/Test.cpp)
