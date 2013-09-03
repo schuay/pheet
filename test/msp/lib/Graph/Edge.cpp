@@ -71,7 +71,7 @@ head() const
 	return h;
 }
 
-weight_vector_t
+weight_vector_t const&
 Edge::
 weights() const
 {
