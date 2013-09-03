@@ -9,6 +9,7 @@
 
 #include <vector>
 
+#include "../lib/ShortestPath/Path.h"
 #include "StrategyMspPlace.h"
 
 namespace pheet
@@ -30,7 +31,7 @@ public:
 	typedef typename Pheet::Environment::BaseStrategy BaseStrategy;
 	typedef std::vector<int> Weights;
 
-	StrategyMspStrategy(const Weights& weights);
+	StrategyMspStrategy(sp::PathPtr path);
 	StrategyMspStrategy(Self& other);
 	StrategyMspStrategy(Self&& other);
 
@@ -41,7 +42,7 @@ public:
 	static size_t default_k;
 
 private:
-	Weights weights;
+	sp::PathPtr path;
 };
 
 template <class Pheet>
@@ -49,8 +50,8 @@ size_t StrategyMspStrategy<Pheet>::default_k = 1024;
 
 template <class Pheet>
 StrategyMspStrategy<Pheet>::
-StrategyMspStrategy(const Weights& weights)
-	: weights(weights)
+StrategyMspStrategy(sp::PathPtr path)
+	: path(path)
 {
 	this->set_k(default_k);
 }
@@ -59,7 +60,7 @@ template <class Pheet>
 StrategyMspStrategy<Pheet>::
 StrategyMspStrategy(Self& other)
 	: BaseStrategy(other),
-	  weights(other.weights)
+	  path(other.path)
 {
 }
 
@@ -67,7 +68,7 @@ template <class Pheet>
 StrategyMspStrategy<Pheet>::
 StrategyMspStrategy(Self&& other)
 	: BaseStrategy(other),
-	  weights(other.weights)
+	  path(other.path)
 {
 }
 
@@ -76,19 +77,22 @@ inline bool
 StrategyMspStrategy<Pheet>::
 prioritize(Self& other) const
 {
-	StrategyMspPlace<Pheet>& p = Pheet::template place_singleton<StrategyMspPlace<Pheet>>();
+	StrategyMspPlace<Pheet>& place = Pheet::template place_singleton<StrategyMspPlace<Pheet>>();
 
-	double lhs = 0.0;
-	for (int i = 0; i < weights.size(); i++) {
-		lhs += weights[i] * p.factor(i);
+	const graph::weight_vector_t this_weight = path->weight();
+	const graph::weight_vector_t that_weight = other.path->weight();
+
+	double this_priority = 0.0;
+	for (int i = 0; i < this_weight.size(); i++) {
+		this_priority += this_weight[i] * place.factor(i);
 	}
 
-	double rhs = 0.0;
-	for (int i = 0; i < other.weights.size(); i++) {
-		rhs += other.weights[i] * p.factor(i);
+	double that_priority = 0.0;
+	for (int i = 0; i < that_weight.size(); i++) {
+		that_priority += that_weight[i] * place.factor(i);
 	}
 
-	return (lhs < rhs);
+	return (this_priority < that_priority);
 }
 
 template <class Pheet>

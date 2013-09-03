@@ -102,7 +102,7 @@ operator()()
 
 	sp::Paths non_dominated = set->insert(candidates);
 	for (sp::PathPtr & p : non_dominated) {
-		Pheet::template spawn_s<Self>(Strategy(p->weight()), graph, p, set, pc);
+		Pheet::template spawn_s<Self>(Strategy(p), graph, p, set, pc);
 	}
 }
 
