@@ -13,13 +13,11 @@
 
 namespace pheet {
 
-  //#define SORTING_TEST true
 const procs_t sorting_test_cpus[] = {1, 2, 4, 8, 16, 32, 64, 128};
 const unsigned int sorting_test_seeds[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 const size_t sorting_test_n[] = {10000000, 100000000, 1000000000, 8388607, 33554431, 134217727};
 const int sorting_test_types[] = {0, 1, 3, 4};
 
-//#define GRAPH_BIPARTITIONING_TEST true
 const procs_t graph_bipartitioning_test_cpus[] = {1, 2, 4, 8, 16, 32, 64, 128};
 const unsigned int graph_bipartitioning_test_seeds[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 
@@ -79,7 +77,6 @@ const int graph_bipartitioning_test_types[] = {0};
 
 //#define GRAPHBIANDLUPIV_TEST true
 
-//#define INAROW_TEST true
 const procs_t inarow_test_cpus[] = {1, 2, 4, 8, 16, 32, 64, 128};
 const unsigned int inarow_test_lookaheads[] = {6, 7, 8};
 
@@ -87,7 +84,6 @@ const bool    nqueens_test        = false;
 const procs_t nqueens_test_cpus[] = {1, 2, 4, 8, 16, 32, 64, 128};
 const size_t  nqueens_test_n[]    = {24, 32, 48};
 
-//#define UTS_TEST      true
 const procs_t uts_test_cpus[] = {4};
 
 // 0 # (T1) Geometric [fixed] ------- Tree size = 4130071, tree depth = 10, num leaves = 3305118 (80.03%)
@@ -101,11 +97,9 @@ const procs_t uts_test_cpus[] = {4};
 // 8 # (T1XL) Geometric [fixed] ----- Tree size = 1635119272, tree depth = 15, num leaves = 1308100063 (80.00%)
 const unsigned int uts_test_standardworkloads[] = {0,1,2,3,4,5,6,7,8};
 
-#define TriStrip_TEST true
 const procs_t tristrip_test_cpus[] = {1, 2, 3, 6, 12, 24, 48};
 const procs_t tristrip_test_nodecount[] = {1024*12};
 
-#define SOR_TEST	true
 const procs_t sor_test_cpus[] = {1, 2, 3, 6, 12, 24, 48};
  const int sor_test_maxtrissize[] = {1536};
 const int sor_test_iterations[] =  {100};
@@ -116,8 +110,6 @@ const bool sor_prio[] = {true,false};
  const bool sor_runsor = true;
  const bool sor_usestrat = true;
 
-
-#define LUPIV_TEST      true
  const procs_t lupiv_test_cpus[] = {2,4,6,8,10,12};
  const unsigned int lupiv_test_seeds[] = {0};
  const size_t lupiv_test_n[] = { 1536};

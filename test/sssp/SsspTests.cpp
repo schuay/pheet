@@ -7,7 +7,6 @@
  */
 
 #include "SsspTests.h"
-#ifdef SSSP_TEST
 #include "Simple/SimpleSssp.h"
 #include "Strategy/StrategySssp.h"
 #include "Adaptive/AdaptiveSssp.h"
@@ -20,7 +19,6 @@
 #include <pheet/sched/Synchroneous/SynchroneousScheduler.h>
 #include <pheet/ds/StrategyTaskStorage/CentralK/CentralKStrategyTaskStorage.h>
 #include <pheet/ds/StrategyTaskStorage/DistK/DistKStrategyTaskStorage.h>
-#endif
 
 namespace pheet {
 
@@ -39,7 +37,6 @@ void SsspTests::run_test() {
 							SsspAnalysis>();
 	return;
 #endif
-#ifdef SSSP_TEST
 	std::cout << "----" << std::endl;
 
 	this->run_algorithm<	Pheet::WithScheduler<SynchroneousScheduler>,
@@ -68,7 +65,6 @@ void SsspTests::run_test() {
 	this->run_algorithm<	Pheet::WithScheduler<BasicScheduler>,
 							SimpleSssp>();
 							*/
-#endif
 }
 
 } /* namespace pheet */

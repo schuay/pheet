@@ -8,7 +8,6 @@
 
 #include "PrefixSumTests.h"
 
-#ifdef PREFIX_SUM_TEST
 #include "Sequential/SequentialPrefixSum.h"
 #include "NaiveParallel/NaiveParallelPrefixSum.h"
 #include "RecursiveParallel/RecursiveParallelPrefixSum.h"
@@ -46,7 +45,6 @@
 
 
 #include <iostream>
-#endif
 
 namespace pheet {
 
@@ -60,7 +58,6 @@ PrefixSumTests::~PrefixSumTests() {
 }
 
 void PrefixSumTests::run_test() {
-#ifdef PREFIX_SUM_TEST
 	std::cout << "----" << std::endl;
 
 	// default tests
@@ -103,7 +100,6 @@ void PrefixSumTests::run_test() {
 
 	this->run_prefix_sum<	Pheet::WithScheduler<SynchroneousScheduler>,
 						RecursiveParallelPrefixSum>();
-#endif
 }
 
 
