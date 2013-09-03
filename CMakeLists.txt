@@ -13,6 +13,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_definitions(-DPHEET_DEBUG_MODE)
 endif()
 
+add_subdirectory(examples)
 add_subdirectory(test)
 
 # A silly hack to make all files (including headers) show up in QtCreator.
