@@ -7,7 +7,8 @@
 #ifndef __SET_H
 #define __SET_H
 
-#include "test/msp/lib/ShortestPath/Path.h"
+#include "lib/ShortestPath/Path.h"
+#include "lib/ShortestPath/ShortestPaths.h"
 
 namespace pareto
 {
@@ -26,6 +27,8 @@ public:
 	virtual void insert(sp::PathPtr& path,
 	                    sp::Paths& added,
 	                    sp::Paths& removed) = 0;
+
+	virtual sp::Paths paths() const = 0;
 
 	virtual ~Set() { }
 };
