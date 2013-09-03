@@ -18,20 +18,6 @@ namespace pareto
 class Set
 {
 public:
-
-	/**
-	 * DEPRECATED.
-	 *
-	 * Insert the set of elements into the pareto set.
-	 *
-	 * For all elements e in paths:
-	 * 1) If e is dominated within its current node set, do nothing.
-	 * 2) Otherwise, add e and prune all dominated elements of the node set.
-	 *
-	 * Return the set of inserted paths.
-	 */
-	virtual sp::Paths insert(sp::Paths& paths) = 0;
-
 	/**
 	 * Attempts to inserts path into the set. Returns true, iff the path
 	 * has been successfully inserted. Otherwise, the removed vector contains
