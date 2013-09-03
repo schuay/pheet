@@ -20,7 +20,6 @@ namespace pareto
 class LockedSet : public NaiveSet
 {
 public:
-	sp::Paths insert(sp::Paths& paths) override;
 	void insert(sp::PathPtr& path,
 	            sp::Paths& added,
 	            sp::Paths& removed) override;

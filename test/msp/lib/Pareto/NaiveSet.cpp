@@ -12,17 +12,6 @@ using namespace sp;
 namespace pareto
 {
 
-sp::Paths
-NaiveSet::
-insert(sp::Paths& paths)
-{
-	sp::Paths added, removed;
-	for (auto p : paths) {
-		insert(p, added, removed);
-	}
-	return added;
-}
-
 void
 NaiveSet::
 insert(sp::PathPtr& path,
