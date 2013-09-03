@@ -62,7 +62,7 @@ SimpleLUPivImpl<Pheet, BLOCK_SIZE>::SimpleLUPivImpl(double* a, int* pivot, int m
 }
 
 template <class Pheet, int BLOCK_SIZE>
-SimpleLUPivImpl<Pheet, BLOCK_SIZE>::SimpleLUPivImpl(double* a, int* pivot, int size, PerformanceCounters& pc)
+SimpleLUPivImpl<Pheet, BLOCK_SIZE>::SimpleLUPivImpl(double* a, int* pivot, int size, PerformanceCounters&)
 : a(a), pivot(pivot), m(size), lda(size), n(size) {
 	pheet_assert(m > 0);
 	pheet_assert(n > 0);
