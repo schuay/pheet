@@ -41,9 +41,12 @@ protected:
 
 		PathPtr p(new Path(start));
 		MspPerformanceCounters<SyncPheet> pc;
+		Sets paretoSets(g);
 
-		SequentialMsp<SyncPheet> seq(g, p, nullptr, pc);
-		sp = seq();
+		SequentialMsp<SyncPheet> seq(g, p, &paretoSets, pc);
+		seq();
+
+		sp = paretoSets.shortest_paths();
 	}
 
 	virtual void TearDown() {

@@ -12,7 +12,6 @@
 #include "../lib/Pareto/Less.h"
 #include "../lib/Pareto/PriorityLinkedQueue.h"
 #include "../lib/Pareto/Sets.h"
-#include "../lib/ShortestPath/ShortestPaths.h"
 #include "../MspPerformanceCounters.h"
 
 namespace pheet
@@ -26,11 +25,10 @@ public:
 
 	SequentialMsp(graph::Graph const* graph,
 	              sp::PathPtr const path,
-	              pareto::Sets* set,
+	              pareto::Sets* sets,
 	              PerformanceCounters& pc);
 
-	/* TODO: Change the way results are returned. */
-	sp::ShortestPaths*
+	void
 	operator()();
 
 	static char const name[];
@@ -41,6 +39,7 @@ private:
 
 	pareto::less dominates;
 	pareto::PriorityLinkedQueue m_queue;
+	pareto::Sets* sets;
 
 	PerformanceCounters& pc;
 };
