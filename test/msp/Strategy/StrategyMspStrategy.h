@@ -79,8 +79,8 @@ prioritize(Self& other) const
 {
 	StrategyMspPlace<Pheet>& place = Pheet::template place_singleton<StrategyMspPlace<Pheet>>();
 
-	const graph::weight_vector_t this_weight = path->weight();
-	const graph::weight_vector_t that_weight = other.path->weight();
+	const graph::weight_vector_t& this_weight = path->weight();
+	const graph::weight_vector_t& that_weight = other.path->weight();
 
 	double this_priority = 0.0;
 	for (int i = 0; i < this_weight.size(); i++) {
