@@ -21,7 +21,7 @@ public:
 	Node* tail() const;
 	Node* head() const;
 
-	graph::weight_vector_t weights() const;
+	graph::weight_vector_t const& weights() const;
 
 private:
 	Edge(Node* t,
