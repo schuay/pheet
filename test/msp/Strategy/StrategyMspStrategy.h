@@ -108,7 +108,7 @@ inline bool
 StrategyMspStrategy<Pheet>::
 dead_task()
 {
-	return false; /* TODO */
+	return path->dominated();
 }
 
 } /* namespace pheet */

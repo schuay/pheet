@@ -28,17 +28,18 @@ SetMapper::
 
 }
 
-sp::Paths
+void
 SetMapper::
-insert(sp::Paths& paths)
+insert(sp::Paths& paths,
+       sp::Paths& added,
+       sp::Paths&)
 {
-	sp::Paths non_dominated;
 	for (auto p : paths) {
 		graph::Node const* node = p->head();
 		if (map[node]->insert(p)) {
-			non_dominated.push_back(p);
+			added.push_back(p);
 		}
 	}
-	return non_dominated;
 }
+
 }

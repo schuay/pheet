@@ -100,8 +100,18 @@ operator()()
 		candidates.push_back(to);
 	}
 
-	sp::Paths non_dominated = set->insert(candidates);
-	for (sp::PathPtr & p : non_dominated) {
+	/* Insert into the Pareto set. Mark dominated paths and spawn tasks for
+	 * newly added paths. */
+
+	sp::Paths added, removed;
+	set->insert(candidates, added, removed);
+
+	for (sp::PathPtr & p : removed) {
+		p->set_dominated();
+		pc.num_dead_tasks.incr();
+	}
+
+	for (sp::PathPtr & p : added) {
 		Pheet::template spawn_s<Self>(Strategy(p), graph, p, set, pc);
 	}
 }
