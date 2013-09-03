@@ -7,8 +7,6 @@
 #ifndef MSPTESTS_H_
 #define MSPTESTS_H_
 
-#include "../init.h"
-
 namespace pheet
 {
 
