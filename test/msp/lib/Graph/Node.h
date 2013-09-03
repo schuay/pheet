@@ -24,7 +24,7 @@ public:
 
 	Graph* graph() const;
 
-	std::vector<Edge*> out_edges() const;
+	std::vector<Edge const*> out_edges() const;
 
 private:
 	Node(Graph* graph);
@@ -35,6 +35,8 @@ private:
 	Agnode_t* n;
 
 	ulong m_id;
+
+	std::vector<Edge const*> m_out_edges;
 };
 
 }
