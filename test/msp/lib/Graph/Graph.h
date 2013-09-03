@@ -7,7 +7,6 @@
 #ifndef __GRAPH_H
 #define __GRAPH_H
 
-#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -30,8 +29,6 @@ typedef std::vector<weight_t> weight_vector_t;
 #define ATTR_WEIGHT const_cast<char *>("label")
 #define ATTR_DEGREE const_cast<char *>("degree")
 #define ATTR_NODEID const_cast<char *>("label")
-
-/* TODO: Make the entire cgraph usage thread-safe by locking/precomputing. */
 
 class Graph
 {
@@ -79,8 +76,6 @@ private:
 
 	std::unordered_map<ulong, Node*> m_nodes;
 	std::unordered_map<ulong, Edge*> m_edges;
-
-	std::mutex m_lock;
 };
 
 }

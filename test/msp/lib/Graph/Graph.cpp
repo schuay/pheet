@@ -181,6 +181,7 @@ add_edge(ulong const id,
          Edge* e)
 {
 	m_edges.emplace(id, e);
+	e->tail()->m_out_edges.push_back(e);
 }
 
 }
