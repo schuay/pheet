@@ -17,12 +17,14 @@ insert(sp::Paths& paths)
 	return NaiveSet::insert(paths);
 }
 
-bool
+void
 LockedSet::
-insert(sp::PathPtr& path)
+insert(sp::PathPtr& path,
+       sp::Paths& added,
+       sp::Paths& removed)
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
-	return NaiveSet::insert(path);
+	NaiveSet::insert(path, added, removed);
 
 }
 

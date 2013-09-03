@@ -16,41 +16,35 @@ sp::Paths
 NaiveSet::
 insert(sp::Paths& paths)
 {
-	sp::Paths non_dominated;
+	sp::Paths added, removed;
 	for (auto p : paths) {
-		if (insert(p)) {
-			non_dominated.push_back(p);
-		}
+		insert(p, added, removed);
 	}
-	return non_dominated;
+	return added;
 }
 
-bool
+void
 NaiveSet::
-insert(sp::PathPtr& path)
+insert(sp::PathPtr& path,
+       sp::Paths& added,
+       sp::Paths& removed)
 {
 	less dominates;
-	bool add_elem = true;
-	PathPtr lhs = path;
+
 	for (auto i = m_set.begin(); i != m_set.end();) {
 		PathPtr rhs = *i;
-		if (dominates(lhs.get(), rhs.get())) {
-			/* TODO: Additional set requirement:
-			 * * A way of marking pruned tasks as dead. We need to find out if we can
-			 *   actually (safely) access the strategy object after insertion into the
-			 *   scheduler, or if we should do it implicitly (like Sssp).
-			 */
+		if (dominates(path.get(), rhs.get())) {
+			removed.push_back(rhs);
 			m_set.erase(i++);
-		} else if (dominates(rhs.get(), lhs.get())) {
-			add_elem = false;
-			break;
+		} else if (dominates(rhs.get(), path.get())) {
+			return;
 		} else {
-			++ i;
+			i++;
 		}
 	}
-	if (add_elem) {
-		m_set.insert(path);
-	}
-	return add_elem;
+
+	added.push_back(path);
+	m_set.insert(path);
 }
+
 }
