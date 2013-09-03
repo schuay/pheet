@@ -36,7 +36,7 @@ Path*
 Path::
 step(Edge const* edge) const
 {
-	graph::weight_vector_t ws = edge->weights();
+	graph::weight_vector_t const& ws = edge->weights();
 	assert(ws.size() == m_weight.size());
 
 	Path* p = new Path(*this);
