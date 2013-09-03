@@ -7,6 +7,7 @@
 #ifndef __PATH_H
 #define __PATH_H
 
+#include <atomic>
 #include <memory>
 #include <vector>
 
@@ -35,11 +36,18 @@ public:
 	std::vector<graph::Edge const*> edges() const;
 	std::vector<graph::weight_t> weight() const;
 
+	bool dominated() const;
+	void set_dominated();
+
+private:
+	Path(const Path& that);
+
 private:
 	graph::Node const* m_tail;
 	graph::Node const* m_head;
 	std::vector<graph::Edge const*> m_edges;
 	std::vector<graph::weight_t> m_weight;
+	std::atomic_bool m_dominated;
 };
 
 }
