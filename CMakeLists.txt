@@ -1,5 +1,7 @@
 PROJECT(Pheet)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+
+find_package(GTest REQUIRED)
 find_package(Threads REQUIRED)
 
 include(FindPkgConfig)
@@ -12,6 +14,8 @@ endif()
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_definitions(-DPHEET_DEBUG_MODE)
 endif()
+
+enable_testing()
 
 add_subdirectory(examples)
 add_subdirectory(test)
