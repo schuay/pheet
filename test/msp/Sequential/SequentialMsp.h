@@ -11,7 +11,7 @@
 #include "../lib/Graph/Graph.h"
 #include "../lib/Pareto/Less.h"
 #include "../lib/Pareto/PriorityLinkedQueue.h"
-#include "../lib/Pareto/SetMapper.h"
+#include "../lib/Pareto/Sets.h"
 #include "../lib/ShortestPath/ShortestPaths.h"
 #include "../MspPerformanceCounters.h"
 
@@ -26,7 +26,7 @@ public:
 
 	SequentialMsp(graph::Graph const* graph,
 	              sp::PathPtr const path,
-	              pareto::SetMapper* set,
+	              pareto::Sets* set,
 	              PerformanceCounters& pc);
 
 	/* TODO: Change the way results are returned. */
