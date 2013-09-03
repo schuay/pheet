@@ -35,6 +35,8 @@ public:
 	            sp::Paths& added,
 	            sp::Paths& removed);
 
+	sp::ShortestPaths* shortest_paths() const;
+
 private:
 	std::unordered_map<graph::Node const*, Set*> map;
 

@@ -40,4 +40,17 @@ insert(sp::Paths& paths,
 	}
 }
 
+sp::ShortestPaths*
+Sets::
+shortest_paths() const
+{
+	sp::ShortestPaths* sp = new sp::ShortestPaths;
+
+	for (const auto & p : map) {
+		sp->paths[p.first] = p.second->paths();
+	}
+
+	return sp;
+}
+
 }
