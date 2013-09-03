@@ -7,7 +7,7 @@
 #ifndef MSPTEST_H_
 #define MSPTEST_H_
 
-#include "../Test.h"
+#include "../../Test.h"
 #include "lib/Generator/Generator.h"
 #include "lib/Pareto/Sets.h"
 #include "pheet/pheet.h"
