@@ -23,8 +23,8 @@ operator()(Path const* lhs,
 {
 	assert(lhs && rhs);
 
-	vector<graph::weight_t> const l = lhs->weight();
-	vector<graph::weight_t> const r = rhs->weight();
+	weight_vector_t const& l = lhs->weight();
+	weight_vector_t const& r = rhs->weight();
 
 	assert(l.size() == r.size());
 	int const dims = l.size();
