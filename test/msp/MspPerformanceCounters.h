@@ -31,8 +31,8 @@ public:
 	}
 
 	MspPerformanceCounters(Self&& other)
-		: num_dead_tasks(other.num_dead_tasks),
-		  num_actual_tasks(other.num_actual_tasks) {
+		: num_dead_tasks(std::move(other.num_dead_tasks)),
+		  num_actual_tasks(std::move(other.num_actual_tasks)) {
 	}
 
 	static void print_headers() {
