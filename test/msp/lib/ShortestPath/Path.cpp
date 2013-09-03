@@ -80,14 +80,14 @@ head() const
 	return m_head;
 }
 
-vector<Edge const*>
+vector<Edge const*> const&
 Path::
 edges() const
 {
 	return m_edges;
 }
 
-vector<weight_t>
+weight_vector_t const&
 Path::
 weight() const
 {

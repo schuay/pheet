@@ -9,6 +9,7 @@
 #include <assert.h>
 #include <queue>
 
+using namespace graph;
 using namespace sp;
 
 namespace pareto
@@ -20,8 +21,8 @@ operator()(elem_t const* lhs, elem_t const* rhs) const
 {
 	assert(lhs && rhs);
 
-	std::vector<graph::weight_t> const l = lhs->path->weight();
-	std::vector<graph::weight_t> const r = rhs->path->weight();
+	weight_vector_t const& l = lhs->path->weight();
+	weight_vector_t const& r = rhs->path->weight();
 
 	assert(l.size() == r.size());
 	int const dims = l.size();
