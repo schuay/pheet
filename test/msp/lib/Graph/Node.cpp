@@ -25,20 +25,11 @@ graph() const
 	return m_graph;
 }
 
-std::vector<Edge*>
+std::vector<Edge const*>
 Node::
 out_edges() const
 {
-	std::vector<Edge*> edges;
-
-	/* TODO: Cache or precompute results to avoid repeated locks. */
-	std::lock_guard<std::mutex> lock(m_graph->m_lock);
-
-	for (Agedge_t* e = agfstout(m_graph->g, n); e != nullptr; e = agnxtout(m_graph->g, e)) {
-		edges.push_back(m_graph->get_edge(AGID(e)));
-	}
-
-	return edges;
+	return m_out_edges;
 }
 
 Node::
