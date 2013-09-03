@@ -9,7 +9,7 @@
 
 #include "../lib/Graph/Edge.h"
 #include "../lib/Graph/Graph.h"
-#include "../lib/Pareto/SetMapper.h"
+#include "../lib/Pareto/Sets.h"
 #include "../lib/ShortestPath/ShortestPaths.h"
 #include "../MspPerformanceCounters.h"
 #include "StrategyMspStrategy.h"
@@ -53,7 +53,7 @@ public:
 
 	StrategyMspTask(const graph::Graph* graph,
 	                const sp::PathPtr path,
-	                pareto::SetMapper* set,
+	                pareto::Sets* sets,
 	                PerformanceCounters& pc);
 
 	virtual void operator()();
@@ -66,7 +66,7 @@ private:
 	const graph::Graph* graph;
 	const sp::PathPtr path;
 
-	pareto::SetMapper* set;
+	pareto::Sets* sets;
 
 	PerformanceCounters& pc;
 };
@@ -78,9 +78,9 @@ template <class Pheet>
 StrategyMspTask<Pheet>::
 StrategyMspTask(const graph::Graph* graph,
                 const sp::PathPtr path,
-                pareto::SetMapper* set,
+                pareto::Sets* sets,
                 PerformanceCounters& pc)
-	: graph(graph), path(path), set(set), pc(pc)
+	: graph(graph), path(path), sets(sets), pc(pc)
 {
 }
 
@@ -104,7 +104,7 @@ operator()()
 	 * newly added paths. */
 
 	sp::Paths added, removed;
-	set->insert(candidates, added, removed);
+	sets->insert(candidates, added, removed);
 
 	for (sp::PathPtr & p : removed) {
 		p->set_dominated();
@@ -112,7 +112,7 @@ operator()()
 	}
 
 	for (sp::PathPtr & p : added) {
-		Pheet::template spawn_s<Self>(Strategy(p), graph, p, set, pc);
+		Pheet::template spawn_s<Self>(Strategy(p), graph, p, sets, pc);
 	}
 }
 

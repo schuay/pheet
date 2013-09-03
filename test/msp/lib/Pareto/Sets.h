@@ -4,25 +4,25 @@
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  */
 
-#ifndef __SET_MAPPER_H
-#define __SET_MAPPER_H
+#ifndef __SETS_H
+#define __SETS_H
 
 #include <unordered_map>
 
-#include "test/msp/lib/Graph/Graph.h"
 #include "Set.h"
+#include "test/msp/lib/Graph/Graph.h"
 
 namespace pareto
 {
 
-class SetMapper
+class Sets
 {
 public:
 
-	SetMapper(graph::Graph const* g);
-	virtual ~SetMapper();
+	Sets(graph::Graph const* g);
+	virtual ~Sets();
 
-	/*
+	/**
 	 * For p <- paths, insert e into the pareto set attached to p->head()
 	 *
 	 * After execution, the added vector contains all p <- paths which have been
@@ -42,4 +42,4 @@ private:
 
 }
 
-#endif /*  __SET_MAPPER_H*/
+#endif /*  __SETS_H*/

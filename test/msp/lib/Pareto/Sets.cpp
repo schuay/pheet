@@ -5,13 +5,13 @@
  */
 
 #include "LockedSet.h"
-#include "SetMapper.h"
+#include "Sets.h"
 
 namespace pareto
 {
 
-SetMapper::
-SetMapper(graph::Graph const* g)
+Sets::
+Sets(graph::Graph const* g)
 {
 	for (auto node : g->nodes()) {
 		Set* set = new LockedSet();
@@ -19,8 +19,8 @@ SetMapper(graph::Graph const* g)
 	}
 }
 
-SetMapper::
-~SetMapper()
+Sets::
+~Sets()
 {
 	for (auto it = map.begin(); it != map.end(); ++it) {
 		delete it->second;
@@ -29,7 +29,7 @@ SetMapper::
 }
 
 void
-SetMapper::
+Sets::
 insert(sp::Paths& paths,
        sp::Paths& added,
        sp::Paths&)
