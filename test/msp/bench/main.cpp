@@ -6,7 +6,6 @@
 
 #define NDEBUG 1
 
-#include "../init.h"
 #include "MspTests.h"
 
 using namespace pheet;
