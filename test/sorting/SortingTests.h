@@ -11,9 +11,7 @@
 
 #include "../init.h"
 #include "../Test.h"
-#ifdef SORTING_TEST
 #include "SortingTest.h"
-#endif
 
 namespace pheet {
 
@@ -31,7 +29,6 @@ private:
 
 template <class Pheet, template <class P> class Sorter>
 void SortingTests::run_sorter() {
-#ifdef SORTING_TEST
 	typename Pheet::MachineModel mm;
 	procs_t max_cpus = std::min(mm.get_num_leaves(), Pheet::Environment::max_cpus);
 
@@ -57,7 +54,6 @@ void SortingTests::run_sorter() {
 			}
 		}
 	}
-#endif
 }
 
 }

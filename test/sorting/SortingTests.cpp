@@ -8,7 +8,6 @@
 
 #include "SortingTests.h"
 
-#ifdef SORTING_TEST
 #include "Reference/ReferenceSTLSort.h"
 #include "Reference/ReferenceQuicksort.h"
 #include "Reference/ReferenceQuicksortLoop.h"
@@ -47,7 +46,6 @@
 #include <pheet/sched/MixedMode/MixedModeScheduler.h>
 
 #include <iostream>
-#endif
 
 namespace pheet {
 
@@ -61,7 +59,6 @@ SortingTests::~SortingTests() {
 }
 
 void SortingTests::run_test() {
-#ifdef SORTING_TEST
 	std::cout << "----" << std::endl;
 
 #ifdef AMP_STEALING_DEQUE_TEST
@@ -148,8 +145,6 @@ void SortingTests::run_test() {
 //						MixedModeQuicksort>();
 //	this->run_sorter<	Pheet::WithScheduler<FinisherScheduler>,
 //						DagQuicksort>();
-#endif
-
 #endif
 }
 

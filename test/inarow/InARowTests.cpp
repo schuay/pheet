@@ -7,10 +7,8 @@
 */
 
 #include "InARowTests.h"
-#ifdef INAROW_TEST
 #include "InARowTest.h"
 #include "RecursiveSearch/InARowGame.h"
-#endif
 
 #include <pheet/sched/Strategy/StrategyScheduler.h>
 
@@ -24,7 +22,6 @@ namespace pheet {
 	template <class Test>
 	void InARowTests::test(unsigned int width, unsigned int height, unsigned int rowlength, unsigned int* scenario)
 	{
-#ifdef INAROW_TEST
 		typename Pheet::MachineModel mm;
 		procs_t max_cpus = mm.get_num_leaves();
 				//std::min(mm.get_num_leaves(), Test::max_cpus);
@@ -49,26 +46,20 @@ namespace pheet {
 				iart.run_test();
 			}
 		}
-#endif
 	}
 
 	void InARowTests::run_test()
 	{
-#ifdef INAROW_TEST
-		if(inarow_test) {
+		//test<DefaultBasicScheduler>(8,8,4,4,2,(unsigned int*)scenario2);
+		//test<DefaultBasicScheduler>(8,8,4,7,8,(unsigned int*)scenario2);
 
-			//test<DefaultBasicScheduler>(8,8,4,4,2,(unsigned int*)scenario2);
-			//test<DefaultBasicScheduler>(8,8,4,7,8,(unsigned int*)scenario2);
+		//test<DefaultSynchroneousScheduler>(8,8,4,10,1,(unsigned int*)scenario1);
+		//		return;
+		//test<DefaultBasicScheduler>(8,8,4,7,8,(unsigned int*)scenario2);
 
-			//test<DefaultSynchroneousScheduler>(8,8,4,10,1,(unsigned int*)scenario1);
-			//		return;
-			//test<DefaultBasicScheduler>(8,8,4,7,8,(unsigned int*)scenario2);
-
-			test<InARowGame<Pheet::WithScheduler<StrategyScheduler> > >(8,8,4,(unsigned int*)scenario2);
-	//		test<InARowGame<PrimitiveHeapPriorityScheduler> >(8,8,4,(unsigned int*)scenario2);
-		//	test<DefaultBasicScheduler>(8,8,4,7,8,(unsigned int*)scenario2);
-		}
-#endif
+		test<InARowGame<Pheet::WithScheduler<StrategyScheduler> > >(8,8,4,(unsigned int*)scenario2);
+//		test<InARowGame<PrimitiveHeapPriorityScheduler> >(8,8,4,(unsigned int*)scenario2);
+	//	test<DefaultBasicScheduler>(8,8,4,7,8,(unsigned int*)scenario2);
 	}
 
 }
