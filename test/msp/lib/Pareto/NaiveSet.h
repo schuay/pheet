@@ -21,6 +21,8 @@ public:
 	            sp::Paths& added,
 	            sp::Paths& removed) override;
 
+	sp::Paths paths() const override;
+
 private:
 	std::unordered_set<sp::PathPtr> m_set;
 };

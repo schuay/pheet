@@ -36,4 +36,11 @@ insert(sp::PathPtr& path,
 	m_set.insert(path);
 }
 
+sp::Paths
+NaiveSet::
+paths() const
+{
+	return sp::Paths(m_set.begin(), m_set.end());
+}
+
 }
