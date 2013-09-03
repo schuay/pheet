@@ -8,8 +8,6 @@
 
 #include "GraphBipartitioningTests.h"
 
-#ifdef GRAPH_BIPARTITIONING_TEST
-
 #include "Basic/BBGraphBipartitioningFREELogic.h"
 
 #include <pheet/models/MachineModel/HWLoc/HWLocSMTMachineModel.h>
@@ -55,7 +53,6 @@
 #include "../../sched/strategies/LifoFifo/LifoFifoStrategy.h"
 
 #include "../test_schedulers.h"*/
-#endif
 
 namespace pheet {
 
@@ -68,7 +65,6 @@ GraphBipartitioningTests::~GraphBipartitioningTests() {
 }
 
 void GraphBipartitioningTests::run_test() {
-#ifdef GRAPH_BIPARTITIONING_TEST
 	std::cout << "----" << std::endl;
 
 #ifdef AMP_STEALING_DEQUE_TEST
@@ -178,8 +174,6 @@ void GraphBipartitioningTests::run_test() {
 							BBGraphBipartitioning<>
 								::WithLogic<BBGraphBipartitioningFREELogic>
 								::BT >();
-
-#endif
 
 #endif
 }

@@ -11,9 +11,7 @@
 
 #include "../init.h"
 #include "../Test.h"
-#ifdef PREFIX_SUM_TEST
 #include "PrefixSumTest.h"
-#endif
 
 namespace pheet {
 
@@ -31,7 +29,6 @@ private:
 
 template <class Pheet, template <class P> class Algorithm>
 void PrefixSumTests::run_prefix_sum() {
-#ifdef PREFIX_SUM_TEST
 	typename Pheet::MachineModel mm;
 	procs_t max_cpus = std::min(mm.get_num_leaves(), Pheet::Environment::max_cpus);
 
@@ -66,7 +63,6 @@ void PrefixSumTests::run_prefix_sum() {
 			}
 		}
 	}
-#endif
 }
 
 } /* namespace pheet */

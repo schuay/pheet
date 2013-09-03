@@ -8,8 +8,6 @@
 
 #include "SORTests.h"
 
-#ifdef SOR_TEST
-
 #include "SORTest.h"
 #include "PartitionMatrix/SORRun.h"
 
@@ -19,14 +17,11 @@
 //#include "../test_schedulers.h"
 #include <iostream>
 
-#endif
-
 namespace pheet {
 
 	template <class Test>
 	void SORTests::test(bool, bool, bool)
 	{
-#ifdef SOR_TEST
 	    for(size_t itr = 0; itr < sizeof(sor_test_iterations)/sizeof(sor_test_iterations[0]); itr++) {
 	      for(size_t sl = 0; sl < sizeof(sor_test_slices)/sizeof(sor_test_slices[0]); sl++) {
 		for(size_t o = 0; o < sizeof(sor_test_omega)/sizeof(sor_test_omega[0]); o++) {
@@ -39,12 +34,10 @@ namespace pheet {
 		}
 	    }
 	  }
-#endif
 	}
 
 	void SORTests::run_test(bool)
 	{
-#ifdef SOR_TEST
 		if(sor_test) {
 
 		  //			  for(size_t pp = 0; pp < sizeof(sor_prio)/sizeof(sor_prio[0]); pp++) {
@@ -54,7 +47,6 @@ namespace pheet {
 				   test<SORRun<Pheet::WithScheduler<BasicScheduler> > >(sor_runuts,sor_runsor,sor_usestrat);
 				 //			  }
 		}
-#endif
 	}
 
 }

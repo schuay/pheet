@@ -7,11 +7,9 @@
  */
 
 #include "LUPivTests.h"
-#ifdef LUPIV_TEST
 #include "Simple/SimpleLUPiv.h"
 //#include "LocalityStrategy/LocalityStrategyLUPiv.h"
 #include "PPoPPLocalityStrategy/PPoPPLocalityStrategyLUPiv.h"
-#endif
 
 
 #include <pheet/pheet.h>
@@ -33,7 +31,6 @@ LUPivTests::~LUPivTests() {
 }
 
 void LUPivTests::run_test(bool) {
-#ifdef LUPIV_TEST
 	std::cout << "----" << std::endl;
 
        	//this->run_kernel<	Pheet,
@@ -64,7 +61,6 @@ void LUPivTests::run_test(bool) {
 
 	this->run_kernel<	Pheet::WithScheduler<BasicScheduler>,
 						SimpleLUPiv>();
-#endif
 }
 
 }
