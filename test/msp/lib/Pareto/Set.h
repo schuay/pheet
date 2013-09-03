@@ -13,7 +13,7 @@ namespace pareto
 {
 
 /**
- * Inteface for pareto set operations: insert().
+ * Interface for Pareto set operations.
  */
 class Set
 {
@@ -32,7 +32,7 @@ public:
 
 	virtual bool insert(sp::PathPtr& path) = 0;
 
-	virtual ~Set() {};
+	virtual ~Set() {}
 };
 
 }
