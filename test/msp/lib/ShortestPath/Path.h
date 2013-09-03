@@ -33,8 +33,8 @@ public:
 
 	graph::Node const* tail() const;
 	graph::Node const* head() const;
-	std::vector<graph::Edge const*> edges() const;
-	std::vector<graph::weight_t> weight() const;
+	std::vector<graph::Edge const*> const& edges() const;
+	graph::weight_vector_t const& weight() const;
 
 	bool dominated() const;
 	void set_dominated();
