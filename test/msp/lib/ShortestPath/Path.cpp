@@ -17,9 +17,19 @@ namespace sp
 
 Path::
 Path(graph::Node const* init)
-	: m_tail(init), m_head(init)
+	: m_tail(init), m_head(init), m_dominated(false)
 {
 	m_weight.resize(init->graph()->degree(), 0);
+}
+
+Path::
+Path(const Path& that)
+	: m_tail(that.m_tail),
+	  m_head(that.m_head),
+	  m_edges(that.m_edges),
+	  m_weight(that.m_weight),
+	  m_dominated(false)
+{
 }
 
 Path*
@@ -82,6 +92,20 @@ Path::
 weight() const
 {
 	return m_weight;
+}
+
+bool
+Path::
+dominated() const
+{
+	return m_dominated.load(std::memory_order_acquire);
+}
+
+void
+Path::
+set_dominated()
+{
+	m_dominated.store(true, std::memory_order_release);
 }
 
 }
