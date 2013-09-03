@@ -21,19 +21,17 @@ template <class Pheet>
 SequentialMsp<Pheet>::
 SequentialMsp(Graph const* graph,
               sp::PathPtr const path,
-              pareto::Sets* /* Unused */,
+              pareto::Sets* sets,
               PerformanceCounters& pc)
-	: graph(graph), path(path), pc(pc)
+	: graph(graph), path(path), sets(sets), pc(pc)
 {
 }
 
 template <class Pheet>
-ShortestPaths*
+void
 SequentialMsp<Pheet>::
 operator()()
 {
-	ShortestPaths* sp = new ShortestPaths();
-
 	PathPtr init = path;
 	m_queue.insert(init);
 
@@ -45,44 +43,23 @@ operator()()
 
 		pc.num_actual_tasks.incr();
 
-		/* We've expanded up to head. The path is therefore optimal and must
-		 * be added to our global shortest paths. */
+		/* For all outgoing edges <- head, generate candidates. */
 
-		sp->paths[head].push_back(p);
-
-		/* For all outgoing edges <- head: */
-
+		sp::Paths candidates;
 		for (auto & e : head->out_edges()) {
-			/* The following steps are abstracted into queue.insert():
-			 *
-			 * Follow the edge, resulting in path p and weight w.
-			 * Compare it to existing path weights for target node in set:
-			 * For all dominated paths p':
-			 *     Remove p' from queue.
-			 * If p is not dominated by any existing path to head:
-			 *     Add p to queue.
-			 */
-			std::shared_ptr<Path> q(p->step(e));
-			Node const* qhead = q->head();
+			sp::PathPtr q(p->step(e));
+			candidates.push_back(q);
+		}
 
-			/* A (somewhat ugly) special case for paths which are dominated by
-			 * already final paths stored in ShortestPaths. */
+		sp::Paths added, removed;
+		sets->insert(candidates, added, removed);
 
-			bool dominated = false;
-			for (auto const & final_path : sp->paths[qhead]) {
-				if (dominates(final_path.get(), q.get())) {
-					dominated = true;
-					break;
-				}
-			}
+		/* Add newly inserted candidates to our queue. */
 
-			if (!dominated) {
-				m_queue.insert(q);
-			}
+		for (auto & p : added) {
+			m_queue.insert(p);
 		}
 	}
-
-	return sp;
 }
 
 template class SequentialMsp < pheet::PheetEnv < pheet::SynchroneousScheduler,
