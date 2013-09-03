@@ -9,7 +9,7 @@
 
 #include "../Test.h"
 #include "lib/Generator/Generator.h"
-#include "lib/Pareto/SetMapper.h"
+#include "lib/Pareto/Sets.h"
 #include "pheet/pheet.h"
 
 namespace pheet
@@ -73,7 +73,7 @@ void MspTest<Pheet, Algorithm>::run_test()
 	{
 		typename Pheet::Environment env(cpus, pc);
 
-		pareto::SetMapper q(g);
+		pareto::Sets q(g);
 		sp::PathPtr init(new sp::Path(src));
 
 		check_time(start);

@@ -21,7 +21,7 @@ template <class Pheet>
 SequentialMsp<Pheet>::
 SequentialMsp(Graph const* graph,
               sp::PathPtr const path,
-              pareto::SetMapper* /* Unused */,
+              pareto::Sets* /* Unused */,
               PerformanceCounters& pc)
 	: graph(graph), path(path), pc(pc)
 {
