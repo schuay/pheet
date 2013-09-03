@@ -32,13 +32,11 @@ void
 Sets::
 insert(sp::Paths& paths,
        sp::Paths& added,
-       sp::Paths&)
+       sp::Paths& removed)
 {
 	for (auto p : paths) {
 		graph::Node const* node = p->head();
-		if (map[node]->insert(p)) {
-			added.push_back(p);
-		}
+		map[node]->insert(p, added, removed);
 	}
 }
 
