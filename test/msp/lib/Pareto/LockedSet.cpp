@@ -20,4 +20,11 @@ insert(sp::PathPtr& path,
 
 }
 
+sp::Paths
+LockedSet::
+paths() const
+{
+	return NaiveSet::paths();
+}
+
 }
