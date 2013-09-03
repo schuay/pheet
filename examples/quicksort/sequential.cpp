@@ -36,7 +36,7 @@ bool verify(int* begin, int* end) {
 	return true;
 }
 
-int main(int argc, char* argv[]) {
+int main(int, char**) {
 	int* data = new int[N];
 	std::mt19937 rng;
   	rng.seed(0);
