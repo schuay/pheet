@@ -6,6 +6,7 @@ include_directories(
 	${HWLOC_INCLUDE_DIR}
 )
 
+add_subdirectory(Sequential)
 add_subdirectory(bench)
 add_subdirectory(lib)
-add_subdirectory(Sequential)
+add_subdirectory(test)
