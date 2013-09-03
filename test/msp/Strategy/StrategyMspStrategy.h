@@ -7,8 +7,9 @@
 #ifndef STRATEGYMSPSTRATEGY_H_
 #define STRATEGYMSPSTRATEGY_H_
 
-#include <algorithm>
 #include <vector>
+
+#include "StrategyMspPlace.h"
 
 namespace pheet
 {
@@ -75,16 +76,17 @@ inline bool
 StrategyMspStrategy<Pheet>::
 prioritize(Self& other) const
 {
-	/* TODO: The importance assigned to each weight component depends on the place.
-	 * How can we access these here? */
+	StrategyMspPlace<Pheet>& p = Pheet::template place_singleton<StrategyMspPlace<Pheet>>();
 
-	int lhs = 0, rhs = 0;
-	std::for_each(weights.begin(), weights.end(), [&lhs](int w) {
-		lhs += w;
-	});
-	std::for_each(other.weights.begin(), other.weights.end(), [&rhs](int w) {
-		rhs += w;
-	});
+	double lhs = 0.0;
+	for (int i = 0; i < weights.size(); i++) {
+		lhs += weights[i] * p.factor(i);
+	}
+
+	double rhs = 0.0;
+	for (int i = 0; i < other.weights.size(); i++) {
+		rhs += other.weights[i] * p.factor(i);
+	}
 
 	return (lhs < rhs);
 }
