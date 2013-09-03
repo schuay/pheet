@@ -8,23 +8,28 @@
 #define __LOCKED_SET_H
 
 #include <mutex>
+
 #include "NaiveSet.h"
 
 namespace pareto
 {
+
 /**
  * Wrapper for NaiveSet to provide sychronized access for multiple processors
  */
 class LockedSet : public NaiveSet
 {
 public:
-	virtual sp::Paths insert(sp::Paths& paths) override;
-	virtual bool insert(sp::PathPtr& path) override;
+	sp::Paths insert(sp::Paths& paths) override;
+	void insert(sp::PathPtr& path,
+	            sp::Paths& added,
+	            sp::Paths& removed) override;
 
 private:
 	std::mutex m_mutex;
 
 };
+
 }
 
-#endif /* LOCKED_SET_H */
+#endif /* __LOCKED_SET_H */

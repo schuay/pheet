@@ -20,6 +20,8 @@ class Set
 public:
 
 	/**
+	 * DEPRECATED.
+	 *
 	 * Insert the set of elements into the pareto set.
 	 *
 	 * For all elements e in paths:
@@ -30,9 +32,16 @@ public:
 	 */
 	virtual sp::Paths insert(sp::Paths& paths) = 0;
 
-	virtual bool insert(sp::PathPtr& path) = 0;
+	/**
+	 * Attempts to inserts path into the set. Returns true, iff the path
+	 * has been successfully inserted. Otherwise, the removed vector contains
+	 * a list of paths which were dominated by path.
+	 */
+	virtual void insert(sp::PathPtr& path,
+	                    sp::Paths& added,
+	                    sp::Paths& removed) = 0;
 
-	virtual ~Set() {}
+	virtual ~Set() { }
 };
 
 }
