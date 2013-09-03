@@ -10,9 +10,7 @@
 #define GRAPHBIPARTITIONINGTESTS_H_
 
 #include "../init.h"
-#ifdef GRAPH_BIPARTITIONING_TEST
 #include "GraphBipartitioningTest.h"
-#endif
 #include <algorithm>
 
 /*
@@ -34,7 +32,6 @@ private:
 
 template <class Pheet, template <class P> class Partitioner>
 void GraphBipartitioningTests::run_partitioner() {
-#ifdef GRAPH_BIPARTITIONING_TEST
 	typename Pheet::MachineModel mm;
 	procs_t max_cpus = std::min(mm.get_num_leaves(), Pheet::Environment::max_cpus);
 
@@ -71,7 +68,6 @@ void GraphBipartitioningTests::run_partitioner() {
 			}
 		}
 	}
-#endif
 }
 
 }

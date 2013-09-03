@@ -30,23 +30,19 @@ namespace pheet {
 	template <class Test>
 	void UTSTests::test()
 	{
-#ifdef UTS_TEST
 		for(size_t s = 0; s < sizeof(uts_test_standardworkloads)/sizeof(uts_test_standardworkloads[0]); s++) {
 			for(size_t c = 0; c < sizeof(uts_test_cpus)/sizeof(uts_test_cpus[0]); c++) {
 				UTSTest<Test> iart(uts_test_cpus[c],uts_test_standardworkloads_params[uts_test_standardworkloads[s]]);
 				iart.run_test();
 			}
 		}
-#endif
 	}
 
 	void UTSTests::run_test()
 	{
-#ifdef UTS_TEST
 		if(uts_test) {
 			test<UTSRun<Pheet::WithScheduler<StrategyScheduler> > >();
 		}
-#endif
 	}
 
 }

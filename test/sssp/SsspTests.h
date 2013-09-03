@@ -10,9 +10,7 @@
 #define SSSPTESTS_H_
 
 #include "../init.h"
-#ifdef SSSP_TEST
 #include "SsspTest.h"
-#endif
 
 namespace pheet {
 
@@ -30,7 +28,6 @@ private:
 
 template <class Pheet, template <class P> class Partitioner>
 void SsspTests::run_algorithm() {
-#ifdef SSSP_TEST
 	typename Pheet::MachineModel mm;
 	procs_t max_cpus = std::min(mm.get_num_leaves(), Pheet::Environment::max_cpus);
 
@@ -62,7 +59,6 @@ void SsspTests::run_algorithm() {
 			}
 		}
 	}
-#endif
 }
 
 } /* namespace pheet */

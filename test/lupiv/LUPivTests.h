@@ -11,9 +11,7 @@
 
 #include "../init.h"
 #include "../Tests.h"
-#ifdef LUPIV_TEST
 #include "LUPivTest.h"
-#endif
 
 #include <algorithm>
 
@@ -33,7 +31,6 @@ private:
 
 template <class Pheet, template <class P> class Kernel>
 void LUPivTests::run_kernel() {
-#ifdef LUPIV_TEST
 	typename Pheet::MachineModel mm;
 	procs_t max_cpus = std::min(mm.get_num_leaves(), Pheet::Environment::max_cpus);
 
@@ -59,7 +56,6 @@ void LUPivTests::run_kernel() {
 			}
 		}
 	}
-#endif
 }
 
 
