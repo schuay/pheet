@@ -3,6 +3,7 @@
 #include <unordered_set>
 
 #include "Sequential/SequentialMsp.h"
+#include "Strategy/StrategyMspTask.h"
 #include "lib/Generator/Generator.h"
 #include "lib/Pareto/Less.h"
 #include "pheet/pheet.h"
@@ -48,7 +49,35 @@ private:
 	PathPtr const path;
 };
 
-typedef ::testing::Types<SequentialTest> TestTypes;
+class StrategyTest
+{
+public:
+	typedef Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<DistKStrategyTaskStorage>
+	DistKPheet;
+
+	StrategyTest(Graph const* graph,
+	             PathPtr const path)
+		: graph(graph), path(path) {
+	}
+
+	ShortestPaths*
+	operator()() {
+		MspPerformanceCounters<DistKPheet> pc;
+		Sets q(graph);
+		{
+			typename DistKPheet::Environment env;
+			StrategyMspTask<DistKPheet> msp(graph, path, &q, pc);
+			msp();
+		}
+		return q.shortest_paths();
+	}
+
+private:
+	Graph const* graph;
+	PathPtr const path;
+};
+
+typedef ::testing::Types<SequentialTest, StrategyTest> TestTypes;
 TYPED_TEST_CASE(TESTCASE, TestTypes);
 
 template <typename T>
