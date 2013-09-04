@@ -243,6 +243,11 @@ BStrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::~BStrategyScheduler
 		// we can shut down the scheduler
 		scheduler_state->current_state = 2;
 
+		// Make sure task storage is empty by performing one pop on the empty task storage
+		// Cleans out any remaining references to tasks
+		TaskStorageItem di = task_storage.pop();
+		pheet_assert(di.task == nullptr);
+
 		performance_counters.task_time.stop_timer();
 		performance_counters.total_time.stop_timer();
 
@@ -426,6 +431,11 @@ void BStrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::main_loop() {
 		}
 
 		if(scheduler_state->current_state >= 2) {
+			// Make sure task storage is empty by performing one pop on the empty task storage
+			// Cleans out any remaining references to tasks
+			di = task_storage.pop();
+			pheet_assert(di.task == nullptr);
+
 //			performance_counters.idle_time.stop_timer();
 			return;
 		}
