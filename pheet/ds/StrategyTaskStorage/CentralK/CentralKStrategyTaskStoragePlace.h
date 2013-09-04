@@ -91,15 +91,20 @@ public:
 	}
 
 	~CentralKStrategyTaskStoragePlace() {
-		// Check whether this is needed at all, or if scheduler only terminates if heap is empty
+		// clean_up needs to be called by scheduler before, so we can assume no
+		// old references are stored in priority queue
+		pheet_assert(heap.empty());
+	}
+
+	/**
+	 * Needs to be called by scheduling system before scheduler terminates
+	 */
+	void clean_up() {
 		while(!heap.empty()) {
 			Ref r = heap.pop();
-			// All items should have been processed (Can't check this, since some items may have
-			// already been deleted by other threads)
-		//	pheet_assert(r.position != r.item->position);
-		//	if(r.strategy != r.item->strategy) {
-				delete r.strategy;
-		//	}
+			// All items should have been processed
+			pheet_assert(r.position != r.item->position);
+			delete r.strategy;
 			r.strategy = nullptr;
 		}
 	}
