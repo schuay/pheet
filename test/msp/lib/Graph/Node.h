@@ -24,7 +24,7 @@ public:
 
 	Graph* graph() const;
 
-	std::vector<Edge const*> out_edges() const;
+	std::vector<Edge const*> const& out_edges() const;
 
 private:
 	Node(Graph* graph);
