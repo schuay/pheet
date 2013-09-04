@@ -9,7 +9,7 @@
 #ifndef FASTBITSET_H_
 #define FASTBITSET_H_
 
-#ifndef __ICC
+#if !defined(__ICC) && !defined(ENV_WINDOWS)
 #include <bitset>
 template <size_t SIZE>
 using FastBitset = std::bitset<SIZE>;
@@ -27,6 +27,7 @@ class FastBitset {
 
 	size_t data;
 
+#ifdef __ICC
 	static inline size_t bit_scan_forward(size_t word)
 	{
 		asm("bsf %1,%0"
@@ -45,6 +46,27 @@ class FastBitset {
 
 		return oldbit;
 	}
+#elif ENV_WINDOWS
+	static inline size_t bit_scan_forward(size_t word)
+	{
+		unsigned long index = 0;;
+#ifdef _M_X64
+		_BitScanForward64(&index, word);
+#else
+		_BitScanForward(&index, word);
+#endif
+		return index;
+	}
+
+	static inline int test_bit(size_t nr, volatile const size_t *addr)
+	{
+#ifdef _M_X64
+		return _bittest64(addr, nr);
+#else
+		return _bittest(addr, nr);
+#endif
+	}
+#endif
 public:
 	FastBitset() : data() {}
 
