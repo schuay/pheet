@@ -15,10 +15,10 @@ using namespace sp;
 
 #define TESTCASE GenericTest
 #define TEST_GRAPH(nodes, edges, seed) \
-TEST_F(TESTCASE, test_##nodes##_##edges##_##seed) \
+TYPED_TEST(TESTCASE, test_##nodes##_##edges##_##seed) \
 { \
-    init(nodes, edges, seed); \
-    test_full(start, sp); \
+	this->init(nodes, edges, seed); \
+	test_full(this->start, this->sp); \
 }
 
 namespace
@@ -48,11 +48,13 @@ private:
 	PathPtr const path;
 };
 
+typedef ::testing::Types<SequentialTest> TestTypes;
+TYPED_TEST_CASE(TESTCASE, TestTypes);
+
+template <typename T>
 class TESTCASE : public ::testing::Test
 {
 protected:
-	typedef Pheet::WithScheduler<SynchroneousScheduler> SyncPheet;
-
 	virtual void init(const int nodes,
 	                  const int edges,
 	                  const int seed) {
@@ -64,13 +66,9 @@ protected:
 		ASSERT_NE(start, nullptr);
 
 		PathPtr p(new Path(start));
-		MspPerformanceCounters<SyncPheet> pc;
-		Sets paretoSets(g);
 
-		SequentialMsp<SyncPheet> seq(g, p, &paretoSets, pc);
-		seq();
-
-		sp = paretoSets.shortest_paths();
+		T gen(g, p);
+		sp = gen();
 	}
 
 	virtual void TearDown() {
@@ -161,9 +159,9 @@ test_full(const Node* start,
 	test_all_reachable_nodes_present(start, sp);
 }
 
-TEST_F(TESTCASE, SanityCheck)
+TYPED_TEST(TESTCASE, SanityCheck)
 {
-	init(50, 150, 42);
+	this->init(50, 150, 42);
 }
 
 TEST_GRAPH(50, 150, 42)
