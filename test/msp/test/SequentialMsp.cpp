@@ -13,7 +13,7 @@ using namespace pareto;
 using namespace pheet;
 using namespace sp;
 
-#define TESTCASE SequentialTest
+#define TESTCASE GenericTest
 #define TEST_GRAPH(nodes, edges, seed) \
 TEST_F(TESTCASE, test_##nodes##_##edges##_##seed) \
 { \
@@ -23,6 +23,30 @@ TEST_F(TESTCASE, test_##nodes##_##edges##_##seed) \
 
 namespace
 {
+
+class SequentialTest
+{
+public:
+	typedef Pheet::WithScheduler<SynchroneousScheduler> SyncPheet;
+
+	SequentialTest(Graph const* graph,
+	               PathPtr const path)
+		: graph(graph), path(path) {
+	}
+
+	ShortestPaths*
+	operator()() {
+		MspPerformanceCounters<SyncPheet> pc;
+		Sets q(graph);
+		SequentialMsp<SyncPheet> msp(graph, path, &q, pc);
+		msp();
+		return q.shortest_paths();
+	}
+
+private:
+	Graph const* graph;
+	PathPtr const path;
+};
 
 class TESTCASE : public ::testing::Test
 {
