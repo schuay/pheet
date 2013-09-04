@@ -18,7 +18,8 @@ namespace pareto
 {
 
 /**
- * A naive implementation of the pareto queue using linked lists.
+ * A naive implementation of the pareto queue using linked lists and
+ * a priority queue to determine elements returned by first().
  */
 class LinkedQueue : public Queue
 {
@@ -26,7 +27,7 @@ public:
 	LinkedQueue();
 	virtual ~LinkedQueue();
 
-	std::vector<sp::PathPtr> first(size_t const  n) override = 0;
+	std::vector<sp::PathPtr> first(size_t const  n) override;
 	void insert(sp::PathPtr path) override;
 	bool empty() const override;
 
@@ -35,6 +36,12 @@ protected:
 		struct elem_t* prev, *next;
 		sp::PathPtr path;
 	} elem_t;
+
+	class elem_lexic_greater
+	{
+	public:
+		bool operator()(elem_t const* lhs, elem_t const* rhs) const;
+	};
 
 	typedef std::unordered_map<graph::Node const*, std::unordered_set<elem_t*>>
 	        node_ptrs_t;
