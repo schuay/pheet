@@ -14,9 +14,9 @@
 #include "misc/types.h"
 
 #ifdef __GNUG__
-#define thread_local __thread
+#define THREAD_LOCAL __thread
 #elif __clang__
-#define thread_local __thread
+#define THREAD_LOCAL __thread
 #endif
 
 #include "performance_settings.h"

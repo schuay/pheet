@@ -150,14 +150,14 @@ private:
 
 	CPUThreadExecutor<Self> thread_executor;
 
-	static thread_local Self* local_place;
+	static THREAD_LOCAL Self* local_place;
 
 	template <class T>
 	friend void execute_cpu_thread(T* param);
 };
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStackT, uint8_t CallThreshold>
-thread_local CentralizedSchedulerPlace<Pheet, TaskStorageT, FinishStackT, CallThreshold>* CentralizedSchedulerPlace<Pheet, TaskStorageT, FinishStackT, CallThreshold>::local_place = NULL;
+THREAD_LOCAL CentralizedSchedulerPlace<Pheet, TaskStorageT, FinishStackT, CallThreshold>* CentralizedSchedulerPlace<Pheet, TaskStorageT, FinishStackT, CallThreshold>::local_place = NULL;
 
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStackT, uint8_t CallThreshold>

@@ -106,7 +106,7 @@ private:
 
 	Self* parent_place;
 
-	static thread_local Self* local_place;
+	static THREAD_LOCAL Self* local_place;
 };
 
 template <class Pheet>
@@ -116,7 +116,7 @@ template <class Pheet>
 procs_t const SynchroneousScheduler<Pheet>::max_cpus = 1;
 
 template <class Pheet>
-thread_local SynchroneousScheduler<Pheet>*
+THREAD_LOCAL SynchroneousScheduler<Pheet> *
 SynchroneousScheduler<Pheet>::local_place = nullptr;
 
 template <class Pheet>
