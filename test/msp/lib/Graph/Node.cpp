@@ -25,7 +25,7 @@ graph() const
 	return m_graph;
 }
 
-std::vector<Edge const*>
+std::vector<Edge const*> const&
 Node::
 out_edges() const
 {
