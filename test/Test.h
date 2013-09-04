@@ -11,14 +11,14 @@
 
 #include "init.h"
 
-#include <sys/time.h>
 #include <stdlib.h>
 
 namespace pheet {
 
 class Test {
 public:
-	typedef struct timeval Time;
+	typedef std::chrono::high_resolution_clock Timer;
+	typedef Timer::time_point Time;
 
 	Test();
 	virtual ~Test();

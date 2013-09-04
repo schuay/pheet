@@ -17,13 +17,10 @@ Test::~Test() {
 }
 
 void Test::check_time(Time & time) {
-	gettimeofday(&time, NULL);
+	time = Timer::now();
 }
 
 double Test::calculate_seconds(Time const& start, Time const& end) {
-	double dStart = 1.0e-6 * start.tv_usec;
-	double dStop = (end.tv_sec - start.tv_sec) + 1.0e-6 * end.tv_usec;
-
-	return dStop - dStart;
+	return 1.0e-6 * std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
 }
 }
