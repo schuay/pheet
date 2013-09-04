@@ -38,7 +38,7 @@ operator()()
 	while (!m_queue.empty()) {
 		/* Retrieve our next optimal candidate path. */
 
-		PathPtr p = m_queue.first(1)[0];
+		PathPtr p = m_queue.first();
 		Node const* head = p->head();
 
 		pc.num_actual_tasks.incr();

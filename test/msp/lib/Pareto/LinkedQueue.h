@@ -27,7 +27,7 @@ public:
 	LinkedQueue();
 	virtual ~LinkedQueue();
 
-	std::vector<sp::PathPtr> first(size_t const  n) override;
+	sp::PathPtr first() override;
 	void insert(sp::PathPtr path) override;
 	bool empty() const override;
 
