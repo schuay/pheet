@@ -1,6 +1,6 @@
 include_directories(${GTEST_INCLUDE_DIR})
-add_executable(msp-test-seq SequentialMsp.cpp)
-target_link_libraries(msp-test-seq
+add_executable(msp-test MspTest.cpp)
+target_link_libraries(msp-test
     ${CMAKE_THREAD_LIBS_INIT}
     ${GTEST_LIBRARY}
     ${GTEST_MAIN_LIBRARY}
@@ -11,4 +11,4 @@ target_link_libraries(msp-test-seq
     msp-sequential
     msp-sp
 )
-add_test(NAME msp-test-seq COMMAND msp-test-seq)
+add_test(NAME msp-test COMMAND msp-test)
