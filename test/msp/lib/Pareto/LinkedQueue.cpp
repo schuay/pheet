@@ -6,6 +6,8 @@
 
 #include "LinkedQueue.h"
 
+#include <assert.h>
+#include <queue>
 #include <vector>
 
 using namespace graph;
@@ -31,6 +33,54 @@ LinkedQueue::
 		next = next->next;
 		delete curr;
 	}
+}
+
+bool
+LinkedQueue::elem_lexic_greater::
+operator()(elem_t const* lhs, elem_t const* rhs) const
+{
+	assert(lhs && rhs);
+
+	weight_vector_t const& l = lhs->path->weight();
+	weight_vector_t const& r = rhs->path->weight();
+
+	assert(l.size() == r.size());
+	int const dims = l.size();
+
+	for (int i = 0; i < dims; i++) {
+		if (l[i] == r[i]) {
+			continue;
+		}
+		return (l[i] > r[i]);
+	}
+
+	return false;
+}
+
+std::vector<PathPtr>
+LinkedQueue::
+first(size_t const n)
+{
+	assert(n == 1);
+
+	std::priority_queue<elem_t*, std::vector<elem_t*>, elem_lexic_greater> q;
+
+	for (elem_t* n = m_list; n != nullptr; n = n->next) {
+		q.push(n);
+	}
+
+	std::vector<PathPtr> ps;
+	for (size_t i = 0; i < n && !q.empty(); i++) {
+		elem_t* n = q.top();
+		q.pop();
+
+		ps.push_back(n->path);
+
+		m_elems_by_head[n->path->head()].erase(n);
+		list_erase(n);
+	}
+
+	return ps;
 }
 
 void
