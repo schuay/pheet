@@ -7,8 +7,6 @@
 #ifndef __QUEUE_H
 #define __QUEUE_H
 
-#include <vector>
-
 #include "test/msp/lib/ShortestPath/Path.h"
 
 namespace pareto
@@ -22,11 +20,9 @@ class Queue
 {
 public:
 	/**
-	 * Returns the first n elements and removes them from the queue.  If
-	 * queue.size() = n' < n, n' elements are returned and the queue is
-	 * cleared.
+	 * Returns the first element and removes it the queue.
 	 */
-	virtual std::vector<sp::PathPtr> first(size_t const n) = 0;
+	virtual sp::PathPtr first() = 0;
 
 	/**
 	 * Inserts path into the queue.
