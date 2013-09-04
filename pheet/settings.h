@@ -17,6 +17,8 @@
 #define THREAD_LOCAL __thread
 #elif __clang__
 #define THREAD_LOCAL __thread
+#elif ENV_WINDOWS
+#define THREAD_LOCAL __declspec(thread)
 #endif
 
 #include "performance_settings.h"
