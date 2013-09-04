@@ -10,7 +10,7 @@
 #include "../lib/Graph/Edge.h"
 #include "../lib/Graph/Graph.h"
 #include "../lib/Pareto/Less.h"
-#include "../lib/Pareto/LinkedQueue.h"
+#include "../lib/Pareto/PriorityQueue.h"
 #include "../lib/Pareto/Sets.h"
 #include "../MspPerformanceCounters.h"
 
@@ -38,7 +38,7 @@ private:
 	sp::PathPtr const path;
 
 	pareto::less dominates;
-	pareto::LinkedQueue m_queue;
+	pareto::PriorityQueue m_queue;
 	pareto::Sets* sets;
 
 	PerformanceCounters& pc;

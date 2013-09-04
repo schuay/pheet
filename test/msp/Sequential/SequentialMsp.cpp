@@ -54,6 +54,12 @@ operator()()
 		sp::Paths added, removed;
 		sets->insert(candidates, added, removed);
 
+		/* Mark removed candidates as dominated. */
+
+		for (auto & p : removed) {
+			p->set_dominated();
+		}
+
 		/* Add newly inserted candidates to our queue. */
 
 		for (auto & p : added) {
