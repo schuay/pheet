@@ -44,6 +44,8 @@ double
 StrategyMspPlace<Pheet>::
 factor(int n)
 {
+	/* TODO: Ensure no factor is equal to 0. */
+
 	while (n + 1 > factors.size()) {
 		factors.push_back(gen() / (double)gen.max());
 	}
