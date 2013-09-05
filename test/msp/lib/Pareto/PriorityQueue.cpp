@@ -58,8 +58,11 @@ insert(PathPtr path)
 
 bool
 PriorityQueue::
-empty() const
+empty()
 {
+	while (!m_queue.empty() && m_queue.top()->dominated()) {
+		m_queue.pop();
+	}
 	return m_queue.empty();
 }
 
