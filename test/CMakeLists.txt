@@ -11,3 +11,4 @@ add_subdirectory(sorting)
 add_subdirectory(sssp)
 # add_subdirectory(tristrip) Needs additional configuration.
 # add_subdirectory(uts) Needs additional configuration
+add_subdirectory(util)
