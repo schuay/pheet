@@ -89,6 +89,10 @@ void
 StrategyMspTask<Pheet>::
 operator()()
 {
+	if (path->dominated()) {
+		return;
+	}
+
 	pc.num_actual_tasks.incr();
 
 	/* Generate candidates. */
