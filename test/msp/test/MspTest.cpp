@@ -14,6 +14,18 @@ using namespace pareto;
 using namespace pheet;
 using namespace sp;
 
+/* A generic test suite for MSP algorithms, consisting of:
+ *
+ * GenericTest: The generic test class. Responsible for constructing the
+ *		graph, running the algorithm, and cleaning up.
+ * Typed test classes (SequentialTest, StrategyTest, ...): Used to abstract
+ *		differences between types. This *could* theoretically be done by using
+ *      more than one template parameter in GenericTest, but GTest is limited to
+ *		one.
+ * TEST_GRAPH: This macro actually simplifies setting up full test runs for
+ *		different graph parameters.
+ */
+
 #define TESTCASE GenericTest
 #define TEST_GRAPH(nodes, edges, seed) \
 TYPED_TEST(TESTCASE, test_##nodes##_##edges##_##seed) \
