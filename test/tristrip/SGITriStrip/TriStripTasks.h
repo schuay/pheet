@@ -48,16 +48,16 @@ namespace pheet {
 
 		void operator()()
 		{
-		  
+
 		  std::mt19937 rng;
 		  rng.seed(65432);
 		  std::uniform_int_distribution<size_t> rnd_st(0, graph.size());
-		  
+
 		  size_t startrand =512;
 		  for(size_t i = 0; i < startrand; i++)
-		    { 
+		    {
 		      size_t n = rnd_st(rng);
-		      
+
 		      if(!graph[n]->taken && !graph[n]->spawned_hint)
 			{
 			  graph[n]->spawned_hint = true;
@@ -69,9 +69,9 @@ namespace pheet {
 		    }
 		  //typename Pheet::Finish f;
 
-		  //	  return;		  
+		  //	  return;
 		  size_t spawnsetcount = 1024;
-		  
+
 		  for(size_t i=0; i<graph.size(); i+=spawnsetcount)
 		    {
 		      size_t start = i;
@@ -87,7 +87,7 @@ namespace pheet {
 
 		}
 	};
-	
+
 	template <class Pheet, bool withstrat>
 	class TriStripSpawner : public Pheet::Task
 	{
@@ -103,7 +103,7 @@ namespace pheet {
 		void operator()()
 		{
 		  GraphDual& graph = *this->graph;
-		  
+
 		  for(size_t i=start; i<stop; i++)
 		    {
 		      if(!graph[i]->taken && !graph[i]->spawned_hint)
@@ -224,7 +224,7 @@ namespace pheet {
 					GraphNode* n = possiblenextnodes.top().getNode();
 					possiblenextnodes.pop();
 
-			       		if(!(n->spawned_hint || n->isTaken()))
+					if(!(n->spawned_hint || n->isTaken()))
 					{
 					  //printf(".");
 					  //	  	  	n->spawned_hint = true;

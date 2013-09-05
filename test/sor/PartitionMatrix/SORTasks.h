@@ -64,11 +64,11 @@ namespace pheet {
 				column_owners[i]=Pheet::get_place();
 			}
 
-			for (int p=0; p<2*iterations; p++) 
+			for (int p=0; p<2*iterations; p++)
 			  {
 			    {
 			      typename Pheet::Finish f;
-			      
+
 			      for(int i = 0; i < sp.slices; i++)
 				{
 				  if(!usestrat)
@@ -78,7 +78,7 @@ namespace pheet {
 				}
 			    }
 			}
-			
+
 				//			for(int i=0;i<sp.slices;i++)
 				//	printf("%X ",(long long)column_owners[i]);
 				//printf("\n");
@@ -89,9 +89,9 @@ namespace pheet {
 			for (int i=1; i<Mm1; i++) {
 				for (int j=1; j<Nm1; j++) {
 					sp.total += sp.G[i][j];
-						
+
 				}
-			}   
+			}
 		}
 	};
 
@@ -151,7 +151,7 @@ namespace pheet {
 				double* Gim1 = G[i-1];
 
 
-				if(i == 1) { 
+				if(i == 1) {
 					double* Gip1 = G[i+1];
 
 					for (int j=1; j<Nm1; j=j+2){

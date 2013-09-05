@@ -62,7 +62,7 @@ double SORRun<Pheet>::getTotal()
 template <class Pheet>
   SORRun<Pheet>::SORRun(procs_t cpus, int M, int N, int slices, double omega, int iterations, bool prio, bool runuts, bool runsor, bool usestrat):
 cpus(cpus), iterations(iterations),runuts(runuts),runsor(runsor),usestrat(usestrat) {
-	
+
 	sp.M=M;
 	sp.N=N;
 	sp.slices=slices;
@@ -83,9 +83,9 @@ cpus(cpus), iterations(iterations),runuts(runuts),runsor(runsor),usestrat(usestr
 		for (int j=0; j<N; j++)
 		{
 			sp.G[i][j] = uni(rng) * 1e-6;
-		}      
+		}
 
-/*	
+/*
 	//Compare with reference random values
 	ifstream file ("bin/ref/randvals.bin", ios::in|ios::binary);
 	file.read((char*)backend,N*M*sizeof(double));

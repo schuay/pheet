@@ -41,7 +41,7 @@ namespace pheet {
 	  }
 #endif
 	}
-  
+
 	void SORTests::run_test(bool)
 	{
 #ifdef SOR_TEST
@@ -56,5 +56,5 @@ namespace pheet {
 		}
 #endif
 	}
-	
+
 }
