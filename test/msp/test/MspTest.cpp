@@ -4,7 +4,7 @@
 
 #include "Sequential/SequentialMsp.h"
 #include "Strategy/StrategyMspTask.h"
-#include "lib/Generator/Generator.h"
+#include "lib/Graph/Generator/Generator.h"
 #include "lib/Pareto/Less.h"
 #include "pheet/pheet.h"
 #include "pheet/sched/Synchroneous/SynchroneousScheduler.h"
