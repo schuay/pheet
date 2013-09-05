@@ -31,7 +31,7 @@ using namespace sp;
 TYPED_TEST(TESTCASE, test_##nodes##_##edges##_##seed) \
 { \
 	this->init(nodes, edges, seed); \
-	test_full(this->start, this->sp); \
+	test_full(this->g, this->start, this->sp); \
 }
 
 namespace
@@ -171,6 +171,10 @@ reachable_nodes(const Node* start)
 	return set;
 }
 
+/**
+ * Tests whether every node set within the solution is a Pareto set
+ * (= no path within the set is dominated by any other path within the set).
+ */
 void
 test_optimal_paths_only(const ShortestPaths* sp)
 {
@@ -179,6 +183,10 @@ test_optimal_paths_only(const ShortestPaths* sp)
 	}
 }
 
+/**
+ * Tests whether all nodes which are reachable from the start node
+ * are present within the solution set.
+ */
 void
 test_all_reachable_nodes_present(const Node* start,
                                  const ShortestPaths* sp)
@@ -192,12 +200,84 @@ test_all_reachable_nodes_present(const Node* start,
 	EXPECT_TRUE(reachables.empty());
 }
 
+bool
+pathptr_lexic_less(PathPtr const& l,
+                   PathPtr const& r)
+{
+	weight_vector_t const& wl = l->weight();
+	weight_vector_t const& wr = r->weight();
+
+	for (size_t i = 0; i < wl.size(); i++) {
+		if (wl[i] < wr[i]) {
+			return true;
+		} else if (wl[i] > wr[i]) {
+			return false;
+		}
+	}
+
+	return false;
+}
+
 void
-test_full(const Node* start,
+expect_paths_eq(Paths const& lhs,
+                Paths const& rhs)
+{
+	EXPECT_EQ(lhs.size(), rhs.size());
+
+	Paths l(lhs);
+	Paths r(rhs);
+
+	std::sort(l.begin(), l.end(), pathptr_lexic_less);
+	std::sort(r.begin(), r.end(), pathptr_lexic_less);
+
+	for (size_t i = 0; i < l.size(); i++) {
+		PathPtr& lp = l[i];
+		PathPtr& rp = r[i];
+
+		EXPECT_EQ(lp->head(), rp->head());
+		EXPECT_EQ(lp->tail(), rp->tail());
+		EXPECT_EQ(lp->weight(), rp->weight());
+
+		/* Edges must not necessarily be equal. When given a choice of several
+		 * paths with equal weights, any path may be chosen. */
+	}
+}
+
+/**
+ * Tests whether the solution produced by the current algorithm is equivalent
+ * to the solution produced by the sequential algorithm. Of course, this
+ * assumes that the sequential algorithm is correct.
+ */
+void
+test_against_sequential(const Graph* graph,
+                        const Node* start,
+                        const ShortestPaths* sp)
+{
+	SequentialTest seq(graph, PathPtr(new Path(start)));
+	const ShortestPaths* ssp = seq();
+
+	ASSERT_EQ(sp->paths.size(), ssp->paths.size());
+
+	for (auto it = ssp->paths.cbegin(); it != ssp->paths.cend(); it++) {
+		Node const* n = it->first;
+
+		Paths const& spaths = it->second;
+		Paths const& paths  = sp->paths.at(n);
+
+		expect_paths_eq(spaths, paths);
+	}
+
+	delete ssp;
+}
+
+void
+test_full(const Graph* graph,
+          const Node* start,
           const ShortestPaths* sp)
 {
 	test_optimal_paths_only(sp);
 	test_all_reachable_nodes_present(start, sp);
+	test_against_sequential(graph, start, sp);
 }
 
 TYPED_TEST(TESTCASE, SanityCheck)
