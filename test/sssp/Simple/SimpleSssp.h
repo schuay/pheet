@@ -9,8 +9,8 @@
 #ifndef SIMPLESSSP_H_
 #define SIMPLESSSP_H_
 
-#include "../sssp_graph_helpers.h"
 #include "SimpleSsspPerformanceCounters.h"
+#include "util/Graph/Graph.h"
 
 namespace pheet {
 

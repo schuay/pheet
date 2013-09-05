@@ -9,10 +9,9 @@
 #ifndef SSSPTEST_H_
 #define SSSPTEST_H_
 
-#include "sssp_graph_helpers.h"
-
 #include <pheet/pheet.h>
-#include "../Test.h"
+#include "Test.h"
+#include "util/Graph/Graph.h"
 
 #include <stdlib.h>
 #include <vector>
@@ -63,7 +62,8 @@ SsspTest<Pheet, Algorithm>::~SsspTest() {
 
 template <class Pheet, template <class P> class Algorithm>
 void SsspTest<Pheet, Algorithm>::run_test() {
-	SsspGraphVertex* data = generate_data();
+	SsspGraph* graph = graph_random(size, p, max_w, seed);
+	SsspGraphVertex* data = graph->vertices;
 
 	typename Pheet::Environment::PerformanceCounters pc;
 	typename Algorithm<Pheet>::PerformanceCounters ppc;
@@ -92,56 +92,7 @@ void SsspTest<Pheet, Algorithm>::run_test() {
 	pc.print_values();
 	std::cout << std::endl;
 
-	delete_data(data);
-}
-
-template <class Pheet, template <class P> class Algorithm>
-SsspGraphVertex* SsspTest<Pheet, Algorithm>::generate_data() {
-	SsspGraphVertex* data = new SsspGraphVertex[size];
-
-	std::mt19937 rng;
-	rng.seed(seed);
-    std::uniform_real_distribution<float> rnd_f(0.0, 1.0);
-    std::uniform_int_distribution<size_t> rnd_st(1, max_w);
-
-	std::vector<SsspGraphEdge>* edges = new std::vector<SsspGraphEdge>[size];
-	for(size_t i = 0; i < size; ++i) {
-		for(size_t j = i + 1; j < size; ++j) {
-			if(rnd_f(rng) < p) {
-				SsspGraphEdge e;
-				e.target = j;
-				e.weight = rnd_st(rng);
-				edges[i].push_back(e);
-				e.target = i;
-				edges[j].push_back(e);
-			}
-		}
-		data[i].num_edges = edges[i].size();
-		if(edges[i].size() > 0) {
-			data[i].edges = new SsspGraphEdge[edges[i].size()];
-			for(size_t j = 0; j < edges[i].size(); ++j) {
-				data[i].edges[j] = edges[i][j];
-			}
-		}
-		else {
-			data[i].edges = NULL;
-		}
-		data[i].distance = std::numeric_limits<size_t>::max();
-	}
-	data[0].distance = 0;
-	delete[] edges;
-
-	return data;
-}
-
-template <class Pheet, template <class P> class Algorithm>
-void SsspTest<Pheet, Algorithm>::delete_data(SsspGraphVertex* data) {
-	for(size_t i = 0; i < size; ++i) {
-		if(data[i].edges != NULL) {
-			delete[] data[i].edges;
-		}
-	}
-	delete[] data;
+	graph_free(graph);
 }
 
 template <class Pheet, template <class P> class Algorithm>
