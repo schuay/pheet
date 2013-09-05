@@ -9,3 +9,4 @@ target_link_libraries(msp-graph
 )
 
 add_subdirectory(Adapters)
+add_subdirectory(Generator)
