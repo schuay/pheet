@@ -68,13 +68,13 @@ void TimePerformanceCounter<Pheet, false>::stop_timer() {
 
 template <class Pheet>
 inline
-void TimePerformanceCounter<Pheet, false>::print(char const* const formatting_string) {
+void TimePerformanceCounter<Pheet, false>::print(char const* const) {
 
 }
 
 template <class Pheet>
 inline
-void TimePerformanceCounter<Pheet, false>::print_header(char const* const string) {
+void TimePerformanceCounter<Pheet, false>::print_header(char const* const) {
 
 }
 

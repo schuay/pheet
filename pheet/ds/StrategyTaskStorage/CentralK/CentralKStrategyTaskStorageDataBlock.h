@@ -37,7 +37,7 @@ public:
 	//	}
 	}
 
-	bool put(size_t* head, size_t* tail, size_t& cur_tail, Item* item, PerformanceCounters& pc) {
+	bool put(size_t* head, size_t*, size_t& cur_tail, Item* item, PerformanceCounters& pc) {
 		// Take care not to break correct wraparounds when changing anything
 		size_t k = item->strategy->get_k();
 	//	size_t next_offset = offset + BlockSize;

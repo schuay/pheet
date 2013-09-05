@@ -236,13 +236,13 @@ void BasicSchedulerImpl<Pheet, StealingDeque, FinishStack, CallThreshold>::spawn
 
 template <class Pheet, template <class P, typename T> class StealingDeque, template <class> class FinishStack, uint8_t CallThreshold>
 template<class CallTaskType, class Strategy, typename ... TaskParams>
-void BasicSchedulerImpl<Pheet, StealingDeque, FinishStack, CallThreshold>::spawn_prio(Strategy s, TaskParams&& ... params) {
+void BasicSchedulerImpl<Pheet, StealingDeque, FinishStack, CallThreshold>::spawn_prio(Strategy, TaskParams&& ... params) {
 	spawn<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, template <class P, typename T> class StealingDeque, template <class> class FinishStack, uint8_t CallThreshold>
 template<class Strategy, typename F, typename ... TaskParams>
-void BasicSchedulerImpl<Pheet, StealingDeque, FinishStack, CallThreshold>::spawn_prio(Strategy s, F&& f, TaskParams&& ... params) {
+void BasicSchedulerImpl<Pheet, StealingDeque, FinishStack, CallThreshold>::spawn_prio(Strategy, F&& f, TaskParams&& ... params) {
 	spawn(f, std::forward<TaskParams&&>(params) ...);
 }
 

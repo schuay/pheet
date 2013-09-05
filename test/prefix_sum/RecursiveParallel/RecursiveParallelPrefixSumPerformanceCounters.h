@@ -21,9 +21,9 @@ public:
 	typedef RecursiveParallelPrefixSumPerformanceCounters<Pheet> Self;
 
 	RecursiveParallelPrefixSumPerformanceCounters() {}
-	RecursiveParallelPrefixSumPerformanceCounters(Self& other)
+	RecursiveParallelPrefixSumPerformanceCounters(Self&)
 	{}
-	RecursiveParallelPrefixSumPerformanceCounters(Self&& other)
+	RecursiveParallelPrefixSumPerformanceCounters(Self&&)
 	{}
 	~RecursiveParallelPrefixSumPerformanceCounters() {}
 

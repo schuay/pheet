@@ -31,7 +31,7 @@ inline MergeStrategyHeapPerformanceCounters<Pheet>::MergeStrategyHeapPerformance
 }
 
 template <class Pheet>
-MergeStrategyHeapPerformanceCounters<Pheet>::MergeStrategyHeapPerformanceCounters(MergeStrategyHeapPerformanceCounters& other)
+MergeStrategyHeapPerformanceCounters<Pheet>::MergeStrategyHeapPerformanceCounters(MergeStrategyHeapPerformanceCounters&)
 {
 
 }

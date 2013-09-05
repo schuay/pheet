@@ -31,7 +31,7 @@ class ReferenceSssp : public Pheet::Task {
 public:
 	typedef ReferenceSsspPerformanceCounters<Pheet> PerformanceCounters;
 
-	ReferenceSssp(SsspGraphVertex* graph, size_t size, PerformanceCounters& pc)
+	ReferenceSssp(SsspGraphVertex* graph, size_t, PerformanceCounters& pc)
 	:graph(graph), pc(pc) {}
 	virtual ~ReferenceSssp() {}
 
@@ -70,7 +70,7 @@ public:
 		}
 	}
 
-	static void set_k(size_t k) {}
+	static void set_k(size_t) {}
 
 	static char const name[];
 private:

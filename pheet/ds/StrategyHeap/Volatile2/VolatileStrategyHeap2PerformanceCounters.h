@@ -31,7 +31,7 @@ inline VolatileStrategyHeap2PerformanceCounters<Pheet>::VolatileStrategyHeap2Per
 }
 
 template <class Pheet>
-VolatileStrategyHeap2PerformanceCounters<Pheet>::VolatileStrategyHeap2PerformanceCounters(VolatileStrategyHeap2PerformanceCounters& other)
+VolatileStrategyHeap2PerformanceCounters<Pheet>::VolatileStrategyHeap2PerformanceCounters(VolatileStrategyHeap2PerformanceCounters&)
 {
 
 }

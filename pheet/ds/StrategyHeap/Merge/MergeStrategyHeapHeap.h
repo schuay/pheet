@@ -201,7 +201,7 @@ public:
 	typedef MergeStrategyHeapBase<Pheet, T> Item;
 	typedef MergeStrategyHeapBase<Pheet, T> Base;
 
-	MergeStrategyHeapHeap(StrategyRetriever& sr, std::map<std::type_index, Base*>& heap_heaps)
+	MergeStrategyHeapHeap(StrategyRetriever& sr, std::map<std::type_index, Base*>&)
 	:comp(sr) {
 
 	}

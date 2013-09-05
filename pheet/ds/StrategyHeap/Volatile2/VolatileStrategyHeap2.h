@@ -426,7 +426,7 @@ public:
 	typedef VolatileStrategySubHeap2<Pheet, TT, StrategyRetriever, Strategy, Strategy> Self;
 	typedef VolatileStrategyHeap2Node<Pheet, TT, StrategyRetriever, Strategy, Strategy> Node;
 
-	VolatileStrategySubHeap2(StrategyRetriever& sr, std::map<std::type_index, VolatileStrategySubHeap2Base*>& heap_heaps)
+	VolatileStrategySubHeap2(StrategyRetriever& sr, std::map<std::type_index, VolatileStrategySubHeap2Base*>&)
 	:max(nullptr), sr(sr), unconsolidated_count(0) {
 	}
 	~VolatileStrategySubHeap2() {
