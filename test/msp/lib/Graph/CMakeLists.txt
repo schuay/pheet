@@ -7,3 +7,5 @@ add_library(msp-graph
 target_link_libraries(msp-graph
     ${LIBCGRAPH_LIBRARY}
 )
+
+add_subdirectory(Adapters)
