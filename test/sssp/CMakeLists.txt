@@ -5,4 +5,5 @@ add_executable(sssp ${ALL_CPP_SRCS} ../Test.cpp)
 target_link_libraries(sssp
     ${CMAKE_THREAD_LIBS_INIT}
     ${HWLOC_LIBRARIES}
+    util-graph
 )
