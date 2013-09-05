@@ -35,7 +35,7 @@ public:
 	 */
 	virtual void insert(sp::PathPtr path) = 0;
 
-	virtual bool empty() const = 0;
+	virtual bool empty() = 0;
 };
 
 }

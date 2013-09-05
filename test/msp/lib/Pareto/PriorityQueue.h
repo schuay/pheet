@@ -22,7 +22,7 @@ class PriorityQueue : public Queue
 public:
 	sp::PathPtr first() override;
 	void insert(sp::PathPtr path) override;
-	bool empty() const override;
+	bool empty() override;
 
 private:
 	class path_lincomb_greater
