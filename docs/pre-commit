@@ -10,8 +10,7 @@ if [ ! -x $(which astyle) ]; then
     exit 1
 fi
 
-ASTYLE_PARAMETERS="--style=kr --suffix=none --indent=tab --align-pointer=type --align-reference=type \
-                   --pad-oper --pad-header --unpad-paren --add-brackets --xC100"
+ASTYLE_PARAMETERS="--style=kr -n -t -k1 -W1 -p -H -U -j -xC100"
 FILE_PATTERN="\.(c|cpp|h)$"
 IGNORE_PATTERN="^doc/"
 
