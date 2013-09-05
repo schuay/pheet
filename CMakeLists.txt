@@ -14,10 +14,6 @@ endif()
 
 FILE(GLOB_RECURSE ALL_CPP_SRCS test/*.cpp)
 FILE(GLOB_RECURSE ALL_HEADERS *.h)
-FILE(GLOB_RECURSE Nonworking_Tests test/inarow/*.cpp test/uts/*.cpp  test/sor/*.cpp)
-#LIST(REMOVE_ITEM ALL_CPP_SRCS  ${Nonworking_Tests} )
-
-LINK_DIRECTORIES(/opt/gcc-4.7/lib/ /opt/gcc-4.7/lib64/ /opt/hwloc-1.4/lib/)
 
 include_directories(${HWLOC_INCLUDE_DIR} ${CMAKE_SOURCE_DIR})
 add_executable (pheet_test ${ALL_CPP_SRCS} ${ALL_HEADERS})
