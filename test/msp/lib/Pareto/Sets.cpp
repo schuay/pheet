@@ -13,7 +13,8 @@ namespace pareto
 Sets::
 Sets(graph::Graph const* g)
 {
-	for (auto node : g->nodes()) {
+    for (size_t i = 0; i < g->node_count; i++) {
+        graph::Node const* node = g->nodes + i;
 		Set* set = new LockedSet();
 		map.insert(std::pair<graph::Node const*, Set*>(node, set));
 	}

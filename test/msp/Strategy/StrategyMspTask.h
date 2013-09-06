@@ -7,7 +7,6 @@
 #ifndef STRATEGYMSPTASK_H_
 #define STRATEGYMSPTASK_H_
 
-#include "../lib/Graph/Edge.h"
 #include "../lib/Graph/Graph.h"
 #include "../lib/Pareto/Sets.h"
 #include "../lib/ShortestPath/ShortestPaths.h"
@@ -99,7 +98,8 @@ operator()()
 	const graph::Node* head = path->head();
 
 	sp::Paths candidates;
-	for (auto & e : head->out_edges()) {
+    for (size_t i = 0; i < head->edge_count; i++) {
+        graph::Edge* e = head->edges + i;
 		sp::PathPtr to(path->step(e));
 		candidates.push_back(to);
 	}

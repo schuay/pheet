@@ -9,34 +9,26 @@
 
 #include <vector>
 
-#include "Graph.h"
-
 namespace graph
 {
 
 class Node
 {
-	friend class Edge;
-	friend class Graph;
-
 public:
-	ulong id() const;
+    uint id() const;
+    Graph const* graph() const;
 
-	Graph* graph() const;
-
-	std::vector<Edge const*> const& out_edges() const;
-
-private:
-	Node(Graph* graph);
-	Node(Graph* graph, Agnode_t* n);
+    std::vector<Edge> const& edges() const;
 
 private:
-	Graph* m_graph;
-	Agnode_t* n;
+    Node(Graph* graph,
+         const uint id);
 
-	ulong m_id;
+private:
+    Graph const* m_graph;
+    const uint m_id;
 
-	std::vector<Edge const*> m_out_edges;
+    std::vector<Edge> m_edges;
 };
 
 }

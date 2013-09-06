@@ -6,182 +6,58 @@
 
 #include "Graph.h"
 
-#include <graphviz/cgraph.h>
-#include <stdexcept>
-#include <stdio.h>
-
-#include "Edge.h"
-#include "Node.h"
+#include <random>
 
 namespace graph
 {
 
-Graph::
-Graph(std::string const& name,
-      size_t const degree)
-	: m_degree(degree)
-{
-	g = agopen(const_cast<char*>(name.c_str()), Agdirected, NULL);
-
-	agattr(g, AGRAPH, ATTR_DEGREE, const_cast<char*>(""));
-	agattr(g, AGNODE, ATTR_NODEID, const_cast<char*>(""));
-	agattr(g, AGEDGE, ATTR_WEIGHT, const_cast<char*>(""));
-
-	agset(g, ATTR_DEGREE, const_cast<char*>(std::to_string(degree).c_str()));
-}
-
-Graph::
-Graph(Agraph_t* g)
-	: g(g)
-{
-	m_degree = std::stoi(agget(g, ATTR_DEGREE));
-
-	for (Agnode_t* n = agfstnode(g); n != nullptr; n = agnxtnode(g, n)) {
-		new Node(this, n);
-	}
-
-	for (auto & p : m_nodes) {
-		Agnode_t* n = p.second->n;
-		for (Agedge_t* e = agfstout(g, n); e != nullptr; e = agnxtout(g, e)) {
-			new Edge(this, e);
-		}
-	}
-}
-
-Graph::
-~Graph()
-{
-	for (auto & n : m_nodes) {
-		delete n.second;
-	}
-
-	for (auto & e : m_edges) {
-		delete e.second;
-	}
-
-	agclose(g);
-}
-
 Graph*
-Graph::
-read(FILE* f)
+graph_random(const size_t node_count,
+             const float edge_probability,
+             const size_t degree,
+             const unsigned int max_weight,
+             const unsigned int seed)
 {
-	Agraph_t* g = agread(f, NULL);
-	return new Graph(g);
-}
+    Node* nodes = new Node[node_count];
 
-bool
-Graph::
-write(FILE* f)
-{
-	return (agwrite(g, f) > 0);
-}
+    std::mt19937 rng;
+    rng.seed(seed);
 
-size_t
-Graph::
-degree() const
-{
-	return m_degree;
-}
+    std::uniform_real_distribution<float> rnd_f(0.0, 1.0);
+    std::uniform_int_distribution<size_t> rnd_st(1, max_weight);
 
-std::string
-Graph::
-name() const
-{
-	std::string name(agnameof(g));
-	return name;
-}
+    std::vector<Edge>* edges = new std::vector<Edge>[node_count];
+    for (size_t i = 0; i < node_count; ++i) {
+        for (size_t j = i + 1; j < node_count; ++j) {
+            if (rnd_f(rng) < edge_probability) {
+                weight_vector_t ws;
+                for (size_t k = 0; k < degree; k++) {
+                    ws.push_back(rnd_st(rng));
+                }
 
-bool
-Graph::
-contains_edge(Node const* tail,
-              Node const* head) const
-{
-	Agedge_t* e = agedge(g, tail->n, head->n, NULL, FALSE);
-	return (e != nullptr);
-}
+                edges[i].push_back({ nodes + j, ws });
+                edges[j].push_back({ nodes + i, ws });
+            }
+        }
+        nodes[i].edge_count = edges[i].size();
+        nodes[i].edges = new Edge[edges[i].size()];
+        for (size_t j = 0; j < edges[i].size(); ++j) {
+            nodes[i].edges[j] = edges[i][j];
+        }
+    }
+    delete[] edges;
 
-Node*
-Graph::
-add_node()
-{
-	Node* n = new Node(this);
-	return n;
-}
-
-Edge*
-Graph::
-add_edge(Node* tail,
-         Node* head,
-         weight_vector_t const& weights)
-{
-	Edge* e = new Edge(tail, head, weights);
-	return e;
-}
-
-size_t
-Graph::
-node_count() const
-{
-	return agnnodes(g);
-}
-
-size_t
-Graph::
-edge_count() const
-{
-	return agnedges(g);
-}
-
-
-Node*
-Graph::
-get_node(ulong const id) const
-{
-	try {
-		return m_nodes.at(id);
-	} catch (std::out_of_range const&) {
-		return nullptr;
-	}
-}
-
-std::vector<Node*>
-Graph::
-nodes() const
-{
-	std::vector<Node*> ns;
-	for (auto & p : m_nodes) {
-		ns.push_back(p.second);
-	}
-	return ns;
-}
-
-Edge*
-Graph::
-get_edge(ulong const id) const
-{
-	try {
-		return m_edges.at(id);
-	} catch (std::out_of_range const&) {
-		return nullptr;
-	}
+    return new Graph { nodes, node_count, degree };
 }
 
 void
-Graph::
-add_node(ulong const id,
-         Node* n)
+graph_free(Graph* graph)
 {
-	m_nodes.emplace(id, n);
-}
-
-void
-Graph::
-add_edge(ulong const id,
-         Edge* e)
-{
-	m_edges.emplace(id, e);
-	e->tail()->m_out_edges.push_back(e);
+    for (size_t i = 0; i < graph->node_count; ++i) {
+        delete[] graph->nodes[i].edges;
+    }
+    delete[] graph->nodes;
+    delete graph;
 }
 
 }

@@ -9,7 +9,6 @@
 
 #include <unordered_map>
 
-#include "test/msp/lib/Graph/Node.h"
 #include "Path.h"
 
 namespace sp

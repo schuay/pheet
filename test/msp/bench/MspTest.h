@@ -8,7 +8,6 @@
 #define MSPTEST_H_
 
 #include "../../Test.h"
-#include "lib/Graph/Generator/Generator.h"
 #include "lib/Pareto/Sets.h"
 #include "pheet/pheet.h"
 
@@ -25,8 +24,8 @@ public:
 	 */
 	MspTest(const procs_t cpus,
 	        const size_t nodes,
-	        const size_t edges,
-	        const graph::Generator::Wl& weight_limits,
+            const size_t edges,
+            const size_t weight_limits,
 	        const unsigned int seed);
 	virtual ~MspTest();
 
@@ -47,13 +46,13 @@ char const* const MspTest<Pheet, Algorithm>::types[] = {"random"};
 template <class Pheet, template <class P> class Algorithm>
 MspTest<Pheet, Algorithm>::MspTest(const procs_t cpus,
                                    const size_t nodes,
-                                   const size_t edges,
-                                   const graph::Generator::Wl& weight_limits,
+                                   const size_t /* TODO */,
+                                   const size_t weight_limits,
                                    const unsigned int seed)
 	: cpus(cpus), seed(seed)
 {
-	g = graph::Generator::directed("test", nodes, edges, true, weight_limits, seed);
-	src = g->nodes().front();
+    g = graph::graph_random(nodes, 0.5, 3, weight_limits, seed); /* TODO */
+    src = g->nodes;
 }
 
 template <class Pheet, template <class P> class Algorithm>
@@ -74,7 +73,7 @@ void MspTest<Pheet, Algorithm>::run_test()
 		typename Pheet::Environment env(cpus, pc);
 
 		pareto::Sets q(g);
-		sp::PathPtr init(new sp::Path(src));
+        sp::PathPtr init(new sp::Path(src, g->degree));
 
 		check_time(start);
 		Pheet::template finish<Algorithm<Pheet>>(g, init, &q, ppc);
@@ -88,8 +87,7 @@ void MspTest<Pheet, Algorithm>::run_test()
 	std::cout << "test\t"
 	          << "algorithm\t"
 	          << "scheduler\t"
-	          << "nodes\t"
-	          << "edges\t"
+              << "nodes\t"
 	          << "seed\t"
 	          << "cpus\t"
 	          << "total_time\t";
@@ -102,8 +100,7 @@ void MspTest<Pheet, Algorithm>::run_test()
 	          << Algorithm<Pheet>::name << "\t";
 	Pheet::Environment::print_name();
 	std::cout << "\t"
-	          << g->node_count() << "\t"
-	          << g->edge_count() << "\t"
+              << g->node_count << "\t"
 	          << seed << "\t"
 	          << cpus << "\t"
 	          << seconds << "\t";

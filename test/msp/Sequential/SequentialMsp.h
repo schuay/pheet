@@ -7,7 +7,6 @@
 #ifndef __SEQUENTIAL_MSP_H
 #define __SEQUENTIAL_MSP_H
 
-#include "../lib/Graph/Edge.h"
 #include "../lib/Graph/Graph.h"
 #include "../lib/Pareto/Less.h"
 #include "../lib/Pareto/PriorityQueue.h"

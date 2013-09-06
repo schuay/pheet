@@ -11,7 +11,7 @@
 #include <memory>
 #include <vector>
 
-#include "test/msp/lib/Graph/Edge.h"
+#include "lib/Graph/Graph.h"
 
 namespace sp
 {
@@ -23,7 +23,8 @@ typedef std::vector<PathPtr> Paths;
 class Path
 {
 public:
-	Path(graph::Node const* init);
+    Path(graph::Node const* init,
+         const size_t degree);
 
 	/** Returns a new path object which represents the path generated
 	 *  by appending the given edge to the current path. */

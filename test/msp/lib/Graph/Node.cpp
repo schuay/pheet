@@ -6,49 +6,35 @@
 
 #include "Node.h"
 
-#include <graphviz/cgraph.h>
-
 namespace graph
 {
 
-ulong
+uint
 Node::
 id() const
 {
-	return AGID(n);
+    return m_id;
 }
 
-Graph*
+Graph const*
 Node::
 graph() const
 {
 	return m_graph;
 }
 
-std::vector<Edge const*> const&
+std::vector<Edge> const&
 Node::
-out_edges() const
+edges() const
 {
-	return m_out_edges;
+    return m_edges;
 }
 
 Node::
-Node(Graph* graph)
-	: m_graph(graph)
+Node(Graph const* graph,
+     const uint id)
+    : m_graph(graph), m_id(id)
 {
-	n = agnode(m_graph->g, NULL, TRUE);
-	m_id = AGID(n);
-	agset(n, ATTR_NODEID, const_cast<char*>(std::to_string(m_id).c_str()));
-	m_graph->add_node(AGID(n), this);
-}
-
-Node::
-Node(Graph* graph,
-     Agnode_t* n)
-	: m_graph(graph), n(n)
-{
-	m_id = AGID(n);
-	m_graph->add_node(AGID(n), this);
 }
 
 }

@@ -4,7 +4,6 @@
 
 #include "Sequential/SequentialMsp.h"
 #include "Strategy/StrategyMspTask.h"
-#include "lib/Graph/Generator/Generator.h"
 #include "lib/Pareto/Less.h"
 #include "pheet/pheet.h"
 #include "pheet/sched/Synchroneous/SynchroneousScheduler.h"
@@ -97,16 +96,15 @@ class TESTCASE : public ::testing::Test
 {
 protected:
 	virtual void init(const int nodes,
-	                  const int edges,
+                      const int /* TODO */,
 	                  const int seed) {
-		g = Generator::directed("g", nodes, edges, true,
-		                        Generator::default_weights(), seed);
+        g = graph::graph_random(nodes, 0.5, 3, 10000, seed); /* TODO */
 		ASSERT_NE(g, nullptr);
 
-		start = g->nodes().front();
+        start = g->nodes;
 		ASSERT_NE(start, nullptr);
 
-		PathPtr p(new Path(start));
+        PathPtr p(new Path(start, g->degree));
 
 		T gen(g, p);
 		sp = gen();
@@ -114,7 +112,7 @@ protected:
 
 	virtual void TearDown() {
 		delete sp;
-		delete g;
+        graph::graph_free(g);
 	}
 
 protected:
@@ -150,8 +148,8 @@ reachable_nodes(const Node* start)
 	std::unordered_set<const Node*> set = { start };
 
 	std::stack<const Node*> stack;
-	for (const Edge * e : start->out_edges()) {
-		stack.push(e->head());
+    for (size_t i = 0; i < start->edge_count; i++) {
+        stack.push(start->edges[i].head);
 	}
 
 	while (!stack.empty()) {
@@ -163,8 +161,8 @@ reachable_nodes(const Node* start)
 		}
 
 		set.insert(n);
-		for (const Edge * e : n->out_edges()) {
-			stack.push(e->head());
+        for (size_t i = 0; i < n->edge_count; i++) {
+            stack.push(n->edges[i].head);
 		}
 	}
 
@@ -253,7 +251,7 @@ test_against_sequential(const Graph* graph,
                         const Node* start,
                         const ShortestPaths* sp)
 {
-	SequentialTest seq(graph, PathPtr(new Path(start)));
+    SequentialTest seq(graph, PathPtr(new Path(start, graph->degree)));
 	const ShortestPaths* ssp = seq();
 
 	ASSERT_EQ(sp->paths.size(), ssp->paths.size());

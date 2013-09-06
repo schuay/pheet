@@ -14,9 +14,10 @@
 
 namespace
 {
-const size_t NODES      = 500;
-const size_t EDGES      = 50000;
-const unsigned int SEED = 42;
+const size_t NODES        = 500;
+const size_t EDGES        = 50000;
+const size_t WEIGHT_LIMIT = 10000;
+const unsigned int SEED   = 42;
 
 template <class Pheet, template <class P> class Partitioner>
 void run_algorithm()
@@ -26,7 +27,7 @@ void run_algorithm()
 	    std::min(mm.get_num_leaves(), Pheet::Environment::max_cpus);
 
 	pheet::MspTest<Pheet, Partitioner> gbt(max_cpus, NODES, EDGES,
-	                                       graph::Generator::default_weights(), SEED);
+                                           WEIGHT_LIMIT, SEED);
 	gbt.run_test();
 }
 

@@ -5,7 +5,6 @@ target_link_libraries(msp-test
     ${GTEST_LIBRARY}
     ${GTEST_MAIN_LIBRARY}
     ${HWLOC_LIBRARIES}
-    msp-generator
     msp-graph
     msp-pareto
     msp-sequential

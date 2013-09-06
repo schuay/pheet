@@ -16,10 +16,11 @@ namespace sp
 {
 
 Path::
-Path(graph::Node const* init)
+Path(graph::Node const* init,
+     const size_t degree)
 	: m_tail(init), m_head(init), m_dominated(false)
 {
-	m_weight.resize(init->graph()->degree(), 0);
+    m_weight.resize(degree, 0);
 }
 
 Path::
@@ -36,16 +37,16 @@ Path*
 Path::
 step(Edge const* edge) const
 {
-	graph::weight_vector_t const& ws = edge->weights();
-	assert(ws.size() == m_weight.size());
+    graph::weight_vector_t const& ws = edge->weights;
+    assert(ws.size() == m_weight.size());
 
 	Path* p = new Path(*this);
 
-	p->m_head = edge->head();
+    p->m_head = edge->head;
 	p->m_edges.push_back(edge);
 
-	for (size_t i = 0; i < ws.size(); i++) {
-		p->m_weight[i] += ws[i];
+    for (size_t i = 0; i < ws.size(); i++) {
+        p->m_weight[i] += ws[i];
 	}
 
 	return p;
@@ -55,10 +56,6 @@ void
 Path::
 print() const
 {
-	printf("%lu", m_tail->id());
-	for (auto const e : m_edges) {
-		printf(" -> %lu", e->head()->id());
-	}
 	printf(" (");
 	for (auto const & w : m_weight) {
 		printf("%d ", w);
