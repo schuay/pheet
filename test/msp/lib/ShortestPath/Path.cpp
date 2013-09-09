@@ -17,7 +17,7 @@ namespace sp
 
 Path::
 Path(graph::Node const* init)
-	: m_tail(init), m_head(init), m_dominated(false)
+	: m_tail(init), m_head(init), m_pred(nullptr), m_dominated(false)
 {
 	m_weight.resize(init->graph()->degree(), 0);
 }
@@ -26,7 +26,7 @@ Path::
 Path(const Path& that)
 	: m_tail(that.m_tail),
 	  m_head(that.m_head),
-	  m_edges(that.m_edges),
+	  m_pred(that.m_pred),
 	  m_weight(that.m_weight),
 	  m_dominated(false)
 {
@@ -42,7 +42,7 @@ step(Edge const* edge) const
 	Path* p = new Path(*this);
 
 	p->m_head = edge->head();
-	p->m_edges.push_back(edge);
+	p->m_pred = this;
 
 	for (size_t i = 0; i < ws.size(); i++) {
 		p->m_weight[i] += ws[i];
@@ -55,10 +55,7 @@ void
 Path::
 print() const
 {
-	printf("%lu", m_tail->id());
-	for (auto const e : m_edges) {
-		printf(" -> %lu", e->head()->id());
-	}
+	printf("%lu --> %lu", m_tail->id(), m_head->id());
 	printf(" (");
 	for (auto const & w : m_weight) {
 		printf("%d ", w);
@@ -78,13 +75,6 @@ Path::
 head() const
 {
 	return m_head;
-}
-
-vector<Edge const*> const&
-Path::
-edges() const
-{
-	return m_edges;
 }
 
 weight_vector_t const&
