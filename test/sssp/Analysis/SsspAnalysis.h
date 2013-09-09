@@ -23,8 +23,10 @@ namespace pheet {
 struct SsspAnalysisNode {
 	size_t node_id;
 	size_t distance;
+	size_t distance_prev;
 	size_t added;
 	bool processed;
+	bool active;
 };
 
 struct SsspAnalysisNodeLess {
@@ -192,6 +194,18 @@ public:
 			std::vector<size_t> processed_ref;
 			std::vector<size_t> base_d;
 #endif
+			// Mark nodes that can be processed in this phase as active (distance values
+			// might change during update, so we can't rely on them)
+			for(size_t i = offset; i < v.size(); ++i) {
+				if(graph[v[i].node_id].distance == v[i].distance &&
+						!v[i].processed) {
+					v[i].active = true;
+				}
+				else {
+					v[i].active = false;
+				}
+			}
+
 			// Go through list and only process nodes visible to all threads and the first node (which is always processed)
 			size_t orig_size = v.size();
 			size_t sum_new = 0;
@@ -201,17 +215,17 @@ public:
 			for(j = 0, j2 = 0; j < block_size && offset + j2 < orig_size; ++j2) {
 				n = v[offset + j2];
 				size_t node = n.node_id;
-				size_t d = graph[node].distance;
+				size_t d = n.distance;
 				size_t a = n.added;
 #ifdef SSSP_SIM_VERIFY_THEORY
-				if(d == n.distance && !n.processed) {
+				if(n.active) {
 					base_d.push_back(d);
 				}
 #endif
 				// Node is visible to all threads or the first node
 				if(j == 0 || a + k < orig_size) {
 					// Node has not been processed, and no better distance value has been found
-					if(d == n.distance && !n.processed) {
+					if(n.active) {
 						pc.num_actual_tasks.incr();
 
 #ifdef SSSP_SIM_VERIFY_THEORY
@@ -249,6 +263,7 @@ public:
 					}
 				}
 			}
+
 			size_t max_h_rnd = max_h;
 			// If not enough nodes visible to all threads are available process some random nodes
 			if(orig_size - offset > 1 && j < block_size) {
