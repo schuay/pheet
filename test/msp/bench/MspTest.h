@@ -70,6 +70,8 @@ void MspTest<Pheet, Algorithm>::run_test()
 
 	Time start, end;
 
+	std::shared_ptr<sp::ShortestPaths> sp;
+
 	{
 		typename Pheet::Environment env(cpus, pc);
 
@@ -79,6 +81,8 @@ void MspTest<Pheet, Algorithm>::run_test()
 		check_time(start);
 		Pheet::template finish<Algorithm<Pheet>>(g, init, &q, ppc);
 		check_time(end);
+
+		sp.reset(q.shortest_paths());
 	}
 
 	const double seconds = calculate_seconds(start, end);
@@ -90,6 +94,7 @@ void MspTest<Pheet, Algorithm>::run_test()
 	          << "scheduler\t"
 	          << "nodes\t"
 	          << "edges\t"
+	          << "paths\t"
 	          << "seed\t"
 	          << "cpus\t"
 	          << "total_time\t";
@@ -104,6 +109,7 @@ void MspTest<Pheet, Algorithm>::run_test()
 	std::cout << "\t"
 	          << g->node_count() << "\t"
 	          << g->edge_count() << "\t"
+	          << sp->paths.size()
 	          << seed << "\t"
 	          << cpus << "\t"
 	          << seconds << "\t";
