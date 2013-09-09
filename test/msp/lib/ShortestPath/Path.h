@@ -33,7 +33,6 @@ public:
 
 	graph::Node const* tail() const;
 	graph::Node const* head() const;
-	std::vector<graph::Edge const*> const& edges() const;
 	graph::weight_vector_t const& weight() const;
 
 	bool dominated() const;
@@ -45,7 +44,7 @@ private:
 private:
 	graph::Node const* m_tail;
 	graph::Node const* m_head;
-	std::vector<graph::Edge const*> m_edges;
+	Path const* m_pred;
 	std::vector<graph::weight_t> m_weight;
 	std::atomic_bool m_dominated;
 };
