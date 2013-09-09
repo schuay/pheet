@@ -34,7 +34,7 @@ insert(sp::Paths& paths,
        sp::Paths& added,
        sp::Paths& removed)
 {
-	for (auto p : paths) {
+	for (auto & p : paths) {
 		graph::Node const* node = p->head();
 		map[node]->insert(p, added, removed);
 	}
