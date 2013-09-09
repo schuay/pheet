@@ -17,9 +17,9 @@ namespace sp
 
 Path::
 Path(graph::Node const* init)
-	: m_tail(init), m_head(init), m_pred(nullptr), m_dominated(false)
+	: m_tail(init), m_head(init), m_pred(nullptr), m_degree(init->graph()->degree()), m_dominated(false)
 {
-	m_weight.resize(init->graph()->degree(), 0);
+	m_weight.resize(m_degree, 0);
 }
 
 Path::
@@ -28,6 +28,7 @@ Path(const Path& that)
 	  m_head(that.m_head),
 	  m_pred(that.m_pred),
 	  m_weight(that.m_weight),
+	  m_degree(that.m_degree),
 	  m_dominated(false)
 {
 }

@@ -26,8 +26,8 @@ operator()(Path const* lhs,
 	weight_vector_t const& l = lhs->weight();
 	weight_vector_t const& r = rhs->weight();
 
-	assert(l.size() == r.size());
-	int const dims = l.size();
+	const size_t dims = lhs->degree();
+	assert(dims == rhs->degree());
 
 	for (int i = 0; i < dims; i++) {
 		if (l[i] > r[i]) {
