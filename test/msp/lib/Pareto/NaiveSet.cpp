@@ -21,7 +21,7 @@ insert(sp::PathPtr& path,
 	less dominates;
 
 	for (auto i = m_set.begin(); i != m_set.end();) {
-		PathPtr rhs = *i;
+		PathPtr const& rhs = *i;
 		if (dominates(path.get(), rhs.get())) {
 			removed.push_back(rhs);
 			m_set.erase(i++);
