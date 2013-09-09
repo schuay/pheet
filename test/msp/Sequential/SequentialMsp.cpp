@@ -35,7 +35,13 @@ operator()()
 	PathPtr init = path;
 	m_queue.insert(init);
 
+	sp::Paths candidates, added, removed;
+
 	while (!m_queue.empty()) {
+		candidates.clear();
+		added.clear();
+		removed.clear();
+
 		/* Retrieve our next optimal candidate path. */
 
 		PathPtr p = m_queue.first();
@@ -45,13 +51,11 @@ operator()()
 
 		/* For all outgoing edges <- head, generate candidates. */
 
-		sp::Paths candidates;
 		for (auto & e : head->out_edges()) {
 			sp::PathPtr q(p->step(e));
 			candidates.push_back(q);
 		}
 
-		sp::Paths added, removed;
 		sets->insert(candidates, added, removed);
 
 		/* Mark removed candidates as dominated. */
