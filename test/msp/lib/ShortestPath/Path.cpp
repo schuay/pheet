@@ -78,13 +78,6 @@ head() const
 	return m_head;
 }
 
-weight_vector_t const&
-Path::
-weight() const
-{
-	return m_weight;
-}
-
 bool
 Path::
 dominated() const
