@@ -24,7 +24,7 @@ class StrategyMspPlace
 public:
 	StrategyMspPlace();
 
-	double
+	inline double
 	factor(int n);
 
 private:
@@ -40,7 +40,7 @@ StrategyMspPlace()
 }
 
 template <class Pheet>
-double
+inline double
 StrategyMspPlace<Pheet>::
 factor(int n)
 {
