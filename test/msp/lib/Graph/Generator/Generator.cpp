@@ -104,9 +104,9 @@ Generator::Wl
 Generator::
 default_weights()
 {
-	return { std::pair<int, int>(0, 10),
-	         std::pair<int, int>(0, 10),
-	         std::pair<int, int>(0, 10)
+	return { std::pair<int, int>(0, 100000),
+	         std::pair<int, int>(0, 100000),
+	         std::pair<int, int>(0, 100000)
 	       };
 
 }
