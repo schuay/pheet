@@ -35,6 +35,10 @@ public:
 	graph::Node const* head() const;
 	graph::weight_vector_t const& weight() const;
 
+	inline size_t degree() const {
+		return m_degree;
+	}
+
 	bool dominated() const;
 	void set_dominated();
 
@@ -46,6 +50,7 @@ private:
 	graph::Node const* m_head;
 	Path const* m_pred;
 	std::vector<graph::weight_t> m_weight;
+	const size_t m_degree;
 	std::atomic_bool m_dominated;
 };
 
