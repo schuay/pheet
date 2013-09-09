@@ -33,7 +33,9 @@ public:
 
 	graph::Node const* tail() const;
 	graph::Node const* head() const;
-	graph::weight_vector_t const& weight() const;
+	inline graph::weight_vector_t const& weight() const {
+		return m_weight;
+	}
 
 	inline size_t degree() const {
 		return m_degree;
