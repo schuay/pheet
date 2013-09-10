@@ -349,6 +349,7 @@ private:
 
 	void process_global_queue() {
 		pc.process_global_list_time.start_timer();
+		pc.process_global_list_max_time.start_timer();
 
 		DataBlock* next = global_tail->get_next();
 		while(next != nullptr) {
@@ -371,6 +372,7 @@ private:
 			tasks_taken_since_update = 0;
 		}
 		pc.process_global_list_time.stop_timer();
+		pc.process_global_list_max_time.stop_timer();
 	}
 
 	bool spy() {
