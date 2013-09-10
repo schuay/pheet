@@ -28,6 +28,7 @@ public:
 	 num_successful_takes(other.num_successful_takes),
 	 num_taken_heap_items(other.num_taken_heap_items),
 	 num_spied_tasks(other.num_spied_tasks),
+	 num_inspected_global_items(other.num_inspected_global_items),
 	 make_global_time(other.make_global_time),
 	 process_global_list_time(other.process_global_list_time),
 	 process_global_list_max_time(other.process_global_list_max_time),
@@ -44,6 +45,7 @@ public:
 		BasicPerformanceCounter<Pheet, task_storage_count_successful_takes>::print_header("num_successful_takes\t");
 		BasicPerformanceCounter<Pheet, task_storage_count_taken_heap_items>::print_header("num_taken_heap_items\t");
 		BasicPerformanceCounter<Pheet, task_storage_count_spied_tasks>::print_header("num_spied_tasks\t");
+		BasicPerformanceCounter<Pheet, task_storage_count_inspected_global_items>::print_header("num_inspected_global_items\t");
 		TimePerformanceCounter<Pheet, task_storage_measure_make_global_time>::print_header("make_global_time\t");
 		TimePerformanceCounter<Pheet, task_storage_measure_process_global_list_time>::print_header("process_global_list_time\t");
 		TimePerformanceCounter<Pheet, task_storage_measure_process_global_list_max_time>::print_header("process_global_list_max_time\t");
@@ -59,6 +61,7 @@ public:
 		num_successful_takes.print("%d\t");
 		num_taken_heap_items.print("%d\t");
 		num_spied_tasks.print("%d\t");
+		num_inspected_global_items.print("%d\t");
 		make_global_time.print("%f\t");
 		process_global_list_time.print("%f\t");
 		process_global_list_max_time.print("%f\t");
@@ -74,6 +77,7 @@ public:
 	BasicPerformanceCounter<Pheet, task_storage_count_successful_takes> num_successful_takes;
 	BasicPerformanceCounter<Pheet, task_storage_count_taken_heap_items> num_taken_heap_items;
 	BasicPerformanceCounter<Pheet, task_storage_count_spied_tasks> num_spied_tasks;
+	BasicPerformanceCounter<Pheet, task_storage_count_inspected_global_items> num_inspected_global_items;
 
 	TimePerformanceCounter<Pheet, task_storage_measure_make_global_time> make_global_time;
 	TimePerformanceCounter<Pheet, task_storage_measure_process_global_list_time> process_global_list_time;

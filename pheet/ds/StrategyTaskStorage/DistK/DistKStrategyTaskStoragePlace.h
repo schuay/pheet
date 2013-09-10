@@ -356,6 +356,8 @@ private:
 			global_tail->mark_processed_globally();
 
 			for(size_t i = 0; i < next->get_filled(); ++i) {
+				pc.num_inspected_global_items.incr();
+
 				Item* data = next->get_item(i);
 				if(data->position == next->get_offset() + i) {
 					// Item is usable

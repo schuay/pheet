@@ -138,8 +138,8 @@ public:
 	}
 
 	void set_active_threads(size_t value) {
+		pheet_assert(active_threads == 0);
 		active_threads = value;
-
 	}
 
 	size_t get_filled() {

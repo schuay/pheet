@@ -73,6 +73,7 @@ bool const task_storage_count_taken_heap_items = pc_all | false;
 bool const task_storage_count_dequeued_tasks = pc_all | false;
 bool const task_storage_count_steal_executed_tasks = pc_all | false;
 bool const task_storage_count_spied_tasks = pc_all | false;
+bool const task_storage_count_inspected_global_items = pc_all | false;
 
 bool const stealer_count_stream_tasks = pc_all | false;
 bool const stealer_count_stolen_tasks = pc_all | false;
