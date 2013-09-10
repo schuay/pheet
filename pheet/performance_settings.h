@@ -59,6 +59,7 @@ bool const task_storage_measure_strategy_alloc_time = pc_all | false;
 bool const task_storage_measure_steal_time = pc_all | false;
 bool const task_storage_measure_make_global_time = pc_all | false;
 bool const task_storage_measure_process_global_list_time = pc_all | false;
+bool const task_storage_measure_process_global_list_max_time = pc_all | false;
 bool const task_storage_measure_process_local_list_time = pc_all | false;
 bool const task_storage_measure_try_connect_time = pc_all | false;
 bool const task_storage_count_skipped_cleanups = pc_all | false;
