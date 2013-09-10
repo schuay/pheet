@@ -320,10 +320,12 @@ private:
 			}
 			local_tail->set_active_threads(np + 1);
 
+			pc.try_connect_time.start_timer();
 			do {
 				process_global_queue();
 
 			} while(!global_tail->connect_list(local_head));
+			pc.try_connect_time.stop_timer();
 
 			global_tail->mark_processed_globally();
 			global_tail = local_tail;

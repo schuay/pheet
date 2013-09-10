@@ -29,6 +29,7 @@ public:
 	 make_global_time(other.make_global_time),
 	 process_global_list_time(other.process_global_list_time),
 	 process_local_list_time(other.process_local_list_time),
+	 try_connect_time(other.try_connect_time),
 	 strategy_heap_performance_counters(other.strategy_heap_performance_counters) {}
 
 	inline ~DistKStrategyTaskStoragePerformanceCounters() {}
@@ -42,6 +43,7 @@ public:
 		TimePerformanceCounter<Pheet, task_storage_measure_make_global_time>::print_header("make_global_time\t");
 		TimePerformanceCounter<Pheet, task_storage_measure_process_global_list_time>::print_header("process_global_list_time\t");
 		TimePerformanceCounter<Pheet, task_storage_measure_process_local_list_time>::print_header("process_local_list_time\t");
+		TimePerformanceCounter<Pheet, task_storage_measure_try_connect_time>::print_header("try_connect_time\t");
 
 		StrategyHeapPerformanceCounters::print_headers();
 	}
@@ -54,6 +56,7 @@ public:
 		make_global_time.print("%f\t");
 		process_global_list_time.print("%f\t");
 		process_local_list_time.print("%f\t");
+		try_connect_time.print("%f\t");
 
 		strategy_heap_performance_counters.print_values();
 	}
@@ -67,6 +70,7 @@ public:
 	TimePerformanceCounter<Pheet, task_storage_measure_make_global_time> make_global_time;
 	TimePerformanceCounter<Pheet, task_storage_measure_process_global_list_time> process_global_list_time;
 	TimePerformanceCounter<Pheet, task_storage_measure_process_local_list_time> process_local_list_time;
+	TimePerformanceCounter<Pheet, task_storage_measure_try_connect_time> try_connect_time;
 
 	StrategyHeapPerformanceCounters strategy_heap_performance_counters;
 };
