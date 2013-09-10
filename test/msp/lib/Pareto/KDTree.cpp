@@ -101,7 +101,7 @@ dominated(tree_t const* t,
 		return false;
 	}
 
-	if (t->active && dominates(t->p.get(), path.get())) {
+	if (t->active && dominates(t->p, path)) {
 		return true;
 	}
 
@@ -135,7 +135,7 @@ prune(tree_t* t,
 		return;
 	}
 
-	if (t->active && dominates(path.get(), t->p.get())) {
+	if (t->active && dominates(path, t->p)) {
 		t->active = false;
 		pruned.push_back(t->p);
 		size--;
