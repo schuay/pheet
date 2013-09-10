@@ -26,6 +26,7 @@ public:
 	 num_unsuccessful_takes(other.num_unsuccessful_takes),
 	 num_successful_takes(other.num_successful_takes),
 	 num_taken_heap_items(other.num_taken_heap_items),
+	 num_spied_tasks(other.num_spied_tasks),
 	 make_global_time(other.make_global_time),
 	 process_global_list_time(other.process_global_list_time),
 	 process_local_list_time(other.process_local_list_time),
@@ -40,6 +41,7 @@ public:
 		BasicPerformanceCounter<Pheet, task_storage_count_unsuccessful_takes>::print_header("num_unsuccessful_takes\t");
 		BasicPerformanceCounter<Pheet, task_storage_count_successful_takes>::print_header("num_successful_takes\t");
 		BasicPerformanceCounter<Pheet, task_storage_count_taken_heap_items>::print_header("num_taken_heap_items\t");
+		BasicPerformanceCounter<Pheet, task_storage_count_spied_tasks>::print_header("num_spied_tasks\t");
 		TimePerformanceCounter<Pheet, task_storage_measure_make_global_time>::print_header("make_global_time\t");
 		TimePerformanceCounter<Pheet, task_storage_measure_process_global_list_time>::print_header("process_global_list_time\t");
 		TimePerformanceCounter<Pheet, task_storage_measure_process_local_list_time>::print_header("process_local_list_time\t");
@@ -53,6 +55,7 @@ public:
 		num_unsuccessful_takes.print("%d\t");
 		num_successful_takes.print("%d\t");
 		num_taken_heap_items.print("%d\t");
+		num_spied_tasks.print("%d\t");
 		make_global_time.print("%f\t");
 		process_global_list_time.print("%f\t");
 		process_local_list_time.print("%f\t");
@@ -66,6 +69,7 @@ public:
 	BasicPerformanceCounter<Pheet, task_storage_count_unsuccessful_takes> num_unsuccessful_takes;
 	BasicPerformanceCounter<Pheet, task_storage_count_successful_takes> num_successful_takes;
 	BasicPerformanceCounter<Pheet, task_storage_count_taken_heap_items> num_taken_heap_items;
+	BasicPerformanceCounter<Pheet, task_storage_count_spied_tasks> num_spied_tasks;
 
 	TimePerformanceCounter<Pheet, task_storage_measure_make_global_time> make_global_time;
 	TimePerformanceCounter<Pheet, task_storage_measure_process_global_list_time> process_global_list_time;
