@@ -301,6 +301,8 @@ private:
 	}
 
 	void make_queue_global() {
+		pc.make_global_time.start_timer();
+
 		if(task_storage->get_num_places() > 1) {
 			pc.num_blocks_created.incr();
 			DataBlock* new_list = &(data_blocks.acquire_item());
@@ -337,9 +339,13 @@ private:
 			local_tail = new_list;
 		}
 		remaining_k = std::numeric_limits<size_t>::max();
+
+		pc.make_global_time.stop_timer();
 	}
 
 	void process_global_queue() {
+		pc.process_global_list_time.start_timer();
+
 		DataBlock* next = global_tail->get_next();
 		while(next != nullptr) {
 			global_tail->mark_processed_globally();
@@ -360,6 +366,7 @@ private:
 			update_offset = local_tail->get_offset() + local_tail->get_filled();
 			tasks_taken_since_update = 0;
 		}
+		pc.process_global_list_time.stop_timer();
 	}
 
 	bool spy() {
@@ -387,6 +394,8 @@ private:
 	}
 
 	bool process_local_list(DataBlock* block) {
+		pc.process_local_list_time.start_timer();
+
 		bool success = false;
 
 		while(block != nullptr) {
@@ -418,6 +427,8 @@ private:
 
 			block = block->get_next();
 		}
+
+		pc.process_local_list_time.stop_timer();
 
 		return success;
 	}
