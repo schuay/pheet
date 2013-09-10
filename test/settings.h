@@ -36,5 +36,8 @@ bool const prefix_sum_log_schedule = false;
 
 bool const sssp_count_dead_tasks = false;
 bool const sssp_count_actual_tasks = false;
+bool const sssp_measure_last_non_dead_time = false;
+bool const sssp_measure_last_task_time = false;
+bool const sssp_measure_last_update_time = false;
 
 #endif /* PHEET_TEST_SETTINGS_H_ */
