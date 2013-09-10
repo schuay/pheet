@@ -355,6 +355,7 @@ private:
 		DataBlock* next = global_tail->get_next();
 		while(next != nullptr) {
 			global_tail->mark_processed_globally();
+			pc.max_inspected_global_blocks.incr();
 
 			for(size_t i = 0; i < next->get_filled(); ++i) {
 				pc.num_inspected_global_items.incr();
@@ -374,6 +375,7 @@ private:
 			update_offset = local_tail->get_offset() + local_tail->get_filled();
 			tasks_taken_since_update = 0;
 		}
+		pc.max_inspected_global_blocks.add_counted();
 		pc.process_global_list_time.stop_timer();
 		pc.process_global_list_max_time.stop_timer();
 	}
