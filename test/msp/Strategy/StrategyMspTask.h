@@ -7,12 +7,12 @@
 #ifndef STRATEGYMSPTASK_H_
 #define STRATEGYMSPTASK_H_
 
-#include "../lib/Graph/Edge.h"
-#include "../lib/Graph/Graph.h"
-#include "../lib/Pareto/Sets.h"
-#include "../lib/ShortestPath/ShortestPaths.h"
-#include "../MspPerformanceCounters.h"
+#include "MspPerformanceCounters.h"
 #include "StrategyMspStrategy.h"
+#include "lib/Graph/Edge.h"
+#include "lib/Graph/Graph.h"
+#include "lib/Pareto/Sets.h"
+#include "lib/ShortestPath/ShortestPaths.h"
 
 namespace pheet
 {
