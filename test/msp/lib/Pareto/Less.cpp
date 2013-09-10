@@ -29,7 +29,7 @@ operator()(Path const* lhs,
 	const size_t dims = lhs->degree();
 	assert(dims == rhs->degree());
 
-	for (int i = 0; i < dims; i++) {
+	for (size_t i = 0; i < dims; i++) {
 		if (l[i] > r[i]) {
 			return false;
 		}
