@@ -6,6 +6,8 @@
 
 #include "KDSet.h"
 
+#include <limits>
+
 using namespace graph;
 using namespace sp;
 
@@ -33,9 +35,31 @@ insert(PathPtr& path,
        Paths& added,
        Paths& removed)
 {
-	(void)path;
-	(void)added;
-	(void)removed;
+	assert(Dims == path->degree());
+
+	std::vector<weight_t> mins(Dims, std::numeric_limits<weight_t>::min());
+	std::vector<weight_t> maxs(Dims, std::numeric_limits<weight_t>::max());
+
+	typename tree_t::_Region_ dominator_region(&mins[0], &path->weight()[0], t->value_acc(),
+	        t->value_comp());
+	std::vector<PathPtr> dominators;
+	t->find_within_range(dominator_region, std::back_inserter(dominators));
+
+	if (!dominators.empty()) {
+		return;
+	}
+
+	typename tree_t::_Region_ dominatee_region(&path->weight()[0], &maxs[0], t->value_acc(),
+	        t->value_comp());
+	std::vector<PathPtr> dominatees;
+	t->find_within_range(dominatee_region, std::back_inserter(dominatees));
+
+	for (PathPtr const & p : dominatees) {
+		t->erase_exact(p);
+		removed.push_back(p);
+	}
+
+	added.push_back(path);
 }
 
 template <int Dims>
