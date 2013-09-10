@@ -8,7 +8,6 @@
 #define __PATH_H
 
 #include <atomic>
-#include <memory>
 #include <vector>
 
 #include "test/msp/lib/Graph/Edge.h"
@@ -17,7 +16,7 @@ namespace sp
 {
 
 class Path;
-typedef std::shared_ptr<Path> PathPtr;
+typedef Path* PathPtr;
 typedef std::vector<PathPtr> Paths;
 
 class Path
