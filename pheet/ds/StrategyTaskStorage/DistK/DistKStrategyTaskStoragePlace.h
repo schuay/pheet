@@ -314,12 +314,13 @@ private:
 
 			size_t np = task_storage->get_num_places() - 1;
 			DataBlock* block = local_head;
-			while(block != nullptr) {
+			while(block != local_tail) {
 				pc.num_global_blocks.incr();
 				block->set_active_threads(np);
 //				block->target_active_threads = 0;
 				block = block->get_next();
 			}
+			pc.num_global_blocks.incr();
 			local_tail->set_active_threads(np + 1);
 
 			pc.try_connect_time.start_timer();
