@@ -252,6 +252,8 @@ public:
 		s->rebase();
 		r.strategy = s;
 
+		pc.num_spied_tasks.incr();
+
 		heap.template push<Strategy>(std::move(r));
 	}
 
