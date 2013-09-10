@@ -153,7 +153,7 @@ void MaxTimePerformanceCounter<Pheet, true>::print(char const* const formatting_
 #ifdef PHEET_DEBUG_MODE
 	pheet_assert(!is_active);
 #endif
-	printf(formatting_string, reducer.get_sum());
+	printf(formatting_string, reducer.get_max());
 }
 
 template <class Pheet>
