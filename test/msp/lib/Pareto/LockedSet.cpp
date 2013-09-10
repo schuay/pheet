@@ -16,7 +16,7 @@ insert(sp::PathPtr& path,
        sp::Paths& removed)
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
-	NaiveSet::insert(path, added, removed);
+	KDSet<3>::insert(path, added, removed);
 
 }
 
@@ -24,7 +24,7 @@ sp::Paths
 LockedSet::
 paths() const
 {
-	return NaiveSet::paths();
+	return KDSet<3>::paths();
 }
 
 }

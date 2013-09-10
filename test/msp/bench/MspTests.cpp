@@ -14,8 +14,8 @@
 
 namespace
 {
-const size_t NODES      = 500;
-const size_t EDGES      = 50000;
+const size_t NODES      = 100;
+const size_t EDGES      = 2000;
 const unsigned int SEED = 42;
 
 template <class Pheet, template <class P> class Partitioner>

@@ -42,10 +42,7 @@ insert(PathPtr& path,
 
 	typename tree_t::_Region_ dominator_region(&mins[0], &path->weight()[0], t->value_acc(),
 	        t->value_comp());
-	std::vector<PathPtr> dominators;
-	t->find_within_range(dominator_region, std::back_inserter(dominators));
-
-	if (!dominators.empty()) {
+	if (t->count_within_range(dominator_region) > 0) {
 		return;
 	}
 
@@ -59,6 +56,7 @@ insert(PathPtr& path,
 		removed.push_back(p);
 	}
 
+	t->insert(path);
 	added.push_back(path);
 }
 
@@ -69,5 +67,7 @@ paths() const
 {
 	return sp::Paths(t->begin(), t->end());
 }
+
+template class KDSet<3>;
 
 }

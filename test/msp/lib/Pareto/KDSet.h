@@ -16,8 +16,15 @@ namespace pareto
 template <int Dims>
 class KDSet : public Set
 {
+private:
+	struct acc_t {
+		typedef graph::weight_t result_type;
+		graph::weight_t operator()(sp::PathPtr const& path, size_t k) const {
+			return path->weight()[k];
+		}
+	};
+
 public:
-	typedef std::pointer_to_binary_function<sp::PathPtr, size_t, graph::weight_t> acc_t;
 	typedef KDTree::KDTree<Dims, sp::PathPtr, acc_t> tree_t;
 
 	KDSet();
