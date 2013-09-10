@@ -52,6 +52,17 @@ namespace KDTree
           }
       }
 
+      _Region(subvalue_type const* __L, subvalue_type const* __H,
+	      _Acc const& __acc=_Acc(), const _Cmp& __cmp=_Cmp())
+	: _M_acc(__acc), _M_cmp(__cmp)
+      {
+        for (size_t __i = 0; __i != __K; ++__i)
+          {
+             _M_low_bounds[__i] =  __L[__i];
+             _M_high_bounds[__i] = __H[__i];
+          }
+      }
+
       bool
       intersects_with(_CenterPt const& __THAT) const
       {
