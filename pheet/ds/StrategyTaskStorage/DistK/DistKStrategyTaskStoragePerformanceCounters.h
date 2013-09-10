@@ -11,6 +11,7 @@
 
 #include <pheet/primitives/PerformanceCounter/Basic/BasicPerformanceCounter.h>
 #include <pheet/primitives/PerformanceCounter/Time/TimePerformanceCounter.h>
+#include <pheet/primitives/PerformanceCounter/Time/MaxTimePerformanceCounter.h>
 
 namespace pheet {
 
