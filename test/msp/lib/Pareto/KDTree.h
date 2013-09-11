@@ -7,6 +7,7 @@
 #ifndef KDTREE_H_
 #define KDTREE_H_
 
+#include "lib/Pareto/Less.h"
 #include "lib/ShortestPath/Path.h"
 
 namespace pareto
@@ -17,6 +18,9 @@ struct tree_t;
 class KDTree
 {
 public:
+	KDTree();
+	virtual ~KDTree();
+
 	/**
 	 * Worst case: O(n). All nodes are potential dominator candidates
 	 * but none of them actually dominate path.
@@ -39,8 +43,25 @@ public:
 	 */
 	void insert(const sp::PathPtr path);
 
+	sp::Paths items() const;
+
+private:
+	bool dominated(tree_t const* t,
+	               const size_t i,
+	               const sp::PathPtr path) const;
+
+	void prune(tree_t* t,
+	           const size_t i,
+	           const sp::PathPtr path,
+	           sp::Paths& pruned);
+
+	void items(tree_t const* t,
+	           sp::Paths& paths) const;
+
 private:
 	tree_t* t;
+
+	const less dominates;
 };
 
 }
