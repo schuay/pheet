@@ -18,16 +18,21 @@ insert(PathPtr& path,
        Paths& added,
        Paths& removed)
 {
-	(void)path;
-	(void)added;
-	(void)removed;
+	if (t.dominated(path)) {
+		return;
+	}
+
+	t.prune(path, removed);
+	t.insert(path);
+
+	added.push_back(path);
 }
 
 Paths
 KDSet::
 paths() const
 {
-	return { };
+	return t.items();
 }
 
 }
