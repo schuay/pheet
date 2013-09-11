@@ -7,6 +7,7 @@
 #ifndef KDSET_H_
 #define KDSET_H_
 
+#include "KDTree.h"
 #include "Set.h"
 
 namespace pareto
@@ -22,6 +23,7 @@ public:
 	sp::Paths paths() const override;
 
 private:
+	KDTree t;
 };
 
 }
