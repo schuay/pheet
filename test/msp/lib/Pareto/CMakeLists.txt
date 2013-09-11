@@ -1,5 +1,6 @@
 add_library(msp-pareto
     KDSet.cpp
+    KDTree.cpp
     Less.cpp
     LockedSet.cpp
     NaiveSet.cpp
