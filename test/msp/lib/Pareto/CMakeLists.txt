@@ -4,4 +4,5 @@ add_library(msp-pareto
     NaiveSet.cpp
     PriorityQueue.cpp
     Sets.cpp
+    SortedSet.cpp
 )
