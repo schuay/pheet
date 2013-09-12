@@ -9,6 +9,7 @@
 
 #include <set>
 
+#include "Less.h"
 #include "Set.h"
 
 namespace pareto
@@ -23,9 +24,10 @@ namespace pareto
  */
 class SortedSet : public Set
 {
-private:
+public:
 	class lincomb_less
 	{
+	public:
 		bool operator()(sp::PathPtr const& l,
 		                sp::PathPtr const& r) const;
 	};
@@ -38,6 +40,7 @@ public:
 	sp::Paths paths() const override;
 
 private:
+	less dominates;
 	std::multiset<sp::PathPtr, lincomb_less> m_set;
 };
 
