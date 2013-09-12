@@ -28,8 +28,8 @@ public:
 	 * After execution, the added vector contains all p <- paths which have been
 	 * added (= which were not dominated).
 	 * Likewise, the removed vector contains all p <- this which were removed from
-	 * the current SetMapper. Note that in the current implementation, the intersection
-	 * of removed and paths may be non-empty.
+	 * the current Sets. Note that in the current implementation, the intersection
+	 * of removed and added paths may be non-empty.
 	 */
 	void insert(sp::Paths& paths,
 	            sp::Paths& added,
