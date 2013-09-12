@@ -37,6 +37,10 @@ public:
 		return m_weight;
 	}
 
+	inline graph::weight_t weight_sum() const {
+		return m_weight_sum;
+	}
+
 	inline size_t degree() const {
 		return m_degree;
 	}
@@ -52,6 +56,7 @@ private:
 	graph::Node const* m_head;
 	Path const* m_pred;
 	std::vector<graph::weight_t> m_weight;
+	graph::weight_t m_weight_sum;
 	const size_t m_degree;
 	std::atomic_bool m_dominated;
 };
