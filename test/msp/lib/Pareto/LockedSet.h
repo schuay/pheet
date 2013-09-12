@@ -9,7 +9,7 @@
 
 #include <mutex>
 
-#include "NaiveSet.h"
+#include "SortedSet.h"
 
 namespace pareto
 {
@@ -17,7 +17,7 @@ namespace pareto
 /**
  * Wrapper for NaiveSet to provide sychronized access for multiple processors
  */
-class LockedSet : public NaiveSet
+class LockedSet : public SortedSet
 {
 public:
 	void insert(sp::PathPtr& path,
