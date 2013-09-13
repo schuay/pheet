@@ -55,11 +55,16 @@ private:
 	           const sp::PathPtr path,
 	           sp::Paths& pruned);
 
+	void insert(tree_t** t,
+				const size_t i,
+				const sp::PathPtr path);
+
 	void items(tree_t const* t,
-	           sp::Paths& paths) const;
+			   sp::Paths& paths) const;
 
 private:
 	tree_t* t;
+	int imba;
 
 	const less dominates;
 };
