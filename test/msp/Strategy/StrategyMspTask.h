@@ -39,7 +39,7 @@ namespace pheet
  * Furthermore, we lose some of the parallelism achieved by Sanders by
  * grouping candidates by node and doing an initial prune within each node set
  * in parallel before attempting to update the Pareto set. This causes a larger
- * amount of accesses for theglobal Pareto set. We are also unable to perform
+ * amount of accesses for the global Pareto set. We are also unable to perform
  * bulk updates, since individual tasks do not communicate with each other.
  */
 
