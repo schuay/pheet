@@ -17,6 +17,7 @@ namespace
 const size_t NODES      = 500;
 const size_t EDGES      = 50000;
 const unsigned int SEED = 42;
+const int WEIGHT_LIMIT  = 1000;
 
 template <class Pheet, template <class P> class Partitioner>
 void
@@ -40,7 +41,7 @@ MspBenchmarks::
 run_benchmarks()
 {
 	graph::Graph* g = graph::Generator::directed("test", NODES, EDGES, true,
-	                  graph::Generator::default_weights(), SEED);
+	                  graph::Generator::generate_uniform_Wl(WEIGHT_LIMIT), SEED);
 	graph::Node* src = g->nodes().front();
 
 	::run_algorithm<Pheet::WithScheduler<SynchroneousScheduler>, SequentialMsp>(g, src);
