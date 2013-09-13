@@ -27,10 +27,10 @@ using namespace sp;
  */
 
 #define TESTCASE GenericTest
-#define TEST_GRAPH(nodes, edges, seed) \
-TYPED_TEST(TESTCASE, test_##nodes##_##edges##_##seed) \
+#define TEST_GRAPH(nodes, edges, degree, weight_limit, seed) \
+TYPED_TEST(TESTCASE, test_##nodes##_##edges##_##degree##_##weight_limit##_##seed) \
 { \
-	this->init(nodes, edges, seed); \
+	this->init(nodes, edges, degree, weight_limit, seed); \
 	test_full(this->g, this->start, this->sp); \
 }
 
@@ -96,11 +96,13 @@ template <typename T>
 class TESTCASE : public ::testing::Test
 {
 protected:
-	virtual void init(const int nodes,
-	                  const int edges,
+	virtual void init(size_t const nodes,
+	                  size_t const edges,
+	                  size_t const degree,
+	                  size_t const weight_limit,
 	                  const int seed) {
 		g = Generator::directed("g", nodes, edges, true,
-		                        Generator::default_weight_limits(), seed);
+		                        degree, weight_limit, seed);
 		ASSERT_NE(g, nullptr);
 
 		start = g->nodes().front();
@@ -282,14 +284,17 @@ test_full(const Graph* graph,
 
 TYPED_TEST(TESTCASE, SanityCheck)
 {
-	this->init(50, 150, 42);
+	this->init(50, 150, 3, 10, 42);
 }
 
-TEST_GRAPH(50, 150, 42)
-TEST_GRAPH(50, 500, 51)
-TEST_GRAPH(50, 1270, 33)
-TEST_GRAPH(50, 1000, 123)
-TEST_GRAPH(333, 1501, 2031)
+#define DEGREE (3)
+#define WEIGHT_LIMIT (10000)
+
+TEST_GRAPH(50, 150, DEGREE, WEIGHT_LIMIT, 42)
+TEST_GRAPH(50, 500, DEGREE, WEIGHT_LIMIT, 51)
+TEST_GRAPH(50, 1270, DEGREE, WEIGHT_LIMIT, 33)
+TEST_GRAPH(50, 1000, DEGREE, WEIGHT_LIMIT, 123)
+TEST_GRAPH(333, 1501, DEGREE, WEIGHT_LIMIT, 2031)
 
 /* TODO: Add other correctness criteria. */
 
