@@ -72,7 +72,7 @@ read(FILE* f)
 
 bool
 Graph::
-write(FILE* f)
+write(FILE* f) const
 {
 	return (agwrite(g, f) > 0);
 }
