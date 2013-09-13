@@ -8,7 +8,6 @@
 
 #include <algorithm>
 #include <assert.h>
-#include <random>
 
 #define N (10)
 #define M (15)
@@ -63,7 +62,7 @@ directed(std::string const& name,
 
 	for (head = 1; head < n; head++) {
 		tail = random() % head;
-		g->add_edge(tree[tail], tree[head], generate_weight_vector(weight_limits));
+		g->add_edge(tree[tail], tree[head], generate_weight_vector(random, weight_limits));
 	}
 
 	/* Add additional random edges until achieving desired number */
@@ -73,7 +72,7 @@ directed(std::string const& name,
 			head = random() % n;
 		} while (head == tail || (!allow_parallel_edges && g->contains_edge(tree[tail], tree[head])));
 
-		g->add_edge(tree[tail], tree[head], generate_weight_vector(weight_limits));
+		g->add_edge(tree[tail], tree[head], generate_weight_vector(random, weight_limits));
 	}
 	return g;
 }
@@ -91,11 +90,11 @@ basic(unsigned short const seed)
 
 std::vector<int>
 Generator::
-generate_weight_vector(Wl const& weight_limits)
+generate_weight_vector(std::default_random_engine& random, Wl const& weight_limits)
 {
 	std::vector<int> weights;
 	for (auto & it : weight_limits) {
-		int w = it.first + rand() % (it.second - it.first + 1);
+		int w = it.first + random() % (it.second - it.first + 1);
 		weights.push_back(w);
 	}
 	return weights;
