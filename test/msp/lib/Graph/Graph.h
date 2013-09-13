@@ -41,7 +41,7 @@ public:
 	virtual ~Graph();
 
 	static Graph* read(FILE* f);
-	bool write(FILE* f);
+	bool write(FILE* f) const;
 
 	size_t degree() const;
 	std::string name() const;
