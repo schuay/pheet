@@ -6,7 +6,8 @@
 
 #include "KDTree.h"
 
-#include "assert.h"
+#include <assert.h>
+#include <algorithm>
 
 using namespace graph;
 using namespace sp;
@@ -124,12 +125,39 @@ tree_height(tree_t const* t)
 	return (t == nullptr) ? -1 : t->height;
 }
 
+tree_t*
+rebuild(Paths& paths,
+		const size_t i,
+		const int start,
+		const int end)
+{
+	if (start >= end) {
+		return nullptr;
+	}
+
+	auto cmp = [i](PathPtr const& l, PathPtr const& r) { return (l->weight()[i] < r->weight()[i]); };
+	std::sort(paths.begin() + start, paths.begin() + end, cmp);
+
+	const int mid = start + (end - start) / 2;
+
+	tree_t* l = rebuild(paths, (i + 1) % paths[mid]->degree(), start, mid);
+	tree_t* r = rebuild(paths, (i + 1) % paths[mid]->degree(), mid + 1, end);
+
+	return new tree_t { paths[mid], l, r, (size_t)std::max(tree_height(l), tree_height(r)) + 1, true };
+}
+
 void
 KDTree::
 insert(const PathPtr path)
 {
 	assert(path);
 	insert(&t, 0, path);
+
+	if (imba > 1 + tree_height(t) / 2) {
+		Paths paths = items();
+		tree_delete(t);
+		t = rebuild(paths, 0, 0, paths.size());
+	}
 }
 
 void
