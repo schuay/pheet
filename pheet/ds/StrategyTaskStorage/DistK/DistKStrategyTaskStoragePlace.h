@@ -92,13 +92,20 @@ public:
 		// Check whether this is needed at all, or if scheduler only terminates if heap is empty
 		while(!heap.empty()) {
 			Ref r = heap.pop();
-			// All items should have been processed
-			pheet_assert(r.position != r.item->position);
-			// Is potentially dangerous. Maybe item has already been deleted? Check...
-			if(r.strategy != r.item->strategy) {
-				delete r.strategy;
+			if(r.type == 0) {
+				// Local reference
+
+				// Mark item as removed (not really necessary, but allows for additional error checks)
+				r.item->block->mark_item_used();
+				pc.num_taken_heap_items.incr();
+
+				// All items should have been processed
+				pheet_assert(r.position != r.item->position);
 			}
-			r.strategy = nullptr;
+			else {
+				delete r.strategy;
+				r.strategy = nullptr;
+			}
 		}
 	}
 
@@ -108,7 +115,7 @@ public:
 		// Cannot check this since item may be uninitialized if it has been newly allocated
 //		pheet_assert(it.strategy == nullptr);
 		size_t k = s.get_k();
-		pheet_assert(k > 0);
+//		pheet_assert(k > 0);
 
 		it.strategy = new Strategy(std::move(s));
 		it.data = data;

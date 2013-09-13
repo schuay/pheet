@@ -67,7 +67,7 @@ public:
 	template <template <class, typename, typename> class NewTS>
 		using WithPriorityTaskStorage = Self;
 	template <template <class, typename, template <class, class> class> class NewTS>
-		using WithStrategyTaskStorage = StrategySchedulerImpl<Pheet, NewTS, StealerT, FinishStack, BaseStrategyT>;;
+		using WithStrategyTaskStorage = StrategySchedulerImpl<Pheet, NewTS, StealerT, FinishStack, BaseStrategyT>;
 
 	/*
 	 * Uses complete machine

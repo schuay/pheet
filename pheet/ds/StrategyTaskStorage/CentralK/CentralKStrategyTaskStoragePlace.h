@@ -94,8 +94,9 @@ public:
 		// Check whether this is needed at all, or if scheduler only terminates if heap is empty
 		while(!heap.empty()) {
 			Ref r = heap.pop();
-			// All items should have been processed
-			pheet_assert(r.position != r.item->position);
+			// All items should have been processed (Can't check this, since some items may have
+			// already been deleted by other threads)
+		//	pheet_assert(r.position != r.item->position);
 		//	if(r.strategy != r.item->strategy) {
 				delete r.strategy;
 		//	}
@@ -159,7 +160,7 @@ public:
 
 			if(r.item->position == r.position) {
 				T ret = r.item->data;
-				if(SIZET_CAS(&(r.item->position), r.position, r.position + 1)) {
+				if(SIZET_CAS(&(r.item->position), r.position, r.position + (std::numeric_limits<size_t>::max() >> 1))) {
 					pc.num_successful_takes.incr();
 					return ret;
 				}

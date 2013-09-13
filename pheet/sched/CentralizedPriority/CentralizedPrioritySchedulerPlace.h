@@ -506,7 +506,6 @@ void CentralizedPrioritySchedulerPlace<Pheet, FinishStackT, CallThreshold>::spaw
 			performance_counters.num_actual_spawns.incr();
 			CallTaskType* task = new CallTaskType(params ...);
 			pheet_assert(current_task_parent != NULL);
-			pheet_assert(current_task_parent >= stack && (current_task_parent < (stack + stack_size)));
 			finish_stack.spawn(current_task_parent);
 			TaskStorageItem di;
 			di.task = task;
@@ -545,7 +544,6 @@ void CentralizedPrioritySchedulerPlace<Pheet, FinishStackT, CallThreshold>::spaw
 
 			FunctorTask<decltype(bound)>* task = new FunctorTask<decltype(bound)>(bound);
 			pheet_assert(current_task_parent != NULL);
-			pheet_assert(current_task_parent >= stack && (current_task_parent < (stack + stack_size)));
 			finish_stack.spawn(current_task_parent);
 			TaskStorageItem di;
 			di.task = task;

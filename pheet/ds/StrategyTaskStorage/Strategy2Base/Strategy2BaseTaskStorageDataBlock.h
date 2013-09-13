@@ -37,7 +37,7 @@ public:
 		this->prev = prev;
 		this->next.store(nullptr, std::memory_order_relaxed);
 		if(prev != nullptr) {
-			pheet_assert(prev->next == nullptr);
+			pheet_assert(prev->next.load(std::memory_order_relaxed) == nullptr);
 			offset = prev->offset + BlockSize;
 
 			// When next pointer of predecessor is read (as not null), all initialization happened before
@@ -83,9 +83,9 @@ public:
 
 	void mark_reusable() {
 		pheet_assert(!reuse.load(std::memory_order_relaxed));
-		// Since reuse flag is the only thing written by foreign threads in a block,
-		// no memory ordering constraints are needed
-		reuse.store(true, std::memory_order_relaxed);
+		// To make sure the update to the pointers becomes visible before
+		// block is reused do a release
+		reuse.store(true, std::memory_order_release);
 	}
 private:
 	Place* place;
