@@ -48,19 +48,19 @@ public:
 private:
 	bool dominated(tree_t const* t,
 	               const size_t i,
-				   sp::PathPtr const& path) const;
+	               sp::PathPtr const& path) const;
 
 	void prune(tree_t* t,
 	           const size_t i,
-			   sp::PathPtr const& path,
+	           sp::PathPtr const& path,
 	           sp::Paths& pruned);
 
 	void insert(tree_t** t,
-				const size_t i,
-				sp::PathPtr const& path);
+	            const size_t i,
+	            sp::PathPtr const& path);
 
 	void items(tree_t const* t,
-			   sp::Paths& paths) const;
+	           sp::Paths& paths) const;
 
 private:
 	tree_t* t;
