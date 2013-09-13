@@ -6,8 +6,9 @@
 
 #include "KDTree.h"
 
-#include <assert.h>
 #include <algorithm>
+#include <assert.h>
+#include <queue>
 
 using namespace graph;
 using namespace sp;
@@ -19,7 +20,7 @@ namespace pareto
  * The left branch is <=, the right is >.
  */
 struct tree_t {
-	const PathPtr p;
+	PathPtr p;
 	tree_t* l;
 	tree_t* r;
 	size_t height;
@@ -46,6 +47,46 @@ tree_delete(tree_t* t)
 
 	delete t;
 }
+
+struct Recycler
+{
+	Recycler(tree_t* root)
+	{
+		nodes.push(root);
+	}
+
+	~Recycler()
+	{
+		while (!nodes.empty()) {
+			tree_t* t = nodes.front();
+			nodes.pop();
+			tree_delete(t);
+		}
+	}
+
+	tree_t*
+	get()
+	{
+		if (nodes.empty()) {
+			return new tree_t();
+		}
+
+		tree_t* t = nodes.front();
+		nodes.pop();
+
+		if (t->l) {
+			nodes.push(t->l);
+		}
+
+		if (t->r) {
+			nodes.push(t->r);
+		}
+
+		return t;
+	}
+
+	std::queue<tree_t*> nodes;
+};
 
 KDTree::
 ~KDTree()
@@ -129,7 +170,8 @@ inline static tree_t*
 rebuild(Paths& paths,
 		const size_t i,
 		const int start,
-		const int end)
+		const int end,
+		Recycler& recycler)
 {
 	if (start >= end) {
 		return nullptr;
@@ -140,10 +182,12 @@ rebuild(Paths& paths,
 
 	const int mid = start + (end - start) / 2;
 
-	tree_t* l = rebuild(paths, (i + 1) % paths[mid]->degree(), start, mid);
-	tree_t* r = rebuild(paths, (i + 1) % paths[mid]->degree(), mid + 1, end);
+	tree_t* l = rebuild(paths, (i + 1) % paths[mid]->degree(), start, mid, recycler);
+	tree_t* r = rebuild(paths, (i + 1) % paths[mid]->degree(), mid + 1, end, recycler);
 
-	return new tree_t { paths[mid], l, r, (size_t)std::max(tree_height(l), tree_height(r)) + 1, true };
+	tree_t* t = recycler.get();
+	*t = { paths[mid], l, r, (size_t)std::max(tree_height(l), tree_height(r)) + 1, true};
+	return t;
 }
 
 void
@@ -155,8 +199,8 @@ insert(const PathPtr path)
 
 	if (imba > 1 + tree_height(t) / 2) {
 		Paths paths = items();
-		tree_delete(t);
-		t = rebuild(paths, 0, 0, paths.size());
+		Recycler r(t);
+		t = rebuild(paths, 0, 0, paths.size(), r);
 	}
 }
 
