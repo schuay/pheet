@@ -34,7 +34,7 @@ KDTree() :
 {
 }
 
-static void
+inline static void
 tree_delete(tree_t* t)
 {
 	if (!t) {
@@ -125,7 +125,7 @@ tree_height(tree_t const* t)
 	return (t == nullptr) ? -1 : t->height;
 }
 
-tree_t*
+inline static tree_t*
 rebuild(Paths& paths,
 		const size_t i,
 		const int start,
