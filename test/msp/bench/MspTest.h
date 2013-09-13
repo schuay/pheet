@@ -109,7 +109,7 @@ void MspTest<Pheet, Algorithm>::run_test()
 	std::cout << "\t"
 	          << g->node_count() << "\t"
 	          << g->edge_count() << "\t"
-	          << sp->paths.size()
+	          << sp->paths.size() << "\t"
 	          << seed << "\t"
 	          << cpus << "\t"
 	          << seconds << "\t";
