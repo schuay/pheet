@@ -6,14 +6,14 @@
 
 #define NDEBUG 1
 
-#include "MspTests.h"
+#include "MspBenchmarks.h"
 
 using namespace pheet;
 
 int main(int, char**)
 {
-	MspTests t;
-	t.run_test();
+	MspBenchmarks t;
+	t.run_benchmarks();
 
 	return 0;
 }
