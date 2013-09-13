@@ -12,6 +12,7 @@
 
 #define N (10)
 #define M (15)
+#define W (100000)
 
 using namespace graph;
 
@@ -104,9 +105,9 @@ Generator::Wl
 Generator::
 default_weights()
 {
-	return { std::pair<int, int>(0, 100000),
-	         std::pair<int, int>(0, 100000),
-	         std::pair<int, int>(0, 100000)
+	return { std::pair<int, int>(0, W),
+	         std::pair<int, int>(0, W),
+	         std::pair<int, int>(0, W)
 	       };
 
 }
