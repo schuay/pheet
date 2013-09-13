@@ -222,6 +222,7 @@ public:
 					base_d.push_back(d);
 				}
 #endif
+				pheet_assert(k > 0 || a + k < orig_size);
 				// Node is visible to all threads or the first node
 				if(j == 0 || a + k < orig_size) {
 					// Node has not been processed, and no better distance value has been found
@@ -257,6 +258,7 @@ public:
 							}
 						}
 						v[offset + j2].processed = true;
+						v[offset + j2].active = false;
 						// Store in which phase node has been settled (will be overwritten if same node is settled again)
 						settled[node] = phase;
 						++j;
@@ -279,7 +281,7 @@ public:
 					// Node not visible to all threads
 					if(a + k >= orig_size) {
 						// Node has not been processed, and no better distance value has been found
-						if(d == n.distance && !n.processed) {
+						if(n.active) {
 							pc.num_actual_tasks.incr();
 
 #ifdef SSSP_SIM_VERIFY_THEORY
@@ -331,19 +333,29 @@ public:
 				size_t tj = processed_ref[tjr - 1];
 				double qt = 1.0;
 				for(size_t ti = 1; ti < tj; ++ti) {
-					for(size_t L = 1; L <= size; ++L) {
+					for(size_t L = 1; L < size; ++L) {
 						pheet_assert(base_d[tj-1] >= base_d[ti-1]);
 						double iptL = 0;
 						double h = ((double)(base_d[tj-1] - base_d[ti-1]))/sssp_sim_theory_div;
-						double tmp = pow(sssp_sim_theory_p * h, (double)L);
+						double ph = sssp_sim_theory_p * h;
+						double tmp = ph;
 						for(size_t L_fac = L; L_fac > 1; --L_fac) {
-							tmp /= (double) L_fac;
+							tmp *= ph/ ((double) L_fac);
+						}
+						if(tmp == 0.0) {
+							break;
 						}
 						iptL = 1 - tmp;
+				/*		if(iptL == 1.0) {
+							std::cout << "aha";
+						}*/
 						for(size_t ptLexp = 1; ptLexp < L; ++ptLexp) {
 							iptL = pow(iptL, (double)(size - ptLexp - 1));
 						}
-//						std::cout << "tj " << tj << " ti " << ti << " L " << L << " h " << h << " tmp " << tmp << " iptL " << iptL << std::endl;
+				/*		if(iptL == 1.0) {
+							std::cout << "aha2";
+						}*/
+					//	std::cout << "tj " << tj << " ti " << ti << " L " << L << " h " << h << " tmp " << tmp << " iptL " << iptL << std::endl;
 						qt *= iptL;
 					}
 				}
@@ -393,7 +405,7 @@ public:
 			std::cout << "\t" << active_p_hist[i];
 #endif
 #ifdef SSSP_SIM_VERIFY_THEORY
-			std::cout << "\t" << Wt_hist[i] << std::endl;
+			std::cout << "\t" << Wt_hist[i];
 #endif
 			std::cout << std::endl;
 #endif
