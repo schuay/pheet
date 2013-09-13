@@ -62,6 +62,7 @@ operator()()
 
 		for (auto & p : removed) {
 			p->set_dominated();
+			pc.num_dead_tasks.incr();
 		}
 
 		/* Add newly inserted candidates to our queue. */
