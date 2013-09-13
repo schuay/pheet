@@ -100,7 +100,7 @@ protected:
 	                  const int edges,
 	                  const int seed) {
 		g = Generator::directed("g", nodes, edges, true,
-		                        Generator::default_weights(), seed);
+		                        Generator::default_weight_limits(), seed);
 		ASSERT_NE(g, nullptr);
 
 		start = g->nodes().front();

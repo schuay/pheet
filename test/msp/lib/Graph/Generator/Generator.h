@@ -42,7 +42,9 @@ public:
 	  */
 	static Graph* basic(unsigned short const seed);
 
-	static Wl default_weights();
+	static Wl default_weight_limits();
+
+	static Wl generate_uniform_Wl(int w);
 
 private:
 	/** generate a weight vector w with d = weight_limits.size elements and

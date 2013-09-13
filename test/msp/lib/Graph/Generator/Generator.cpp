@@ -102,11 +102,21 @@ generate_weight_vector(std::default_random_engine& random, Wl const& weight_limi
 
 Generator::Wl
 Generator::
-default_weights()
+default_weight_limits()
 {
 	return { std::pair<int, int>(0, W),
 	         std::pair<int, int>(0, W),
 	         std::pair<int, int>(0, W)
 	       };
 
+}
+
+Generator::Wl
+Generator::
+generate_uniform_Wl(int w)
+{
+	return { std::pair<int, int>(0, w),
+	         std::pair<int, int>(0, w),
+	         std::pair<int, int>(0, w)
+	       };
 }
