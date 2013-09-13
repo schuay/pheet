@@ -4,8 +4,8 @@
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  */
 
-#ifndef MSPTEST_H_
-#define MSPTEST_H_
+#ifndef MSPBENCHMARK_H_
+#define MSPBENCHMARK_H_
 
 #include "../Test.h"
 #include "lib/Graph/Generator/Generator.h"
@@ -16,18 +16,18 @@ namespace pheet
 {
 
 template <class Pheet, template <class P> class Algorithm>
-class MspTest : Test
+class MspBenchmark : Test
 {
 public:
 	/**
-	 * MspTest executes a single run of the multi-criteria shortest path algorithm
+	 * MspBenchmark executes a single run of the multi-criteria shortest path algorithm
 	 * with the given parameters.
 	 */
-	MspTest(const procs_t cpus,
-	        const graph::Graph* g,
-	        const graph::Node* src,
-	        const unsigned int seed);
-	virtual ~MspTest();
+	MspBenchmark(const procs_t cpus,
+	             const graph::Graph* g,
+	             const graph::Node* src,
+	             const unsigned int seed);
+	virtual ~MspBenchmark();
 
 	void run_test();
 
@@ -41,24 +41,28 @@ private:
 };
 
 template <class Pheet, template <class P> class Algorithm>
-char const* const MspTest<Pheet, Algorithm>::types[] = {"random"};
+char const* const MspBenchmark<Pheet, Algorithm>::types[] = {"random"};
 
 template <class Pheet, template <class P> class Algorithm>
-MspTest<Pheet, Algorithm>::MspTest(const procs_t cpus,
-                                   const graph::Graph* g,
-                                   const graph::Node* src,
-                                   const unsigned int seed)
+MspBenchmark<Pheet, Algorithm>::
+MspBenchmark(const procs_t cpus,
+             const graph::Graph* g,
+             const graph::Node* src,
+             const unsigned int seed)
 	: cpus(cpus), g(g), src(src), seed(seed)
 {
 }
 
 template <class Pheet, template <class P> class Algorithm>
-MspTest<Pheet, Algorithm>::~MspTest()
+MspBenchmark<Pheet, Algorithm>::
+~MspBenchmark()
 {
 }
 
 template <class Pheet, template <class P> class Algorithm>
-void MspTest<Pheet, Algorithm>::run_test()
+void
+MspBenchmark<Pheet, Algorithm>::
+run_test()
 {
 	typename Pheet::Environment::PerformanceCounters pc;
 	typename Algorithm<Pheet>::PerformanceCounters ppc;
@@ -114,4 +118,4 @@ void MspTest<Pheet, Algorithm>::run_test()
 
 } /* namespace pheet */
 
-#endif /* MSPTEST_H_ */
+#endif /* MSPBENCHMARK_H_ */
