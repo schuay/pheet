@@ -4,8 +4,8 @@
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  */
 
-#ifndef MSPTESTS_H_
-#define MSPTESTS_H_
+#ifndef MSPBENCHMARKS_H_
+#define MSPBENCHMARKS_H_
 
 #include "lib/Graph/Graph.h"
 
@@ -20,12 +20,12 @@ namespace pheet
  * to all nodes reachable from s.
  */
 
-class MspTests
+class MspBenchmarks
 {
 public:
-	void run_test();
+	void run_benchmarks();
 };
 
 } /* namespace pheet */
 
-#endif /* MSPTESTS_H_ */
+#endif /* MSPBENCHMARKS_H_ */
