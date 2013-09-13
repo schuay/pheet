@@ -48,15 +48,12 @@ tree_delete(tree_t* t)
 	delete t;
 }
 
-struct Recycler
-{
-	Recycler(tree_t* root)
-	{
+struct Recycler {
+	Recycler(tree_t* root) {
 		nodes.push(root);
 	}
 
-	~Recycler()
-	{
+	~Recycler() {
 		while (!nodes.empty()) {
 			tree_t* t = nodes.front();
 			nodes.pop();
@@ -65,8 +62,7 @@ struct Recycler
 	}
 
 	tree_t*
-	get()
-	{
+	get() {
 		if (nodes.empty()) {
 			return new tree_t();
 		}
@@ -98,7 +94,7 @@ bool
 KDTree::
 dominated(tree_t const* t,
           const size_t i,
-		  PathPtr const& path) const
+          PathPtr const& path) const
 {
 	if (!t) {
 		return false;
@@ -130,8 +126,8 @@ dominated(PathPtr const& path) const
 void
 KDTree::
 prune(tree_t* t,
-	  const size_t i,
-	  PathPtr const& path,
+      const size_t i,
+      PathPtr const& path,
       Paths& pruned)
 {
 	if (!t) {
@@ -168,16 +164,18 @@ tree_height(tree_t const* t)
 
 inline static tree_t*
 rebuild(Paths& paths,
-		const size_t i,
-		const int start,
-		const int end,
-		Recycler& recycler)
+        const size_t i,
+        const int start,
+        const int end,
+        Recycler& recycler)
 {
 	if (start >= end) {
 		return nullptr;
 	}
 
-	auto cmp = [i](PathPtr const& l, PathPtr const& r) { return (l->weight()[i] < r->weight()[i]); };
+	auto cmp = [i](PathPtr const & l, PathPtr const & r) {
+		return (l->weight()[i] < r->weight()[i]);
+	};
 	std::sort(paths.begin() + start, paths.begin() + end, cmp);
 
 	const int mid = start + (end - start) / 2;
@@ -207,8 +205,8 @@ insert(PathPtr const& path)
 void
 KDTree::
 insert(tree_t** t,
-	   const size_t i,
-	   PathPtr const& path)
+       const size_t i,
+       PathPtr const& path)
 {
 	weight_vector_t const& ws = path->weight();
 	const size_t degree = path->degree();
@@ -220,7 +218,7 @@ insert(tree_t** t,
 
 	tree_t* tt = *t;
 	insert((ws[i] <= tt->p->weight()[i]) ? &tt->l : &tt->r,
-		   (i + 1) % degree, path);
+	       (i + 1) % degree, path);
 
 	tt->height++;
 	imba = std::max(imba, std::abs(tree_height(tt->l) - tree_height(tt->r)));
