@@ -10,6 +10,7 @@
 #ifndef __GENERATOR_H
 #define __GENERATOR_H
 
+#include <random>
 #include "test/msp/lib/Graph/Edge.h"
 #include "test/msp/lib/Graph/Graph.h"
 #include "test/msp/lib/Graph/Node.h"
@@ -46,7 +47,8 @@ public:
 private:
 	/** generate a weight vector w with d = weight_limits.size elements and
 	    forall i: weight_limits[i].first <= w[i] <= weight_limits[i].second */
-	static std::vector<int> generate_weight_vector(Wl const& weight_limits);
+	static std::vector<int> generate_weight_vector(std::default_random_engine& random,
+	        Wl const& weight_limits);
 };
 
 }
