@@ -15,6 +15,7 @@
 
 #include <vector>
 #include <math.h>
+#include <iomanip>
 
 //#include <pheet/ds/PriorityQueue/Merge/MergeHeap.h>
 
@@ -71,6 +72,36 @@ public:
 #ifdef SSSP_SIM_VERIFY_THEORY
 		std::vector<double> Wt_hist;
 		Wt_hist.push_back(0);
+
+		size_t const pascal_max = 2048;
+		std::vector<double*> pascal;
+		{
+			// First row of pascal
+			double* data = new double[1];
+			data[0] = 1.0;
+			pascal.push_back(data);
+		}
+		for(size_t i = 1; i < pascal_max; ++i) {
+			double* data = new double[i+1];
+			for(size_t j = 0; j <= i; ++j) {
+				double first, second;
+				if(j == 0) {
+					first = 0.0;
+				}
+				else {
+					first = pascal[i-1][j-1];
+				}
+				if(j == i) {
+					second = 0.0;
+				}
+				else {
+					second = pascal[i-1][j];
+				}
+				data[j] = first + second;
+			}
+
+			pascal.push_back(data);
+		}
 #endif
 
 		graph[0].distance = 0;
@@ -333,30 +364,112 @@ public:
 				size_t tj = processed_ref[tjr - 1];
 				double qt = 1.0;
 				for(size_t ti = 1; ti < tj; ++ti) {
+					double h = ((double)(base_d[tj-1] - base_d[ti-1]))/sssp_sim_theory_div;
+					double ph = sssp_sim_theory_p * h;
+					// Use approximation (due to floating point limitations)?
+					bool approx = false;
 					for(size_t L = 1; L < size; ++L) {
 						pheet_assert(base_d[tj-1] >= base_d[ti-1]);
-						double iptL = 0;
-						double h = ((double)(base_d[tj-1] - base_d[ti-1]))/sssp_sim_theory_div;
-						double ph = sssp_sim_theory_p * h;
-						double tmp = ph;
-						for(size_t L_fac = L; L_fac > 1; --L_fac) {
-							tmp *= ph/ ((double) L_fac);
+						if(!approx) {
+							double iptL = 0;
+							double tmp = ph;
+							for(size_t L_fac = L; L_fac > 1; --L_fac) {
+								tmp *= ph/ ((double) L_fac);
+							}
+							if(tmp == 0.0) {
+								break;
+							}
+
+							// Manually exponentiate (1 - tmp) to omit rounding errors (first iteration should hopefully be enough)
+							if(L > 1) {
+								// Precalculate (1-tmp)^x for all x that are powers of 2 until pascal_max
+								size_t ptLexp_offset = 2;
+								size_t exponent = size - 2;
+								while(exponent < pascal_max && ptLexp_offset < L) {
+									exponent *= (size - ptLexp_offset - 1);
+									++ptLexp_offset;
+								}
+								std::vector<double> calculated;
+								calculated.push_back(1-tmp);
+								bool pointless = false;
+								for(size_t ei = 1; ((size_t)1 << ei) <= pascal_max && !pointless; ++ei) {
+									double val = 0.0;
+									double pow_tmp = 1.0;
+									size_t cur_exp = 1 << ei;
+									for(size_t ej = 0; ej < cur_exp; ++ej) {
+										val += pascal[cur_exp - 1][ej] * pow_tmp;
+										pow_tmp *= -tmp;
+										if(pow_tmp == 0.0) {
+											pointless = true;
+											break;
+										}
+									}
+									// Sanity check for rounding errors
+									if(val > 1.0) {
+										val = 1.0;
+									}
+									calculated.push_back(val);
+								}
+								// Prepare more exponents until we reach what we need
+								while(exponent > ((size_t)1 << calculated.size())) {
+									calculated.push_back(calculated.back()*calculated.back());
+								}
+
+								// Now greedily exponentiate with the calculated values
+								size_t greed = calculated.size() - 1;
+								iptL = 1.0;
+								while(exponent > 0) {
+									size_t greed_exp = 1 << greed;
+									while(greed_exp <= exponent) {
+										iptL *= calculated[greed];
+										exponent -= greed_exp;
+									}
+									--greed;
+								}
+
+
+						//		iptL = 1 - tmp;
+						/*		if(iptL == 1.0) {
+									std::cout << "aha";
+								}*/
+								// Calculate more exponents
+								for(size_t ptLexp = ptLexp_offset; ptLexp < L; ++ptLexp) {
+									iptL = pow(iptL, (double)(size - ptLexp - 1));
+								}
+						//		std::cout << "tj " << tj << " ti " << ti << " L " << L << " h " << h << " tmp " << tmp << " iptL " << iptL << std::endl;
+								if(iptL == 1.0) {
+									// Switch to approximation
+									approx = true;
+								}
+						/*		if(iptL == 1.0) {
+									std::cout << "aha2";
+								}*/
+								qt *= iptL;
+							}
+							else {
+								iptL = 1 - tmp;
+								qt *= iptL;
+						//		std::cout << "tj " << tj << " ti " << ti << " L " << L << " h " << h << " tmp " << tmp << " iptL " << iptL << std::endl;
+							}
 						}
-						if(tmp == 0.0) {
-							break;
+
+						// Due to floating point problems approximate the rest (approximation is good for large L!)
+						if(approx)
+						{
+							double apv = 1.0 / (size - 1);
+							for(size_t binomial = 0; binomial < L; ++binomial) {
+								apv *= (size - 1 - binomial);
+								apv *= ph;
+								apv /= (L - binomial);
+							}
+						//	std::cout << std::setprecision(48) << -apv;
+							apv = exp(-apv);
+						//	std::cout << "tj " << tj << " ti " << ti << " L " << L << " h " << h << " approx " << std::setprecision(48) << apv << std::endl;
+							if(apv == 1.0) {
+								break;
+							}
+							qt *= apv;
 						}
-						iptL = 1 - tmp;
-				/*		if(iptL == 1.0) {
-							std::cout << "aha";
-						}*/
-						for(size_t ptLexp = 1; ptLexp < L; ++ptLexp) {
-							iptL = pow(iptL, (double)(size - ptLexp - 1));
-						}
-				/*		if(iptL == 1.0) {
-							std::cout << "aha2";
-						}*/
-					//	std::cout << "tj " << tj << " ti " << ti << " L " << L << " h " << h << " tmp " << tmp << " iptL " << iptL << std::endl;
-						qt *= iptL;
 					}
 				}
 //				std::cout << "qt " << qt << std::endl;
@@ -386,6 +499,12 @@ public:
 			// Sort nodes by distance value for next iteration
 			std::sort(v.begin() + offset, v.end(), less);
 		}
+
+#ifdef SSSP_SIM_VERIFY_THEORY
+		for(size_t i = 0; i < pascal_max; ++i) {
+			delete[] pascal[i];
+		}
+#endif
 
 		for(size_t i = 0; i <= phase; ++i) {
 			size_t counter = 0;
