@@ -21,12 +21,14 @@ struct tree_t {
 	const PathPtr p;
 	tree_t* l;
 	tree_t* r;
+	size_t height;
 	bool active;
 };
 
 KDTree::
 KDTree() :
 	t(nullptr),
+	imba(0),
 	dominates()
 {
 }
@@ -116,30 +118,40 @@ prune(const PathPtr path,
 	prune(t, 0, path, pruned);
 }
 
+static int
+tree_height(tree_t const* t)
+{
+	return (t == nullptr) ? -1 : t->height;
+}
+
 void
 KDTree::
 insert(const PathPtr path)
 {
 	assert(path);
+	insert(&t, 0, path);
+}
 
+void
+KDTree::
+insert(tree_t** t,
+	   const size_t i,
+	   const PathPtr path)
+{
 	weight_vector_t const& ws = path->weight();
-
 	const size_t degree = path->degree();
 
-	tree_t** parentptr = &t;
-	tree_t* child = t;
-
-	for (size_t i = 0; child; i = (i + 1) % degree) {
-		if (ws[i] <= child->p->weight()[i]) {
-			parentptr = &child->l;
-			child = child->l;
-		} else {
-			parentptr = &child->r;
-			child = child->r;
-		}
+	if (*t == nullptr) {
+		*t = new tree_t { path, nullptr, nullptr, 0, true };
+		return;
 	}
 
-	*parentptr = new tree_t { path, nullptr, nullptr, true };
+	tree_t* tt = *t;
+	insert((ws[i] <= tt->p->weight()[i]) ? &tt->l : &tt->r,
+		   (i + 1) % degree, path);
+
+	tt->height++;
+	imba = std::max(imba, std::abs(tree_height(tt->l) - tree_height(tt->r)));
 }
 
 void
