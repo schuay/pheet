@@ -7,6 +7,8 @@
 #ifndef MSPTESTS_H_
 #define MSPTESTS_H_
 
+#include "lib/Graph/Graph.h"
+
 namespace pheet
 {
 

@@ -24,9 +24,8 @@ public:
 	 * with the given parameters.
 	 */
 	MspTest(const procs_t cpus,
-	        const size_t nodes,
-	        const size_t edges,
-	        const graph::Generator::Wl& weight_limits,
+	        const graph::Graph* g,
+	        const graph::Node* src,
 	        const unsigned int seed);
 	virtual ~MspTest();
 
@@ -35,8 +34,8 @@ public:
 private:
 	procs_t cpus;
 	graph::Graph const* g;
-	unsigned int seed;
 	graph::Node const* src;
+	unsigned int seed;
 
 	static char const* const types[];
 };
@@ -46,20 +45,16 @@ char const* const MspTest<Pheet, Algorithm>::types[] = {"random"};
 
 template <class Pheet, template <class P> class Algorithm>
 MspTest<Pheet, Algorithm>::MspTest(const procs_t cpus,
-                                   const size_t nodes,
-                                   const size_t edges,
-                                   const graph::Generator::Wl& weight_limits,
+                                   const graph::Graph* g,
+                                   const graph::Node* src,
                                    const unsigned int seed)
-	: cpus(cpus), seed(seed)
+	: cpus(cpus), g(g), src(src), seed(seed)
 {
-	g = graph::Generator::directed("test", nodes, edges, true, weight_limits, seed);
-	src = g->nodes().front();
 }
 
 template <class Pheet, template <class P> class Algorithm>
 MspTest<Pheet, Algorithm>::~MspTest()
 {
-	delete g;
 }
 
 template <class Pheet, template <class P> class Algorithm>
