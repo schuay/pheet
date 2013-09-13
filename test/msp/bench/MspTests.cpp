@@ -19,14 +19,13 @@ const size_t EDGES      = 50000;
 const unsigned int SEED = 42;
 
 template <class Pheet, template <class P> class Partitioner>
-void run_algorithm()
+void run_algorithm(graph::Graph* g, graph::Node* src)
 {
 	typename Pheet::MachineModel mm;
 	const pheet::procs_t max_cpus =
 	    std::min(mm.get_num_leaves(), Pheet::Environment::max_cpus);
 
-	pheet::MspTest<Pheet, Partitioner> gbt(max_cpus, NODES, EDGES,
-	                                       graph::Generator::default_weights(), SEED);
+	pheet::MspTest<Pheet, Partitioner> gbt(1, g, src, SEED);
 	gbt.run_test();
 }
 
@@ -37,10 +36,14 @@ namespace pheet
 
 void MspTests::run_test()
 {
-	::run_algorithm<Pheet::WithScheduler<SynchroneousScheduler>, SequentialMsp>();
+	graph::Graph* g = graph::Generator::directed("test", NODES, EDGES, true,
+	                  graph::Generator::default_weights(), SEED);
+	graph::Node* src = g->nodes().front();
+
+	::run_algorithm<Pheet::WithScheduler<SynchroneousScheduler>, SequentialMsp>(g, src);
 
 	::run_algorithm < Pheet::WithScheduler<BStrategyScheduler>
-	::WithTaskStorage<DistKStrategyTaskStorage>, StrategyMspTask > ();
+	::WithTaskStorage<DistKStrategyTaskStorage>, StrategyMspTask > (g, src);
 }
 
 } /* namespace pheet */
