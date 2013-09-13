@@ -17,11 +17,12 @@ using namespace graph;
 
 Graph*
 Generator::
-directed(std::string const& name,
-         size_t const& n,
-         size_t const& m,
-         bool const& allow_parallel_edges,
-         std::vector<std::pair<int, int>> const& weight_limits,
+directed(std::string const name,
+         size_t const n,
+         size_t const m,
+         bool const allow_parallel_edges,
+         size_t const degree,
+         size_t const weight_limit,
          unsigned short const seed)
 {
 	assert(n > 0);
@@ -36,12 +37,9 @@ directed(std::string const& name,
 		assert(m <= n * (n - 1));
 	}
 
-	for (auto & it : weight_limits) {
-		assert(it.first <= it.second);
-	}
 
 	std::default_random_engine random(seed);
-	Graph* g = new Graph(name, weight_limits.size());
+	Graph* g = new Graph(name, degree);
 	std::vector<Node*> tree;
 
 	/*  Generate a random permutation in the array tree. */
@@ -62,7 +60,7 @@ directed(std::string const& name,
 
 	for (head = 1; head < n; head++) {
 		tail = random() % head;
-		g->add_edge(tree[tail], tree[head], generate_weight_vector(random, weight_limits));
+		g->add_edge(tree[tail], tree[head], generate_weight_vector(random, degree, weight_limit));
 	}
 
 	/* Add additional random edges until achieving desired number */
@@ -72,7 +70,7 @@ directed(std::string const& name,
 			head = random() % n;
 		} while (head == tail || (!allow_parallel_edges && g->contains_edge(tree[tail], tree[head])));
 
-		g->add_edge(tree[tail], tree[head], generate_weight_vector(random, weight_limits));
+		g->add_edge(tree[tail], tree[head], generate_weight_vector(random, degree, weight_limit));
 	}
 	return g;
 }
@@ -81,42 +79,19 @@ Graph*
 Generator::
 basic(unsigned short const seed)
 {
-	Wl wl;
-	wl.push_back(std::pair<int, int>(0, 5));
-	wl.push_back(std::pair<int, int>(3, 10));
-	wl.push_back(std::pair<int, int>(1, 7));
-	return Generator::directed("g", N, M, true, wl, seed);
+	return Generator::directed("g", N, M, true, 3, 100, seed);
 }
 
 std::vector<int>
 Generator::
-generate_weight_vector(std::default_random_engine& random, Wl const& weight_limits)
+generate_weight_vector(std::default_random_engine& random,
+                       int const degree,
+                       int const weight_limit)
 {
 	std::vector<int> weights;
-	for (auto & it : weight_limits) {
-		int w = it.first + random() % (it.second - it.first + 1);
+	for (int i = 0; i < degree; i++) {
+		int w = random() % weight_limit;
 		weights.push_back(w);
 	}
 	return weights;
-}
-
-Generator::Wl
-Generator::
-default_weight_limits()
-{
-	return { std::pair<int, int>(0, W),
-	         std::pair<int, int>(0, W),
-	         std::pair<int, int>(0, W)
-	       };
-
-}
-
-Generator::Wl
-Generator::
-generate_uniform_Wl(int w)
-{
-	return { std::pair<int, int>(0, w),
-	         std::pair<int, int>(0, w),
-	         std::pair<int, int>(0, w)
-	       };
 }

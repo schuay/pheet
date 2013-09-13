@@ -20,37 +20,34 @@ namespace graph
 
 class Generator
 {
-public:
-	typedef std::vector<std::pair<int, int>> Wl;
 
 public:
 	/** generate a random connected directed graph */
-	static Graph* directed(std::string const& name,
-	                       size_t const& n,                    /**< Number of nodes (n > 0) */
-	                       size_t const& m,                    /**< Number of edges (n-1 <= m).
+	static Graph* directed(std::string const name,
+	                       size_t const n,                    /**< Number of nodes (n > 0) */
+	                       size_t const m,                    /**< Number of edges (n-1 <= m).
                                                                     If !allow_parallel_edges: m <= n*(n-1)  */
-	                       bool const& allow_parallel_edges,   /**< If true, graph may contain parallel edges */
-	                       Wl const& weight_limits,            /**< Limits [min, max] for the weight vector of an edge.
-                                                                    length of vector = d = dimension of graph */
-	                       unsigned short const seed);         /**< seed value for rand() */
+	                       bool const allow_parallel_edges,   /**< If true, graph may contain parallel edges */
+	                       size_t const degree,
+	                       size_t const
+	                       weight_limit,            /**< Upper limit for the elements of a weight vector of an edge.
+																	For all elements e of a weight vector hold: 0 <=  e <= weight_limit   */
+	                       unsigned short const seed);         /**< seed value for random number generator */
 	/** generate a random connected directed graph with
 	    N = 10
 	    M = 15
 	    name = "g"
 	    parallel edges allowed
-	    weight vector limits: [(0,1),(3,10),(-2,2)]
 	  */
 	static Graph* basic(unsigned short const seed);
 
-	static Wl default_weight_limits();
-
-	static Wl generate_uniform_Wl(int w);
-
 private:
 	/** generate a weight vector w with d = weight_limits.size elements and
-	    forall i: weight_limits[i].first <= w[i] <= weight_limits[i].second */
-	static std::vector<int> generate_weight_vector(std::default_random_engine& random,
-	        Wl const& weight_limits);
+		forall i: 0 <= w[i] <= weight_limit */
+	static std::vector<int>
+	generate_weight_vector(std::default_random_engine& random,
+	                       int const degree,
+	                       int const weight_limit);
 };
 
 }
