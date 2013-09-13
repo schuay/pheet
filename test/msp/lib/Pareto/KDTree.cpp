@@ -98,7 +98,7 @@ bool
 KDTree::
 dominated(tree_t const* t,
           const size_t i,
-          const PathPtr path) const
+		  PathPtr const& path) const
 {
 	if (!t) {
 		return false;
@@ -122,7 +122,7 @@ dominated(tree_t const* t,
 
 bool
 KDTree::
-dominated(const PathPtr path) const
+dominated(PathPtr const& path) const
 {
 	return dominated(t, 0, path);
 }
@@ -130,8 +130,8 @@ dominated(const PathPtr path) const
 void
 KDTree::
 prune(tree_t* t,
-      const size_t i,
-      const PathPtr path,
+	  const size_t i,
+	  PathPtr const& path,
       Paths& pruned)
 {
 	if (!t) {
@@ -154,7 +154,7 @@ prune(tree_t* t,
 
 void
 KDTree::
-prune(const PathPtr path,
+prune(PathPtr const& path,
       Paths& pruned)
 {
 	prune(t, 0, path, pruned);
@@ -192,7 +192,7 @@ rebuild(Paths& paths,
 
 void
 KDTree::
-insert(const PathPtr path)
+insert(PathPtr const& path)
 {
 	assert(path);
 	insert(&t, 0, path);
@@ -208,7 +208,7 @@ void
 KDTree::
 insert(tree_t** t,
 	   const size_t i,
-	   const PathPtr path)
+	   PathPtr const& path)
 {
 	weight_vector_t const& ws = path->weight();
 	const size_t degree = path->degree();

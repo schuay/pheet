@@ -27,37 +27,37 @@ public:
 	 * Best case: O(1). There are no potential dominator candidates, or
 	 * the first inspected node dominates path.
 	 */
-	bool dominated(const sp::PathPtr path) const;
+	bool dominated(sp::PathPtr const& path) const;
 
 	/**
 	 * Worst case: O(n), all nodes need to be pruned or all nodes are
 	 * potential pruning candidates.
 	 * Best case: O(1). No potential pruning candidates.
 	 */
-	void prune(const sp::PathPtr path,
+	void prune(sp::PathPtr const& path,
 	           sp::Paths& pruned);
 
 	/**
 	 * O(log n) in a fully balanced tree. For now, we won't do balancing
 	 * though, so again the worst case is O(n).
 	 */
-	void insert(const sp::PathPtr path);
+	void insert(sp::PathPtr const& path);
 
 	sp::Paths items() const;
 
 private:
 	bool dominated(tree_t const* t,
 	               const size_t i,
-	               const sp::PathPtr path) const;
+				   sp::PathPtr const& path) const;
 
 	void prune(tree_t* t,
 	           const size_t i,
-	           const sp::PathPtr path,
+			   sp::PathPtr const& path,
 	           sp::Paths& pruned);
 
 	void insert(tree_t** t,
 				const size_t i,
-				const sp::PathPtr path);
+				sp::PathPtr const& path);
 
 	void items(tree_t const* t,
 			   sp::Paths& paths) const;
