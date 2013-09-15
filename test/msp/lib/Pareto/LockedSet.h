@@ -9,15 +9,16 @@
 
 #include <mutex>
 
-#include "NaiveSet.h"
+#include "Set.h"
 
 namespace pareto
 {
 
 /**
- * Wrapper for NaiveSet to provide sychronized access for multiple processors
+ * Wrapper for a basic set to provide sychronized access for multiple processors
  */
-class LockedSet : public NaiveSet
+template<class T>
+class LockedSet : public Set
 {
 public:
 	void insert(sp::PathPtr& path,
@@ -27,8 +28,8 @@ public:
 	sp::Paths paths() const override;
 
 private:
+	T m_set;
 	std::mutex m_mutex;
-
 };
 
 }
