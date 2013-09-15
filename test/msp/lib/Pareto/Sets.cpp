@@ -5,6 +5,7 @@
  */
 
 #include "LockedSet.h"
+#include "NaiveSet.h"
 #include "Sets.h"
 
 namespace pareto
@@ -14,7 +15,7 @@ Sets::
 Sets(graph::Graph const* g)
 {
 	for (auto node : g->nodes()) {
-		Set* set = new LockedSet();
+		Set* set = new LockedSet<NaiveSet>();
 		map.insert(std::pair<graph::Node const*, Set*>(node, set));
 	}
 }

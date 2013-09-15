@@ -6,25 +6,31 @@
 
 #include "LockedSet.h"
 
+#include "NaiveSet.h"
+
 namespace pareto
 {
 
+template<class T>
 void
-LockedSet::
+LockedSet<T>::
 insert(sp::PathPtr& path,
        sp::Paths& added,
        sp::Paths& removed)
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
-	NaiveSet::insert(path, added, removed);
+	m_set.insert(path, added, removed);
 
 }
 
+template<class T>
 sp::Paths
-LockedSet::
+LockedSet<T>::
 paths() const
 {
-	return NaiveSet::paths();
+	return m_set.paths();
 }
+
+template class LockedSet<NaiveSet>;
 
 }
