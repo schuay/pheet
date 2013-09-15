@@ -6,6 +6,7 @@
 
 #include "LockedSet.h"
 
+#include "KDSet.h"
 #include "NaiveSet.h"
 
 namespace pareto
@@ -31,6 +32,7 @@ paths() const
 	return m_set.paths();
 }
 
+template class LockedSet<KDSet>;
 template class LockedSet<NaiveSet>;
 
 }

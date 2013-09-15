@@ -4,8 +4,8 @@
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  */
 
+#include "KDSet.h"
 #include "LockedSet.h"
-#include "NaiveSet.h"
 #include "Sets.h"
 
 namespace pareto
@@ -15,7 +15,7 @@ Sets::
 Sets(graph::Graph const* g)
 {
 	for (auto node : g->nodes()) {
-		Set* set = new LockedSet<NaiveSet>();
+		Set* set = new LockedSet<KDSet>();
 		map.insert(std::pair<graph::Node const*, Set*>(node, set));
 	}
 }
