@@ -65,6 +65,7 @@ private:
 private:
 	tree_t* t;
 	int imba;
+	size_t size;
 
 	const less dominates;
 };

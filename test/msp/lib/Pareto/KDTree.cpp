@@ -31,6 +31,7 @@ KDTree::
 KDTree() :
 	t(nullptr),
 	imba(0),
+	size(0),
 	dominates()
 {
 }
@@ -137,6 +138,7 @@ prune(tree_t* t,
 	if (t->active && dominates(path.get(), t->p.get())) {
 		t->active = false;
 		pruned.push_back(t->p);
+		size--;
 	}
 
 	const size_t j = (i + 1) % path->degree();
@@ -213,6 +215,7 @@ insert(tree_t** t,
 
 	if (*t == nullptr) {
 		*t = new tree_t { path, nullptr, nullptr, 0, true };
+		size++;
 		return;
 	}
 
