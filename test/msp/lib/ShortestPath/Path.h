@@ -51,7 +51,7 @@ public:
 	void set_dominated();
 
 private:
-	Path(const Path& that);
+	Path();
 
 private:
 	graph::Node const* m_tail;
@@ -59,7 +59,7 @@ private:
 	Path const* m_pred;
 	std::vector<graph::weight_t> m_weight;
 	graph::weight_t m_weight_sum;
-	const size_t m_degree;
+	size_t m_degree;
 	std::atomic_bool m_dominated;
 };
 
