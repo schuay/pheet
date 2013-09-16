@@ -12,10 +12,16 @@ namespace pareto
 {
 
 Sets::
-Sets(graph::Graph const* g)
+Sets(graph::Graph const* g, graph::Node const* src)
 {
 	for (auto node : g->nodes()) {
-		Set* set = new LockedSet<KDSet>();
+		Set* set;
+		if (node->id() == src->id()) {
+			sp::PathPtr p(new sp::Path(src));
+			set = new LockedSet<KDSet>(p);
+		} else {
+			set = new LockedSet<KDSet>();
+		}
 		map.insert(std::pair<graph::Node const*, Set*>(node, set));
 	}
 }
