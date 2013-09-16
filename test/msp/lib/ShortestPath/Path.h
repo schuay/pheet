@@ -22,8 +22,8 @@ typedef std::vector<PathPtr> Paths;
 class Path
 {
 public:
+	Path();
 	Path(graph::Node const* init);
-
 
 	/** Returns a new path object which represents the path generated
 	 *  by appending the given edge to the current path. */
@@ -51,15 +51,12 @@ public:
 	void set_dominated();
 
 private:
-	Path(const Path& that);
-
-private:
 	graph::Node const* m_tail;
 	graph::Node const* m_head;
 	Path const* m_pred;
 	std::vector<graph::weight_t> m_weight;
 	graph::weight_t m_weight_sum;
-	const size_t m_degree;
+	size_t m_degree;
 	std::atomic_bool m_dominated;
 };
 

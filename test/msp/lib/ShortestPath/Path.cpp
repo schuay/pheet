@@ -28,13 +28,13 @@ Path(graph::Node const* init)
 }
 
 Path::
-Path(const Path& that)
-	: m_tail(that.m_tail),
-	  m_head(that.m_head),
-	  m_pred(that.m_pred),
-	  m_weight(that.m_weight),
-	  m_weight_sum(that.m_weight_sum),
-	  m_degree(that.m_degree),
+Path()
+	: m_tail(nullptr),
+	  m_head(nullptr),
+	  m_pred(nullptr),
+	  m_weight(),
+	  m_weight_sum(0),
+	  m_degree(0),
 	  m_dominated(false)
 {
 }
@@ -46,10 +46,14 @@ step(Edge const* edge) const
 	graph::weight_vector_t const& ws = edge->weights();
 	assert(ws.size() == m_weight.size());
 
-	Path* p = new Path(*this);
+	Path* p = new Path();
 
+	p->m_tail = m_tail;
 	p->m_head = edge->head();
 	p->m_pred = this;
+	p->m_weight = m_weight;
+	p->m_weight_sum = m_weight_sum;
+	p->m_degree = m_degree;
 
 	for (size_t i = 0; i < ws.size(); i++) {
 		p->m_weight[i] += ws[i];
