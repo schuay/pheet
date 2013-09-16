@@ -21,6 +21,8 @@ typedef std::vector<PathPtr> Paths;
 
 class Path
 {
+	friend class PathMM;
+
 public:
 	Path(graph::Node const* init);
 
