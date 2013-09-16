@@ -50,7 +50,7 @@ public:
 	ShortestPaths*
 	operator()() {
 		MspPerformanceCounters<SyncPheet> pc;
-		Sets q(graph);
+		Sets q(graph, path->head());
 		SequentialMsp<SyncPheet> msp(graph, path, &q, pc);
 		msp();
 		return q.shortest_paths();
@@ -75,7 +75,7 @@ public:
 	ShortestPaths*
 	operator()() {
 		MspPerformanceCounters<DistKPheet> pc;
-		Sets q(graph);
+		Sets q(graph, path->head());
 		{
 			typename DistKPheet::Environment env;
 			StrategyMspTask<DistKPheet> msp(graph, path, &q, pc);

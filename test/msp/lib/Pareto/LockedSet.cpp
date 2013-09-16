@@ -13,6 +13,21 @@ namespace pareto
 {
 
 template<class T>
+LockedSet<T>::
+LockedSet()
+{
+	m_set = new T();
+}
+
+template<class T>
+LockedSet<T>::
+LockedSet(sp::PathPtr& init)
+{
+	m_set = new T(init);
+}
+
+
+template<class T>
 void
 LockedSet<T>::
 insert(sp::PathPtr& path,
@@ -20,7 +35,7 @@ insert(sp::PathPtr& path,
        sp::Paths& removed)
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
-	m_set.insert(path, added, removed);
+	m_set->insert(path, added, removed);
 
 }
 
@@ -29,7 +44,14 @@ sp::Paths
 LockedSet<T>::
 paths() const
 {
-	return m_set.paths();
+	return m_set->paths();
+}
+
+template<class T>
+LockedSet<T>::
+~LockedSet()
+{
+	delete m_set;
 }
 
 template class LockedSet<KDSet>;

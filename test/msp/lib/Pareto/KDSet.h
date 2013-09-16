@@ -16,6 +16,11 @@ namespace pareto
 class KDSet : public Set
 {
 public:
+
+	KDSet();
+
+	KDSet(sp::PathPtr& init);
+
 	void insert(sp::PathPtr& path,
 	            sp::Paths& added,
 	            sp::Paths& removed) override;
