@@ -250,6 +250,7 @@ KDTree::
 items() const
 {
 	Paths ps;
+	ps.reserve(size);
 	items(t, ps);
 	return ps;
 }
