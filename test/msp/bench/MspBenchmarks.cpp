@@ -28,7 +28,7 @@ run_algorithm(graph::Graph* g, graph::Node* src)
 	const pheet::procs_t max_cpus =
 	    std::min(mm.get_num_leaves(), Pheet::Environment::max_cpus);
 
-	pheet::MspBenchmark<Pheet, Partitioner> gbt(1, g, src, SEED);
+	pheet::MspBenchmark<Pheet, Partitioner> gbt(max_cpus, g, src, SEED);
 	gbt.run_test();
 }
 
