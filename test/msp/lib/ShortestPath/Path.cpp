@@ -39,28 +39,25 @@ Path()
 {
 }
 
-Path*
+void
 Path::
-step(Edge const* edge) const
+step(const PathPtr path,
+     Edge const* edge)
 {
 	graph::weight_vector_t const& ws = edge->weights();
-	assert(ws.size() == m_weight.size());
+	assert(ws.size() == path->m_weight.size());
 
-	Path* p = new Path();
-
-	p->m_tail = m_tail;
-	p->m_head = edge->head();
-	p->m_pred = this;
-	p->m_weight = m_weight;
-	p->m_weight_sum = m_weight_sum;
-	p->m_degree = m_degree;
+	m_tail = path->m_tail;
+	m_head = edge->head();
+	m_pred = path;
+	m_weight = path->m_weight;
+	m_weight_sum = path->m_weight_sum;
+	m_degree = path->m_degree;
 
 	for (size_t i = 0; i < ws.size(); i++) {
-		p->m_weight[i] += ws[i];
-		p->m_weight_sum += ws[i];
+		m_weight[i] += ws[i];
+		m_weight_sum += ws[i];
 	}
-
-	return p;
 }
 
 void

@@ -36,7 +36,8 @@ public:
 			areas.push_back(new Path[size]);
 		}
 
-		return areas.back() + current;
+		PathPtr back = areas.back();
+		return back + current++;
 	}
 
 private:

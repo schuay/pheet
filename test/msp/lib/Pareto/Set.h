@@ -31,6 +31,7 @@ public:
 	virtual sp::Paths paths() const = 0;
 
 	virtual ~Set() { }
+
 };
 
 }

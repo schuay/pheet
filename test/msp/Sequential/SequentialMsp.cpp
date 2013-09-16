@@ -8,6 +8,7 @@
 
 #include <memory>
 
+#include "lib/ShortestPath/PathMM.h"
 #include "pheet/pheet.h"
 #include "pheet/sched/Synchroneous/SynchroneousScheduler.h"
 
@@ -32,6 +33,8 @@ void
 SequentialMsp<Pheet>::
 operator()()
 {
+	PathMM<Pheet> mm;
+
 	PathPtr init = path;
 	m_queue.insert(init);
 
@@ -52,7 +55,8 @@ operator()()
 		/* For all outgoing edges <- head, generate candidates. */
 
 		for (auto & e : head->out_edges()) {
-			sp::PathPtr q(p->step(e));
+			PathPtr q = mm.acquire();
+			q->step(p, e);
 			candidates.push_back(q);
 		}
 

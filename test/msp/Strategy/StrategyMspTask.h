@@ -12,6 +12,7 @@
 #include "lib/Graph/Edge.h"
 #include "lib/Graph/Graph.h"
 #include "lib/Pareto/Sets.h"
+#include "lib/ShortestPath/PathMM.h"
 #include "lib/ShortestPath/ShortestPaths.h"
 
 namespace pheet
@@ -95,13 +96,16 @@ operator()()
 
 	pc.num_actual_tasks.incr();
 
+	sp::PathMM<Pheet>& mm = Pheet::template place_singleton<sp::PathMM<Pheet>>();
+
 	/* Generate candidates. */
 	const graph::Node* head = path->head();
 
 	sp::Paths candidates;
 	for (auto & e : head->out_edges()) {
-		sp::PathPtr to(path->step(e));
-		candidates.push_back(to);
+		sp::PathPtr q = mm.acquire();
+		q->step(path, e);
+		candidates.push_back(q);
 	}
 
 	/* Insert into the Pareto set. Mark dominated paths and spawn tasks for

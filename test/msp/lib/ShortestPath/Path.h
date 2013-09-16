@@ -10,7 +10,7 @@
 #include <atomic>
 #include <vector>
 
-#include "test/msp/lib/Graph/Edge.h"
+#include "lib/Graph/Edge.h"
 
 namespace sp
 {
@@ -21,15 +21,13 @@ typedef std::vector<PathPtr> Paths;
 
 class Path
 {
-	friend class PathMM;
-
 public:
+	Path();
 	Path(graph::Node const* init);
 
-
-	/** Returns a new path object which represents the path generated
-	 *  by appending the given edge to the current path. */
-	Path* step(graph::Edge const* edge) const;
+	/** Initializes the current object torepresents the path generated
+	 *  by appending the given edge to the given path. */
+	void step(const PathPtr path, graph::Edge const* edge);
 
 	void print() const;
 	void print_verbose() const;
@@ -51,9 +49,6 @@ public:
 
 	bool dominated() const;
 	void set_dominated();
-
-private:
-	Path();
 
 private:
 	graph::Node const* m_tail;
