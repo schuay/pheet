@@ -71,6 +71,23 @@ print() const
 	printf(")\n");
 }
 
+void
+Path::
+print_verbose() const
+{
+	if (m_pred != nullptr) {
+		m_pred->print_verbose();
+		printf("\t-- (");
+		for (auto const & w : m_weight) {
+			printf("%d ", w);
+		}
+		printf(")");
+		printf("-> %lu\n",  m_head->id());
+	} else {
+		printf("%lu\n",  m_head->id());
+	}
+}
+
 Node const*
 Path::
 tail() const

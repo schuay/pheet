@@ -25,14 +25,17 @@ class Path
 public:
 	Path(graph::Node const* init);
 
+
 	/** Returns a new path object which represents the path generated
 	 *  by appending the given edge to the current path. */
 	Path* step(graph::Edge const* edge) const;
 
 	void print() const;
+	void print_verbose() const;
 
 	graph::Node const* tail() const;
 	graph::Node const* head() const;
+
 	inline graph::weight_vector_t const& weight() const {
 		return m_weight;
 	}
