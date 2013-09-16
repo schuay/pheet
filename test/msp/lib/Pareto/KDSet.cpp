@@ -12,6 +12,18 @@ using namespace sp;
 namespace pareto
 {
 
+KDSet::
+KDSet()
+{
+
+}
+
+KDSet::
+KDSet(sp::PathPtr& init)
+{
+	t.insert(init);
+}
+
 void
 KDSet::
 insert(PathPtr& path,

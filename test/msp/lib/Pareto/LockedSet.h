@@ -21,14 +21,21 @@ template<class T>
 class LockedSet : public Set
 {
 public:
+
+	LockedSet();
+
+	LockedSet(sp::PathPtr& init);
+
 	void insert(sp::PathPtr& path,
 	            sp::Paths& added,
 	            sp::Paths& removed) override;
 
 	sp::Paths paths() const override;
 
+	~LockedSet();
+
 private:
-	T m_set;
+	T* m_set;
 	std::mutex m_mutex;
 };
 

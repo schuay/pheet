@@ -12,6 +12,17 @@ using namespace sp;
 namespace pareto
 {
 
+NaiveSet::
+NaiveSet()
+{
+}
+
+NaiveSet::
+NaiveSet(PathPtr& init)
+{
+	m_set.insert(init);
+}
+
 void
 NaiveSet::
 insert(sp::PathPtr& path,
@@ -34,6 +45,7 @@ insert(sp::PathPtr& path,
 
 	added.push_back(path);
 	m_set.insert(path);
+
 }
 
 sp::Paths

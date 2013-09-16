@@ -17,6 +17,11 @@ namespace pareto
 class NaiveSet : public Set
 {
 public:
+
+	NaiveSet();
+
+	NaiveSet(sp::PathPtr& init);
+
 	void insert(sp::PathPtr& path,
 	            sp::Paths& added,
 	            sp::Paths& removed) override;

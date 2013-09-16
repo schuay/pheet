@@ -15,11 +15,18 @@
 namespace pareto
 {
 
+/**
+ * Maps one pareto set to each node of a graph g
+ */
 class Sets
 {
 public:
 
-	Sets(graph::Graph const* g);
+	/** The pareto set attached to
+	 * the source node src is initialized with the null-vector (this is the
+	 * shortest path from src to src)
+	 */
+	Sets(graph::Graph const* g, graph::Node const* src);
 	virtual ~Sets();
 
 	/**
