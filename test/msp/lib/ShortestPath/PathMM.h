@@ -11,6 +11,17 @@
 namespace sp
 {
 
+/* NOTES:
+ * I'm abandoning this approach once again.
+ * 1. For some reason, using raw pointers instead of shared_ptrs is very slow on Mars.
+ * 2. Large instances cause bad_alloc exceptions when we can't alloc large enough memory areas.
+ * 3. Related to two, since we never reclaim memory, our instance size limit is lowered.
+ *
+ * If we pick this up again:
+ * * Answer above concerns.
+ * * Don't leak the initially created path.
+ */
+
 #define PATHMM_INITIAL_SIZE (128)
 
 template <class Pheet>
