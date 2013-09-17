@@ -97,7 +97,7 @@ public:
 	T pop() {
 		size_t b = bottom.load(std::memory_order_relaxed);
 		size_t t = top.load(std::memory_order_relaxed);
-		pheet_assert(((ptrdiff_t)(b - t)) > 0);
+		pheet_assert(((ptrdiff_t)(b - t)) >= 0);
 		DataBlock* db = bottom_block;
 
 		BaseItem* ret;
@@ -394,7 +394,7 @@ private:
 		if(!db->fits(t)) {
 			// Only one thread may update the top block, we use a TASLock for that
 			// Is not blocking progress of other threads, only blocking progress for cleanup
-			if(top_block_lock.test_and_set(std::memory_order_relaxed)) {
+			if(!top_block_lock.test_and_set(std::memory_order_relaxed)) {
 				// Reload top_block, just in case it was changed in the meantime
 				db = top_block.load(std::memory_order_relaxed);
 
@@ -408,7 +408,7 @@ private:
 					db = next;
 				} while(!db->fits(t));
 				// Free lock, so other threads can update top_block now
-				top_block_lock.clear();
+				top_block_lock.clear(std::memory_order_release);
 
 				return db;
 			}
