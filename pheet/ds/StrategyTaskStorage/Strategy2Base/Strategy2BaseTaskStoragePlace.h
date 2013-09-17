@@ -284,7 +284,7 @@ private:
 			return nullable_traits<T>::null_value;
 		}
 
-		DataBlock* db = get_top_block();
+		DataBlock* db = get_top_block(t);
 
 		size_t offset;
 		while(true) {
@@ -386,9 +386,10 @@ private:
 	/**
 	 * Corrects the top block pointer if necessary, and marks old blocks as reusable
 	 * Can be called by any thread
+	 * May only be called on non-empty queues, otherwise there may be a corner-case
+	 * where t moved past the block, but the next block has not yet been initialized
 	 */
-	DataBlock* get_top_block() {
-		size_t t = top.load(std::memory_order_acquire);
+	DataBlock* get_top_block(size_t t) {
 		DataBlock* db = top_block.load(std::memory_order_relaxed);
 
 		if(!db->fits(t)) {
