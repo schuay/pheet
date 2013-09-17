@@ -97,6 +97,7 @@ public:
 	T pop() {
 		size_t b = bottom.load(std::memory_order_relaxed);
 		size_t t = top.load(std::memory_order_relaxed);
+		pheet_assert(((ptrdiff_t)(b - t)) > 0);
 		DataBlock* db = bottom_block;
 
 		BaseItem* ret;
@@ -129,7 +130,6 @@ public:
 			// Has item been taken? (Due to stealing or due to other execution orders for tasks
 			// with different strategies) If yes, skip task and continue
 			if(ret->taken.load(std::memory_order_relaxed)) {
-				--b;
 				continue;
 			}
 
@@ -163,7 +163,6 @@ public:
 				// (will just lead to a failed steal attempt, and queue is empty in this case anyway)
 				bottom.store(b2, std::memory_order_relaxed);
 
-				--b;
 				continue;
 			}
 
