@@ -301,6 +301,7 @@ private:
 					return nullable_traits<T>::null_value;
 				}
 				offset = db->get_block_offset();
+				continue;
 			}
 			break;
 		}
@@ -388,6 +389,8 @@ private:
 	 * Can be called by any thread
 	 * May only be called on non-empty queues, otherwise there may be a corner-case
 	 * where t moved past the block, but the next block has not yet been initialized
+	 * For this reason t has to be passed, so that the t is used for which the
+	 * non-empty check is performed (linearized to there)
 	 */
 	DataBlock* get_top_block(size_t t) {
 		DataBlock* db = top_block.load(std::memory_order_relaxed);
