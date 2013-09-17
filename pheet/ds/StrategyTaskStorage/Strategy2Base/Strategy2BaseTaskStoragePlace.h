@@ -46,6 +46,7 @@ public:
 	Strategy2BaseTaskStoragePlace(TaskStorage* task_storage, SchedulerPlace* scheduler_place, PerformanceCounters pc)
 	:pc(pc), task_storage(task_storage),
 	 bottom(0), top(0),
+	 last_partner(nullptr),
 	 scheduler_place(scheduler_place)  {
 		bottom_block = &(data_blocks.acquire_item());
 		bottom_block->link(nullptr);
