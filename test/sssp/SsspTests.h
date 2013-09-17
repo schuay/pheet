@@ -50,12 +50,17 @@ void SsspTests::run_algorithm() {
 							continue;
 						}
 					}
+#ifdef SSSP_SEED_RANGE
+					for(unsigned int seed = sssp_test_seed_first; seed <= sssp_test_seed_last; ++seed) {
+#else
 					for(size_t s = 0; s < sizeof(sssp_test_seeds)/sizeof(sssp_test_seeds[0]); s++) {
+						unsigned int seed = sssp_test_seeds[s];
+#endif
 						SsspTest<Pheet, Partitioner> gbt(cpus, sssp_test_types[t], sssp_test_k[k],
 								sssp_test_problems[pr].n,
 								sssp_test_problems[pr].p,
 								sssp_test_problems[pr].max_w,
-								sssp_test_seeds[s]);
+								seed);
 						gbt.run_test();
 					}
 				}

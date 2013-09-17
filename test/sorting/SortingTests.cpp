@@ -41,6 +41,7 @@
 #include <pheet/sched/CentralizedPriority/CentralizedPriorityScheduler.h>
 #include <pheet/sched/Strategy/StrategyScheduler.h>
 #include <pheet/sched/BStrategy/BStrategyScheduler.h>
+#include <pheet/sched/Strategy2/StrategyScheduler2.h>
 #include <pheet/sched/Synchroneous/SynchroneousScheduler.h>
 #include <pheet/sched/MixedMode/MixedModeScheduler.h>
 
@@ -102,6 +103,8 @@ void SortingTests::run_test() {
 						DagQuicksortNoCut>();
 #else
 	// default tests
+	this->run_sorter<	Pheet::WithScheduler<StrategyScheduler2>,
+						DagQuicksort>();
 	this->run_sorter<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<DistKStrategyTaskStorage>,
 						StrategyQuicksort>();
 	this->run_sorter<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<DistKStrategyTaskStorageLocalK>,

@@ -22,7 +22,7 @@ class CommentedFile:
 
 reader = csv.reader(CommentedFile(sys.stdin), delimiter='\t')
 
-headers = set(['hostname', 'date', 'phase', 'settled', 'max_h'])
+headers = set(['hostname', 'date', 'phase', 'settled', 'max_h', 'expected'])
 all_data = list()
 
 while True:
@@ -45,6 +45,7 @@ while True:
 		data['phase'] = sim[1]
 		data['settled'] = sim[2]
 		data['max_h'] = sim[3]
+		data['expected'] = sim[4]
 		all_data.append(data)
 	
 headers.remove('')

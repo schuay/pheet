@@ -1,22 +1,26 @@
 /*
  * StrategyScheduler2Place.h
  *
- *  Created on: Mar 8, 2012
+ *  Created on: Aug 12, 2013
  *      Author: Martin Wimmer
  *	   License: Boost Software License 1.0 (BSL1.0)
  */
 
-#ifndef STRATEGYSCHEDULERPLACE_H_
-#define STRATEGYSCHEDULERPLACE_H_
+#ifndef STRATEGYSCHEDULER2PLACE_H_
+#define STRATEGYSCHEDULER2PLACE_H_
 
-#include "StrategySchedulerPerformanceCounters.h"
+#include "StrategyScheduler2PerformanceCounters.h"
+#include "../../settings.h"
+#include "../common/CPUThreadExecutor.h"
+#include "../common/FinishRegion.h"
 #include "../common/PlaceBase.h"
+
 
 namespace pheet {
 
 
 template <class Place>
-struct StrategySchedulerPlaceLevelDescription {
+struct StrategyScheduler2PlaceLevelDescription {
 	Place** partners;
 	procs_t num_partners;
 	procs_t local_id;
@@ -25,14 +29,12 @@ struct StrategySchedulerPlaceLevelDescription {
 	procs_t global_id_offset;
 };
 
-
-
 template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
-class StrategySchedulerPlace : public PlaceBase<Pheet> {
+class StrategyScheduler2Place : public PlaceBase<Pheet> {
 public:
-	typedef StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold> Self;
+	typedef StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold> Self;
 	typedef Self Place;
-	typedef StrategySchedulerPlaceLevelDescription<Self> LevelDescription;
+	typedef StrategyScheduler2PlaceLevelDescription<Self> LevelDescription;
 	typedef typename Pheet::Backoff Backoff;
 	typedef typename Pheet::Scheduler::Task Task;
 	template <typename F>
@@ -40,17 +42,17 @@ public:
 	typedef FinishStackT<Pheet> FinishStack;
 	typedef typename FinishStack::Element StackElement;
 	typedef typename Pheet::Scheduler::TaskStorageItem TaskStorageItem;
-	typedef typename Pheet::Scheduler::TaskStorage TaskStorage;
-	typedef typename Pheet::Scheduler::Stealer Stealer;
+	typedef typename Pheet::Scheduler::TaskStorage CentralTaskStorage;
+	typedef typename Pheet::Scheduler::TaskStorage::Place TaskStorage;
 //	typedef typename Pheet::Scheduler::TaskDesc TaskDesc;
 //	typedef typename Pheet::Scheduler::PlaceDesc PlaceDesc;
-	typedef StrategySchedulerPerformanceCounters<Pheet, typename TaskStorage::PerformanceCounters, typename Stealer::PerformanceCounters, typename FinishStack::PerformanceCounters> PerformanceCounters;
+	typedef StrategyScheduler2PerformanceCounters<Pheet, typename TaskStorage::PerformanceCounters, typename FinishStack::PerformanceCounters> PerformanceCounters;
 	typedef typename Pheet::Scheduler::InternalMachineModel InternalMachineModel;
-	typedef typename Pheet::Scheduler::BaseStrategy BaseStrategy;
+//	typedef typename Pheet::Scheduler::BaseStrategy BaseStrategy;
 
-	StrategySchedulerPlace(InternalMachineModel model, Place** places, procs_t num_places, typename Pheet::Scheduler::State* scheduler_state, PerformanceCounters& perf_count);
-	StrategySchedulerPlace(LevelDescription* levels, procs_t num_initialized_levels, InternalMachineModel model, typename Pheet::Scheduler::State* scheduler_state, PerformanceCounters& perf_count);
-	~StrategySchedulerPlace();
+	StrategyScheduler2Place(InternalMachineModel model, CentralTaskStorage* ctask_storage, Place** places, procs_t num_places, typename Pheet::Scheduler::State* scheduler_state, PerformanceCounters& perf_count);
+	StrategyScheduler2Place(CentralTaskStorage* ctask_storage, LevelDescription* levels, procs_t num_initialized_levels, InternalMachineModel model, typename Pheet::Scheduler::State* scheduler_state, PerformanceCounters& perf_count);
+	~StrategyScheduler2Place();
 
 	void prepare_root();
 	void join();
@@ -97,8 +99,26 @@ public:
 	ptrdiff_t next_task_id() { return task_id++; }
 
 	TaskStorage& get_task_storage() { return task_storage; }
-
-	procs_t get_num_levels() { return num_levels; }
+	procs_t get_num_levels() {
+		return num_levels;
+	}
+	procs_t get_num_partners_at_level(procs_t level) {
+		pheet_assert(level < num_levels);
+		return levels[level].num_partners;
+	}
+	Place* get_partner_at_level(procs_t id, procs_t level) {
+		pheet_assert(level < num_levels);
+		pheet_assert(id < levels[level].num_partners);
+		return levels[level].partners[id];
+	}
+	Place* get_random_partner_at_level(procs_t level) {
+		pheet_assert(levels[level].num_partners > 0);
+		std::uniform_int_distribution<procs_t> n_r_gen(0, levels[level].num_partners - 1);
+		procs_t next_rand = n_r_gen(this->get_rng());
+		pheet_assert(next_rand < levels[level].num_partners);
+		pheet_assert(levels[level].partners[next_rand] != this);
+		return levels[level].partners[next_rand];
+	}
 
 private:
 	void initialize_levels();
@@ -106,8 +126,6 @@ private:
 	void run();
 	void execute_task(Task* task, StackElement* parent);
 	void main_loop();
-	void process_queue();
-	bool process_queue_until_finished(StackElement* parent);
 	void wait_for_finish(StackElement* parent);
 
 	InternalMachineModel machine_model;
@@ -123,7 +141,6 @@ private:
 
 //	PlaceDesc place_desc;
 	TaskStorage task_storage;
-	Stealer stealer;
 	FinishStack finish_stack;
 
 //	size_t spawn2call_counter;
@@ -137,22 +154,21 @@ private:
 //	friend class Pheet::Scheduler::Finish;
 
 	template <class T>
-		friend void execute_cpu_thread(T* param);
+	friend void execute_cpu_thread(T* param);
 };
 
 template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
-thread_local StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>*
-StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::local_place = nullptr;
+thread_local StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>*
+StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::local_place = nullptr;
 
 template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
-StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::StrategySchedulerPlace(InternalMachineModel model, Place** places, procs_t num_places, typename Pheet::Scheduler::State* scheduler_state, PerformanceCounters& perf_count)
+StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::StrategyScheduler2Place(InternalMachineModel model, CentralTaskStorage* ctask_storage, Place** places, procs_t num_places, typename Pheet::Scheduler::State* scheduler_state, PerformanceCounters& perf_count)
 : machine_model(model),
   num_initialized_levels(1), num_levels(find_last_bit_set(num_places)), levels(new LevelDescription[num_levels]),
   current_task_parent(nullptr),
   scheduler_state(scheduler_state),
   performance_counters(perf_count),
-  task_storage(performance_counters.task_storage_performance_counters),
-  stealer(task_storage, performance_counters.stealer_performance_counters),
+  task_storage(ctask_storage, this, performance_counters.task_storage_performance_counters),
   finish_stack(performance_counters.finish_stack_performance_counters),
 //  spawn2call_counter(0),
   thread_executor(this),
@@ -175,15 +191,14 @@ StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::StrategySchedulerPla
 }
 
 template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
-StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::StrategySchedulerPlace(LevelDescription* levels, procs_t num_initialized_levels, InternalMachineModel model, typename Pheet::Scheduler::State* scheduler_state, PerformanceCounters& perf_count)
+StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::StrategyScheduler2Place(CentralTaskStorage* ctask_storage, LevelDescription* levels, procs_t num_initialized_levels, InternalMachineModel model, typename Pheet::Scheduler::State* scheduler_state, PerformanceCounters& perf_count)
 : machine_model(model),
   num_initialized_levels(num_initialized_levels), num_levels(num_initialized_levels + find_last_bit_set(levels[num_initialized_levels - 1].size >> 1)),
   levels(new LevelDescription[num_levels]),
   current_task_parent(nullptr),
   scheduler_state(scheduler_state),
   performance_counters(perf_count),
-  task_storage(performance_counters.task_storage_performance_counters),
-  stealer(task_storage, performance_counters.stealer_performance_counters),
+  task_storage(ctask_storage, this, performance_counters.task_storage_performance_counters),
   finish_stack(performance_counters.finish_stack_performance_counters),
 //  spawn2call_counter(0),
   thread_executor(this) {
@@ -196,11 +211,11 @@ StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::StrategySchedulerPla
 }
 
 template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
-StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::~StrategySchedulerPlace() {
+StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::~StrategyScheduler2Place() {
 	if(get_id() == 0) {
 		end_finish_region();
 
-		task_storage.make_empty();
+	//	task_storage.make_empty();
 
 		// we can shut down the scheduler
 		scheduler_state->current_state = 2;
@@ -222,7 +237,8 @@ StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::~StrategySchedulerPl
 }
 
 template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
-void StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::prepare_root() {
+void StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::prepare_root() {
+
 	scheduler_state->state_barrier.signal(0);
 
 	pheet_assert(local_place == NULL);
@@ -235,7 +251,7 @@ void StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::prepare_root() 
 }
 
 template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
-void StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::initialize_levels() {
+void StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::initialize_levels() {
 	procs_t base_offset;
 	procs_t size;
 
@@ -259,7 +275,7 @@ void StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::initialize_leve
 			levels[num_initialized_levels].partners = places + base_offset;
 			levels[num_initialized_levels].memory_level = child.get_memory_level();
 
-			places[offset] = new Place(levels, num_initialized_levels + 1, child, scheduler_state, performance_counters);
+			places[offset] = new Place(task_storage.get_central_task_storage(), levels, num_initialized_levels + 1, child, scheduler_state, performance_counters);
 
 			machine_model = machine_model.get_child(0);
 			levels[num_initialized_levels].size = offset - base_offset;
@@ -287,7 +303,7 @@ void StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::initialize_leve
 }
 
 template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
-void StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::grow_levels_structure() {
+void StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::grow_levels_structure() {
 	if(num_initialized_levels == num_levels) {
 		// We have allocated to little levels
 		procs_t new_size = num_levels + find_last_bit_set(levels[num_levels - 1].size >> 1);
@@ -301,24 +317,24 @@ void StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::grow_levels_str
 }
 
 template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
-void StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::join() {
+void StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::join() {
 	thread_executor.join();
 }
 
 template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
-StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>*
-StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::get() {
+StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>*
+StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::get() {
 	return local_place;
 }
 
 template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
 procs_t
-StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::get_id() {
+StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::get_id() {
 	return levels[0].local_id;
 }
 
 template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
-void StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::run() {
+void StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::run() {
 	local_place = this;
 	initialize_levels();
 
@@ -351,7 +367,7 @@ void StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::run() {
 }
 
 template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
-void StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::execute_task(Task* task, StackElement* parent) {
+void StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::execute_task(Task* task, StackElement* parent) {
 	parent = finish_stack.active_element(parent);
 
 	// Store parent (needed for spawns inside the task)
@@ -370,159 +386,90 @@ void StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::execute_task(Ta
 }
 
 template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
-void StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::main_loop() {
+void StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::main_loop() {
+	Backoff bo;
 	while(true) {
-		// Make sure our queue is empty
-		process_queue();
+		TaskStorageItem di = task_storage.pop();
+		while(di.task != NULL) {
+			// Warning, no distinction between locally spawned tasks and remote tasks
+			// But this makes it easier with the finish construct, etc.
+			// Otherwise we would have to empty our deque on the next finish call
+			// which is bad for balancing
+			execute_task(di.task, di.stack_element);
+			delete di.task;
+			di = task_storage.pop();
 
-		{	// Local scope so we have a new backoff object
-			Backoff bo;
-			TaskStorageItem di;
-			performance_counters.idle_time.start_timer();
-			while(true) {
-				// Finalize elements in stack
-				// We do not steal from the last level as there are no partners
-				procs_t level = num_levels - 1;
-				while(level > 0) {
-					// For all except the top level we assume num_partners > 0
-					pheet_assert(levels[level].num_partners > 0);
-					std::uniform_int_distribution<procs_t> n_r_gen(0, levels[level].num_partners - 1);
-					procs_t next_rand = n_r_gen(this->get_rng());
-					pheet_assert(next_rand < levels[level].num_partners);
-					pheet_assert(levels[level].partners[next_rand] != this);
-
-					performance_counters.num_steal_calls.incr();
-					performance_counters.steal_time.start_timer();
-				//	StealerDescriptor sd(levels[level].partners[next_rand], this, num_levels - 1);
-					di = stealer.steal_from(levels[level].partners[next_rand]);
-				//	di = levels[level].partners[next_rand]->task_storage.steal_push(this->task_storage, sd, performance_counters.task_storage_performance_counters);
-				//	di = levels[level].partners[next_rand % levels[level].num_partners]->task_storage.steal();
-					performance_counters.steal_time.stop_timer();
-
-					if(di.task != NULL) {
-						performance_counters.idle_time.stop_timer();
-						execute_task(di.task, di.stack_element);
-						delete di.task;
-						break;
-					}
-					else {
-						pheet_assert(task_storage.is_empty());
-						performance_counters.num_unsuccessful_steal_calls.incr();
-					}
-					--level;
-				}
-				if(di.task == NULL) {
-					pheet_assert(task_storage.is_empty());
-					if(scheduler_state->current_state >= 2) {
-						performance_counters.idle_time.stop_timer();
-						return;
-					}
-//					task_storage.perform_maintenance(performance_counters.task_storage_performance_counters);
-					bo.backoff();
-				}
-				else {
-					break;
-				}
-			}
+			bo.reset();
 		}
-	}
-}
 
-template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
-void StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::wait_for_finish(StackElement* parent) {
-	while(!finish_stack.unique(parent)) {
-		// Make sure our queue is empty
-		if(!process_queue_until_finished(parent))
-		{	// Local scope so we have a new backoff object
-			Backoff bo;
-			TaskStorageItem di;
-			while(true) {
-				// Finalize elements in stack
-				// We do not steal from the last level as there are no partners
-				procs_t level = num_levels - 1;
-				while(level > 0) {
-					// For all except the top level we assume num_partners > 0
-					pheet_assert(levels[level].num_partners > 0);
-					std::uniform_int_distribution<procs_t> n_r_gen(0, levels[level].num_partners - 1);
-					procs_t next_rand = n_r_gen(this->get_rng());
-					pheet_assert(levels[level].partners[next_rand] != this);
-					performance_counters.num_steal_calls.incr();
-				//	StealerDescriptor sd(levels[level].partners[next_rand], this, num_levels - 1);
-					di = stealer.steal_from(levels[level].partners[next_rand]);
-				//	di = levels[level].partners[next_rand]->task_storage.steal_push(this->task_storage, sd, performance_counters.task_storage_performance_counters);
-				//	di = levels[level].partners[next_rand % levels[level].num_partners]->task_storage.steal();
-
-					if(di.task != NULL) {
-						execute_task(di.task, di.stack_element);
-						delete di.task;
-						break;
-					}
-					else {
-						pheet_assert(task_storage.is_empty());
-						performance_counters.num_unsuccessful_steal_calls.incr();
-					}
-					--level;
-				}
-				if(di.task == NULL) {
-					pheet_assert(task_storage.is_empty());
-					if(finish_stack.unique(parent)) {
-						return;
-					}
-//					task_storage.perform_maintenance(performance_counters.task_storage_performance_counters);
-					bo.backoff();
-				}
-				else {
-					break;
-				}
-			}
+		if(scheduler_state->current_state >= 2) {
+//			performance_counters.idle_time.stop_timer();
+			return;
 		}
+		bo.backoff();
 	}
 }
 
 template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
-void StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::process_queue() {
-	TaskStorageItem di = task_storage.pop();
-	while(di.task != NULL) {
-		// Warning, no distinction between locally spawned tasks and remote tasks
-		// But this makes it easier with the finish construct, etc.
-		// Otherwise we would have to empty our deque on the next finish call
-		// which is bad for balancing
-		execute_task(di.task, di.stack_element);
-		delete di.task;
-		di = task_storage.pop();
-	}
-}
+void StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::wait_for_finish(StackElement* parent) {
+	Backoff bo;
+	while(true) {
+		TaskStorageItem di = task_storage.pop();
+		while(di.task != NULL) {
+			// Warning, no distinction between locally spawned tasks and remote tasks
+			// But this makes it easier with the finish construct, etc.
+			// Otherwise we would have to empty our deque on the next finish call
+			// which is bad for balancing
+			execute_task(di.task, di.stack_element);
+			delete di.task;
+			if(finish_stack.unique(parent)) {
+				return;
+			}
+			di = task_storage.pop();
+		}
 
-template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
-bool StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::process_queue_until_finished(StackElement* parent) {
-	TaskStorageItem di = task_storage.pop();
-	while(di.task != NULL) {
-		// Warning, no distinction between locally spawned tasks and remote tasks
-		// But this makes it easier with the finish construct, etc.
-		// Otherwise we would have to empty our deque on the next finish call
-		// which is bad for balancing
-		execute_task(di.task, di.stack_element);
-		delete di.task;
 		if(finish_stack.unique(parent)) {
-			return true;
+			return;
 		}
-		di = task_storage.pop();
+		bo.backoff();
 	}
-	return false;
 }
 
 template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
-void StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::start_finish_region() {
+void StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::start_finish_region() {
 	performance_counters.task_time.stop_timer();
 	performance_counters.num_finishes.incr();
 
 	current_task_parent = finish_stack.create_blocking(current_task_parent);
 
+	/*
+	// Perform cleanup on left side of finish stack
+	// Not allowed any more. may only be called if freed_stack_elements is empty
+//	empty_stack();
+
+	if(stack_filled_right < stack_size && current_task_parent == (&stack[stack_filled_right]) && stack[stack_filled_right].num_spawned == 1) {
+		++(stack[stack_filled_right].reused_finish_depth);
+	}
+	else {
+		pheet_assert(stack_filled_left < stack_filled_right);
+		--stack_filled_right;
+		performance_counters.finish_stack_blocking_min.add_value(stack_filled_right);
+
+		stack[stack_filled_right].num_finished_remote = 0;
+		// We add 1 to make sure finishes are not propagated to the parent (as we wait manually and then execute a continuation)
+		stack[stack_filled_right].num_spawned = 1;
+		stack[stack_filled_right].parent = current_task_parent;
+		stack[stack_filled_right].reused_finish_depth = 0;
+
+		current_task_parent = stack + stack_filled_right;
+	}
+*/
+
 	performance_counters.task_time.start_timer();
 }
 
 template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
-void StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::end_finish_region() {
+void StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::end_finish_region() {
 	performance_counters.task_time.stop_timer();
 
 	// Make backup of parent since parent might change while waiting
@@ -534,12 +481,37 @@ void StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::end_finish_regi
 	// Restore old parent
 	current_task_parent = finish_stack.destroy_blocking(parent);
 
+	/*
+	// Make sure current_task_parent has the correct value
+	pheet_assert(current_task_parent == &(stack[stack_filled_right]));
+
+	if(current_task_parent->num_spawned > 1) {
+		// There exist some non-executed or stolen tasks
+
+		// Process other tasks until this task has been finished
+		wait_for_finish(current_task_parent);
+
+		// Repair pointer to current_task_parent (might be changed while waiting)
+		current_task_parent = &(stack[stack_filled_right]);
+	}
+	if(current_task_parent->reused_finish_depth > 0) {
+		--(current_task_parent->reused_finish_depth);
+	}
+	else {
+		// Restore old parent
+		current_task_parent = current_task_parent->parent;
+
+		// Remove stack element
+		++stack_filled_right;
+	}
+	*/
+
 	performance_counters.task_time.start_timer();
 }
 
 template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
 template<class CallTaskType, typename ... TaskParams>
-void StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::finish(TaskParams&& ... params) {
+void StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::finish(TaskParams&& ... params) {
 	start_finish_region();
 
 	call<CallTaskType>(std::forward<TaskParams&&>(params) ...);
@@ -549,7 +521,7 @@ void StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::finish(TaskPara
 
 template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
 template<typename F, typename ... TaskParams>
-void StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::finish(F&& f, TaskParams&& ... params) {
+void StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::finish(F&& f, TaskParams&& ... params) {
 	start_finish_region();
 
 	call(f, std::forward<TaskParams&&>(params) ...);
@@ -559,19 +531,35 @@ void StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::finish(F&& f, T
 
 template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
 template<class CallTaskType, typename ... TaskParams>
-void StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::spawn(TaskParams&& ... params) {
-	spawn_s<CallTaskType>(BaseStrategy(), std::forward<TaskParams&&>(params) ...);
+void StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::spawn(TaskParams&& ... params) {
+	performance_counters.num_actual_spawns.incr();
+	CallTaskType* task = new CallTaskType(params ...);
+	pheet_assert(current_task_parent != NULL);
+	finish_stack.spawn(current_task_parent);
+	TaskStorageItem di;
+	di.task = task;
+	di.stack_element = current_task_parent;
+	task_storage.push(di);
 }
 
 template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
 template<typename F, typename ... TaskParams>
-void StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::spawn(F&& f, TaskParams&& ... params) {
-	spawn_s(BaseStrategy(), f, std::forward<TaskParams&&>(params) ...);
+void StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::spawn(F&& f, TaskParams&& ... params) {
+	performance_counters.num_actual_spawns.incr();
+	auto bound = std::bind(f, params ...);
+
+	FunctorTask<decltype(bound)>* task = new FunctorTask<decltype(bound)>(bound);
+	pheet_assert(current_task_parent != NULL);
+	finish_stack.spawn(current_task_parent);
+	TaskStorageItem di;
+	di.task = task;
+	di.stack_element = current_task_parent;
+	task_storage.push(di);
 }
 
 template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
 template<class Strategy>
-inline bool StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::spawn_to_call_check(Strategy&& s) {
+inline bool StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::spawn_to_call_check(Strategy&& s) {
 	size_t weight = (s.get_transitive_weight());
 	size_t current_tasks = task_storage.size();
 	size_t threshold = (current_tasks * current_tasks);
@@ -581,7 +569,7 @@ inline bool StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::spawn_to
 
 template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
 template<class CallTaskType, class Strategy, typename ... TaskParams>
-inline void StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::spawn_s(Strategy&& s, TaskParams&& ... params) {
+inline void StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::spawn_s(Strategy&& s, TaskParams&& ... params) {
 	performance_counters.num_spawns.incr();
 
 	if(task_storage.is_full()) {
@@ -597,7 +585,6 @@ inline void StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::spawn_s(
 			performance_counters.num_actual_spawns.incr();
 			CallTaskType* task = new CallTaskType(params ...);
 			pheet_assert(current_task_parent != NULL);
-//			pheet_assert(current_task_parent >= stack && (current_task_parent < (stack + stack_size)));
 			finish_stack.spawn(current_task_parent);
 			TaskStorageItem di;
 			di.task = task;
@@ -613,7 +600,7 @@ inline void StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::spawn_s(
 
 template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
 template<class Strategy, typename F, typename ... TaskParams>
-inline void StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::spawn_s(Strategy&& s, F&& f, TaskParams&& ... params) {
+inline void StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::spawn_s(Strategy&& s, F&& f, TaskParams&& ... params) {
 	performance_counters.num_spawns.incr();
 
 	if(task_storage.is_full()) {
@@ -632,7 +619,6 @@ inline void StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::spawn_s(
 
 			FunctorTask<decltype(bound)>* task = new FunctorTask<decltype(bound)>(bound);
 			pheet_assert(current_task_parent != NULL);
-//			pheet_assert(current_task_parent >= stack && (current_task_parent < (stack + stack_size)));
 			finish_stack.spawn(current_task_parent);
 			TaskStorageItem di;
 			di.task = task;
@@ -648,7 +634,7 @@ inline void StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::spawn_s(
 
 template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
 template<class CallTaskType, typename ... TaskParams>
-void StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::call(TaskParams&& ... params) {
+void StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::call(TaskParams&& ... params) {
 	performance_counters.num_calls.incr();
 	// Create task
 	CallTaskType task(std::forward<TaskParams&&>(params) ...);
@@ -658,14 +644,14 @@ void StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::call(TaskParams
 
 template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
 template<typename F, typename ... TaskParams>
-void StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::call(F&& f, TaskParams&& ... params) {
+void StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::call(F&& f, TaskParams&& ... params) {
 	performance_counters.num_calls.incr();
 	// Execute task
 	f(std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
-procs_t StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::get_distance(Self* other) const {
+procs_t StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::get_distance(Self* other) const {
 	if(other == this) {
 		return 0;
 	}
@@ -682,7 +668,7 @@ procs_t StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::get_distance
 
 /*
 template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
-procs_t StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::get_distance(Self* other, procs_t max_granularity_level) {
+procs_t StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::get_distance(Self* other, procs_t max_granularity_level) {
 	pheet_assert(max_granularity_level < num_levels);
 
 	procs_t offset = std::max(levels[max_granularity_level].memory_level, other->levels[max_granularity_level].memory_level);
@@ -697,13 +683,13 @@ procs_t StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::get_distance
 */
 /*
 template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
-inline procs_t StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::get_max_distance() {
+inline procs_t StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::get_max_distance() {
 	return this->levels[num_levels - 1].memory_level - this->levels[0].memory_level;
 }
 */
 /*
 template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
-inline procs_t StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::get_max_distance(procs_t max_granularity_level) {
+inline procs_t StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::get_max_distance(procs_t max_granularity_level) {
 	pheet_assert(max_granularity_level < num_levels);
 
 	return this->levels[max_granularity_level].memory_level;
@@ -711,4 +697,4 @@ inline procs_t StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::get_m
 
 }
 
-#endif /* STRATEGYSCHEDULERPLACE_H_ */
+#endif /* STRATEGYSCHEDULER2PLACE_H_ */
