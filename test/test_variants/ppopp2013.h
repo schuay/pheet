@@ -33,7 +33,7 @@ const GraphBipartitioningProblem graph_bipartitioning_test_problems[] = {
 };
 const int graph_bipartitioning_test_types[] = {0};
 
-#define LUPIV_TEST	true
+//#define LUPIV_TEST	true
 const procs_t lupiv_test_cpus[] = {1, 2, 3, 6, 12, 24, 48};
 const unsigned int lupiv_test_seeds[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 const size_t lupiv_test_n[] = {2048, 4096};
