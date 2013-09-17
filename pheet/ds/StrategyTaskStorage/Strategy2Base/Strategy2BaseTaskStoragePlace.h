@@ -403,14 +403,16 @@ private:
 				db = top_block.load(std::memory_order_relaxed);
 
 				// Update the list
-				do {
+				// (It is necessary to recheck if it fits before the first iteration,
+				// since the top block might have changed)
+				while(!db->fits(t)) {
 					DataBlock* next = db->get_next();
 					pheet_assert(next != nullptr);
 					top_block.store(next, std::memory_order_relaxed);
 					// Has release semantics, therefore making the update to top_block visible as well
 					db->mark_reusable();
 					db = next;
-				} while(!db->fits(t));
+				}
 				// Free lock, so other threads can update top_block now
 				top_block_lock.clear(std::memory_order_release);
 
