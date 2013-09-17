@@ -9,17 +9,13 @@
 #ifndef STRATEGY2BASETASKSTORAGEITEM_H_
 #define STRATEGY2BASETASKSTORAGEITEM_H_
 
-#include <pheet/sched/Strategy2/StrategyScheduler2BaseStrategy.h>
-#include <pheet/sched/Strategy2/StrategyScheduler2TaskStorageBase.h>
 
 namespace pheet {
 
-
-
-template <class Pheet, typename TT>
+template <class Pheet, class TaskStorage, typename TT>
 struct Strategy2BaseTaskStorageBaseItem {
 //	typedef StrategyScheduler2TaskStorageBase<Pheet, TT> TaskStorage;
-	typedef StrategyScheduler2BaseStrategy<Pheet> BaseStrategy;
+//	typedef StrategyScheduler2BaseStrategy<Pheet> BaseStrategy;
 
 	Strategy2BaseTaskStorageBaseItem()
 	:taken(true) {}
@@ -28,20 +24,20 @@ struct Strategy2BaseTaskStorageBaseItem {
 	TT data;
 	std::atomic<bool> taken;
 	TaskStorage* task_storage;
-	BaseStrategy* strategy;
+//	BaseStrategy* strategy;
 };
 
-template <class Pheet, class DataBlock, typename TT>
-struct Strategy2BaseTaskStorageItem : Strategy2BaseTaskStorageBaseItem<Pheet, TT> {
+template <class Pheet, class TaskStorage, class DataBlock, typename TT>
+struct Strategy2BaseTaskStorageItem : Strategy2BaseTaskStorageBaseItem<Pheet, TaskStorage, TT> {
 	typedef StrategyScheduler2BaseStrategy<Pheet> BaseStrategy;
 
 	Strategy2BaseTaskStorageItem() {
-		strategy = &strategy_v;
+//		strategy = &strategy_v;
 	}
 	~Strategy2BaseTaskStorageItem() {}
 
-	DataBlock* data_block;
-	size_t offset;
+//	DataBlock* data_block;
+//	size_t offset;
 };
 
 template <class Item>

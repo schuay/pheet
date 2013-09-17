@@ -11,7 +11,7 @@
 
 #include "Strategy2BaseTaskStoragePlace.h"
 #include "Strategy2BaseTaskStorageDataBlock.h"
-#include <pheet/ds/StrategyHeap/Basic/BasicStrategyHeap.h>
+#include "Strategy2BaseTaskStorageBase.h"
 
 namespace pheet {
 
@@ -21,21 +21,43 @@ namespace pheet {
  * Properties: Only place in strategy is used.
  */
 template <class Pheet, typename TT, size_t BlockSize>
-class Strategy2BaseTaskStorageImpl {
+class Strategy2BaseTaskStorageImpl : public Strategy2BaseTaskStorageBase<Pheet, TT> {
 public:
 	typedef Strategy2BaseTaskStorageImpl<Pheet, TT, BlockSize> Self;
+	typedef Strategy2BaseTaskStorageBase<Pheet, TT> BaseTaskStorage;
 
 	typedef Strategy2BaseTaskStoragePlace<Pheet, Self, TT, BlockSize> Place;
-	typedef Strategy2BaseTaskStorageDataBlock<Pheet, Place, TT, BlockSize> DataBlock;
+	typedef Strategy2BaseTaskStorageDataBlock<Pheet, Place, BaseTaskStorage, TT, BlockSize> DataBlock;
 
 	typedef TT T;
+
+	typedef typename BaseTaskStorage::BaseItem BaseItem;
 
 	template <size_t NewBlockSize>
 	using WithBlockSize = Strategy2BaseTaskStorageImpl<Pheet, TT, NewBlockSize>;
 
-	Strategy2BaseTaskStorageImpl(size_t num_places)
-	:num_places(num_places) {}
+	Strategy2BaseTaskStorageImpl()
+	{}
 	~Strategy2BaseTaskStorageImpl() {}
+
+	/**
+	 * Overload from parent class
+	 * Since this is our root task storage it should never be necessary to call it
+	 */
+	T pop(BaseItem* boundary, procs_t place_id) {
+		// Should never occur. Throw exception if it does.
+		throw -1;
+	}
+
+	/**
+	 * Overload from parent class
+	 * Since this is our root task storage it should never be necessary to call it
+	 */
+	T steal(BaseItem* boundary, procs_t place_id) {
+		// Should never occur. Throw exception if it does.
+		throw -1;
+	}
+
 
 	static void print_name() {
 		std::cout << "Strategy2BaseTaskStorage<" << BlockSize << ">";
@@ -45,10 +67,7 @@ private:
 };
 
 template <class Pheet, typename TT>
-using Strategy2BaseTaskStorage = Strategy2BaseTaskStorageImpl<Pheet, TT, BasicStrategyHeap, 128, false>;
-
-template <class Pheet, typename TT>
-using Strategy2BaseTaskStorageLocalK = Strategy2BaseTaskStorageImpl<Pheet, TT, BasicStrategyHeap, 128, true>;
+using Strategy2BaseTaskStorage = Strategy2BaseTaskStorageImpl<Pheet, TT, 128>;
 
 } /* namespace pheet */
 #endif /* STRATEGY2BASETASKSTORAGE_H_ */

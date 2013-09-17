@@ -6,8 +6,8 @@
  *	   License: Boost Software License 1.0 (BSL1.0)
  */
 
-#ifndef STRATEGYSCHEDULER2_H_
-#define STRATEGYSCHEDULER2_H_
+#ifndef STRATEGYSCHEDULER_H_
+#define STRATEGYSCHEDULER_H_
 
 #include "StrategySchedulerPlace.h"
 #include "StrategySchedulerPerformanceCounters.h"
@@ -294,4 +294,4 @@ using StrategyScheduler = StrategySchedulerImpl<Pheet, /*LocalStrategyTaskStorag
 
 }
 
-#endif /* STRATEGYSCHEDULER2_H_ */
+#endif /* STRATEGYSCHEDULER_H_ */

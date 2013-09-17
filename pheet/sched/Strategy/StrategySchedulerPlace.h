@@ -6,8 +6,8 @@
  *	   License: Boost Software License 1.0 (BSL1.0)
  */
 
-#ifndef STRATEGYSCHEDULER2PLACE_H_
-#define STRATEGYSCHEDULER2PLACE_H_
+#ifndef STRATEGYSCHEDULERPLACE_H_
+#define STRATEGYSCHEDULERPLACE_H_
 
 #include "StrategySchedulerPerformanceCounters.h"
 #include "../common/PlaceBase.h"
@@ -711,4 +711,4 @@ inline procs_t StrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::get_m
 
 }
 
-#endif /* STRATEGYSCHEDULER2PLACE_H_ */
+#endif /* STRATEGYSCHEDULERPLACE_H_ */

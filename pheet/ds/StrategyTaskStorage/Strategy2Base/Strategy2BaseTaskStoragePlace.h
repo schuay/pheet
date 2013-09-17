@@ -27,9 +27,11 @@ public:
 
 	typedef TT T;
 
-	typedef Strategy2BaseTaskStorageDataBlock<Pheet, Self, TT, BlockSize> DataBlock;
-	typedef Strategy2BaseTaskStorageBaseItem<Pheet, TT> BaseItem;
-	typedef Strategy2BaseTaskStorageItem<Pheet, DataBlock, TT> Item;
+	typedef typename TaskStorage::BaseTaskStorage BaseTaskStorage;
+
+	typedef Strategy2BaseTaskStorageDataBlock<Pheet, Self, BaseTaskStorage, TT, BlockSize> DataBlock;
+	typedef Strategy2BaseTaskStorageBaseItem<Pheet, BaseTaskStorage, TT> BaseItem;
+	typedef Strategy2BaseTaskStorageItem<Pheet, BaseTaskStorage, DataBlock, TT> Item;
 
 	typedef Strategy2BaseTaskStoragePerformanceCounters<Pheet>
 			PerformanceCounters;
@@ -43,19 +45,19 @@ public:
 
 	Strategy2BaseTaskStoragePlace(TaskStorage* task_storage, SchedulerPlace* scheduler_place, PerformanceCounters pc)
 	:pc(pc), task_storage(task_storage),
-	 bottom(0), top(0), spy_bottom(0), spy_top(0),
+	 bottom(0), top(0),
 	 scheduler_place(scheduler_place)  {
 		bottom_block = &(data_blocks.acquire_item());
 		bottom_block->link(nullptr);
-		top_block->store(bottom_block, std::memory_order_relaxed);
-		pc.num_blocks_created.incr();
+		top_block.store(bottom_block, std::memory_order_relaxed);
+	//	pc.num_blocks_created.incr();
 
 		// Full synchronization by scheduler before place becomes visible, happens-before for all initialization is satisfied
 	}
 
 	~Strategy2BaseTaskStoragePlace() {}
 
-	void push(BaseStrategy&& s, T data) {
+	void push(T data) {
 		Item& it = items.acquire_item();
 
 		// Cannot check this since item may be uninitialized if it has been newly allocated
@@ -64,13 +66,13 @@ public:
 		size_t b = bottom.load(std::memory_order_relaxed);
 
 //		it.strategy_v = std::move(s);
-		it.place = this;
+	//	it.place = this;
 		it.data = data;
 		it.taken.store(false, std::memory_order_relaxed);
 		it.task_storage = task_storage;
 	//	it.item_push = &Self::template item_push<Strategy>;
 	//	it.block = local_tail;
-		it.offset = b;
+	//	it.offset = b;
 
 		// If item does not fit in existing block, add a new block
 		if(!bottom_block->fits(b)) {
@@ -85,15 +87,13 @@ public:
 		}
 
 		// Put item in block at position b
-		bottom_block->put(it, b);
+		bottom_block->put(&it, b);
 
 		// If the new value of bottom is visible, the put operation must have happened before
 		bottom.store(b + 1, std::memory_order_release);
 	}
 
 	T pop() {
-		// Current problem: Tasks for other task storages can trigger linear scans through the data-structure
-
 		size_t b = bottom.load(std::memory_order_relaxed);
 		size_t t = top.load(std::memory_order_relaxed);
 		DataBlock* db = bottom_block;
@@ -115,11 +115,13 @@ public:
 
 				return steal();
 			}
+			--b;
 
 			// Did we empty current block? If yes go to predecessor
 			if(!db->fits(b)) {
 				db = db->get_prev();
 				pheet_assert(db != nullptr);
+				pheet_assert(db->fits(b));
 			}
 
 			ret = db->get(b);
@@ -164,26 +166,15 @@ public:
 				continue;
 			}
 
-			// Now we can try to update bottom
-			// First we do a backup
-			size_t b2 = bottom.load(std::memory_order_relaxed);
-			--b;
-			// Now we update sequentially consistent
-			bottom.store(b, std::memory_order_seq_cst);
-
-			// We need to recheck whether the item we updated it for is still not taken
-			// (otherwise top may overtake bottom)
-			if(ret->taken.load(std::memory_order_relaxed)) {
-				// In this case we need to reset bottom and continue searching
-				// We cannot leave the new value for bottom otherwise top may overtake bottom
-				// Stealing threads may still see bottom < top for a short time but this is ok
-				bottom.store(b2, std::memory_order_relaxed);
-				continue;
-			}
-
 			break;
 		}
+
 		bottom_block = db;
+
+		// Now we update bottom sequentially consistent
+		bottom.store(b, std::memory_order_seq_cst);
+		// No need to check for taken again, this item is guaranteed to be managed by this task storage,
+		// therefore safety checks are based on top and bottom
 
 		// Sequentially consistent ordering due to bottom.store(b, seq_cst) before
 		t = top.load(std::memory_order_relaxed);
@@ -194,6 +185,7 @@ public:
 			// As with Arora deques, due to sequential consistency of writes to top and bottom
 			// it is safe to just take the item
 			T ret_data = ret->data;
+			pheet_assert(!ret->taken.load(std::memory_order_relaxed));
 			ret->taken.store(true, std::memory_order_relaxed);
 			return ret_data;
 		}
@@ -203,6 +195,7 @@ public:
 			bottom.store(b + 1, std::memory_order_relaxed);
 			if(top.compare_exchange_strong(t, t + 1, std::memory_order_relaxed)) {
 				T ret_data = ret->data;
+				pheet_assert(!ret->taken.load(std::memory_order_relaxed));
 				ret->taken.store(true, std::memory_order_relaxed);
 				return ret_data;
 			}
@@ -235,12 +228,12 @@ public:
 	}
 private:
 	T steal() {
-		if(last_partner != nullptr) {
-			T ret = last_partner->steal_from();
+		if(last_partner.load(std::memory_order_relaxed) != nullptr) {
+			T ret = last_partner.load(std::memory_order_relaxed)->steal_from();
 			if(ret != nullable_traits<T>::null_value) {
 				return ret;
 			}
-			last_partner = null;
+			last_partner.store(nullptr, std::memory_order_relaxed);
 		}
 
 		procs_t num_levels = scheduler_place->get_num_levels();
@@ -252,14 +245,17 @@ private:
 
 			T ret = partner.steal_from();
 			if(ret != nullable_traits<T>::null_value) {
-				last_partner = &partner;
+				last_partner.store(&partner, std::memory_order_relaxed);
 				return ret;
 			}
 
-			if(partner.last_partner != nullptr) {
-				ret = partner.last_partner->steal_from();
+			// Don't care about memory ordering, just give me some partner to check
+			Self* partner_partner = partner.last_partner.load(std::memory_order_relaxed);
+			if(partner_partner != nullptr) {
+				ret = partner_partner->steal_from();
 				if(ret != nullable_traits<T>::null_value) {
-					last_partner = partner.last_partner;
+					// Found some work. Recheck this partner next time we steal
+					last_partner.store(partner_partner, std::memory_order_relaxed);
 					return ret;
 				}
 			}
@@ -274,28 +270,12 @@ private:
 	 * Executed in the context of the stealer, should only do thread-safe things
 	 */
 	T steal_from() {
-		// Problem: top_block is never updated and such blocks never freed. How can we do this
-		// without ABA problem?
-
 		// Still not sure whether acquire wouldn't be enough, probably not,
 		// but seq_cst definitely is correct
 		size_t t = top.load(std::memory_order_seq_cst);
 		size_t old_t = t;
 
 		size_t b = bottom.load(std::memory_order_relaxed);
-
-		DataBlock* db = get_top_block();
-		int cmp;
-		while((cmp = db->compare(t)) != 0) {
-			if(cmp < 0) {
-				// To keep it wait-free, no retries
-				return nullable_traits<T>::null_value;
-			}
-			else if(cmp > 0) {
-				db = db->get_next();
-				pheet_assert(db != nullptr);
-			}
-		}
 
 		ptrdiff_t diff = (ptrdiff_t)(b-t);
 		// Empty check
@@ -304,7 +284,29 @@ private:
 			return nullable_traits<T>::null_value;
 		}
 
-		BaseItem* ret = db->get(t);
+		DataBlock* db = get_top_block();
+
+		size_t offset;
+		while(true) {
+			offset = db->get_block_offset();
+
+			ptrdiff_t diff = (ptrdiff_t)(t - offset);
+			if(diff < 0) {
+				// Block was already reused. To keep it wait-free, no retries
+				return nullable_traits<T>::null_value;
+			}
+			else if(diff >= (ptrdiff_t)BlockSize) {
+				db = db->get_next();
+				if(db == nullptr) {
+					return nullable_traits<T>::null_value;
+				}
+				offset = db->get_block_offset();
+			}
+			break;
+		}
+
+		BaseItem* ret = db->direct_get(t - offset);
+
 		// Skip items that have been marked as taken
 		while(ret->taken.load(std::memory_order_acquire)) {
 			++t;
@@ -314,10 +316,11 @@ private:
 				return nullable_traits<T>::null_value;
 			}
 
-			if(!db->fits(t)) {
+			if(t - offset >= BlockSize) {
 				db = db->get_next();
-				if(db == nullptr || !db->fits(t)) {
-					// Working on an old block, return
+				offset += BlockSize;
+				if(db == nullptr || db->get_block_offset() != offset) {
+					// Working on a reused block, return
 					return nullable_traits<T>::null_value;
 				}
 
@@ -357,7 +360,12 @@ private:
 					return nullable_traits<T>::null_value;
 				}
 			}
-			ret = db->get(t);
+			ret = db->direct_get(t - offset);
+
+			if(ret == nullptr) {
+				// Block has been reused, give up
+				return nullable_traits<T>::null_value;
+			}
 		}
 
 		if(ret->task_storage != task_storage) {
@@ -368,7 +376,8 @@ private:
 
 		// Steal is allowed to spuriously fail so weak is enough
 		if(top.compare_exchange_weak(t, t + 1, std::memory_order_seq_cst, std::memory_order_relaxed)) {
-			ret->taken->store(true, std::memory_order_relaxed);
+			pheet_assert(!ret->taken.load(std::memory_order_relaxed));
+			ret->taken.store(true, std::memory_order_relaxed);
 			return ret_data;
 		}
 		return nullable_traits<T>::null_value;
@@ -386,22 +395,29 @@ private:
 			// Only one thread may update the top block, we use a TASLock for that
 			// Is not blocking progress of other threads, only blocking progress for cleanup
 			if(top_block_lock.test_and_set(std::memory_order_relaxed)) {
+				// Reload top_block, just in case it was changed in the meantime
+				db = top_block.load(std::memory_order_relaxed);
+
+				// Update the list
 				do {
 					DataBlock* next = db->get_next();
 					pheet_assert(next != nullptr);
-					top_block.store(next, std:memory_order_relaxed);
+					top_block.store(next, std::memory_order_relaxed);
 					// Has release semantics, therefore making the update to top_block visible as well
 					db->mark_reusable();
 					db = next;
 				} while(!db->fits(t));
+				// Free lock, so other threads can update top_block now
 				top_block_lock.clear();
 
 				return db;
 			}
 			else {
+				// Let some other thread do the clean-up and just iterate through the blocks
 				return db;
 			}
 		}
+		return db;
 	}
 
 	PerformanceCounters pc;
@@ -420,7 +436,7 @@ private:
 	std::atomic<DataBlock*> top_block;
 	std::atomic_flag top_block_lock;
 
-	Self* last_partner;
+	std::atomic<Self*> last_partner;
 
 	SchedulerPlace* scheduler_place;
 };

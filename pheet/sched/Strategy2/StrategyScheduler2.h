@@ -12,17 +12,15 @@
 #include "StrategyScheduler2Place.h"
 #include "StrategyScheduler2PerformanceCounters.h"
 #include "StrategyScheduler2TaskStorageItem.h"
+#include "StrategyScheduler2BaseStrategy.h"
 
 #include "../../settings.h"
-//#include "../../ds/StrategyTaskStorage/Local/LocalStrategyTaskStorage.h"
-#include "../../ds/StrategyTaskStorage/DistK/DistKStrategyTaskStorage.h"
-#include "../../ds/StrategyStealer/Basic/BasicStrategyStealer.h"
-#include "../Strategy/base_strategies/LifoFifo/LifoFifoBaseStrategy.h"
 #include "../../models/MachineModel/BinaryTree/BinaryTreeMachineModel.h"
 #include "../common/SchedulerTask.h"
 #include "../common/SchedulerFunctorTask.h"
 
 #include <pheet/ds/FinishStack/MM/MMFinishStack.h>
+#include <pheet/ds/StrategyTaskStorage/Strategy2Base/Strategy2BaseTaskStorage.h>
 
 namespace pheet {
 
@@ -60,7 +58,7 @@ public:
 //	typedef StrategyScheduler2PlaceDescriptor<Pheet> PlaceDesc;
 //	template <class Strategy>
 //	using TaskDesc = StrategyScheduler2TaskDescriptor<Pheet, Strategy>;
-	typedef BaseStrategyT<Pheet> BaseStrategy;
+	typedef StrategyScheduler2BaseStrategy<Pheet> BaseStrategy;
 	typedef typename Place::PerformanceCounters PerformanceCounters;
 
 	template <class NP>
@@ -151,7 +149,7 @@ procs_t const StrategyScheduler2Impl<Pheet, TaskStorageT, FinishStack>::max_cpus
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack>
 StrategyScheduler2Impl<Pheet, TaskStorageT, FinishStack>::StrategyScheduler2Impl()
-: num_places(machine_model.get_num_leaves()), task_storage(num_places) {
+: num_places(machine_model.get_num_leaves()), task_storage() {
 
 	places = new Place*[num_places];
 	places[0] = new Place(machine_model, &task_storage, places, num_places, &state, performance_counters);
@@ -160,7 +158,7 @@ StrategyScheduler2Impl<Pheet, TaskStorageT, FinishStack>::StrategyScheduler2Impl
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack>
 StrategyScheduler2Impl<Pheet, TaskStorageT, FinishStack>::StrategyScheduler2Impl(typename Place::PerformanceCounters& performance_counters)
-: num_places(machine_model.get_num_leaves()), task_storage(num_places) {
+: num_places(machine_model.get_num_leaves()), task_storage() {
 
 	places = new Place*[num_places];
 	places[0] = new Place(machine_model, &task_storage, places, num_places, &state, performance_counters);
@@ -169,7 +167,7 @@ StrategyScheduler2Impl<Pheet, TaskStorageT, FinishStack>::StrategyScheduler2Impl
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack>
 StrategyScheduler2Impl<Pheet, TaskStorageT, FinishStack>::StrategyScheduler2Impl(procs_t num_places)
-: num_places(num_places), task_storage(num_places) {
+: num_places(num_places), task_storage() {
 
 	places = new Place*[num_places];
 	places[0] = new Place(machine_model, &task_storage, places, num_places, &state, performance_counters);
@@ -178,7 +176,7 @@ StrategyScheduler2Impl<Pheet, TaskStorageT, FinishStack>::StrategyScheduler2Impl
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack>
 StrategyScheduler2Impl<Pheet, TaskStorageT, FinishStack>::StrategyScheduler2Impl(procs_t num_places, typename Place::PerformanceCounters& performance_counters)
-: num_places(num_places), task_storage(num_places) {
+: num_places(num_places), task_storage() {
 
 	places = new Place*[num_places];
 	places[0] = new Place(machine_model, &task_storage, places, num_places, &state, performance_counters);
@@ -296,7 +294,7 @@ inline void StrategyScheduler2Impl<Pheet, TaskStorageT, FinishStack>::call(F&& f
 
 
 template<class Pheet>
-using StrategyScheduler2 = StrategyScheduler2Impl<Pheet, DistKStrategyTaskStorageLocalK, MMFinishStack>;
+using StrategyScheduler2 = StrategyScheduler2Impl<Pheet, Strategy2BaseTaskStorage, MMFinishStack>;
 
 }
 
