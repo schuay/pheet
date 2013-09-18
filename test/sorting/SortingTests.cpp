@@ -13,6 +13,7 @@
 #include "Reference/ReferenceQuicksort.h"
 #include "Reference/ReferenceQuicksortLoop.h"
 #include "Strategy/StrategyQuicksort.h"
+#include "Strategy2/Strategy2Quicksort.h"
 #include "Dag/DagQuicksort.h"
 #include "MixedMode/MixedModeQuicksort.h"
 #include "Reference/ReferenceHeapSort.h"
@@ -104,7 +105,10 @@ void SortingTests::run_test() {
 #else
 	// default tests
 	this->run_sorter<	Pheet::WithScheduler<StrategyScheduler2>,
+						Strategy2Quicksort>();
+	this->run_sorter<	Pheet::WithScheduler<StrategyScheduler2>,
 						DagQuicksort>();
+
 	this->run_sorter<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<DistKStrategyTaskStorage>,
 						StrategyQuicksort>();
 	this->run_sorter<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<DistKStrategyTaskStorageLocalK>,

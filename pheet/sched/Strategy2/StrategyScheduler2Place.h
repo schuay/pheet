@@ -15,6 +15,8 @@
 #include "../common/FinishRegion.h"
 #include "../common/PlaceBase.h"
 
+#include <map>
+
 
 namespace pheet {
 
@@ -44,6 +46,7 @@ public:
 	typedef typename Pheet::Scheduler::TaskStorageItem TaskStorageItem;
 	typedef typename Pheet::Scheduler::TaskStorage CentralTaskStorage;
 	typedef typename Pheet::Scheduler::TaskStorage::Place TaskStorage;
+	typedef typename Pheet::Scheduler::TaskStorage::BasePlace TaskStorageBase;
 //	typedef typename Pheet::Scheduler::TaskDesc TaskDesc;
 //	typedef typename Pheet::Scheduler::PlaceDesc PlaceDesc;
 	typedef StrategyScheduler2PerformanceCounters<Pheet, typename TaskStorage::PerformanceCounters, typename FinishStack::PerformanceCounters> PerformanceCounters;
@@ -62,7 +65,7 @@ public:
 	static Self* get();
 
 	template<class Strategy>
-		bool spawn_to_call_check(Strategy&& s);
+	typename Strategy::TaskStorage::Place* get_task_storage();
 
 	template<class CallTaskType, typename ... TaskParams>
 		void finish(TaskParams&& ... params);
@@ -98,7 +101,7 @@ public:
 
 	ptrdiff_t next_task_id() { return task_id++; }
 
-	TaskStorage& get_task_storage() { return task_storage; }
+	TaskStorage& get_base_task_storage() { return task_storage; }
 	procs_t get_num_levels() {
 		return num_levels;
 	}
@@ -143,6 +146,8 @@ private:
 	TaskStorage task_storage;
 	FinishStack finish_stack;
 
+	std::map<std::type_index, TaskStorageBase*> task_storages;
+
 //	size_t spawn2call_counter;
 
 	CPUThreadExecutor<Self> thread_executor;
@@ -174,6 +179,9 @@ StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::StrategyScheduler2P
   thread_executor(this),
   task_id(0) {
 
+	// Add base task storage to map of all task storages
+	task_storages[std::type_index(typeid(CentralTaskStorage))] = &task_storage;
+
 	// This is the root task execution context. It differs from the others in that it reuses the existing thread instead of creating a new one
 
 	performance_counters.total_time.start_timer();
@@ -203,6 +211,9 @@ StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::StrategyScheduler2P
 //  spawn2call_counter(0),
   thread_executor(this) {
 
+	// Add base task storage to map of all task storages
+	task_storages[std::type_index(typeid(CentralTaskStorage))] = &task_storage;
+
 	memcpy(this->levels, levels, sizeof(LevelDescription) * num_initialized_levels);
 	// We have to initialize this now, as the value is already used by performance counters during initialization
 	this->levels[0].local_id = this->levels[num_initialized_levels - 1].global_id_offset;
@@ -215,10 +226,14 @@ StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::~StrategyScheduler2
 	if(get_id() == 0) {
 		end_finish_region();
 
-	//	task_storage.make_empty();
-
 		// we can shut down the scheduler
 		scheduler_state->current_state = 2;
+
+		// Clean up all task storages
+		for(auto ts : task_storages) {
+			ts.second->clean_up();
+		}
+		task_storage.clean_up();
 
 		performance_counters.task_time.stop_timer();
 		performance_counters.total_time.stop_timer();
@@ -232,6 +247,12 @@ StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::~StrategyScheduler2
 
 		machine_model.unbind();
 		local_place = NULL;
+	}
+	// Delete all additional task storages that were created
+	for(auto ts : task_storages) {
+		if(ts.second != &task_storage) {
+			delete ts.second;
+		}
 	}
 	delete[] levels;
 }
@@ -403,6 +424,11 @@ void StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::main_loop() {
 		}
 
 		if(scheduler_state->current_state >= 2) {
+			// Cleans out any remaining references to tasks
+			for(auto ts : task_storages) {
+				ts.second->clean_up();
+			}
+
 //			performance_counters.idle_time.stop_timer();
 			return;
 		}
@@ -510,6 +536,18 @@ void StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::end_finish_reg
 }
 
 template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
+template<class Strategy>
+typename Strategy::TaskStorage::Place* StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::get_task_storage() {
+	std::type_index ti = std::type_index(typeid(typename Strategy::TaskStorage));
+	typename Strategy::TaskStorage::Place* ts = reinterpret_cast<typename Strategy::TaskStorage::Place*>(task_storages[ti]);
+	if(ts == nullptr) {
+		ts = new typename Strategy::TaskStorage::Place(get_task_storage<typename Strategy::BaseStrategy>());
+		task_storages[ti] = ts;
+	}
+	return ts;
+}
+
+template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
 template<class CallTaskType, typename ... TaskParams>
 void StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::finish(TaskParams&& ... params) {
 	start_finish_region();
@@ -558,43 +596,26 @@ void StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::spawn(F&& f, T
 }
 
 template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
-template<class Strategy>
-inline bool StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::spawn_to_call_check(Strategy&& s) {
-	size_t weight = (s.get_transitive_weight());
-	size_t current_tasks = task_storage.size();
-	size_t threshold = (current_tasks * current_tasks);
-
-	return weight <= threshold;
-}
-
-template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
 template<class CallTaskType, class Strategy, typename ... TaskParams>
 inline void StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::spawn_s(Strategy&& s, TaskParams&& ... params) {
 	performance_counters.num_spawns.incr();
 
-	if(task_storage.is_full()) {
-		// Rigid limit in case the data-structure cannot grow
+	auto ts = get_task_storage<Strategy>();
+
+	// Check whether we can convert task to a function call (determined in strategy)
+	if(s.can_call(ts)) {
 		performance_counters.num_spawns_to_call.incr();
 		call<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 	}
 	else {
-		// TUNE: offsets and parameters
-		if(s.forbid_call_conversion() || !spawn_to_call_check(s)) {
-			pheet_assert(s.get_transitive_weight() > 0);
-		//	spawn2call_counter = 0;
-			performance_counters.num_actual_spawns.incr();
-			CallTaskType* task = new CallTaskType(params ...);
-			pheet_assert(current_task_parent != NULL);
-			finish_stack.spawn(current_task_parent);
-			TaskStorageItem di;
-			di.task = task;
-			di.stack_element = current_task_parent;
-			task_storage.push(std::forward<Strategy&&>(s), di);
-		}
-		else {
-			performance_counters.num_spawns_to_call.incr();
-			call<CallTaskType>(std::forward<TaskParams&&>(params) ...);
-		}
+		performance_counters.num_actual_spawns.incr();
+		CallTaskType* task = new CallTaskType(params ...);
+		pheet_assert(current_task_parent != NULL);
+		finish_stack.spawn(current_task_parent);
+		TaskStorageItem di;
+		di.task = task;
+		di.stack_element = current_task_parent;
+		ts->push(std::forward<Strategy&&>(s), di);
 	}
 }
 
@@ -603,32 +624,24 @@ template<class Strategy, typename F, typename ... TaskParams>
 inline void StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::spawn_s(Strategy&& s, F&& f, TaskParams&& ... params) {
 	performance_counters.num_spawns.incr();
 
-	if(task_storage.is_full()) {
-		// Rigid limit in case the data-structure cannot grow
+	auto ts = get_task_storage<Strategy>();
+
+	// Check whether we can convert task to a function call (determined in strategy)
+	if(s.can_call(ts)) {
 		performance_counters.num_spawns_to_call.incr();
 		call(f, std::forward<TaskParams&&>(params) ...);
 	}
 	else {
-		// TUNE: offsets and parameters
-		if(s.forbid_call_conversion() || !spawn_to_call_check(s)) {
-		//	spawn2call_counter = 0;
-			pheet_assert(s.get_transitive_weight() > 0);
+		performance_counters.num_actual_spawns.incr();
+		auto bound = std::bind(f, params ...);
 
-			performance_counters.num_actual_spawns.incr();
-			auto bound = std::bind(f, params ...);
-
-			FunctorTask<decltype(bound)>* task = new FunctorTask<decltype(bound)>(bound);
-			pheet_assert(current_task_parent != NULL);
-			finish_stack.spawn(current_task_parent);
-			TaskStorageItem di;
-			di.task = task;
-			di.stack_element = current_task_parent;
-			task_storage.push(std::forward<Strategy&&>(s), di);
-		}
-		else {
-			performance_counters.num_spawns_to_call.incr();
-			call(f, std::forward<TaskParams&&>(params) ...);
-		}
+		FunctorTask<decltype(bound)>* task = new FunctorTask<decltype(bound)>(bound);
+		pheet_assert(current_task_parent != NULL);
+		finish_stack.spawn(current_task_parent);
+		TaskStorageItem di;
+		di.task = task;
+		di.stack_element = current_task_parent;
+		task_storage.push(std::forward<Strategy&&>(s), di);
 	}
 }
 

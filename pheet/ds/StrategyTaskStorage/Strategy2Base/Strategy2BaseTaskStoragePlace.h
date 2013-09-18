@@ -12,6 +12,7 @@
 #include "Strategy2BaseTaskStorageDataBlock.h"
 #include "Strategy2BaseTaskStorageItem.h"
 #include "Strategy2BaseTaskStoragePerformanceCounters.h"
+#include "Strategy2BaseTaskStorageBase.h"
 
 #include <pheet/sched/Strategy2/StrategyScheduler2BaseStrategy.h>
 #include <pheet/memory/BlockItemReuse/BlockItemReuseMemoryManager.h>
@@ -21,13 +22,14 @@
 namespace pheet {
 
 template <class Pheet, class TaskStorage, typename TT, size_t BlockSize>
-class Strategy2BaseTaskStoragePlace {
+class Strategy2BaseTaskStoragePlace : public Strategy2BaseTaskStorageBasePlace<Pheet> {
 public:
 	typedef Strategy2BaseTaskStoragePlace<Pheet, TaskStorage, TT, BlockSize> Self;
 
 	typedef TT T;
 
 	typedef typename TaskStorage::BaseTaskStorage BaseTaskStorage;
+	typedef Strategy2BaseTaskStorageBasePlace<Pheet> BaseTaskStoragePlace;
 
 	typedef Strategy2BaseTaskStorageDataBlock<Pheet, Self, BaseTaskStorage, TT, BlockSize> DataBlock;
 	typedef Strategy2BaseTaskStorageBaseItem<Pheet, BaseTaskStorage, TT> BaseItem;
@@ -56,13 +58,17 @@ public:
 		// Full synchronization by scheduler before place becomes visible, happens-before for all initialization is satisfied
 	}
 
+	/**
+	 * Only here for the compiler. Should never be called
+	 */
+	Strategy2BaseTaskStoragePlace(Self*) {
+		throw -1;
+	}
+
 	~Strategy2BaseTaskStoragePlace() {}
 
 	void push(T data) {
 		Item& it = items.acquire_item();
-
-		// Cannot check this since item may be uninitialized if it has been newly allocated
-//		pheet_assert(it.strategy == nullptr);
 
 		size_t b = bottom.load(std::memory_order_relaxed);
 
@@ -89,6 +95,28 @@ public:
 
 		// Put item in block at position b
 		bottom_block->put(&it, b);
+
+		// If the new value of bottom is visible, the put operation must have happened before
+		bottom.store(b + 1, std::memory_order_release);
+	}
+
+	void push(BaseItem* item) {
+		size_t b = bottom.load(std::memory_order_relaxed);
+
+		// If item does not fit in existing block, add a new block
+		if(!bottom_block->fits(b)) {
+			// First check if we already created a next block
+			DataBlock* next = bottom_block->get_next();
+			if(next == nullptr) {
+				// Create one if not
+				next = &(data_blocks.acquire_item());
+				next->link(bottom_block);
+			}
+			bottom_block = next;
+		}
+
+		// Put item in block at position b
+		bottom_block->put(item, b);
 
 		// If the new value of bottom is visible, the put operation must have happened before
 		bottom.store(b + 1, std::memory_order_release);
@@ -226,6 +254,10 @@ public:
 	size_t size() {
 		return bottom.load(std::memory_order_relaxed) - top.load(std::memory_order_relaxed);
 	}
+
+	void clean_up() {
+		// No need for cleanup, everything is automatically cleaned up in destructor
+	}
 private:
 	T steal() {
 		if(last_partner.load(std::memory_order_relaxed) != nullptr) {
@@ -241,7 +273,7 @@ private:
 		// We do not steal from the last level as there are no partners
 		procs_t level = num_levels - 1;
 		while(level > 0) {
-			Self& partner = scheduler_place->get_random_partner_at_level(level)->get_task_storage();
+			Self& partner = scheduler_place->get_random_partner_at_level(level)->get_base_task_storage();
 
 			T ret = partner.steal_from();
 			if(ret != nullable_traits<T>::null_value) {

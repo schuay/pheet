@@ -52,6 +52,7 @@ public:
 	using FunctorTask = SchedulerFunctorTask<Pheet, F>;
 	typedef StrategyScheduler2TaskStorageItem<Pheet, Task, typename FinishStack<Pheet>::Element> TaskStorageItem;
 	typedef TaskStorageT<Pheet, TaskStorageItem> TaskStorage;
+	typedef typename TaskStorage::BaseTaskStorage BaseTaskStorage;
 	typedef StrategyScheduler2Place<Pheet, FinishStack, 4> Place;
 	typedef StrategyScheduler2State<Pheet> State;
 	typedef FinishRegion<Pheet> Finish;
@@ -90,6 +91,9 @@ public:
 
 //	static void print_performance_counter_headers();
 
+	static Self* get() {
+		return singleton;
+	}
 	static Place* get_place();
 	static procs_t get_place_id();
 	Place* get_place_at(procs_t place_id);
@@ -138,6 +142,7 @@ private:
 	State state;
 
 	PerformanceCounters performance_counters;
+	static Self* singleton;
 };
 
 
@@ -148,12 +153,17 @@ template <class Pheet, template <class P, typename T> class TaskStorageT, templa
 procs_t const StrategyScheduler2Impl<Pheet, TaskStorageT, FinishStack>::max_cpus = std::numeric_limits<procs_t>::max() >> 1;
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack>
+StrategyScheduler2Impl<Pheet, TaskStorageT, FinishStack>* StrategyScheduler2Impl<Pheet, TaskStorageT, FinishStack>::singleton = nullptr;
+
+template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack>
 StrategyScheduler2Impl<Pheet, TaskStorageT, FinishStack>::StrategyScheduler2Impl()
 : num_places(machine_model.get_num_leaves()), task_storage() {
 
 	places = new Place*[num_places];
 	places[0] = new Place(machine_model, &task_storage, places, num_places, &state, performance_counters);
 	places[0]->prepare_root();
+
+	singleton = this;
 }
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack>
@@ -163,6 +173,8 @@ StrategyScheduler2Impl<Pheet, TaskStorageT, FinishStack>::StrategyScheduler2Impl
 	places = new Place*[num_places];
 	places[0] = new Place(machine_model, &task_storage, places, num_places, &state, performance_counters);
 	places[0]->prepare_root();
+
+	singleton = this;
 }
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack>
@@ -172,6 +184,8 @@ StrategyScheduler2Impl<Pheet, TaskStorageT, FinishStack>::StrategyScheduler2Impl
 	places = new Place*[num_places];
 	places[0] = new Place(machine_model, &task_storage, places, num_places, &state, performance_counters);
 	places[0]->prepare_root();
+
+	singleton = this;
 }
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack>
@@ -181,12 +195,16 @@ StrategyScheduler2Impl<Pheet, TaskStorageT, FinishStack>::StrategyScheduler2Impl
 	places = new Place*[num_places];
 	places[0] = new Place(machine_model, &task_storage, places, num_places, &state, performance_counters);
 	places[0]->prepare_root();
+
+	singleton = this;
 }
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack>
 StrategyScheduler2Impl<Pheet, TaskStorageT, FinishStack>::~StrategyScheduler2Impl() {
 	delete places[0];
 	delete[] places;
+
+	singleton = nullptr;
 }
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack>

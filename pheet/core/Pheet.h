@@ -124,8 +124,12 @@ public:
 	template <typename IntT> static IntT rand_int(IntT min, IntT max);
 	static Place* get_place();
 	static procs_t get_place_id();
-// TODO:	static procs_t get_num_places();
-// TODO:	static Place* get_place_at(procs_t place_id);
+	static procs_t get_num_places() {
+		return Scheduler::get()->get_num_places();
+	}
+	static Place* get_place_at(procs_t place_id) {
+		return Scheduler::get()->get_place_at(place_id);
+	}
 	template <typename T> static T& place_singleton();
 
 private:

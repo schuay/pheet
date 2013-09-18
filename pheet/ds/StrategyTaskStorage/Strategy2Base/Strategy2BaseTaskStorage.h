@@ -27,6 +27,7 @@ public:
 	typedef Strategy2BaseTaskStorageBase<Pheet, TT> BaseTaskStorage;
 
 	typedef Strategy2BaseTaskStoragePlace<Pheet, Self, TT, BlockSize> Place;
+	typedef Strategy2BaseTaskStorageBasePlace<Pheet> BasePlace;
 	typedef Strategy2BaseTaskStorageDataBlock<Pheet, Place, BaseTaskStorage, TT, BlockSize> DataBlock;
 
 	typedef TT T;

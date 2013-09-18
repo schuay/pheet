@@ -16,6 +16,7 @@ template <class Pheet, class TaskStorage, typename TT>
 struct Strategy2BaseTaskStorageBaseItem {
 //	typedef StrategyScheduler2TaskStorageBase<Pheet, TT> TaskStorage;
 //	typedef StrategyScheduler2BaseStrategy<Pheet> BaseStrategy;
+	typedef TT T;
 
 	Strategy2BaseTaskStorageBaseItem()
 	:taken(true) {}
