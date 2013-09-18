@@ -233,7 +233,6 @@ StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::~StrategyScheduler2
 		for(auto ts : task_storages) {
 			ts.second->clean_up();
 		}
-		task_storage.clean_up();
 
 		performance_counters.task_time.stop_timer();
 		performance_counters.total_time.stop_timer();
