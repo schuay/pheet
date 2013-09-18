@@ -162,7 +162,7 @@ private:
 
 	PerformanceCounters performance_counters;
 
-	static thread_local Self* local_place;
+	static THREAD_LOCAL Self* local_place;
 
 //	friend class Pheet::Scheduler::Finish;
 
@@ -174,7 +174,7 @@ template <class Pheet, uint8_t CallThreshold>
 size_t const PrioritySchedulerPlace<Pheet, CallThreshold>::stack_size = (8192 > (64 << CallThreshold))?8192:(64 << CallThreshold);
 
 template <class Pheet, uint8_t CallThreshold>
-thread_local PrioritySchedulerPlace<Pheet, CallThreshold>*
+THREAD_LOCAL PrioritySchedulerPlace<Pheet, CallThreshold> *
 PrioritySchedulerPlace<Pheet, CallThreshold>::local_place = nullptr;
 
 template <class Pheet, uint8_t CallThreshold>

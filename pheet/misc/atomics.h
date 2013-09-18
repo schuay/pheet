@@ -13,6 +13,11 @@
 
 #ifdef __ICC
 #include "atomics_icc.h"
+
+#elif ENV_WINDOWS
+
+#include "atomics_c11.h"
+
 #elif ENV_GCC
 // Working with g++
 

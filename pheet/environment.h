@@ -14,7 +14,7 @@
 #elif __CYGWIN__
 #define ENV_CYGWIN 1
 #elif _WIN32
-#define ENV_WINDOWS
+#define ENV_WINDOWS 1
 #elif __sun
 #define ENV_SOLARIS
 #endif

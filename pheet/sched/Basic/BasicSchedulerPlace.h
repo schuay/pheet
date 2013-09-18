@@ -161,14 +161,14 @@ private:
 
 	ptrdiff_t task_id;
 
-	static thread_local Self* local_place;
+	static THREAD_LOCAL Self* local_place;
 
 	template <class T>
 		friend void execute_cpu_thread(T* param);
 };
 
 template <class Pheet, template <class P, typename T> class StealingDequeT, template <class> class FinishStackT, uint8_t CallThreshold>
-thread_local BasicSchedulerPlace<Pheet, StealingDequeT, FinishStackT, CallThreshold>* BasicSchedulerPlace<Pheet, StealingDequeT, FinishStackT, CallThreshold>::local_place = NULL;
+THREAD_LOCAL BasicSchedulerPlace<Pheet, StealingDequeT, FinishStackT, CallThreshold>* BasicSchedulerPlace<Pheet, StealingDequeT, FinishStackT, CallThreshold>::local_place = NULL;
 
 
 template <class Pheet, template <class P, typename T> class StealingDequeT, template <class> class FinishStackT, uint8_t CallThreshold>

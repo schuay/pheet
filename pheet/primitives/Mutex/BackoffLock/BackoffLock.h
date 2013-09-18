@@ -11,7 +11,6 @@
 
 #include "../common/BasicLockGuard.h"
 #include <iostream>
-#include <sys/time.h>
 
 namespace pheet {
 

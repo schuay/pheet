@@ -318,7 +318,7 @@ private:
 
 	CPUThreadExecutor<Self> thread_executor;
 
-	static thread_local Place* local_place;
+	static THREAD_LOCAL Place* local_place;
 
 	template <class T>
 		friend void execute_cpu_thread(T* param);
@@ -329,7 +329,7 @@ template <class Pheet, template <class SP, typename T> class StealingDequeT>
 size_t const MixedModeSchedulerPlace<Pheet, StealingDequeT>::finish_stack_size = 8192;
 
 template <class Pheet, template <class SP, typename T> class StealingDequeT>
-thread_local MixedModeSchedulerPlace<Pheet, StealingDequeT>*
+THREAD_LOCAL MixedModeSchedulerPlace<Pheet, StealingDequeT> *
 MixedModeSchedulerPlace<Pheet, StealingDequeT>::local_place = NULL;
 
 template <class Pheet, template <class SP, typename T> class StealingDequeT>

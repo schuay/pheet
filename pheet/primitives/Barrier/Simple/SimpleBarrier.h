@@ -46,7 +46,7 @@ SimpleBarrier<Pheet>::~SimpleBarrier() {
 
 template <class Pheet>
 void SimpleBarrier<Pheet>::signal(size_t i) {
-	INT_ATOMIC_ADD(&(barriers[i&3]), 1);
+	SIZET_ATOMIC_ADD(&(barriers[i&3]), 1);
 }
 
 template <class Pheet>

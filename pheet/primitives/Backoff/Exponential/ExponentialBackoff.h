@@ -46,12 +46,8 @@ void ExponentialBackoffImpl<Pheet, MIN_BACKOFF, MAX_BACKOFF>::backoff() {
 	Pheet p;
 	unsigned int sleep = p.rand_int(limit); //rnd_gen(rng);
 
-	timespec delay;
-	delay.tv_sec = (time_t)0;
-	delay.tv_nsec = sleep;
-	// let's sleep
-	(void)nanosleep(&delay, (timespec *)NULL);
-
+	std::this_thread::sleep_for(std::chrono::nanoseconds(sleep));
+	
 	limit = std::min(limit + sleep, MAX_BACKOFF);
 }
 

@@ -11,7 +11,6 @@
 
 #include <stdio.h>
 #include <iostream>
-#include <sys/time.h>
 
 #include "../../../settings.h"
 #include "../../Reducer/Sum/SumReducer.h"

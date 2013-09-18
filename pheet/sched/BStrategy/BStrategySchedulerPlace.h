@@ -172,7 +172,7 @@ private:
 
 	ptrdiff_t task_id;
 
-	static thread_local Self* local_place;
+	static THREAD_LOCAL Self* local_place;
 
 //	friend class Pheet::Scheduler::Finish;
 
@@ -181,7 +181,7 @@ private:
 };
 
 template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
-thread_local BStrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>*
+THREAD_LOCAL BStrategySchedulerPlace<Pheet, FinishStackT, CallThreshold> *
 BStrategySchedulerPlace<Pheet, FinishStackT, CallThreshold>::local_place = nullptr;
 
 template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>

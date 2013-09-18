@@ -11,7 +11,6 @@
 
 #include <stdio.h>
 #include <iostream>
-#include <sys/time.h>
 
 #include "../../../settings.h"
 #include "../../Reducer/Max/MaxReducer.h"
@@ -80,7 +79,7 @@ public:
 private:
 
 	MaxReducer<Pheet, double> reducer;
-	struct timeval start_time;
+	std::chrono::high_resolution_clock::time_point start_time;
 };
 
 template <class Pheet>
@@ -107,15 +106,14 @@ LastTimePerformanceCounter<Pheet, true>::~LastTimePerformanceCounter() {
 template <class Pheet>
 inline
 void LastTimePerformanceCounter<Pheet, true>::start_timer() {
-	gettimeofday(&start_time, NULL);
+	start_time = std::chrono::high_resolution_clock::now();
 }
 
 template <class Pheet>
 inline
 void LastTimePerformanceCounter<Pheet, true>::take_time() {
-	struct timeval stop_time;
-	gettimeofday(&stop_time, NULL);
-	double time = (stop_time.tv_sec - start_time.tv_sec) + 1.0e-6 * stop_time.tv_usec - 1.0e-6 * start_time.tv_usec;
+	auto stop_time = std::chrono::high_resolution_clock::now();
+	double time = 1.0e-6 * std::chrono::duration_cast<std::chrono::microseconds>(stop_time - start_time).count();
 	reducer.add(time);
 }
 
