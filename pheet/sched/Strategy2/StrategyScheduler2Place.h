@@ -154,7 +154,7 @@ private:
 
 	ptrdiff_t task_id;
 
-	static thread_local Self* local_place;
+	static THREAD_LOCAL Self* local_place;
 
 //	friend class Pheet::Scheduler::Finish;
 

@@ -11,6 +11,7 @@
 
 #include <stdio.h>
 #include <iostream>
+#include <chrono>
 
 #include "../../../settings.h"
 #include "../../Reducer/Max/MaxReducer.h"

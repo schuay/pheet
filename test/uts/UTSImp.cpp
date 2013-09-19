@@ -1,3 +1,5 @@
+#ifdef UTS_TEST
+
 #include <stdlib.h>
 
 extern "C"
@@ -26,3 +28,5 @@ int impl_parseParam(char *param, char *value) {
 extern "C"
 void impl_helpMessage() {
 }
+
+#endif

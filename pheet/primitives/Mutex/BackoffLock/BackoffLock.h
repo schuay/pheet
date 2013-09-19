@@ -11,6 +11,7 @@
 
 #include "../common/BasicLockGuard.h"
 #include <iostream>
+#include <chrono>
 
 namespace pheet {
 
@@ -70,15 +71,12 @@ bool BackoffLockImpl<Pheet, Backoff>::try_lock() {
 template <class Pheet, class Backoff>
 bool BackoffLockImpl<Pheet, Backoff>::try_lock(long int time_ms) {
 	Backoff bo;
-	struct timeval begin;
-	gettimeofday(&begin, NULL);
-	long int begin_ms = (begin.tv_usec / 1000) + (begin.tv_sec * 1000);
+	auto begin = std::chrono::steady_clock::now();;
 	while(!INT_CAS(&locked, 0, 1)) {
 		do {
-			struct timeval current;
-			gettimeofday(&current, NULL);
-			long int current_ms = (current.tv_usec / 1000) + (current.tv_sec * 1000);
-			if(current_ms - begin_ms >= time_ms) {
+			auto current = std::chrono::steady_clock::now();
+			if(std::chrono::duration_cast<std::chrono::milliseconds>(current - begin).count()
+					>= time_ms) {
 				return false;
 			}
 			bo.backoff();

@@ -9,9 +9,9 @@
 #ifndef TWOLEVELGROWINGCIRCULARARRAY_H_
 #define TWOLEVELGROWINGCIRCULARARRAY_H_
 
-#include "../../../settings.h"
+#include <pheet/settings.h>
 
-#include "../../../misc/bitops.h"
+#include <pheet/misc/bitops.h>
 
 namespace pheet {
 

@@ -7,13 +7,16 @@
 */
 
 #include "UTSTests.h"
+#ifdef UTS_TEST
 #include "UTSTest.h"
 #include "RecursiveSearch/UTSRun.h"
 
 #include <pheet/sched/Strategy/StrategyScheduler.h>
+#endif
 
 //#include "../test_schedulers.h"
 #include <iostream>
+
 
 namespace pheet {
 

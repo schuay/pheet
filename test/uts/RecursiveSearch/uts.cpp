@@ -13,6 +13,8 @@
  *
  */
 
+#ifdef UTS_TEST
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -456,3 +458,5 @@ void uts_showStats(int nPes, int chunkSize, double walltime, counter_t nNodes, c
         walltime, (nNodes / walltime), (nNodes / walltime / nPes));
   }
 }
+
+#endif

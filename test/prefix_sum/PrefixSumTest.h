@@ -12,11 +12,11 @@
 #include <stdlib.h>
 #include <iostream>
 #include <memory>
+#include <exception>
 #include <pheet/pheet.h>
 #include "../Test.h"
-#include <exception>
 
-using namespace std;
+//using namespace std;
 
 namespace pheet {
 
@@ -36,7 +36,8 @@ public:
 		aligned = raw;
 		aligned = std::align(alignment, size, aligned, totalSize);
 		if (aligned == 0)
-			throw std::exception("Alignment of allocation failed");
+			// Having a string as parameter doesn't seem to be C++ standard conformant
+			throw std::exception(/*"Alignment of allocation failed"*/);
 	}
 
 	aligned_data(aligned_data && other) :
@@ -130,19 +131,19 @@ void PrefixSumTest<Pheet, Algorithm>::run_test() {
 	Pheet::Environment::PerformanceCounters::print_headers();
 	Algorithm<Pheet>::PerformanceCounters::print_headers();
 	std::cout << std::endl;
-	cout << "prefix_sum\t" << Algorithm<Pheet>::name << "\t";
+	std::cout << "prefix_sum\t" << Algorithm<Pheet>::name << "\t";
 	Pheet::Environment::print_name();
 	std::cout << "\t" << num_problems << "\t" << types[type] << "\t" << size << "\t" << seed << "\t" << cpus << "\t" << seconds << "\t" << correctness << "\t";
 	pc.print_values();
 	apc.print_values();
-	cout << endl;
+	std::cout << std::endl;
 	
 	delete[] data;
 }
 
 
 template <class Pheet, template <class P> class Algorithm>
-PrefixSumTest<Pheet, Algorithm>::TestData PrefixSumTest<Pheet, Algorithm>::generate_data() {
+typename PrefixSumTest<Pheet, Algorithm>::TestData PrefixSumTest<Pheet, Algorithm>::generate_data() {
 
 	TestData testData(size);
 	unsigned int* data = testData.ptr();
