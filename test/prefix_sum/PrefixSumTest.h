@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <memory>
-#include <exception>
+#include <stdexcept>
 #include <pheet/pheet.h>
 #include "../Test.h"
 
@@ -36,8 +36,7 @@ public:
 		aligned = raw;
 		aligned = std::align(alignment, size, aligned, totalSize);
 		if (aligned == 0)
-			// Having a string as parameter doesn't seem to be C++ standard conformant
-			throw std::exception(/*"Alignment of allocation failed"*/);
+			throw std::runtime_error("Alignment of allocation failed");
 	}
 
 	aligned_data(aligned_data && other) :
