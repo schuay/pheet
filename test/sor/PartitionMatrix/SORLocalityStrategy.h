@@ -157,13 +157,13 @@ public:
 
 	  if(distancetothis == 0)
 	  {
-	  	// If local task, prioritize recently used
-	  	return timestamp > other.timestamp;
+		// If local task, prioritize recently used
+		return timestamp > other.timestamp;
 	  }
 	  else
 	  {
-	  	// If stealing, prioritize not recently used
-	  	return timestamp < other.timestamp;
+		// If stealing, prioritize not recently used
+		return timestamp < other.timestamp;
 	  }
 	}
 

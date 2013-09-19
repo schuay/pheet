@@ -63,7 +63,7 @@ void FixedSizeCircularArray<Pheet, T>::put(size_t i, T item) {
 }
 
 template <class Pheet, typename T>
-void FixedSizeCircularArray<Pheet, T>::grow(size_t bottom, size_t top) {
+void FixedSizeCircularArray<Pheet, T>::grow(size_t, size_t) {
 	pheet_assert(false);
 }
 

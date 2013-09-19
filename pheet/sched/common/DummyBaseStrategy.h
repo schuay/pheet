@@ -27,7 +27,7 @@ public:
 
 	~DummyBaseStrategy() {}
 
-	inline bool prioritize(Self& other) {
+	inline bool prioritize(Self&) {
 		return false;
 	}
 
@@ -48,10 +48,10 @@ public:
 		return *this;
 	}
 
-	inline void set_k(size_t value) {
+	inline void set_k(size_t) {
 	}
 
-	inline Self& set_memory_footprint(size_t value) {
+	inline Self& set_memory_footprint(size_t) {
 	//	memory_footprint = value;
 		return *this;
 	}

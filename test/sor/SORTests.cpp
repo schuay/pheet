@@ -24,7 +24,7 @@
 namespace pheet {
 
 	template <class Test>
-	void SORTests::test(bool runuts, bool runsor, bool usestrat)
+	void SORTests::test(bool, bool, bool)
 	{
 #ifdef SOR_TEST
 	    for(size_t itr = 0; itr < sizeof(sor_test_iterations)/sizeof(sor_test_iterations[0]); itr++) {
@@ -41,8 +41,8 @@ namespace pheet {
 	  }
 #endif
 	}
-  
-	void SORTests::run_test(bool usestrategy)
+
+	void SORTests::run_test(bool)
 	{
 #ifdef SOR_TEST
 		if(sor_test) {
@@ -56,5 +56,5 @@ namespace pheet {
 		}
 #endif
 	}
-	
+
 }

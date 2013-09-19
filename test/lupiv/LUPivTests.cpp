@@ -32,7 +32,7 @@ LUPivTests::~LUPivTests() {
 
 }
 
-void LUPivTests::run_test(bool usesstrategy) {
+void LUPivTests::run_test(bool) {
 #ifdef LUPIV_TEST
 	std::cout << "----" << std::endl;
 

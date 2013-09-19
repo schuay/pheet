@@ -15,12 +15,12 @@ char * impl_getName() {
 
 extern "C"
 // construct string with all parameter settings 
-int impl_paramsToStr(char *strBuf, int ind) {
+int impl_paramsToStr(char *, int ind) {
   return ind;
 }
 
 extern "C"
-int impl_parseParam(char *param, char *value) {
+int impl_parseParam(char *, char *) {
   int err = 1;  // Return 0 on a match, nonzero on an error
   return err;
 }

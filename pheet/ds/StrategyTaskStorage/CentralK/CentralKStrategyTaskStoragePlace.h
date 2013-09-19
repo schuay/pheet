@@ -77,7 +77,7 @@ public:
 
 	typedef typename Pheet::Scheduler::Place SchedulerPlace;
 
-	CentralKStrategyTaskStoragePlace(TaskStorage* task_storage, SchedulerPlace* scheduler_place, PerformanceCounters pc)
+	CentralKStrategyTaskStoragePlace(TaskStorage* task_storage, SchedulerPlace*, PerformanceCounters pc)
 	:pc(pc), task_storage(task_storage), heap(sr, pc.strategy_heap_performance_counters), head(0) {
 		DataBlock* tmp = task_storage->start_block;
 		if(tmp == nullptr) {

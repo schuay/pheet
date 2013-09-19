@@ -38,7 +38,7 @@ MinPerformanceCounter<Pheet, T, false>::MinPerformanceCounter() {
 
 template <class Pheet, typename T>
 inline
-MinPerformanceCounter<Pheet, T, false>::MinPerformanceCounter(MinPerformanceCounter<Pheet, T, false> const& other) {
+MinPerformanceCounter<Pheet, T, false>::MinPerformanceCounter(MinPerformanceCounter<Pheet, T, false> const&) {
 
 }
 
@@ -50,19 +50,19 @@ MinPerformanceCounter<Pheet, T, false>::~MinPerformanceCounter() {
 
 template <class Pheet, typename T>
 inline
-void MinPerformanceCounter<Pheet, T, false>::add_value(size_t value) {
+void MinPerformanceCounter<Pheet, T, false>::add_value(size_t) {
 
 }
 
 template <class Pheet, typename T>
 inline
-void MinPerformanceCounter<Pheet, T, false>::print(char const* const formatting_string) {
+void MinPerformanceCounter<Pheet, T, false>::print(char const* const) {
 
 }
 
 template <class Pheet, typename T>
 inline
-void MinPerformanceCounter<Pheet, T, false>::print_header(char const* const string) {
+void MinPerformanceCounter<Pheet, T, false>::print_header(char const* const) {
 
 }
 

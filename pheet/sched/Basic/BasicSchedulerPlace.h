@@ -666,13 +666,13 @@ void BasicSchedulerPlace<Pheet, StealingDequeT, FinishStackT, CallThreshold>::sp
 
 template <class Pheet, template <class P, typename T> class StealingDequeT, template <class> class FinishStackT, uint8_t CallThreshold>
 template<class CallTaskType, class Strategy, typename ... TaskParams>
-inline void BasicSchedulerPlace<Pheet, StealingDequeT, FinishStackT, CallThreshold>::spawn_s(Strategy&& s, TaskParams&& ... params) {
+inline void BasicSchedulerPlace<Pheet, StealingDequeT, FinishStackT, CallThreshold>::spawn_s(Strategy&&, TaskParams&& ... params) {
 	spawn<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, template <class P, typename T> class StealingDequeT, template <class> class FinishStackT, uint8_t CallThreshold>
 template<class Strategy, typename F, typename ... TaskParams>
-inline void BasicSchedulerPlace<Pheet, StealingDequeT, FinishStackT, CallThreshold>::spawn_s(Strategy&& s, F&& f, TaskParams&& ... params) {
+inline void BasicSchedulerPlace<Pheet, StealingDequeT, FinishStackT, CallThreshold>::spawn_s(Strategy&&, F&& f, TaskParams&& ... params) {
 	spawn(f, std::forward<TaskParams&&>(params) ...);
 }
 

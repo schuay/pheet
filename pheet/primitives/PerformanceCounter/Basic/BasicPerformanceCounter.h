@@ -61,19 +61,19 @@ void BasicPerformanceCounter<Pheet, false>::incr() {
 
 template <class Pheet>
 inline
-void BasicPerformanceCounter<Pheet, false>::add(size_t value) {
+void BasicPerformanceCounter<Pheet, false>::add(size_t) {
 
 }
 
 template <class Pheet>
 inline
-void BasicPerformanceCounter<Pheet, false>::print(char const* const formatting_string) {
+void BasicPerformanceCounter<Pheet, false>::print(char const* const) {
 
 }
 
 template <class Pheet>
 inline
-void BasicPerformanceCounter<Pheet, false>::print_header(char const* const string) {
+void BasicPerformanceCounter<Pheet, false>::print_header(char const* const) {
 
 }
 

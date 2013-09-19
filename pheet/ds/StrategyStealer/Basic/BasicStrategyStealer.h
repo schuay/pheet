@@ -99,7 +99,7 @@ public:
 	typedef BasicStrategyStealerPlace<Pheet, TaskStorage> StealerPlace;
 	typedef StealerPlace StealerRef;
 
-	BasicStrategyStealer(TaskStorage& local_task_storage, PerformanceCounters& pc)
+	BasicStrategyStealer(TaskStorage& local_task_storage, PerformanceCounters&)
 	:local_task_storage(local_task_storage) {}
 	~BasicStrategyStealer() {
 		for(auto i = places.begin(); i != places.end(); ++i) {

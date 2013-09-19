@@ -229,13 +229,13 @@ void FinisherSchedulerImpl<Pheet, StealingDeque, CallThreshold>::spawn(F&& f, Ta
 
 template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
 template<class CallTaskType, class Strategy, typename ... TaskParams>
-void FinisherSchedulerImpl<Pheet, StealingDeque, CallThreshold>::spawn_prio(Strategy s, TaskParams&& ... params) {
+void FinisherSchedulerImpl<Pheet, StealingDeque, CallThreshold>::spawn_prio(Strategy, TaskParams&& ... params) {
 	spawn<CallTaskType>(std::forward<TaskParams&&>(params) ...);
 }
 
 template <class Pheet, template <class P, typename T> class StealingDeque, uint8_t CallThreshold>
 template<class Strategy, typename F, typename ... TaskParams>
-void FinisherSchedulerImpl<Pheet, StealingDeque, CallThreshold>::spawn_prio(Strategy s, F&& f, TaskParams&& ... params) {
+void FinisherSchedulerImpl<Pheet, StealingDeque, CallThreshold>::spawn_prio(Strategy, F&& f, TaskParams&& ... params) {
 	spawn(f, std::forward<TaskParams&&>(params) ...);
 }
 

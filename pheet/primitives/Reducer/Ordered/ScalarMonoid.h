@@ -42,7 +42,7 @@ ScalarMonoid<T, Operation>::ScalarMonoid() {
 }
 
 template <typename T, template <typename S> class Operation>
-ScalarMonoid<T, Operation>::ScalarMonoid(Monoid const& other) {
+ScalarMonoid<T, Operation>::ScalarMonoid(Monoid const&) {
 	value = reduce_op.get_identity();
 }
 

@@ -163,7 +163,7 @@ private:
 };
 
 template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
-thread_local StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>*
+THREAD_LOCAL StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>*
 StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::local_place = nullptr;
 
 template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>

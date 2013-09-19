@@ -24,15 +24,15 @@ namespace pheet {
       void print(struct timeval expstart)
       {
 	double time = (start.tv_sec - expstart.tv_sec) + 1.0e-6 * start.tv_usec - 1.0e-6 * expstart.tv_usec;
-	
+
 	std::cout << time << ": " << value << std::endl;
       }
     };
-  
+
   template <class Pheet, typename E, bool enabled>
     class EventsList;
-  
-  
+
+
   template <class Pheet, typename E>
     class EventsList<Pheet, E, true>
     {
@@ -43,30 +43,30 @@ namespace pheet {
 	{
 	  gettimeofday(&start,0);
 	}
-      
+
       inline EventsList(EventsList<Pheet, E, true> const& other):events(other.events)
       {
-	
+
       }
-      
+
       void add(E const& value)
       {
 	struct timeval currtime;
 	gettimeofday(&currtime,0);
-	
+
 	Event<E> e(currtime,value);
 	events.add(e);
       }
-      
+
       void print()
       {
 	std::vector<Event<E> > eventslist = events.get_list();
 	for(size_t i=0;i<eventslist.size();i++)
 	  eventslist[i].print(start);
       }
-      
+
     };
-  
+
   template <class Pheet, typename E>
     class EventsList<Pheet, E, false>
     {
@@ -74,18 +74,18 @@ namespace pheet {
       EventsList()
 	{
 	}
-      
-      inline EventsList(EventsList<Pheet, E, false> const& other)
+
+      inline EventsList(EventsList<Pheet, E, false> const&)
       {
-	
+
       }
-      
-      void add(E const& value)
+
+      void add(E const&)
       {
       }
-      
+
       void print() {}
-      
+
     };
 
   template <class Pheet, typename E, bool enabled>
