@@ -12,6 +12,7 @@
 #include "init.h"
 
 #include <stdlib.h>
+#include <chrono>
 
 namespace pheet {
 
