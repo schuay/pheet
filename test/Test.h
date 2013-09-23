@@ -9,6 +9,7 @@
 #ifndef TEST_H_
 #define TEST_H_
 
+#include <chrono>
 #include <stdlib.h>
 
 namespace pheet
