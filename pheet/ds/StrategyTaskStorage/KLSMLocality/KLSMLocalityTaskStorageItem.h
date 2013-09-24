@@ -15,6 +15,11 @@ namespace pheet {
 
 template <class Pheet, class Place, class Frame, class BaseItem, class Strategy>
 struct KLSMLocalityTaskStorageItem : public BaseItem {
+	KLSMLocalityTaskStorageItem()
+	:owner(Pheet::get_place()), used_locally(false), frame(nullptr) {
+		owner = Pheet::get_place();
+	}
+
 	Place* owner;
 	Strategy strategy;
 	bool used_locally;
@@ -27,7 +32,7 @@ template <class Item>
 struct KLSMLocalityTaskStorageItemReuseCheck {
 	bool operator() (Item const& item) const {
 		// item.taken is always set after last_phase is set, therefore use this for checks
-		return item.taken/* && frame->can_reuse(last_phase)*/;
+		return item.taken && !used_locally && (frame == nullptr || frame->can_reuse(last_phase));
 	}
 };
 
