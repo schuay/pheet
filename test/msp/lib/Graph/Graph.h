@@ -56,26 +56,27 @@ public:
 	size_t node_count() const;
 	size_t edge_count() const;
 
-	Node* get_node(ulong const id) const;
+	Node* get_node(uint const id) const;
 	std::vector<Node*> nodes() const;
 
 private:
 	Graph(Agraph_t* g);
 
-	Edge* get_edge(ulong const id) const;
-
-	void add_node(ulong const id,
+	void add_node(Agnode_t const* agnode,
 	              Node* n);
-	void add_edge(ulong const id,
-	              Edge* e);
+	void add_edge(Edge* e);
 
 private:
 	Agraph_t* g;
 
 	size_t m_degree;
 
-	std::unordered_map<ulong, Node*> m_nodes;
-	std::unordered_map<ulong, Edge*> m_edges;
+	std::unordered_map<Agnode_t const*, Node*> m_nodes_map;
+
+	std::vector<Node*> m_nodes;
+	std::vector<Edge*> m_edges;
+
+	uint m_next_node_id;
 };
 
 }
