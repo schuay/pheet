@@ -28,7 +28,7 @@ inline bool size_t_cas_clang(size_t* p, size_t old_v, size_t new_v) {
 #define UINT_ATOMIC_ADD(p, val)		(__sync_fetch_and_add(p, val))
 #define LONG_ATOMIC_ADD(p, val)		(__sync_fetch_and_add(p, val))
 #define ULONG_ATOMIC_ADD(p, val)	(__sync_fetch_and_add(p, val))
-inline bool size_t_atomic_add_clang(size_t* p, size_t val) {
+inline bool size_t_atomic_add_clang(volatile size_t* p, size_t val) {
 	return __sync_fetch_and_add(p, val);
 }
 #define SIZET_ATOMIC_ADD(p, val)	(size_t_atomic_add_clang(p, val))
