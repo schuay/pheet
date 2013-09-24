@@ -49,6 +49,8 @@ run_benchmarks()
 
 	::run_algorithm < Pheet::WithScheduler<BStrategyScheduler>
 	::WithTaskStorage<DistKStrategyTaskStorage>, StrategyMspTask > (g, src);
+
+	delete g;
 }
 
 } /* namespace pheet */
