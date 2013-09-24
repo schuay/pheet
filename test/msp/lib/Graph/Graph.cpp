@@ -19,7 +19,8 @@ namespace graph
 Graph::
 Graph(std::string const& name,
       size_t const degree)
-	: m_degree(degree)
+	: m_degree(degree),
+	  m_next_node_id(0)
 {
 	g = agopen(const_cast<char*>(name.c_str()), Agdirected, NULL);
 
@@ -32,7 +33,8 @@ Graph(std::string const& name,
 
 Graph::
 Graph(Agraph_t* g)
-	: g(g)
+	: g(g),
+	  m_next_node_id(0)
 {
 	m_degree = std::stoi(agget(g, ATTR_DEGREE));
 
@@ -41,7 +43,7 @@ Graph(Agraph_t* g)
 	}
 
 	for (auto & p : m_nodes) {
-		Agnode_t* n = p.second->n;
+		Agnode_t* n = p->n;
 		for (Agedge_t* e = agfstout(g, n); e != nullptr; e = agnxtout(g, e)) {
 			new Edge(this, e);
 		}
@@ -51,12 +53,12 @@ Graph(Agraph_t* g)
 Graph::
 ~Graph()
 {
-	for (auto & n : m_nodes) {
-		delete n.second;
+	for (Node * n : m_nodes) {
+		delete n;
 	}
 
-	for (auto & e : m_edges) {
-		delete e.second;
+	for (Edge * e : m_edges) {
+		delete e;
 	}
 
 	agclose(g);
@@ -133,55 +135,34 @@ edge_count() const
 	return agnedges(g);
 }
 
-
 Node*
-Graph::
-get_node(ulong const id) const
+Graph::get_node(const uint id) const
 {
-	try {
-		return m_nodes.at(id);
-	} catch (std::out_of_range const&) {
-		return nullptr;
-	}
+	return m_nodes.at(id);
 }
 
 std::vector<Node*>
 Graph::
 nodes() const
 {
-	std::vector<Node*> ns;
-	for (auto & p : m_nodes) {
-		ns.push_back(p.second);
-	}
-	return ns;
-}
-
-Edge*
-Graph::
-get_edge(ulong const id) const
-{
-	try {
-		return m_edges.at(id);
-	} catch (std::out_of_range const&) {
-		return nullptr;
-	}
+	return m_nodes;
 }
 
 void
 Graph::
-add_node(ulong const id,
+add_node(Agnode_t const* agnode,
          Node* n)
 {
-	m_nodes.emplace(id, n);
+	m_nodes_map.emplace(agnode, n);
+	m_nodes.push_back(n);
 }
 
 void
 Graph::
-add_edge(ulong const id,
-         Edge* e)
+add_edge(Edge* e)
 {
-	m_edges.emplace(id, e);
 	e->tail()->m_out_edges.push_back(e);
+	m_edges.push_back(e);
 }
 
 }
