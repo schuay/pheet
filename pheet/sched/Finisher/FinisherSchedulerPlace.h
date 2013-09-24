@@ -357,14 +357,12 @@ void FinisherSchedulerPlace<Pheet, StealingDequeT, CallThreshold>::run() {
 	initialize_levels();
 //	stack = new StackElement[stack_size];
 
+	// Releases all writes to this place to all other places. Will become visible after wait
 	scheduler_state->state_barrier.signal(0);
 
 	performance_counters.total_time.start_timer();
 
 	scheduler_state->state_barrier.wait(0, levels[0].size);
-
-	// Make sure the original initialization by all places is visible
-	MEMORY_FENCE();
 
 	main_loop();
 

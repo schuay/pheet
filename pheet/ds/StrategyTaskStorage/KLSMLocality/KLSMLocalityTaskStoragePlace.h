@@ -22,7 +22,7 @@ public:
 
 	typedef typename ParentTaskStoragePlace::BaseTaskStoragePlace BaseTaskStoragePlace;
 	typedef typename ParentTaskStoragePlace::BaseItem BaseItem;
-	typedef KLSMLocalityTaskStorageItem<Pheet, BaseItem, Strategy> Item;
+	typedef KLSMLocalityTaskStorageItem<Pheet, Self, void, BaseItem, Strategy> Item;
 	typedef typename BaseItem::T T;
 
 	typedef BlockItemReuseMemoryManager<Pheet, Item, KLSMLocalityTaskStorageItemReuseCheck<Item> > ItemMemoryManager;
@@ -84,6 +84,11 @@ private:
 	bool created_task_storage;
 
 	ItemMemoryManager items;
+
+	Item* top;
+
+	size_t delay_phase;
+	size_t missed_tasks;
 };
 
 } /* namespace pheet */

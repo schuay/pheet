@@ -9,17 +9,25 @@
 #ifndef KLSMLOCALITYTASKSTORAGEITEM_H_
 #define KLSMLOCALITYTASKSTORAGEITEM_H_
 
+#include <atomic>
+
 namespace pheet {
 
-template <class Pheet, class BaseItem, class Strategy>
+template <class Pheet, class Place, class Frame, class BaseItem, class Strategy>
 struct KLSMLocalityTaskStorageItem : public BaseItem {
+	Place* owner;
 	Strategy strategy;
+	bool used_locally;
+
+	Frame* frame;
+	std::atomic<size_t> last_phase;
 };
 
 template <class Item>
 struct KLSMLocalityTaskStorageItemReuseCheck {
 	bool operator() (Item const& item) const {
-		return item.taken;
+		// item.taken is always set after last_phase is set, therefore use this for checks
+		return item.taken/* && frame->can_reuse(last_phase)*/;
 	}
 };
 
