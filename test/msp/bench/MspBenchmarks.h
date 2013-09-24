@@ -23,7 +23,10 @@ namespace pheet
 class MspBenchmarks
 {
 public:
-	void run_benchmarks();
+	void run_benchmarks(bool SequentialMsp,
+	                    bool StrategyMspTask,
+	                    std::vector<int> n,
+	                    std::vector<std::string> files);
 };
 
 } /* namespace pheet */

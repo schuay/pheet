@@ -22,13 +22,9 @@ const size_t DEGREE        = 3;
 
 template <class Pheet, template <class P> class Partitioner>
 void
-run_algorithm(graph::Graph* g, graph::Node* src)
+run_algorithm(graph::Graph* g, graph::Node* src, int n)
 {
-	typename Pheet::MachineModel mm;
-	const pheet::procs_t max_cpus =
-	    std::min(mm.get_num_leaves(), Pheet::Environment::max_cpus);
-
-	pheet::MspBenchmark<Pheet, Partitioner> gbt(max_cpus, g, src, SEED);
+	pheet::MspBenchmark<Pheet, Partitioner> gbt(n, g, src, SEED);
 	gbt.run_test();
 }
 
@@ -39,18 +35,34 @@ namespace pheet
 
 void
 MspBenchmarks::
-run_benchmarks()
+run_benchmarks(bool sequential,
+               bool strategy,
+               std::vector<int> n,
+               std::vector<std::string> files)
 {
-	graph::Graph* g = graph::Generator::directed("test", NODES, EDGES, true,
-	                  DEGREE, WEIGHT_LIMIT, SEED);
-	graph::Node* src = g->nodes().front();
+	graph::Graph* g;
+	graph::Node* src;
 
-	::run_algorithm<Pheet::WithScheduler<SynchroneousScheduler>, SequentialMsp>(g, src);
+	for (auto & it : files) {
+		g = graph::Graph::read(fopen(it.c_str(), "r"));
+		src = g->nodes().front();
 
-	::run_algorithm < Pheet::WithScheduler<BStrategyScheduler>
-	::WithTaskStorage<DistKStrategyTaskStorage>, StrategyMspTask > (g, src);
+		/* Note: no need to execute with SynchroneousScheduler for different
+		   amount of cores */
+		if (sequential) {
+			::run_algorithm < Pheet::WithScheduler<SynchroneousScheduler>,
+			SequentialMsp > (g, src, 1);
+		}
 
-	delete g;
+		for (auto & it : n) {
+			if (strategy) {
+				::run_algorithm < Pheet::WithScheduler<BStrategyScheduler>
+				::WithTaskStorage<DistKStrategyTaskStorage>, StrategyMspTask > (g, src, it);
+			}
+		}
+
+		delete g;
+	}
 }
 
 } /* namespace pheet */
