@@ -48,6 +48,8 @@ Edge(Graph* graph,
 	}
 
 	assert(ws.size() == m_graph->degree());
+
+	m_graph->add_edge(this);
 }
 
 Graph*
