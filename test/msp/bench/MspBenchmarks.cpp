@@ -14,17 +14,12 @@
 
 namespace
 {
-const size_t NODES         = 500;
-const size_t EDGES         = 50000;
-const unsigned int SEED    = 42;
-const size_t WEIGHT_LIMIT  = 1000;
-const size_t DEGREE        = 3;
 
 template <class Pheet, template <class P> class Partitioner>
 void
 run_algorithm(graph::Graph* g, graph::Node* src, int n)
 {
-	pheet::MspBenchmark<Pheet, Partitioner> gbt(n, g, src, SEED);
+	pheet::MspBenchmark<Pheet, Partitioner> gbt(n, g, src);
 	gbt.run_test();
 }
 
@@ -51,8 +46,8 @@ run_benchmarks(bool const sequential,
 			SequentialMsp > (g, src, 1);
 		}
 
-		for (auto & it : n) {
-			if (strategy) {
+		if (strategy) {
+			for (auto & it : n) {
 				::run_algorithm < Pheet::WithScheduler<BStrategyScheduler>
 				::WithTaskStorage<DistKStrategyTaskStorage>, StrategyMspTask > (g, src, it);
 			}
