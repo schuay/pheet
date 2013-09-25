@@ -1,7 +1,6 @@
 PROJECT(Pheet)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
-find_package(GTest REQUIRED)
 find_package(Threads REQUIRED)
 
 include(FindPkgConfig)
