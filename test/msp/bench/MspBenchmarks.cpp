@@ -30,24 +30,21 @@ namespace pheet
 
 void
 MspBenchmarks::
-run_benchmarks(bool const sequential,
-               bool const strategy,
-               std::vector<int> const& n,
-               std::vector<std::string> const& files)
+run_benchmarks(BenchOpts const& opts)
 {
-	for (auto & it : files) {
+	for (auto & it : opts.files) {
 		graph::Graph* g = graph::Graph::read(fopen(it.c_str(), "r"));
 		graph::Node* src = g->nodes().front();
 
 		/* Note: no need to execute with SynchroneousScheduler for different
 		   amount of cores */
-		if (sequential) {
+		if (opts.sequential) {
 			::run_algorithm < Pheet::WithScheduler<SynchroneousScheduler>,
 			SequentialMsp > (g, src, 1);
 		}
 
-		if (strategy) {
-			for (auto & it : n) {
+		if (opts.strategy) {
+			for (auto & it : opts.ncpus) {
 				::run_algorithm < Pheet::WithScheduler<BStrategyScheduler>
 				::WithTaskStorage<DistKStrategyTaskStorage>, StrategyMspTask > (g, src, it);
 			}

@@ -12,6 +12,15 @@
 namespace pheet
 {
 
+struct BenchOpts {
+	BenchOpts() : strategy(false), sequential(false) { }
+
+	bool strategy;
+	bool sequential;
+	std::vector<int> ncpus;
+	std::vector<std::string> files;
+};
+
 /**
  * MSP stands for the Multi-criteria (single source) Shortest Path problem.
  *
@@ -23,10 +32,7 @@ namespace pheet
 class MspBenchmarks
 {
 public:
-	void run_benchmarks(bool const SequentialMsp,
-	                    bool const StrategyMspTask,
-	                    std::vector<int> const& n,
-	                    std::vector<std::string> const& files);
+	void run_benchmarks(BenchOpts const& opts);
 };
 
 } /* namespace pheet */
