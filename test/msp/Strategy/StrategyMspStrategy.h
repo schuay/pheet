@@ -76,7 +76,24 @@ inline bool
 StrategyMspStrategy<Pheet>::
 prioritize(Self& other) const
 {
-	return (path->weight_sum() < other.path->weight_sum());
+	StrategyMspPlace<Pheet>& place = Pheet::template place_singleton<StrategyMspPlace<Pheet>>();
+
+	const size_t degree = path->degree();
+
+	const graph::weight_vector_t& this_weight = path->weight();
+	const graph::weight_vector_t& that_weight = other.path->weight();
+
+	double this_priority = 0.0;
+	for (int i = 0; i < degree; i++) {
+		this_priority += this_weight[i] * place.factor(i);
+	}
+
+	double that_priority = 0.0;
+	for (int i = 0; i < degree; i++) {
+		that_priority += that_weight[i] * place.factor(i);
+	}
+
+	return (this_priority < that_priority);
 }
 
 template <class Pheet>
