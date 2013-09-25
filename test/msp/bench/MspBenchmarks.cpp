@@ -35,17 +35,14 @@ namespace pheet
 
 void
 MspBenchmarks::
-run_benchmarks(bool sequential,
-               bool strategy,
-               std::vector<int> n,
-               std::vector<std::string> files)
+run_benchmarks(bool const sequential,
+               bool const strategy,
+               std::vector<int> const& n,
+               std::vector<std::string> const& files)
 {
-	graph::Graph* g;
-	graph::Node* src;
-
 	for (auto & it : files) {
-		g = graph::Graph::read(fopen(it.c_str(), "r"));
-		src = g->nodes().front();
+		graph::Graph* g = graph::Graph::read(fopen(it.c_str(), "r"));
+		graph::Node* src = g->nodes().front();
 
 		/* Note: no need to execute with SynchroneousScheduler for different
 		   amount of cores */
