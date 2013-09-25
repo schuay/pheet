@@ -1,5 +1,5 @@
 /*
- * Copyright Martin Wimmer 2013.
+ * Copyright Jakob Gruber, Martin Kalany 2013.
  * Distributed under the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  */
@@ -129,12 +129,12 @@ main(int argc, char** argv)
 		} while (++optind < argc);
 	} else {
 		std::cerr << "No input files given." << std::endl;
-		return EXIT_FAILURE;
+		usage();
 	}
 
 	if (strategy && nv.size() == 0) {
 		std::cerr << "Number of processors needs to be specified when --strategy is given.\n";
-		return EXIT_FAILURE;
+		usage();
 	}
 
 	MspBenchmarks t;
