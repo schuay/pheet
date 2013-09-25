@@ -82,6 +82,11 @@ run_test()
 
 	const double seconds = calculate_seconds(start, end);
 
+	int npaths = 0;
+	for (auto const & pair : sp->paths) {
+		npaths += pair.second.size();
+	}
+
 	/* Headers. */
 
 	std::cout << "test\t"
@@ -103,7 +108,7 @@ run_test()
 	std::cout << "\t"
 	          << g->node_count() << "\t"
 	          << g->edge_count() << "\t"
-	          << sp->paths.size() << "\t"
+	          << npaths << "\t"
 	          << cpus << "\t"
 	          << seconds << "\t";
 	ppc.print_values();
