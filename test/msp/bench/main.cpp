@@ -65,6 +65,7 @@ usage()
 	          << "Benchmark multi-objective shortest path algorithms\n"
 	          << "PARAMETERS:\n"
 	          << "-n\t\t number of processors to be used for benchmarking\n"
+	          << "-r\t\t number of repetitions to be used for each benchmark\n"
 	          << "--seq\t\t benchmark the sequential algorithm."
 	          << " Benchmark will be run for n=1.\n"
 	          << "--strategy\t benchmark the parallel algorithm.\n\n";
@@ -102,11 +103,12 @@ main(int argc, char** argv)
 			{"seq",      no_argument,       &sequential, 1},
 			{"strategy", no_argument,       &strategy,   1},
 			{"ncpus",    required_argument, 0,           'n'},
+			{"reps",     required_argument, 0,           'r'},
 			{0, 0, 0, 0}
 		};
 
 		int option_index = 0;
-		c = getopt_long(argc, argv, "n:", long_options, &option_index);
+		c = getopt_long(argc, argv, "n:r:", long_options, &option_index);
 
 		if (c == -1) {
 			break;
@@ -119,6 +121,10 @@ main(int argc, char** argv)
 
 		case 'n':
 			opts.ncpus.push_back(parse_int(optarg));
+			break;
+
+		case 'r':
+			opts.repetitions = parse_int(optarg);
 			break;
 
 		case '?':
