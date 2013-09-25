@@ -9,6 +9,7 @@
 
 #include <vector>
 
+#include "StrategyMspPlace.h"
 #include "lib/ShortestPath/Path.h"
 
 namespace pheet
