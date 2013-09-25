@@ -1,6 +1,8 @@
-FILE(GLOB_RECURSE ALL_CPP_SRCS *.cpp)
-
-add_executable(msp-bench ${ALL_CPP_SRCS} ../../Test.cpp)
+add_executable(msp-bench
+    main.cpp
+    MspBenchmarks.cpp
+    ../../Test.cpp
+)
 target_link_libraries(msp-bench
     ${CMAKE_THREAD_LIBS_INIT}
     ${HWLOC_LIBRARIES}
@@ -10,4 +12,11 @@ target_link_libraries(msp-bench
     msp-pareto
     msp-sequential
     msp-sp
+)
+
+add_executable(msp-bench-gengraph gengraph.cpp)
+target_link_libraries(msp-bench-gengraph
+    ${LIBCGRAPH_LIBRARY}
+    msp-generator
+    msp-graph
 )
