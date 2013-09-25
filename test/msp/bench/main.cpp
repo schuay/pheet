@@ -71,22 +71,37 @@ usage()
 	exit(EXIT_FAILURE);
 }
 
+static int
+parse_int(char const* str)
+{
+	try {
+		return std::stoi(str);
+	} catch (const std::invalid_argument&) {
+		std::cerr << "Invalid argument: " << optarg << std::endl;
+		usage();
+	} catch (const std::out_of_range&) {
+		std::cerr << "Argument out of range: " << optarg << std::endl;
+		usage();
+	}
+
+	return -1; /* Never reached. */
+}
+
 int
 main(int argc, char** argv)
 {
-	int c, n;
-	std::vector<int> nv;
-	std::vector<std::string> files;
+	int c;
 
-	//Flags for strategies to be used
+	pheet::BenchOpts opts;
+
 	int sequential = 0;
 	int strategy = 0;
 
 	while (1) {
 		static struct option long_options[] = {
-			{"seq",     no_argument,       &sequential,   1},
-			{"strategy",   no_argument,       &strategy, 1},
-			{"ncpus",  required_argument, 0, 'n'},
+			{"seq",      no_argument,       &sequential, 1},
+			{"strategy", no_argument,       &strategy,   1},
+			{"ncpus",    required_argument, 0,           'n'},
 			{0, 0, 0, 0}
 		};
 
@@ -103,16 +118,7 @@ main(int argc, char** argv)
 			break;
 
 		case 'n':
-			try {
-				n = std::stoi(optarg);
-			} catch (const std::invalid_argument& e) {
-				std::cerr << "Invalid argument for option -n: " << optarg << std::endl;
-				usage();
-			} catch (const std::out_of_range& e) {
-				std::cerr << "Argument for option -n out of range: " << optarg << std::endl;
-				usage();
-			}
-			nv.push_back(n);
+			opts.ncpus.push_back(parse_int(optarg));
 			break;
 
 		case '?':
@@ -125,20 +131,23 @@ main(int argc, char** argv)
 
 	if (optind < argc) {
 		do {
-			parse(argv[optind], files);
+			parse(argv[optind], opts.files);
 		} while (++optind < argc);
 	} else {
 		std::cerr << "No input files given." << std::endl;
 		usage();
 	}
 
-	if (strategy && nv.size() == 0) {
+	if (opts.strategy && opts.ncpus.size() == 0) {
 		std::cerr << "Number of processors needs to be specified when --strategy is given.\n";
 		usage();
 	}
 
+	opts.sequential = (sequential != 0);
+	opts.strategy   = (strategy != 0);
+
 	MspBenchmarks t;
-	t.run_benchmarks(sequential, strategy, nv, files);
+	t.run_benchmarks(opts);
 
 	return EXIT_SUCCESS;
 }
