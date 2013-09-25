@@ -17,12 +17,7 @@ namespace sp
 
 Path::
 Path(graph::Node const* init)
-	: m_tail(init),
-	  m_head(init),
-	  m_pred(nullptr),
-	  m_weight_sum(0),
-	  m_degree(init->graph()->degree()),
-	  m_dominated(false)
+	: m_tail(init), m_head(init), m_pred(nullptr), m_degree(init->graph()->degree()), m_dominated(false)
 {
 	m_weight.resize(m_degree, 0);
 }
@@ -33,7 +28,6 @@ Path(const Path& that)
 	  m_head(that.m_head),
 	  m_pred(that.m_pred),
 	  m_weight(that.m_weight),
-	  m_weight_sum(that.m_weight_sum),
 	  m_degree(that.m_degree),
 	  m_dominated(false)
 {
@@ -53,7 +47,6 @@ step(Edge const* edge) const
 
 	for (size_t i = 0; i < ws.size(); i++) {
 		p->m_weight[i] += ws[i];
-		p->m_weight_sum += ws[i];
 	}
 
 	return p;
