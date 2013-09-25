@@ -13,8 +13,9 @@ namespace pheet
 {
 
 struct BenchOpts {
-	BenchOpts() : strategy(false), sequential(false) { }
+	BenchOpts() : repetitions(1), strategy(false), sequential(false) { }
 
+	int repetitions;
 	bool strategy;
 	bool sequential;
 	std::vector<int> ncpus;

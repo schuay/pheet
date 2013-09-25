@@ -39,14 +39,18 @@ run_benchmarks(BenchOpts const& opts)
 		/* Note: no need to execute with SynchroneousScheduler for different
 		   amount of cores */
 		if (opts.sequential) {
-			::run_algorithm < Pheet::WithScheduler<SynchroneousScheduler>,
-			SequentialMsp > (g, src, 1);
+			for (int i = 0; i < opts.repetitions; i++) {
+				::run_algorithm < Pheet::WithScheduler<SynchroneousScheduler>,
+				SequentialMsp > (g, src, 1);
+			}
 		}
 
 		if (opts.strategy) {
 			for (auto & it : opts.ncpus) {
-				::run_algorithm < Pheet::WithScheduler<BStrategyScheduler>
-				::WithTaskStorage<DistKStrategyTaskStorage>, StrategyMspTask > (g, src, it);
+				for (int i = 0; i < opts.repetitions; i++) {
+					::run_algorithm < Pheet::WithScheduler<BStrategyScheduler>
+					::WithTaskStorage<DistKStrategyTaskStorage>, StrategyMspTask > (g, src, it);
+				}
 			}
 		}
 
