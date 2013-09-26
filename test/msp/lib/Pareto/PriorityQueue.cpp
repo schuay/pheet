@@ -36,7 +36,7 @@ PathPtr
 PriorityQueue::
 first()
 {
-	PathPtr p = nullptr;
+	PathPtr p;
 
 	while (!p || p->dominated()) {
 		if (m_queue.empty()) {

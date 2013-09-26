@@ -8,6 +8,7 @@
 #define __PATH_H
 
 #include <atomic>
+#include <memory>
 #include <vector>
 
 #include "test/msp/lib/Graph/Edge.h"
@@ -18,7 +19,7 @@ namespace sp
 constexpr int BLOCK_SIZE = 4096;
 
 class Path;
-typedef Path* PathPtr;
+typedef std::shared_ptr<Path> PathPtr;
 typedef std::vector<PathPtr> Paths;
 
 class Path

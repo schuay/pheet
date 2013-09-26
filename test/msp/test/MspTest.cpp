@@ -135,8 +135,8 @@ is_optimal_path_set(const Paths& paths)
 
 	for (size_t i = 0; i < paths.size(); i++) {
 		for (size_t j = i + 1; j < paths.size(); j++) {
-			const Path* l = paths[i];
-			const Path* r = paths[j];
+			const Path* l = paths[i].get();
+			const Path* r = paths[j].get();
 
 			if (dominates(l, r) || dominates(r, l)) {
 				l->print();

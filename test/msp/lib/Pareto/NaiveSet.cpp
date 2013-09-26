@@ -33,10 +33,10 @@ insert(sp::PathPtr& path,
 
 	for (auto i = m_set.begin(); i != m_set.end();) {
 		PathPtr const& rhs = *i;
-		if (dominates(path, rhs)) {
+		if (dominates(path.get(), rhs.get())) {
 			removed.push_back(rhs);
 			m_set.erase(i++);
-		} else if (dominates(rhs, path)) {
+		} else if (dominates(rhs.get(), path.get())) {
 			return;
 		} else {
 			i++;
