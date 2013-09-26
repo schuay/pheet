@@ -51,6 +51,7 @@ operator()()
 
 		/* For all outgoing edges <- head, generate candidates. */
 
+		candidates.reserve(head->out_edges().size());
 		for (auto & e : head->out_edges()) {
 			sp::PathPtr q(p->step(e));
 			candidates.push_back(q);
