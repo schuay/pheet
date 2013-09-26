@@ -29,6 +29,7 @@ public:
 	typedef Strategy2BaseTaskStoragePlace<Pheet, Self, TT, BlockSize> Place;
 	typedef Strategy2BaseTaskStorageBasePlace<Pheet> BasePlace;
 	typedef Strategy2BaseTaskStorageDataBlock<Pheet, Place, BaseTaskStorage, TT, BlockSize> DataBlock;
+	typedef Strategy2BaseTaskStorageBoundaryState BoundaryState;
 
 	typedef TT T;
 
@@ -45,7 +46,7 @@ public:
 	 * Overload from parent class
 	 * Since this is our root task storage it should never be necessary to call it
 	 */
-	T pop(BaseItem* boundary, procs_t place_id) {
+	T pop(BaseItem*, procs_t) {
 		// Should never occur. Throw exception if it does.
 		throw -1;
 	}
@@ -54,7 +55,7 @@ public:
 	 * Overload from parent class
 	 * Since this is our root task storage it should never be necessary to call it
 	 */
-	T steal(BaseItem* boundary, procs_t place_id) {
+	T steal(BaseItem*, procs_t) {
 		// Should never occur. Throw exception if it does.
 		throw -1;
 	}

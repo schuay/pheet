@@ -23,6 +23,7 @@ public:
 	typedef typename ParentTaskStorage::BaseItem BaseItem;
 	typedef typename BaseItem::T T;
 	typedef KLSMLocalityTaskStoragePlace<Pheet, Self, typename ParentTaskStorage::Place, Strategy> Place;
+	typedef Strategy2BaseTaskStorageBoundaryState BoundaryState;
 
 	KLSMLocalityTaskStorage(ParentTaskStorage* parent)
 	:parent(parent) {

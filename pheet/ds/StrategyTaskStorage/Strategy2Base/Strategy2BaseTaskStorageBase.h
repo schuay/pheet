@@ -18,6 +18,7 @@ class Strategy2BaseTaskStorageBase {
 public:
 	typedef Strategy2BaseTaskStorageBase<Pheet, TT> Self;
 	typedef Strategy2BaseTaskStorageBaseItem<Pheet, Self, TT> BaseItem;
+	typedef Strategy2BaseTaskStorageBoundaryState BoundaryState;
 
 	Strategy2BaseTaskStorageBase() {}
 	virtual ~Strategy2BaseTaskStorageBase() {}

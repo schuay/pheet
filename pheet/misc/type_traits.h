@@ -24,7 +24,7 @@ class nullable_traits<T*> {
 };
 
 template <typename T>
-T* const nullable_traits<T*>::null_value = NULL;
+T* const nullable_traits<T*>::null_value = nullptr;
 
 }
 
