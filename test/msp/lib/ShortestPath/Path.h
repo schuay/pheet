@@ -31,7 +31,7 @@ public:
 
 	/** Sets up the current path object to represent the path generated
 	 *  by appending the given edge to the given path. */
-	void step(graph::Edge const* edge, Path const* path);
+	void step(graph::Edge const* edge, PathPtr const path);
 
 	void print() const;
 	void print_verbose() const;

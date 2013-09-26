@@ -53,14 +53,14 @@ Path(Path const& that)
 
 void
 Path::
-step(Edge const* edge, Path const* path)
+step(Edge const* edge, PathPtr const path)
 {
 	graph::weight_vector_t const& ws = edge->weights();
 	assert(ws.size() == path->m_weight.size());
 
 	m_tail = path->m_tail;
 	m_head = edge->head();
-	m_pred = path;
+	m_pred = path.get();
 	m_weight = path->m_weight;
 	m_weight_sum = path->m_weight_sum;
 	m_degree = path->m_degree;
