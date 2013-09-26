@@ -25,9 +25,9 @@ public:
 	Path();
 	Path(graph::Node const* init);
 
-	/** Returns a new path object which represents the path generated
-	 *  by appending the given edge to the current path. */
-	Path* step(graph::Edge const* edge) const;
+	/** Sets up the current path object to represent the path generated
+	 *  by appending the given edge to the given path. */
+	void step(graph::Edge const* edge, Path const* path);
 
 	void print() const;
 	void print_verbose() const;

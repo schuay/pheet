@@ -53,7 +53,8 @@ operator()()
 
 		candidates.reserve(head->out_edges().size());
 		for (auto & e : head->out_edges()) {
-			sp::PathPtr q(p->step(e));
+			sp::PathPtr q = new Path();
+			q->step(e, p);
 			candidates.push_back(q);
 		}
 

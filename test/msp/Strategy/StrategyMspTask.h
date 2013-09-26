@@ -115,8 +115,9 @@ operator()()
 
 	d.candidates.reserve(head->out_edges().size());
 	for (auto & e : head->out_edges()) {
-		sp::PathPtr to(path->step(e));
-		d.candidates.push_back(to);
+		sp::PathPtr q = new sp::Path();
+		q->step(e, path);
+		d.candidates.push_back(q);
 	}
 
 	/* Insert into the Pareto set. Mark dominated paths and spawn tasks for
