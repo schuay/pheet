@@ -23,6 +23,7 @@ class Path
 {
 public:
 	Path();
+	Path(Path const& that);
 	Path(graph::Node const* init);
 
 	/** Sets up the current path object to represent the path generated

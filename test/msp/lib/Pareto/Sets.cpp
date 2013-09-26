@@ -54,7 +54,11 @@ shortest_paths() const
 	sp::ShortestPaths* sp = new sp::ShortestPaths;
 
 	for (const auto & p : map) {
-		sp->paths[p.first] = p.second->paths();
+		for (sp::PathPtr const & pp : p.second->paths()) {
+			/* Since we now use pheet's memory manager which deletes all objects
+			 * when going out of scope, the results have to be deep copied. */
+			sp->paths[p.first].push_back(new sp::Path(*pp));
+		}
 	}
 
 	return sp;

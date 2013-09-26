@@ -39,6 +39,18 @@ Path()
 {
 }
 
+Path::
+Path(Path const& that)
+	: m_tail(that.m_tail),
+	  m_head(that.m_head),
+	  m_pred(nullptr),
+	  m_weight(that.m_weight),
+	  m_weight_sum(that.m_weight_sum),
+	  m_degree(that.m_degree),
+	  m_dominated(that.m_dominated.load())
+{
+}
+
 void
 Path::
 step(Edge const* edge, Path const* path)
