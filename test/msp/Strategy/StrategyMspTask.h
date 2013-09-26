@@ -13,6 +13,7 @@
 #include "lib/Graph/Graph.h"
 #include "lib/Pareto/Sets.h"
 #include "lib/ShortestPath/ShortestPaths.h"
+#include "pheet/memory/BlockItemReuse/BlockItemReuseMemoryManager.h"
 
 namespace pheet
 {
@@ -62,6 +63,8 @@ public:
 	typedef StrategyMspTask<Pheet> Self;
 	typedef StrategyMspStrategy<Pheet> Strategy;
 	typedef MspPerformanceCounters<Pheet> PerformanceCounters;
+	typedef BlockItemReuseMemoryManagerImpl < Pheet, sp::Path,
+	        sp::PathReuseCheck, sp::BLOCK_SIZE > PathMM;
 
 	StrategyMspTask(const graph::Graph* graph,
 	                const sp::PathPtr path,
@@ -107,6 +110,7 @@ operator()()
 
 	pc.num_actual_tasks.incr();
 
+	PathMM& mm = Pheet::template place_singleton<PathMM>();
 	StrategyMspData& d = Pheet::template place_singleton<StrategyMspData>();
 	d.clear();
 
@@ -115,7 +119,7 @@ operator()()
 
 	d.candidates.reserve(head->out_edges().size());
 	for (auto & e : head->out_edges()) {
-		sp::PathPtr q = new sp::Path();
+		sp::PathPtr q = &mm.acquire_item();
 		q->step(e, path);
 		d.candidates.push_back(q);
 	}

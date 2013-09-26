@@ -79,9 +79,12 @@ public:
 		{
 			typename DistKPheet::Environment env;
 			StrategyMspTask<DistKPheet> msp(graph, path, &q, pc);
-			msp();
+			{
+				DistKPheet::Finish f;
+				msp();
+			}
+			return q.shortest_paths();
 		}
-		return q.shortest_paths();
 	}
 
 private:

@@ -15,6 +15,8 @@
 namespace sp
 {
 
+constexpr int BLOCK_SIZE = 4096;
+
 class Path;
 typedef Path* PathPtr;
 typedef std::vector<PathPtr> Paths;
@@ -59,6 +61,14 @@ private:
 	graph::weight_t m_weight_sum;
 	size_t m_degree;
 	std::atomic_bool m_dominated;
+};
+
+class PathReuseCheck
+{
+public:
+	inline bool operator()(Path const& path) const {
+		return false; //path.unused();
+	}
 };
 
 }
