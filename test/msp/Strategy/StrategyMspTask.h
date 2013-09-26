@@ -119,7 +119,7 @@ operator()()
 
 	d.candidates.reserve(head->out_edges().size());
 	for (auto & e : head->out_edges()) {
-		sp::PathPtr q(&mm.acquire_item());
+		sp::PathPtr q(&mm.acquire_item(), sp::pathDeleter);
 		q->step(e, path);
 		d.candidates.push_back(q);
 	}

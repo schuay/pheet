@@ -54,6 +54,14 @@ public:
 	bool dominated() const;
 	void set_dominated();
 
+	inline bool unused() const {
+		return m_unused.load(std::memory_order_relaxed);
+	}
+
+	inline void set_unused() {
+		m_unused.store(true, std::memory_order_relaxed);
+	}
+
 private:
 	graph::Node const* m_tail;
 	graph::Node const* m_head;
@@ -62,13 +70,17 @@ private:
 	graph::weight_t m_weight_sum;
 	size_t m_degree;
 	std::atomic_bool m_dominated;
+	std::atomic_bool m_unused;
 };
+
+void
+pathDeleter(Path* path);
 
 class PathReuseCheck
 {
 public:
 	inline bool operator()(Path const& path) const {
-		return false; //path.unused();
+		return path.unused();
 	}
 };
 

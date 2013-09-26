@@ -74,17 +74,19 @@ public:
 
 	ShortestPaths*
 	operator()() {
+		ShortestPaths* sp;
 		MspPerformanceCounters<DistKPheet> pc;
-		Sets q(graph, path->head());
 		{
 			typename DistKPheet::Environment env;
+			Sets q(graph, path->head());
 			StrategyMspTask<DistKPheet> msp(graph, path, &q, pc);
 			{
 				DistKPheet::Finish f;
 				msp();
 			}
-			return q.shortest_paths();
+			sp = q.shortest_paths();
 		}
+		return sp;
 	}
 
 private:

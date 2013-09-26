@@ -22,7 +22,8 @@ Path(graph::Node const* init)
 	  m_pred(nullptr),
 	  m_weight_sum(0),
 	  m_degree(init->graph()->degree()),
-	  m_dominated(false)
+	  m_dominated(false),
+	  m_unused(false)
 {
 	m_weight.resize(m_degree, 0);
 }
@@ -35,7 +36,8 @@ Path()
 	  m_weight(),
 	  m_weight_sum(0),
 	  m_degree(0),
-	  m_dominated(false)
+	  m_dominated(false),
+	  m_unused(false)
 {
 }
 
@@ -47,7 +49,8 @@ Path(Path const& that)
 	  m_weight(that.m_weight),
 	  m_weight_sum(that.m_weight_sum),
 	  m_degree(that.m_degree),
-	  m_dominated(that.m_dominated.load())
+	  m_dominated(that.m_dominated.load()),
+	  m_unused(that.m_unused.load())
 {
 }
 
@@ -65,6 +68,7 @@ step(Edge const* edge, PathPtr const path)
 	m_weight_sum = path->m_weight_sum;
 	m_degree = path->m_degree;
 	m_dominated = false;
+	m_unused.store(false, std::memory_order_relaxed);
 
 	for (size_t i = 0; i < ws.size(); i++) {
 		m_weight[i] += ws[i];
@@ -127,6 +131,12 @@ Path::
 set_dominated()
 {
 	m_dominated.store(true, std::memory_order_release);
+}
+
+void
+pathDeleter(Path* path)
+{
+	path->set_unused();
 }
 
 }
