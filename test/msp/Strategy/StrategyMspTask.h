@@ -99,6 +99,7 @@ operator()()
 	const graph::Node* head = path->head();
 
 	sp::Paths candidates;
+	candidates.reserve(head->out_edges().size());
 	for (auto & e : head->out_edges()) {
 		sp::PathPtr to(path->step(e));
 		candidates.push_back(to);
