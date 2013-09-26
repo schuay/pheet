@@ -17,6 +17,18 @@
 namespace pheet
 {
 
+class StrategyMspData
+{
+public:
+	void clear() {
+		candidates.clear();
+		added.clear();
+		removed.clear();
+	}
+
+	sp::Paths candidates, added, removed;
+};
+
 /**
  * Called by the scheduler for each selected path taken from the Pareto queue.
  *
@@ -95,28 +107,29 @@ operator()()
 
 	pc.num_actual_tasks.incr();
 
+	StrategyMspData& d = Pheet::template place_singleton<StrategyMspData>();
+	d.clear();
+
 	/* Generate candidates. */
 	const graph::Node* head = path->head();
 
-	sp::Paths candidates;
-	candidates.reserve(head->out_edges().size());
+	d.candidates.reserve(head->out_edges().size());
 	for (auto & e : head->out_edges()) {
 		sp::PathPtr to(path->step(e));
-		candidates.push_back(to);
+		d.candidates.push_back(to);
 	}
 
 	/* Insert into the Pareto set. Mark dominated paths and spawn tasks for
 	 * newly added paths. */
 
-	sp::Paths added, removed;
-	sets->insert(candidates, added, removed);
+	sets->insert(d.candidates, d.added, d.removed);
 
-	for (sp::PathPtr & p : removed) {
+	for (sp::PathPtr & p : d.removed) {
 		p->set_dominated();
 		pc.num_dead_tasks.incr();
 	}
 
-	for (sp::PathPtr & p : added) {
+	for (sp::PathPtr & p : d.added) {
 		Pheet::template spawn_s<Self>(Strategy(p), graph, p, sets, pc);
 	}
 }
