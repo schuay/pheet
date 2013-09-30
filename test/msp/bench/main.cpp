@@ -61,11 +61,11 @@ parse(char const* name,
 static void
 usage()
 {
-	std::cerr << "\n msp-bench [-n...] [--seq] [--strategy] [DIRECTORY...] [FILE...]\n\n"
+	std::cerr << "\n msp-bench [-r] [-n...] [--seq] [--strategy] [DIRECTORY...] [FILE...]\n\n"
 	          << "Benchmark multi-objective shortest path algorithms\n"
 	          << "PARAMETERS:\n"
-	          << "-n\t\t number of processors to be used for benchmarking\n"
 	          << "-r\t\t number of repetitions to be used for each benchmark\n"
+	          << "-n\t\t number of processors to be used for benchmarking\n"
 	          << "--seq\t\t benchmark the sequential algorithm."
 	          << " Benchmark will be run for n=1.\n"
 	          << "--strategy\t benchmark the parallel algorithm.\n\n";
