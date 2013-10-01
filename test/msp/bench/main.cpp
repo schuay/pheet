@@ -144,13 +144,13 @@ main(int argc, char** argv)
 		usage();
 	}
 
+	opts.sequential = (sequential != 0);
+	opts.strategy   = (strategy != 0);
+
 	if (opts.strategy && opts.ncpus.size() == 0) {
 		std::cerr << "Number of processors needs to be specified when --strategy is given.\n";
 		usage();
 	}
-
-	opts.sequential = (sequential != 0);
-	opts.strategy   = (strategy != 0);
 
 	MspBenchmarks t;
 	t.run_benchmarks(opts);
