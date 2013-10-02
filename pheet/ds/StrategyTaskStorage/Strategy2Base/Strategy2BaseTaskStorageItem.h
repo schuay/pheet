@@ -23,6 +23,8 @@ struct Strategy2BaseTaskStorageBaseItem {
 	~Strategy2BaseTaskStorageBaseItem() {}
 
 	TT data;
+	// For proper consistency, the write to taken has to be a release or protected
+	// By a release fence
 	std::atomic<bool> taken;
 	TaskStorage* task_storage;
 //	BaseStrategy* strategy;

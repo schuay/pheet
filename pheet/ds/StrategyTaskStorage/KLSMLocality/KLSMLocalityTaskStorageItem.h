@@ -16,8 +16,7 @@ namespace pheet {
 template <class Pheet, class Place, class Frame, class BaseItem, class Strategy>
 struct KLSMLocalityTaskStorageItem : public BaseItem {
 	KLSMLocalityTaskStorageItem()
-	:owner(Pheet::get_place()), used_locally(false), frame(nullptr), last_phase(-1) {
-		owner = Pheet::get_place();
+	:owner(nullptr), used_locally(false), frame(nullptr), last_phase(0) {
 	}
 
 	Place* owner;

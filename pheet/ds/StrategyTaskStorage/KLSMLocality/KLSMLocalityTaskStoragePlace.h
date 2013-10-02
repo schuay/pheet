@@ -49,6 +49,7 @@ public:
 		// Might make sense to precreate more, but for now let's leave it at that
 		blocks.push_back(new Block(1));
 		blocks.push_back(new Block(1));
+		blocks.push_back(new Block(1));
 
 		top_block.store(blocks[0], std::memory_order_relaxed);
 	}
@@ -68,14 +69,18 @@ public:
 		it.strategy = std::move(strategy);
 		it.used_locally = true;
 		it.data = data;
-		it.taken.store(false, std::memory_order_relaxed);
 		it.task_storage = task_storage;
-		if(!current_frame->low_congestion()) {
+		it.owner = this;
+		if(!current_frame->medium_congestion()) {
 			// Exchange current frame every time there is congestion
 			current_frame = &(frame_memory_manager.acquire_item());
 		}
-		it.frame.store(current_frame, std::memory_order_relaxed);
-		it.last_phase.store(-1, std::memory_order_relaxed);
+		it.frame.store(current_frame, std::memory_order_release);
+
+		// Release, so that if item is seen as not taken by other threads
+		// It is guaranteed to be newly initialized and the strategy set.
+		it.taken.store(false, std::memory_order_release);
+		it.last_phase.store(-1, std::memory_order_release);
 
 		Block* tb = top_block.load(std::memory_order_relaxed);
 		if(!tb.try_put(&it)) {
@@ -87,9 +92,13 @@ public:
 
 				merged->set_next(next->get_next());
 
-				// No ordering, we don't give any guarantees on things other threads see in a local thread
-				// (Of course for the global list we need to synchronize more)
-				top_block.store(merged, std::memory_order_relaxed);
+				// If new top_block becomes visible, the merge happened before
+				// Threads might still see old blocks, and might miss tasks, but citing the standard:
+				// "Implementations should make atomic stores visible to atomic loads
+				// within a reasonable amount of time."
+				// This means we can assume the merged lists will become visible in bounded time, so
+				// we can assume a non-executed task will become visible at some point
+				top_block.store(merged, std::memory_order_release);
 				tb->reset();
 				tb = merged;
 
@@ -105,8 +114,8 @@ public:
 			}
 			new_tb->set_next(tb);
 
-			// No need to order, will be released by put
-			top_block.store(new_tb, std::memory_order_relaxed);
+			// Make sure that if block is seen, so are the changes to the block, like the next ptr
+			top_block.store(new_tb, std::memory_order_release);
 
 			// We know we have space in here, so no try_put needed
 			new_tb.put(&it);
@@ -123,7 +132,7 @@ public:
 		Item* item = reinterpret_cast<Item*>(boundary);
 
 		// Check whether boundary item is still available
-		if(item->last_phase.load(std::memory_order_acquire) == -1) {
+		while(item->last_phase.load(std::memory_order_acquire) == -1) {
 
 			// We can assume that boundary is stored in this task storage, so we just get the best item
 			Block* best = find_best_block();
@@ -134,10 +143,14 @@ public:
 			// There is at least one taken task now, let's do a cleanup
 			best->pop_taken_and_dead();
 
+			// Some other thread was faster
+			if(data != nullable_traits<T>::null_value) {
+				if(item->owner != this) {
+					// Other owner, need to free frame
 
-			T data = item->data;
-			bool taken = false;
-			if(item->taken.compare_exchange_strong(taken, true, std::memory_order_relaxed, std::memory_order_relaxed)) {
+
+				}
+
 				return data;
 			}
 		}
@@ -227,18 +240,16 @@ private:
 	}
 
 	Block* find_free_block(size_t level) {
-		size_t offset = level << 1;
+		size_t offset = level * 3;
 
 		while(!blocks[offset].empty()) {
 			++offset;
 			if(blocks.size() == offset) {
-				blocks.push_back(new Block(offset >> 1));
-				blocks.push_back(new Block(offset >> 1));
+				size_t l = offset / 3;
+				Block* ret = new Block(l);
+				blocks.push_back(ret);
+				return ret;
 			}
-			if(blocks[offset].empty()) {
-				return blocks[offset];
-			}
-			++offset;
 		}
 		return blocks[offset];
 	}
@@ -250,6 +261,8 @@ private:
 	ItemMemoryManager items;
 	FrameMemoryManager frames;
 
+	// Stores 3 blocks per level.
+	// 2 would be enough in general, but with 3 less synchronization is required
 	std::vector<Block*> blocks;
 	std::atomic<Block*> top_block;
 

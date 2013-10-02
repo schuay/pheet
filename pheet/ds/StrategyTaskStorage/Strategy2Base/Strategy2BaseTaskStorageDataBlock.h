@@ -36,15 +36,14 @@ public:
 	void link(Self* prev) {
 		reuse.store(false, std::memory_order_relaxed);
 		this->prev = prev;
-		// When new value of next pointer becomes visible, so do all the updates to the linked list
-		// The new linked list will therefore be found
-		this->next.store(nullptr, std::memory_order_release);
+		// Next pointer is only read once a new bottom is read, which is where synchronization happens
+		this->next.store(nullptr, std::memory_order_relaxed);
 
 		if(prev != nullptr) {
 			pheet_assert(prev->next.load(std::memory_order_relaxed) == nullptr);
 			offset.store(prev->offset + BlockSize, std::memory_order_relaxed);
 
-			// When next pointer of predecessor is read (as not null), all initialization happened before
+			// Next pointer is only read once a new bottom is read, which is where synchronization happens
 			prev->next.store(this, std::memory_order_release);
 		}
 		else {

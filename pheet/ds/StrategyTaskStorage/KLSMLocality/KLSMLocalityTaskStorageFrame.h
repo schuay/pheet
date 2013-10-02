@@ -27,7 +27,7 @@ public:
 		procs_t p = phase.load(std::memory_order_relaxed);
 		if(last_phase == ((p+1) & wraparound)) {
 			// Item was freed in this phase. We need to progress phases to be able to free it
-			phase.store((p+1) & wraparound, std::memory_order_relaxed);
+			phase.store((p+1) & wraparound, std::memory_order_release);
 
 			// Now let us try and finalize old phase by closing previous phase
 			signed procs_t r = registered[p&1].load(std::memory_order_relaxed);
@@ -36,7 +36,7 @@ public:
 					// Now check whether there are still threads registered
 					// Since cas does an acquire all changes to this field before are also covered
 					// (they are released using a fetch_and_sub to the CAS'd field)
-					signed procs_t ro = registered[(p&1)^1].load(std::memory_order_relaxed);
+					signed procs_t ro = registered[(p&1)^1].load(std::memory_order_acquire);
 
 					if(ro == 0) {
 						// No threads in phase, reuse is safe
@@ -92,11 +92,45 @@ public:
 		return true;
 	}
 
+	size_t register_place() {
+		while(true) {
+			size_t p = phase.load(std::memory_order_relaxed);
+			signed procs_t r = registered[p&1].load(std::memory_order_acquire);
+
+			pheet_assert(r >= -1);
+
+			while(r == -1 || !registered[p&1].compare_exchange_weak(r, r + 1, std::memory_order_acquire, std::memory_order_acquire)) {
+				p = phase.load(std::memory_order_relaxed);
+				r = registered[p&1].load(std::memory_order_acquire);
+			}
+
+			// Check if the phase is still the same
+			size_t p2 = phase.load(std::memory_order_acquire);
+			if((p2 & 1) == (p & 1)) {
+				// As long as the new phase uses the same slot we are fine
+				return p2;
+			}
+			deregister_place(p);
+		}
+	}
+
+	void deregister_place(size_t phase) {
+		registered[p&1].fetch_and_sub(1, std::memory_order_release);
+	}
+
 	/*
 	 * Uppermost bit is never used, so it is safe to be casted to a signed type as well
 	 */
 	size_t get_phase() {
 		return phase.load(std::memory_order_relaxed);
+	}
+
+	/*
+	 * Frames with medium contention can be used for more items if already in use
+	 */
+	bool medium_contention() {
+		size_t ri = phase.load(std::memory_order_relaxed) & 1;
+		return registered[ri^1].load(std::memory_order_relaxed) == -1;
 	}
 
 	/*
@@ -115,12 +149,38 @@ private:
 	static size_t wraparound;
 };
 
+template <class Pheet, class Frame>
+class KLSMLocalityTaskStorageFrameRegistration {
+	KLSMLocalityTaskStorageFrameRegistration()
+	:references(0), phase(0) {
+
+	}
+
+	void add_ref(Frame* frame) {
+		if(references == 0) {
+			phase = frame->register_place();
+		}
+		++references;
+	}
+
+	void rem_ref(Frame* frame) {
+		pheet_assert(references > 0);
+		--references;
+		if(references == 0) {
+			frame->deregister_place(phase);
+		}
+	}
+private:
+	size_t references;
+	size_t phase;
+};
+
 /*
  * Making the wraparound below the highest bit simplifies wraparound and allows for safe casting to
  * signed types
  */
 template <class Pheet>
-size_t KLSMLocalityTaskStorageFrame<Pheet>::wraparound = std::numeric_limits<procs_t>::max() >> 1;
+size_t KLSMLocalityTaskStorageFrame<Pheet>::wraparound = std::numeric_limits<size_t>::max() >> 1;
 
 
 template <class Frame>

@@ -31,10 +31,6 @@ public:
 	KLSMLocalityTaskStorageBlock(size_t size)
 	:size(size), level(0), level_boundary(1), next(nullptr), k(std::numeric_limits<size_t>::max()) {
 		data = new std::atomic<Item*>[size];
-		// Initialized to nullptr in case thread sees an update to filled before the pointer is written
-		for(size_t i = 0; i < size; ++i) {
-			data[i].store(nullptr, std::memory_order_relaxed);
-		}
 	}
 	~KLSMLocalityTaskStorageBlock() {
 		delete[] data;
@@ -50,12 +46,9 @@ public:
 		}
 		else if(f == 0 ||
 				item->strategy.prioritize(data[f-1]->strategy)) {
-			// No ordering constraints whatsoever. Put is only called on local blocks
-			// And we do not give any guarantees on items seen in local blocks
-			// Items may only be reused if no thread is registered to a frame for the given phase
-			// and registering for a new phase triggers a synchronization
 			data[f].store(item, std::memory_order_relaxed);
-			filled.store(f + 1, std::memory_order_relaxed);
+			// If new value for filled is seen, so is the item stored in it
+			filled.store(f + 1, std::memory_order_release);
 
 			if(f + 1 > (level_boundary)) {
 				++level;
@@ -74,12 +67,9 @@ public:
 		pheet_assert(f < size);
 		pheet_assert(f == 0 ||
 				item->strategy.prioritize(data[f-1]->strategy));
-		// No ordering constraints whatsoever. Put is only called on local blocks
-		// And we do not give any guarantees on items seen in local blocks
-		// Items may only be reused if no thread is registered to a frame for the given phase
-		// and registering for a new phase triggers a synchronization
 		data[f].store(item, std::memory_order_relaxed);
-		filled.store(f + 1, std::memory_order_relaxed);
+		// If new value for filled is seen, so is the item stored in it
+		filled.store(f + 1, std::memory_order_release);
 
 		if(f + 1 > (level_boundary)) {
 			++level;
@@ -156,7 +146,7 @@ public:
 			if(n->filled != 0) {
 				return true;
 			}
-			n = n->next;
+			n = n->next.load(std::memory_order_relaxed);
 			next.store(n, std::memory_order_relaxed);
 		}
 		return false;
@@ -165,7 +155,7 @@ public:
 	void drop_empty() {
 		Self* n = next.load(std::memory_order_relaxed);
 		while(n != nullptr && n->filled == 0) {
-			n = n->next;
+			n = n->next.load(std::memory_order_relaxed);
 		}
 		next.store(n, std::memory_order_relaxed);
 	}
@@ -228,7 +218,7 @@ public:
 			}
 		}
 
-		// No synchronization needed unless we are in global list
+		// No synchronization needed. Merged list is made visible using a release
 		filled.store(f + 1, std::memory_order_relaxed);
 
 		pheet_assert(level == 0);
