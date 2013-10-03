@@ -2,6 +2,7 @@ add_executable(msp-bench
     main.cpp
     MspBenchmarks.cpp
     ../../Test.cpp
+	../Util.cpp
 )
 target_link_libraries(msp-bench
     ${CMAKE_THREAD_LIBS_INIT}

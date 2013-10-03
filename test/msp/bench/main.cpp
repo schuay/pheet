@@ -7,12 +7,10 @@
 #define NDEBUG 1
 
 #include "MspBenchmarks.h"
+#include "Util.h"
 
 #include <dirent.h>
 #include <getopt.h>
-#include <iostream>
-#include <stdlib.h>
-#include <stdexcept>
 #include <sys/stat.h>
 
 using namespace pheet;
@@ -75,17 +73,12 @@ usage()
 static int
 parse_int(char const* str)
 {
-	try {
-		return std::stoi(str);
-	} catch (const std::invalid_argument&) {
-		std::cerr << "Invalid argument: " << optarg << std::endl;
-		usage();
-	} catch (const std::out_of_range&) {
-		std::cerr << "Argument out of range: " << optarg << std::endl;
+	int val;
+	if (!msp::Util::parse_int(str, val)) {
 		usage();
 	}
+	return val;
 
-	return -1; /* Never reached. */
 }
 
 int
