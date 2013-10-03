@@ -45,8 +45,6 @@ public:
 
 	typedef typename Pheet::Scheduler::Place SchedulerPlace;
 
-	typedef Strategy2BaseTaskStorageBoundaryState BoundaryState;
-
 	Strategy2BaseTaskStoragePlace(TaskStorage* task_storage, SchedulerPlace* scheduler_place, PerformanceCounters pc)
 	:pc(pc), task_storage(task_storage),
 	 bottom(0), top(0),
@@ -118,8 +116,6 @@ public:
 			}
 			bottom_block = next;
 		}
-
-		++(item->local_ref_count);
 
 		// Put item in block at position b
 		bottom_block->put(item, b);
@@ -406,7 +402,15 @@ private:
 		}
 
 		if(ret->task_storage != task_storage) {
+			// Take care, requires helping scheme in case for updating taken in case setting taken is not
+			// atomic with marking an item as taken. Otherwise progress might be hindered
 			T ret_data = ret->task_storage->steal(ret, scheduler_place->get_id());
+
+			if(ret_data == nullable_traits<T>::null_value) {
+				// Failure to steal
+				// Spurious failures are allowed
+				return nullable_traits<T>::null_value;
+			}
 
 			// We were successful in stealing the given task or a task after that one.
 			// So we know for sure that pop will not find any tasks that are not taken before this one
@@ -416,8 +420,11 @@ private:
 				// 16 was chosen arbitrarily and may be tuned
 
 				size_t old_t2 = top.load(std::memory_order_relaxed);
-				// Weak is enough, and if we fail it's no problem, it's just a lazy correction of top anyway
-				top.compare_exchange_weak(old_t, t, std::memory_order_relaxed, std::memory_order_relaxed);
+				// Only do this if top has not changed in the meantime
+				if(old_t2 == old_t) {
+					// Weak is enough, and if we fail it's no problem, it's just a lazy correction of top anyway
+					top.compare_exchange_weak(old_t, t, std::memory_order_relaxed, std::memory_order_relaxed);
+				}
 			}
 
 			return ret_data;

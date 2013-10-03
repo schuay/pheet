@@ -123,6 +123,11 @@ public:
 		return levels[level].partners[next_rand];
 	}
 
+	void drop_item(TaskStorageItem* item) {
+		delete item->task;
+		finish_stack.signal_completion(item->stack_element);
+	}
+
 private:
 	void initialize_levels();
 	void grow_levels_structure();

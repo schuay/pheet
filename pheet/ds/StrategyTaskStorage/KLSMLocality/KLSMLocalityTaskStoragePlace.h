@@ -17,6 +17,7 @@
 #include <pheet/memory/ItemReuse/ItemReuseMemoryManager.h>
 
 #include <limits>
+#include <unordered_map>
 
 namespace pheet {
 
@@ -27,19 +28,18 @@ public:
 
 	typedef typename ParentTaskStoragePlace::BaseTaskStoragePlace BaseTaskStoragePlace;
 	typedef KLSMLocalityTaskStorageFrame<Pheet> Frame;
+	typedef KLSMLocalityTaskStorageFrameRegistration<Pheet, Frame> FrameReg;
 	typedef typename ParentTaskStoragePlace::BaseItem BaseItem;
-	typedef KLSMLocalityTaskStorageItem<Pheet, Self, Frame, BaseItem, Strategy> Item;
+	typedef KLSMLocalityTaskStorageItem<Pheet, Self, Frame, FrameReg, BaseItem, Strategy> Item;
 	typedef KLSMLocalityTaskStorageBlock<Pheet, Item> Block;
 
 	typedef typename BaseItem::T T;
 
-	typedef BlockItemReuseMemoryManager<Pheet, Item, KLSMLocalityTaskStorageItemReuseCheck<Item> > ItemMemoryManager;
+	typedef BlockItemReuseMemoryManager<Pheet, Item, KLSMLocalityTaskStorageItemReuseCheck<Item, Frame> > ItemMemoryManager;
 	typedef ItemReuseMemoryManager<Pheet, Frame, KLSMLocalityTaskStorageFrameReuseCheck<Frame> > FrameMemoryManager;
 
-	typedef Strategy2BaseTaskStorageBoundaryState BoundaryState;
-
 	KLSMLocalityTaskStoragePlace(ParentTaskStoragePlace* parent_place)
-	:parent_place(parent_place), current_frame(&(frame_memory_manager.acquire_item())), missed_tasks(0) {
+	:parent_place(parent_place), current_frame(&(frames.acquire_item())), missed_tasks(0) {
 
 		// Get central task storage at end of initialization (not before,
 		// since this place becomes visible as soon as we retrieve it)
@@ -52,6 +52,7 @@ public:
 		blocks.push_back(new Block(1));
 
 		top_block.store(blocks[0], std::memory_order_relaxed);
+		bottom_block = blocks[0];
 	}
 	~KLSMLocalityTaskStoragePlace() {
 		for(auto i = blocks.begin(); i != blocks.end(); ++i) {
@@ -71,9 +72,9 @@ public:
 		it.data = data;
 		it.task_storage = task_storage;
 		it.owner = this;
-		if(!current_frame->medium_congestion()) {
+		if(!current_frame->medium_contention()) {
 			// Exchange current frame every time there is congestion
-			current_frame = &(frame_memory_manager.acquire_item());
+			current_frame = &(frames.acquire_item());
 		}
 		it.frame.store(current_frame, std::memory_order_release);
 
@@ -82,48 +83,7 @@ public:
 		it.taken.store(false, std::memory_order_release);
 		it.last_phase.store(-1, std::memory_order_release);
 
-		Block* tb = top_block.load(std::memory_order_relaxed);
-		if(!tb.try_put(&it)) {
-			while(tb->needs_merge()) {
-				Block* next = tb->get_next();
-
-				Block* merged = find_free_block(tb->get_level() + 1);
-				merged->merge_into(next, tb);
-
-				merged->set_next(next->get_next());
-
-				// If new top_block becomes visible, the merge happened before
-				// Threads might still see old blocks, and might miss tasks, but citing the standard:
-				// "Implementations should make atomic stores visible to atomic loads
-				// within a reasonable amount of time."
-				// This means we can assume the merged lists will become visible in bounded time, so
-				// we can assume a non-executed task will become visible at some point
-				top_block.store(merged, std::memory_order_release);
-				tb->reset();
-				tb = merged;
-
-				next->reset();
-			}
-
-			size_t l = tb->get_level();
-			pheet_assert(blocks.size() > ((l << 1) + 1));
-			Block* new_tb = blocks[l << 1];
-			if(!new_tb->empty()) {
-				new_tb = blocks[(l << 1) + 1];
-				pheet_assert(new_tb->empty());
-			}
-			new_tb->set_next(tb);
-
-			// Make sure that if block is seen, so are the changes to the block, like the next ptr
-			top_block.store(new_tb, std::memory_order_release);
-
-			// We know we have space in here, so no try_put needed
-			new_tb.put(&it);
-/*
-			if(best_block == nullptr || (best_block != new_tb) {
-				top = &it;
-			}*/
-		}
+		put(&it);
 
 		parent_place->push(&it);
 	}
@@ -132,25 +92,20 @@ public:
 		Item* item = reinterpret_cast<Item*>(boundary);
 
 		// Check whether boundary item is still available
-		while(item->last_phase.load(std::memory_order_acquire) == -1) {
+		while(item->is_taken()) {
 
 			// We can assume that boundary is stored in this task storage, so we just get the best item
 			Block* best = find_best_block();
 
 			Item* best_item = best->top();
 
-			T data = item->take();
+			T data = (best_item->owner == this)?best_item->take(this):best_item->take(frame_regs[best_item->frame.load(std::memory_order_relaxed)]);
+
 			// There is at least one taken task now, let's do a cleanup
-			best->pop_taken_and_dead();
+			best->pop_taken_and_dead(this, frame_regs);
 
-			// Some other thread was faster
+			// Check whether we succeeded
 			if(data != nullable_traits<T>::null_value) {
-				if(item->owner != this) {
-					// Other owner, need to free frame
-
-
-				}
-
 				return data;
 			}
 		}
@@ -161,11 +116,76 @@ public:
 
 	T steal(BaseItem* boundary) {
 		Item* item = reinterpret_cast<Item*>(boundary);
-		T data = item->data;
-		bool taken = false;
-		if(item->taken.compare_exchange_strong(taken, true, std::memory_order_relaxed, std::memory_order_relaxed)) {
-			return data;
+
+		// Should not be possible. Owner must have observed taken == false and will never go into steal
+		// All owned items must be taken, otherwise no steal would be required
+		// If it does, problems might occur with the reference counting
+		pheet_assert(item->owner != this);
+
+		// No need to do cheap taken check before, was already done by parent
+		Frame* f = item->frame.load(std::memory_order_relaxed);
+		FrameReg& reg = frame_regs[f];
+
+		reg.add_ref(f);
+		if(f == item->frame.load(std::memory_order_relaxed)) {
+			if(!item->is_taken()) {
+				// Boundary item is still active. Put it in local queue, so we don't have to steal it another time
+				// For the boundary item we ignore whether the item is dead, as long as it is not taken, it is
+				// valid to be used
+				put(item);
+
+				// Parent place must know about the item as well, to omit multiple steals
+				// (unless boundary has highest priority and does not create new tasks, then
+				// stealing is inevitable for correct semantics)
+				parent_place->push(item);
+
+				// Now go through other tasks in the blocks of the given thread.
+				// There is no guarantee that all tasks will be seen, since none of these tasks
+				// would violate the k-requirements, this is not an issue
+				// We call this spying
+				Block* b = item->owner->top_block.load(std::memory_order_acquire);
+				while(b != nullptr) {
+					size_t filled = b->acquire_filled();
+					for(size_t i = 0; i < filled; ++i) {
+						Item* spy_item = b->get_item(i);
+						// First do cheap taken check
+						if(!spy_item->taken.load(std::memory_order_acquire)) {
+							Frame* spy_frame = spy_item->frame;
+							FrameReg& spy_reg = frame_regs[spy_frame];
+
+							spy_reg.add_ref(spy_frame);
+
+							if(item->is_taken_or_dead()) {
+								// We do not keep items that are already taken or marked as dead
+								spy_reg.rem_ref(spy_frame);
+							}
+							else {
+								// Store item, but do not store in parent! (It's not a boundary after all!)
+								put(item);
+							}
+						}
+					}
+
+					b = b->acquire_next();
+				}
+
+				// Now that we have spied some items from the owner of the boundary, we can just pop an item
+				return pop(boundary);
+			}
+			else {
+				// Help other thread marking boundary item as taken
+				// Safe since we are still registered to frame so it cannot be reused
+				// (same with the thread we are helping)
+				item->taken.store(true, std::memory_order_release);
+
+				// Now we can deregister from boundary item
+				reg.rem_ref(f);
+			}
 		}
+		else {
+			reg.rem_ref(f);
+		}
+
 		return nullable_traits<T>::null_value;
 	}
 
@@ -177,76 +197,155 @@ public:
 	}
 
 private:
-	Block* merge(Block* block) {
+	void put(Item* item) {
+		Block* bb = bottom_block;
+		if(!bb->try_put(item)) {
+			// Check whether a merge is required
+			if(bb->get_prev() != nullptr && bb->get_level() >= bb->get_prev()->get_level()) {
+				bb = merge(bb);
+				bottom_block = bb;
+			}
 
+			size_t l = bb->get_level();
+			size_t offset = std::min((l*3) + 2, blocks.size() - 1);
+
+			Block* new_bb = blocks[offset];
+			while(!new_bb->empty()) {
+				--offset;
+				new_bb = blocks[offset];
+			}
+			new_bb->set_prev(bb);
+			// Make sure that if block is seen, so are the changes to the block
+			bb->release_next(new_bb);
+
+			// We know we have space in here, so no try_put needed
+			new_bb->put(item);
+
+			bottom_block = new_bb;
+		}
+	}
+
+	Block* merge(Block* block) {
+		// Only do this if merge is actually required
+		pheet_assert(block->get_prev() != nullptr && block->get_level() >= block->get_prev()->get_level());
+
+		// Block should not be empty or try_put would have succeeded
+		pheet_assert(!block->empty());
+
+		Block* last_merge = block->get_prev();
+		Block* merged = find_free_block(block->get_level() + 1);
+		merged->merge_into(last_merge, block, this, frame_regs);
+
+		Block* prev = last_merge->get_prev();
+
+		while(prev != nullptr && merged->get_level() >= prev->get_level()) {
+			last_merge = prev;
+
+			if(!last_merge->empty()) {
+				// Only merge if the other block is not empty
+				Block* merged2 = find_free_block(merged->get_level() + 1);
+				merged2->merge_into(last_merge, merged, this, frame_regs);
+
+				// The merged block was never made visible, we can reset it at any time
+				merged->reset();
+				merged = merged2;
+			}
+			prev = last_merge->get_prev();
+		}
+
+		// Now we need to make new blocks visible, and reset the old blocks
+		if(prev == nullptr) {
+			// Everything merged into one block
+			// Make all changes visible now using a release
+			top_block.store(merged, std::memory_order_release);
+		}
+		else {
+			merged->set_prev(prev);
+
+			// Make all changes visible now using a release
+			prev->release_next(block);
+		}
+		// Now reset old blocks
+		while(last_merge != nullptr) {
+			Block* next = last_merge->get_next();
+			last_merge->reset();
+			last_merge = next;
+		}
+
+		return merged;
 	}
 
 	Block* find_best_block() {
-		Block* b = top_block.load(std::memory_order_relaxed);
-		while(tb->needs_merge()) {
-			Block* next = tb->get_next();
-
-			Block* merged = find_free_block(tb->get_level() + 1);
-			merged->merge_into(next, tb);
-
-			merged->set_next(next->get_next());
-
-			top_block.store(merged, std::memory_order_release);
-			tb->reset();
-			tb = merged;
-
-			next->reset();
+		Block* b = bottom_block;
+		while(b->empty()) {
+			b = b->get_prev();
 		}
 
-		while(b->get_next() != nullptr && b->empty()) {
-			b = b->get_next();
-			top_block.store(b, std::memory_order_release);
-		}
-		if(b->empty()) {
+		if(b == nullptr) {
+			bottom_block = top_block.load(std::memory_order_relaxed);
 			return nullptr;
 		}
 
-		Block* best = nullptr;
-		prev = nullptr;
+		Block* best = b;
+		Block* next = b;
+		b = b->get_prev();
+
 		while(b != nullptr) {
-			if(b->needs_merge()) {
-				Block* next = b->get_next();
+			Block* p = b->get_prev();
+			if(b->empty()) {
+				if(p == nullptr) {
+					// No need to order, we didn't change the block
+					top_block.store(next, std::memory_order_relaxed);
 
-				Block* merged = find_free_block(b->get_level() + 1);
-				merged->merge_into(next, b);
-
-				merged->set_next(next->get_next());
-
-				if(prev == nullptr) {
-					top_block.store(merged, std::memory_order_release);
+					// Contains a release
+					b->reset();
+					// End of list, just return best
+					return best;
 				}
 				else {
+					// No need to order, we didn't change the block
+					p->set_next(next);
 
-				}
-				b->reset();
-				b = merged;
+					// Contains a release
+					b->reset();
 
-				next->reset();
-			}
-			if(!b->empty()) {
-				if(best == nullptr || b->top()->strategy.prioritize(best->top()->strategy)) {
-					best = next;
+					b = p;
 				}
 			}
-			prev = b;
-			b = b->get_next();
+			else if(p != nullptr && b->get_level() >= p->get_level()) {
+				b = merge(b);
+				next->set_prev(b);
+
+				// We need to redo cycle, since merged block might be empty!
+			}
+			else {
+				if(b->top()->strategy.prioritize(best->top()->strategy)) {
+					best = b;
+				}
+				next = b;
+				b = p;
+			}
 		}
+
 		return best;
 	}
 
 	Block* find_free_block(size_t level) {
 		size_t offset = level * 3;
 
-		while(!blocks[offset].empty()) {
+		if(offset >= blocks.size()) {
+			do {
+				size_t l = blocks.size() / 3;
+				blocks.push_back(new Block(1 << l));
+			}while(offset >= blocks.size());
+
+			return blocks.back();
+		}
+		while(!blocks[offset]->empty()) {
 			++offset;
 			if(blocks.size() == offset) {
 				size_t l = offset / 3;
-				Block* ret = new Block(l);
+				Block* ret = new Block(1 << l);
 				blocks.push_back(ret);
 				return ret;
 			}
@@ -265,8 +364,10 @@ private:
 	// 2 would be enough in general, but with 3 less synchronization is required
 	std::vector<Block*> blocks;
 	std::atomic<Block*> top_block;
+	Block* bottom_block;
 
 	Frame* current_frame;
+	std::unordered_map<Frame*, FrameReg> frame_regs;
 
 //	Block* best_block;
 

@@ -48,6 +48,13 @@ public:
 		return *this;
 	}
 
+	bool prioritize(Self& other) {
+		return length > other.length;
+	}
+
+	bool dead_task() {
+		return false;
+	}
 
 	/*
 	 * Checks whether spawn can be converted to a function call

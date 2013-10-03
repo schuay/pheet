@@ -24,19 +24,19 @@ public:
 	~KLSMLocalityTaskStorageFrame() {}
 
 	bool can_reuse(procs_t last_phase) {
-		procs_t p = phase.load(std::memory_order_relaxed);
+		size_t p = phase.load(std::memory_order_relaxed);
 		if(last_phase == ((p+1) & wraparound)) {
 			// Item was freed in this phase. We need to progress phases to be able to free it
 			phase.store((p+1) & wraparound, std::memory_order_release);
 
 			// Now let us try and finalize old phase by closing previous phase
-			signed procs_t r = registered[p&1].load(std::memory_order_relaxed);
+			s_procs_t r = registered[p&1].load(std::memory_order_relaxed);
 			if(r == 0) {
 				if(registered[p&1].compare_exchange_strong(r, -1, std::memory_order_acq_rel, std::memory_order_relaxed)) {
 					// Now check whether there are still threads registered
 					// Since cas does an acquire all changes to this field before are also covered
 					// (they are released using a fetch_and_sub to the CAS'd field)
-					signed procs_t ro = registered[(p&1)^1].load(std::memory_order_acquire);
+					s_procs_t ro = registered[(p&1)^1].load(std::memory_order_acquire);
 
 					if(ro == 0) {
 						// No threads in phase, reuse is safe
@@ -48,7 +48,7 @@ public:
 		}
 
 		if(last_phase == p) {
-			signed procs_t ro = registered[(p&1)^1].load(std::memory_order_relaxed);
+			s_procs_t ro = registered[(p&1)^1].load(std::memory_order_relaxed);
 			if(ro == -1) {
 				// Last phase has been finished
 
@@ -82,7 +82,7 @@ public:
 						return true;
 					}
 				}
-				return false
+				return false;
 			}
 			// Old phase is still in use, nothing we can do
 			return false;
@@ -95,7 +95,7 @@ public:
 	size_t register_place() {
 		while(true) {
 			size_t p = phase.load(std::memory_order_relaxed);
-			signed procs_t r = registered[p&1].load(std::memory_order_acquire);
+			s_procs_t r = registered[p&1].load(std::memory_order_acquire);
 
 			pheet_assert(r >= -1);
 
@@ -115,7 +115,7 @@ public:
 	}
 
 	void deregister_place(size_t phase) {
-		registered[p&1].fetch_and_sub(1, std::memory_order_release);
+		registered[phase&1].fetch_sub(1, std::memory_order_acq_rel);
 	}
 
 	/*
@@ -128,22 +128,22 @@ public:
 	/*
 	 * Frames with medium contention can be used for more items if already in use
 	 */
-	bool medium_contention() {
-		size_t ri = phase.load(std::memory_order_relaxed) & 1;
-		return registered[ri^1].load(std::memory_order_relaxed) == -1;
+	bool medium_contention() const {
+		size_t pi = phase.load(std::memory_order_relaxed) & 1;
+		return registered[pi^1].load(std::memory_order_relaxed) == -1;
 	}
 
 	/*
 	 * Frames with low contention can be reused for new items
 	 */
-	bool low_contention() {
-		size_t ri = phase.load(std::memory_order_relaxed) & 1;
-		return registered[ri].load(std::memory_order_relaxed) == 0 &&
-				registered[ri^1].load(std::memory_order_relaxed) == -1;
+	bool low_contention() const {
+		size_t pi = phase.load(std::memory_order_relaxed) & 1;
+		return registered[pi].load(std::memory_order_relaxed) == 0 &&
+				registered[pi^1].load(std::memory_order_relaxed) == -1;
 	}
 
 private:
-	std::atomic<signed procs_t> registered[2];
+	std::atomic<s_procs_t> registered[2];
 	std::atomic<size_t> phase;
 
 	static size_t wraparound;
@@ -151,6 +151,7 @@ private:
 
 template <class Pheet, class Frame>
 class KLSMLocalityTaskStorageFrameRegistration {
+public:
 	KLSMLocalityTaskStorageFrameRegistration()
 	:references(0), phase(0) {
 
@@ -158,6 +159,10 @@ class KLSMLocalityTaskStorageFrameRegistration {
 
 	void add_ref(Frame* frame) {
 		if(references == 0) {
+			phase = frame->register_place();
+		}
+		else if(frame->get_phase() != phase) {
+			frame->deregister_place(phase);
 			phase = frame->register_place();
 		}
 		++references;
@@ -169,6 +174,14 @@ class KLSMLocalityTaskStorageFrameRegistration {
 		if(references == 0) {
 			frame->deregister_place(phase);
 		}
+		else if(frame->get_phase() != phase) {
+			frame->deregister_place(phase);
+			phase = frame->register_place();
+		}
+	}
+
+	size_t get_phase() {
+		return phase;
 	}
 private:
 	size_t references;
