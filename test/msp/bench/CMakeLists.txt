@@ -15,7 +15,9 @@ target_link_libraries(msp-bench
     msp-sp
 )
 
-add_executable(msp-bench-gengraph gengraph.cpp)
+add_executable(msp-bench-gengraph gengraph.cpp
+	../Util.cpp
+)
 target_link_libraries(msp-bench-gengraph
     ${LIBCGRAPH_LIBRARY}
     msp-generator

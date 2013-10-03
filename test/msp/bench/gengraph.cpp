@@ -8,6 +8,7 @@
 #include <stdio.h>
 
 #include "lib/Graph/Generator/Generator.h"
+#include "Util.h"
 
 using namespace graph;
 
@@ -17,6 +18,17 @@ usage(void)
 	fprintf(stderr,
 	        "gengraph [-n <# nodes>] [-m <# edges>] [-s <seed>] [-w <weight limit>] [-d <degree>]\n");
 	exit(EXIT_FAILURE);
+}
+
+static int
+parse_int(char const* str)
+{
+	int val;
+	if (!msp::Util::parse_int(str, val)) {
+		usage();
+	}
+	return val;
+
 }
 
 int
@@ -33,19 +45,19 @@ main(int argc,
 	while ((opt = getopt(argc, argv, "n:m:s:w:d:")) != -1) {
 		switch (opt) {
 		case 'm':
-			m = strtol(optarg, NULL, 10);
+			m = parse_int(optarg);
 			break;
 		case 'n':
-			n = strtol(optarg, NULL, 10);
+			n = parse_int(optarg);
 			break;
 		case 's':
-			s = strtol(optarg, NULL, 10);
+			s = parse_int(optarg);
 			break;
 		case 'd':
-			d = strtol(optarg, NULL, 10);
+			d = parse_int(optarg);
 			break;
 		case 'w':
-			w = strtol(optarg, NULL, 10);
+			w = parse_int(optarg);
 			break;
 		default:
 			usage();
