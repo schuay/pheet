@@ -34,7 +34,7 @@ public:
 	typedef KLSMLocalityTaskStorageBlock<Pheet, Item> Self;
 
 	KLSMLocalityTaskStorageBlock(size_t size)
-	:size(size), level(0), level_boundary(1), next(nullptr), k(std::numeric_limits<size_t>::max()) {
+	:filled(0), size(size), level(0), level_boundary(1), next(nullptr), prev(nullptr), k(std::numeric_limits<size_t>::max()), in_use(false) {
 		data = new std::atomic<Item*>[size];
 	}
 	~KLSMLocalityTaskStorageBlock() {
@@ -132,14 +132,20 @@ public:
 		}
 		filled.store(f, std::memory_order_relaxed);
 
-		size_t next_boundary = level_boundary >> 1;
-		while(f <= next_boundary) {
-			pheet_assert(level > 0);
-			--level;
-			pheet_assert(next_boundary > 0);
-			next_boundary >>= 1;
+		if(f == 0) {
+			level = 0;
+			level_boundary = 1;
 		}
-		level_boundary = next_boundary;
+		else {
+			size_t next_boundary = level_boundary >> 1;
+			while(f <= next_boundary) {
+				pheet_assert(level > 0);
+				--level;
+				pheet_assert(next_boundary > 0);
+				next_boundary >>= 1;
+			}
+			level_boundary = 1 << level;
+		}
 	}
 
 	bool empty() {
@@ -207,7 +213,9 @@ public:
 
 		while(l != l_max && r != r_max) {
 			Item* l_item = left->data[l].load(std::memory_order_relaxed);
-			Item* r_item = right->data[l].load(std::memory_order_relaxed);
+			Item* r_item = right->data[r].load(std::memory_order_relaxed);
+			pheet_assert(l_item != nullptr);
+			pheet_assert(r_item != nullptr);
 			if(l_item->strategy.prioritize(
 					r_item->strategy)) {
 				data[f].store(r_item, std::memory_order_relaxed);
@@ -224,6 +232,7 @@ public:
 			pheet_assert(r == r_max);
 			do {
 				Item* l_item = left->data[l].load(std::memory_order_relaxed);
+				pheet_assert(l_item != nullptr);
 				data[f].store(l_item, std::memory_order_relaxed);
 				l = left->find_next_non_dead(l + 1, local_place, frame_regs);
 				++f;
@@ -231,7 +240,8 @@ public:
 		}
 		else {
 			while(r != r_max) {
-				Item* r_item = right->data[l].load(std::memory_order_relaxed);
+				Item* r_item = right->data[r].load(std::memory_order_relaxed);
+				pheet_assert(r_item != nullptr);
 				data[f].store(r_item, std::memory_order_relaxed);
 				r = right->find_next_non_dead(r + 1, local_place, frame_regs);
 				++f;
@@ -262,8 +272,18 @@ public:
 		// Make sure new list is visible when successors are not available any more
 		next.store(nullptr, std::memory_order_release);
 		prev = nullptr;
+		in_use = false;
 
 		k = std::numeric_limits<size_t>::max();
+	}
+
+	bool reusable() {
+		pheet_assert(in_use || filled.load(std::memory_order_relaxed) == 0);
+		return !in_use;
+	}
+
+	void mark_in_use() {
+		in_use = true;
 	}
 
 private:
@@ -301,6 +321,8 @@ private:
 	Self* prev;
 
 	size_t k;
+
+	bool in_use;
 };
 
 } /* namespace pheet */

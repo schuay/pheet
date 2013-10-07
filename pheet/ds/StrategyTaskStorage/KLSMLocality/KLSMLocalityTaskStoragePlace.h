@@ -39,7 +39,7 @@ public:
 	typedef ItemReuseMemoryManager<Pheet, Frame, KLSMLocalityTaskStorageFrameReuseCheck<Frame> > FrameMemoryManager;
 
 	KLSMLocalityTaskStoragePlace(ParentTaskStoragePlace* parent_place)
-	:parent_place(parent_place), current_frame(&(frames.acquire_item())), missed_tasks(0) {
+	:parent_place(parent_place), current_frame(&(frames.acquire_item())), missed_tasks(0), tasks(0) {
 
 		// Get central task storage at end of initialization (not before,
 		// since this place becomes visible as soon as we retrieve it)
@@ -53,6 +53,7 @@ public:
 
 		top_block.store(blocks[0], std::memory_order_relaxed);
 		bottom_block = blocks[0];
+		bottom_block->mark_in_use();
 	}
 	~KLSMLocalityTaskStoragePlace() {
 		for(auto i = blocks.begin(); i != blocks.end(); ++i) {
@@ -92,7 +93,7 @@ public:
 		Item* item = reinterpret_cast<Item*>(boundary);
 
 		// Check whether boundary item is still available
-		while(item->is_taken()) {
+		while(!item->is_taken()) {
 
 			// We can assume that boundary is stored in this task storage, so we just get the best item
 			Block* best = find_best_block();
@@ -106,6 +107,7 @@ public:
 
 			// Check whether we succeeded
 			if(data != nullable_traits<T>::null_value) {
+				tasks.store(tasks.load(std::memory_order_relaxed) - 1, std::memory_order_relaxed);
 				return data;
 			}
 		}
@@ -115,6 +117,7 @@ public:
 	}
 
 	T steal(BaseItem* boundary) {
+		// TODO: make sure that items are not reread every time we steal. Could lead to bad scalability with large k if steal order coincides with FIFO order
 		Item* item = reinterpret_cast<Item*>(boundary);
 
 		// Should not be possible. Owner must have observed taken == false and will never go into steal
@@ -139,34 +142,40 @@ public:
 				// stealing is inevitable for correct semantics)
 				parent_place->push(item);
 
-				// Now go through other tasks in the blocks of the given thread.
-				// There is no guarantee that all tasks will be seen, since none of these tasks
-				// would violate the k-requirements, this is not an issue
-				// We call this spying
-				Block* b = item->owner->top_block.load(std::memory_order_acquire);
-				while(b != nullptr) {
-					size_t filled = b->acquire_filled();
-					for(size_t i = 0; i < filled; ++i) {
-						Item* spy_item = b->get_item(i);
-						// First do cheap taken check
-						if(!spy_item->taken.load(std::memory_order_acquire)) {
-							Frame* spy_frame = spy_item->frame;
-							FrameReg& spy_reg = frame_regs[spy_frame];
+				// Only go through tasks of other thread if we have significantly less tasks stored locally
+				// This is mainly to reduce spying in case the boundary items coincide with the
+				// highest priority items, and k is large, where up to k items are looked at
+				// every time an item is stolen.
+				if(tasks.load(std::memory_order_relaxed) < (item->owner->tasks.load(std::memory_order_relaxed) << 1)) {
+					// Now go through other tasks in the blocks of the given thread.
+					// There is no guarantee that all tasks will be seen, since none of these tasks
+					// would violate the k-requirements, this is not an issue
+					// We call this spying
+					Block* b = item->owner->top_block.load(std::memory_order_acquire);
+					while(b != nullptr) {
+						size_t filled = b->acquire_filled();
+						for(size_t i = 0; i < filled; ++i) {
+							Item* spy_item = b->get_item(i);
+							// First do cheap taken check
+							if(spy_item != item && !spy_item->taken.load(std::memory_order_acquire)) {
+								Frame* spy_frame = spy_item->frame;
+								FrameReg& spy_reg = frame_regs[spy_frame];
 
-							spy_reg.add_ref(spy_frame);
+								spy_reg.add_ref(spy_frame);
 
-							if(item->is_taken_or_dead()) {
-								// We do not keep items that are already taken or marked as dead
-								spy_reg.rem_ref(spy_frame);
-							}
-							else {
-								// Store item, but do not store in parent! (It's not a boundary after all!)
-								put(item);
+								if(item->is_taken_or_dead()) {
+									// We do not keep items that are already taken or marked as dead
+									spy_reg.rem_ref(spy_frame);
+								}
+								else {
+									// Store item, but do not store in parent! (It's not a boundary after all!)
+									put(item);
+								}
 							}
 						}
-					}
 
-					b = b->acquire_next();
+						b = b->acquire_next();
+					}
 				}
 
 				// Now that we have spied some items from the owner of the boundary, we can just pop an item
@@ -198,7 +207,11 @@ public:
 
 private:
 	void put(Item* item) {
+		tasks.store(tasks.load(std::memory_order_relaxed) + 1, std::memory_order_relaxed);
+
 		Block* bb = bottom_block;
+		pheet_assert(bb->get_next() == nullptr);
+		pheet_assert(!bb->reusable());
 		if(!bb->try_put(item)) {
 			// Check whether a merge is required
 			if(bb->get_prev() != nullptr && bb->get_level() >= bb->get_prev()->get_level()) {
@@ -210,11 +223,13 @@ private:
 			size_t offset = std::min((l*3) + 2, blocks.size() - 1);
 
 			Block* new_bb = blocks[offset];
-			while(!new_bb->empty()) {
+			while(!new_bb->reusable()) {
 				--offset;
 				new_bb = blocks[offset];
 			}
+			new_bb->mark_in_use();
 			new_bb->set_prev(bb);
+			pheet_assert(new_bb->get_next() == nullptr);
 			// Make sure that if block is seen, so are the changes to the block
 			bb->release_next(new_bb);
 
@@ -232,11 +247,15 @@ private:
 		// Block should not be empty or try_put would have succeeded
 		pheet_assert(!block->empty());
 
+		Block* pre_merge = block->get_next();
 		Block* last_merge = block->get_prev();
+		pheet_assert(block == last_merge->get_next());
 		Block* merged = find_free_block(block->get_level() + 1);
 		merged->merge_into(last_merge, block, this, frame_regs);
+		merged->mark_in_use();
 
 		Block* prev = last_merge->get_prev();
+		pheet_assert(prev == nullptr || prev->get_next() == last_merge);
 
 		while(prev != nullptr && merged->get_level() >= prev->get_level()) {
 			last_merge = prev;
@@ -249,9 +268,14 @@ private:
 				// The merged block was never made visible, we can reset it at any time
 				merged->reset();
 				merged = merged2;
+				merged->mark_in_use();
 			}
 			prev = last_merge->get_prev();
+			pheet_assert(prev == nullptr || prev->get_next() == last_merge);
 		}
+
+		// Will be released when merged block is made visible through update of top block or next pointer
+		merged->set_next(block->get_next());
 
 		// Now we need to make new blocks visible, and reset the old blocks
 		if(prev == nullptr) {
@@ -263,10 +287,10 @@ private:
 			merged->set_prev(prev);
 
 			// Make all changes visible now using a release
-			prev->release_next(block);
+			prev->release_next(merged);
 		}
 		// Now reset old blocks
-		while(last_merge != nullptr) {
+		while(last_merge != pre_merge) {
 			Block* next = last_merge->get_next();
 			last_merge->reset();
 			last_merge = next;
@@ -276,29 +300,48 @@ private:
 	}
 
 	Block* find_best_block() {
+		// Recount number of tasks (might change due to merging, dead tasks, so it's easiest to recalculate)
+		size_t num_tasks = 0;
+
 		Block* b = bottom_block;
-		while(b->empty()) {
-			b = b->get_prev();
+		if(b->empty()) {
+			Block* prev = b->get_prev();
+			while(prev != nullptr && prev->empty()) {
+				bottom_block = prev;
+				prev->set_next(nullptr);
+				b->reset();
+				prev = prev->get_prev();
+			}
+			b = prev;
 		}
 
 		if(b == nullptr) {
-			bottom_block = top_block.load(std::memory_order_relaxed);
+		//	bottom_block = top_block.load(std::memory_order_relaxed);
 			return nullptr;
 		}
 
+		pheet_assert(!b->empty());
 		Block* best = b;
 		Block* next = b;
+		num_tasks += b->get_filled();
 		b = b->get_prev();
 
 		while(b != nullptr) {
+			pheet_assert(!b->reusable());
+
 			Block* p = b->get_prev();
+			pheet_assert(p == nullptr || p->get_next() == b);
 			if(b->empty()) {
+				next->set_prev(p);
 				if(p == nullptr) {
 					// No need to order, we didn't change the block
 					top_block.store(next, std::memory_order_relaxed);
 
 					// Contains a release
 					b->reset();
+
+					tasks = num_tasks;
+
 					// End of list, just return best
 					return best;
 				}
@@ -313,7 +356,10 @@ private:
 				}
 			}
 			else if(p != nullptr && b->get_level() >= p->get_level()) {
+				pheet_assert(b != best);
 				b = merge(b);
+				pheet_assert(!b->reusable());
+				pheet_assert(!best->reusable());
 				next->set_prev(b);
 
 				// We need to redo cycle, since merged block might be empty!
@@ -322,10 +368,13 @@ private:
 				if(b->top()->strategy.prioritize(best->top()->strategy)) {
 					best = b;
 				}
+				num_tasks += b->get_filled();
 				next = b;
 				b = p;
 			}
 		}
+
+		tasks.store(num_tasks, std::memory_order_relaxed);
 
 		return best;
 	}
@@ -341,7 +390,7 @@ private:
 
 			return blocks.back();
 		}
-		while(!blocks[offset]->empty()) {
+		while(!blocks[offset]->reusable()) {
 			++offset;
 			if(blocks.size() == offset) {
 				size_t l = offset / 3;
@@ -372,6 +421,7 @@ private:
 //	Block* best_block;
 
 	size_t missed_tasks;
+	std::atomic<size_t> tasks;
 };
 
 } /* namespace pheet */

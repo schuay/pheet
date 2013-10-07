@@ -151,7 +151,7 @@ private:
 	TaskStorage task_storage;
 	FinishStack finish_stack;
 
-	std::map<std::type_index, TaskStorageBase*> task_storages;
+	std::unordered_map<std::type_index, TaskStorageBase*> task_storages;
 
 //	size_t spawn2call_counter;
 
@@ -572,6 +572,7 @@ void StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::finish(F&& f, 
 template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
 template<class CallTaskType, typename ... TaskParams>
 void StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::spawn(TaskParams&& ... params) {
+	performance_counters.num_spawns.incr();
 	performance_counters.num_actual_spawns.incr();
 	CallTaskType* task = new CallTaskType(params ...);
 	pheet_assert(current_task_parent != NULL);
@@ -585,6 +586,7 @@ void StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::spawn(TaskPara
 template <class Pheet, template <class> class FinishStackT, uint8_t CallThreshold>
 template<typename F, typename ... TaskParams>
 void StrategyScheduler2Place<Pheet, FinishStackT, CallThreshold>::spawn(F&& f, TaskParams&& ... params) {
+	performance_counters.num_spawns.incr();
 	performance_counters.num_actual_spawns.incr();
 	auto bound = std::bind(f, params ...);
 

@@ -37,7 +37,7 @@ int main(int argc, char* argv[]) {
 
 	tests["SOR"] = &sors;
 	tests["lupiv"] = &lpt;
-	tests["tristrip"] = &tristrip;*/
+	tests["tristrip"] = &tristrip;
 	
 	if(argc==3)
 	  {
@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
 	      }
 	    tests[argv[1]]->run_test(prio);
 	    return 0;
-	  }
+	  }*/
 	
 	SortingTests st;
 	st.run_test();

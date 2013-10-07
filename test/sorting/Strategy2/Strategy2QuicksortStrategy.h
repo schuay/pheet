@@ -23,6 +23,7 @@ public:
 
 	typedef KLSMLocalityTaskStorage<Pheet, Self> TaskStorage;
 	typedef typename TaskStorage::Place TaskStoragePlace;
+	typedef typename Pheet::Place Place;
 
 	/*
 	 * Default constructor is required by task storage
@@ -32,7 +33,7 @@ public:
 	}
 
 	Strategy2QuicksortStrategy(size_t length)
-	: length(length) {
+	: length(length), place(Pheet::get_place()) {
 
 	}
 
@@ -45,10 +46,21 @@ public:
 	Self& operator=(Self&& other) {
 //		BaseStrategy::operator=(other);
 		length = other.length;
+		place = other.place;
 		return *this;
 	}
 
 	bool prioritize(Self& other) {
+		Place* p = Pheet::get_place();
+		if(this->place == p) {
+			if(other.place == p) {
+				return length < other.length;
+			}
+			return true;
+		}
+		else if(other.place == p) {
+			return false;
+		}
 		return length > other.length;
 	}
 
@@ -65,6 +77,7 @@ public:
 
 private:
 	size_t length;
+	Place* place;
 };
 
 }

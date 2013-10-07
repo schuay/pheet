@@ -399,6 +399,8 @@ private:
 					return nullable_traits<T>::null_value;
 				}
 			}
+
+			ret = db->direct_get(t - offset);
 		}
 
 		if(ret->task_storage != task_storage) {

@@ -161,10 +161,11 @@ public:
 		if(references == 0) {
 			phase = frame->register_place();
 		}
-		else if(frame->get_phase() != phase) {
+	/*	else if(frame->get_phase() != phase) {
+			size_t new_phase = frame->register_place();
 			frame->deregister_place(phase);
-			phase = frame->register_place();
-		}
+			phase = new_phase;
+		}*/
 		++references;
 	}
 
@@ -174,10 +175,11 @@ public:
 		if(references == 0) {
 			frame->deregister_place(phase);
 		}
-		else if(frame->get_phase() != phase) {
+	/*	else if(frame->get_phase() != phase) {
+			size_t new_phase = frame->register_place();
 			frame->deregister_place(phase);
-			phase = frame->register_place();
-		}
+			phase = new_phase;
+		}*/
 	}
 
 	size_t get_phase() {

@@ -89,9 +89,10 @@ public:
 		// Should be called by everyone except the owner
 		pheet_assert(place_id != Pheet::get_place_id());
 
-		// We are stealing from a foreign place, therefore acquire synchronization is needed
-		Place* place = places[place_id].load(std::memory_order_acquire);
-		// Place should be filled, otherwise there would be nothing to steal from it
+		// For KLSM stealing is called in the context of the stealer, therefore need to retrieve place
+		// from Scheduler (might not yet have been initialized)
+		Place* place = Pheet::get_place()->template get_task_storage<Strategy>();
+		// Place should be created if it does not exist
 		pheet_assert(place != nullptr);
 
 		return place->steal(boundary);
