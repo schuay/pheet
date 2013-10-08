@@ -22,6 +22,7 @@ public:
 	typedef typename Pheet::Environment::BaseStrategy BaseStrategy;
 
 	typedef KLSMLocalityTaskStorage<Pheet, Self> TaskStorage;
+//	typedef typename Pheet::Environment::TaskStorage TaskStorage;
 	typedef typename TaskStorage::Place TaskStoragePlace;
 	typedef typename Pheet::Place Place;
 
@@ -72,7 +73,10 @@ public:
 	 * Checks whether spawn can be converted to a function call
 	 */
 	inline bool can_call(TaskStoragePlace*) {
+		// Due to the static cutoff in the algorithm, the gains of spawn2call are minimal
+		// so we omit this overhead
 		return false;
+	//	return (length / (tsp->size() + 1)) < 512;
 	}
 
 private:

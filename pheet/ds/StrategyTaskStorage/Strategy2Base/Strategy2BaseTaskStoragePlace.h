@@ -102,6 +102,11 @@ public:
 		bottom.store(b + 1, std::memory_order_release);
 	}
 
+	template <class Strategy>
+	void push(Strategy&&, T data) {
+		push(data);
+	}
+
 	void push(BaseItem* item) {
 		size_t b = bottom.load(std::memory_order_relaxed);
 
