@@ -1,17 +1,17 @@
 /*
- * KLSMLocalityTaskStoragePlace.h
+ * LSMLocalityTaskStoragePlace.h
  *
  *  Created on: Sep 18, 2013
  *      Author: Martin Wimmer
  *	   License: Boost Software License 1.0
  */
 
-#ifndef KLSMLOCALITYTASKSTORAGEPLACE_H_
-#define KLSMLOCALITYTASKSTORAGEPLACE_H_
+#ifndef LSMLOCALITYTASKSTORAGEPLACE_H_
+#define LSMLOCALITYTASKSTORAGEPLACE_H_
 
-#include "KLSMLocalityTaskStorageItem.h"
-#include "KLSMLocalityTaskStorageBlock.h"
-#include "KLSMLocalityTaskStorageFrame.h"
+#include "LSMLocalityTaskStorageItem.h"
+#include "LSMLocalityTaskStorageBlock.h"
+#include "LSMLocalityTaskStorageFrame.h"
 
 #include <pheet/memory/BlockItemReuse/BlockItemReuseMemoryManager.h>
 #include <pheet/memory/ItemReuse/ItemReuseMemoryManager.h>
@@ -22,24 +22,24 @@
 namespace pheet {
 
 template <class Pheet, class TaskStorage, class ParentTaskStoragePlace, class Strategy>
-class KLSMLocalityTaskStoragePlace : public ParentTaskStoragePlace::BaseTaskStoragePlace {
+class LSMLocalityTaskStoragePlace : public ParentTaskStoragePlace::BaseTaskStoragePlace {
 public:
-	typedef KLSMLocalityTaskStoragePlace<Pheet, TaskStorage, ParentTaskStoragePlace, Strategy> Self;
+	typedef LSMLocalityTaskStoragePlace<Pheet, TaskStorage, ParentTaskStoragePlace, Strategy> Self;
 
 	typedef typename ParentTaskStoragePlace::BaseTaskStoragePlace BaseTaskStoragePlace;
-	typedef KLSMLocalityTaskStorageFrame<Pheet> Frame;
-	typedef KLSMLocalityTaskStorageFrameRegistration<Pheet, Frame> FrameReg;
+	typedef LSMLocalityTaskStorageFrame<Pheet> Frame;
+	typedef LSMLocalityTaskStorageFrameRegistration<Pheet, Frame> FrameReg;
 	typedef typename ParentTaskStoragePlace::BaseItem BaseItem;
-	typedef KLSMLocalityTaskStorageItem<Pheet, Self, Frame, FrameReg, BaseItem, Strategy> Item;
-	typedef KLSMLocalityTaskStorageBlock<Pheet, Item> Block;
+	typedef LSMLocalityTaskStorageItem<Pheet, Self, Frame, FrameReg, BaseItem, Strategy> Item;
+	typedef LSMLocalityTaskStorageBlock<Pheet, Item> Block;
 
 	typedef typename BaseItem::T T;
 
-	typedef BlockItemReuseMemoryManager<Pheet, Item, KLSMLocalityTaskStorageItemReuseCheck<Item, Frame> > ItemMemoryManager;
-	typedef ItemReuseMemoryManager<Pheet, Frame, KLSMLocalityTaskStorageFrameReuseCheck<Frame> > FrameMemoryManager;
+	typedef BlockItemReuseMemoryManager<Pheet, Item, LSMLocalityTaskStorageItemReuseCheck<Item, Frame> > ItemMemoryManager;
+	typedef ItemReuseMemoryManager<Pheet, Frame, LSMLocalityTaskStorageFrameReuseCheck<Frame> > FrameMemoryManager;
 
-	KLSMLocalityTaskStoragePlace(ParentTaskStoragePlace* parent_place)
-	:parent_place(parent_place), current_frame(&(frames.acquire_item())), missed_tasks(0), tasks(0) {
+	LSMLocalityTaskStoragePlace(ParentTaskStoragePlace* parent_place)
+	:parent_place(parent_place), current_frame(&(frames.acquire_item())), tasks(0) {
 
 		// Get central task storage at end of initialization (not before,
 		// since this place becomes visible as soon as we retrieve it)
@@ -55,7 +55,7 @@ public:
 		bottom_block = blocks[0];
 		bottom_block->mark_in_use();
 	}
-	~KLSMLocalityTaskStoragePlace() {
+	~LSMLocalityTaskStoragePlace() {
 		for(auto i = blocks.begin(); i != blocks.end(); ++i) {
 			delete *i;
 		}
@@ -455,9 +455,8 @@ private:
 
 //	Block* best_block;
 
-	size_t missed_tasks;
 	std::atomic<size_t> tasks;
 };
 
 } /* namespace pheet */
-#endif /* KLSMLOCALITYTASKSTORAGEPLACE_H_ */
+#endif /* LSMLOCALITYTASKSTORAGEPLACE_H_ */
