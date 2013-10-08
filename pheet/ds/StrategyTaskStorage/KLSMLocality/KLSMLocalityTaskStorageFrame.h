@@ -23,72 +23,55 @@ public:
 	}
 	~KLSMLocalityTaskStorageFrame() {}
 
-	bool can_reuse(procs_t last_phase) {
+	bool can_progress_phase() {
 		size_t p = phase.load(std::memory_order_relaxed);
-		if(last_phase == ((p+1) & wraparound)) {
-			// Item was freed in this phase. We need to progress phases to be able to free it
-			phase.store((p+1) & wraparound, std::memory_order_release);
 
-			// Now let us try and finalize old phase by closing previous phase
-			s_procs_t r = registered[p&1].load(std::memory_order_relaxed);
-			if(r == 0) {
-				if(registered[p&1].compare_exchange_strong(r, -1, std::memory_order_acq_rel, std::memory_order_relaxed)) {
-					// Now check whether there are still threads registered
-					// Since cas does an acquire all changes to this field before are also covered
-					// (they are released using a fetch_and_sub to the CAS'd field)
-					s_procs_t ro = registered[(p&1)^1].load(std::memory_order_acquire);
-
-					if(ro == 0) {
-						// No threads in phase, reuse is safe
-						return true;
-					}
-				}
-			}
-			return false;
+		// Check status of previous phase
+		s_procs_t ro = registered[(p&1)^1].load(std::memory_order_relaxed);
+		if(ro == -1) {
+			// Previous phase has already been finished
+			return true;
 		}
+		else if(ro == 0) {
+			// We can try to finalize the previous phase
+			if(registered[(p&1)^1].compare_exchange_strong(ro, -1, std::memory_order_acq_rel, std::memory_order_relaxed)) {
+				// Previous phase is finalized now
+				return true;
+			}
+		}
+		return false;
+	}
 
-		if(last_phase == p) {
-			s_procs_t ro = registered[(p&1)^1].load(std::memory_order_relaxed);
-			if(ro == -1) {
-				// Last phase has been finished
+	void progress_phase() {
+		size_t p = phase.load(std::memory_order_relaxed);
+		pheet_assert(registered[(p&1)^1].load(std::memory_order_relaxed) == -1);
 
-				// Check whether no thread is in current phase
-				if(registered[p&1].load(std::memory_order_relaxed) == 0) {
-					// Update to last_phase happened before next thread will register for frame
-					// It is safe to reuse the item
+		// First reopen the position for the new phase
+		registered[(p&1)^1].store(0, std::memory_order_release);
+		// Then release new phase id (reopening of position needs to have happened before)
+		phase.store((p+1) & wraparound, std::memory_order_release);
+	}
+
+	bool can_reuse(ptrdiff_t last_phase) {
+		pheet_assert(last_phase >= 0);
+
+		size_t p = phase.load(std::memory_order_relaxed);
+		if((size_t)last_phase == ((p+1) & wraparound) ||
+				(size_t)last_phase == p) {
+			// If last_phase of item is bigger than the current phase, this means that
+			// in practice it was already freed one phase earlier. So no need to
+			// progress two phases
+
+			if(can_progress_phase()) {
+				progress_phase();
+
+				if(can_progress_phase()) {
 					return true;
 				}
-				else {
-					// Need to progress to next phase for a chance of progress
-					// First reopen the position for the new phase
-					registered[(p&1)^1].store(0, std::memory_order_relaxed);
-					// Then release new phase id (reopening of position needs to have happened before)
-					phase.store((p+1) & wraparound, std::memory_order_release);
-
-					// No need to try and close old position, since we just found out it is != 0
-					return false;
-				}
 			}
-			else if(ro == 0) {
-				// We still need to close the old position with a CAS
-
-				if(registered[(p&1)^1].compare_exchange_strong(ro, -1, std::memory_order_acq_rel, std::memory_order_relaxed)) {
-					// Check whether no thread is in current phase
-					// Since cas does an acquire all changes to this field before are also covered
-					// (they are released using a fetch_and_sub to the CAS'd field)
-					if(registered[p&1].load(std::memory_order_relaxed) == 0) {
-						// Update to last_phase happened before next thread will register for frame
-						// It is safe to reuse the item
-						return true;
-					}
-				}
-				return false;
-			}
-			// Old phase is still in use, nothing we can do
 			return false;
 		}
 
-		// All other phases can be reused
 		return true;
 	}
 
@@ -114,6 +97,27 @@ public:
 		}
 	}
 
+	/*
+	 * Wait-free variant
+	 */
+	bool try_register_place(size_t& ret_phase) {
+		size_t p = phase.load(std::memory_order_relaxed);
+		s_procs_t r = registered[p&1].load(std::memory_order_acquire);
+
+		pheet_assert(r >= -1);
+
+		if(r == -1 || !registered[p&1].compare_exchange_weak(r, r + 1, std::memory_order_acquire, std::memory_order_acquire)) {
+			return false;
+		}
+		size_t p2 = phase.load(std::memory_order_acquire);
+		if((p2 & 1) == (p & 1)) {
+			ret_phase = p2;
+			return true;
+		}
+		deregister_place(p);
+		return false;
+	}
+
 	void deregister_place(size_t phase) {
 		registered[phase&1].fetch_sub(1, std::memory_order_acq_rel);
 	}
@@ -123,6 +127,10 @@ public:
 	 */
 	size_t get_phase() {
 		return phase.load(std::memory_order_relaxed);
+	}
+
+	size_t get_take_phase() {
+		return (phase.load(std::memory_order_relaxed) + 1) & wraparound;
 	}
 
 	/*
@@ -167,6 +175,16 @@ public:
 			phase = new_phase;
 		}*/
 		++references;
+	}
+
+	bool try_add_ref(Frame* frame) {
+		if(references == 0) {
+			if(!frame->try_register_place(phase)) {
+				return false;
+			}
+		}
+		++references;
+		return true;
 	}
 
 	void rem_ref(Frame* frame) {

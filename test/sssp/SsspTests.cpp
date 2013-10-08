@@ -10,12 +10,14 @@
 #ifdef SSSP_TEST
 #include "Simple/SimpleSssp.h"
 #include "Strategy/StrategySssp.h"
+#include "Strategy2/Strategy2Sssp.h"
 #include "Adaptive/AdaptiveSssp.h"
 #include "Reference/ReferenceSssp.h"
 #include "Analysis/SsspAnalysis.h"
 
 #include <pheet/sched/Basic/BasicScheduler.h>
 #include <pheet/sched/Strategy/StrategyScheduler.h>
+#include <pheet/sched/Strategy2/StrategyScheduler2.h>
 #include <pheet/sched/BStrategy/BStrategyScheduler.h>
 #include <pheet/sched/Synchroneous/SynchroneousScheduler.h>
 #include <pheet/ds/StrategyTaskStorage/CentralK/CentralKStrategyTaskStorage.h>
@@ -42,6 +44,8 @@ void SsspTests::run_test() {
 #ifdef SSSP_TEST
 	std::cout << "----" << std::endl;
 
+	this->run_algorithm<	Pheet::WithScheduler<StrategyScheduler2>,
+							Strategy2Sssp>();
 	this->run_algorithm<	Pheet::WithScheduler<SynchroneousScheduler>,
 							ReferenceSssp>();
 //	this->run_algorithm<	Pheet::WithScheduler<BStrategyScheduler>::WithTaskStorage<DistKStrategyTaskStorage>,

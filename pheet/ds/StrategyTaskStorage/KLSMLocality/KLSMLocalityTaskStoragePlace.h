@@ -69,6 +69,7 @@ public:
 		Item& it = items.acquire_item();
 
 		it.strategy = std::move(strategy);
+		pheet_assert(!it.used_locally);
 		it.used_locally = true;
 		it.data = data;
 		it.task_storage = task_storage;
@@ -98,9 +99,14 @@ public:
 			// We can assume that boundary is stored in this task storage, so we just get the best item
 			Block* best = find_best_block();
 
+			if(best == nullptr) {
+				return nullable_traits<T>::null_value;
+			}
+
 			Item* best_item = best->top();
 
-			T data = (best_item->owner == this)?best_item->take(this):best_item->take(frame_regs[best_item->frame.load(std::memory_order_relaxed)]);
+			// Take does not do any deregistration, this is done by pop_taken_and_dead
+			T data = best_item->take();
 
 			// There is at least one taken task now, let's do a cleanup
 			best->pop_taken_and_dead(this, frame_regs);
@@ -129,7 +135,10 @@ public:
 		Frame* f = item->frame.load(std::memory_order_relaxed);
 		FrameReg& reg = frame_regs[f];
 
-		reg.add_ref(f);
+		if(!reg.try_add_ref(f)) {
+			// Spurious failure
+			return nullable_traits<T>::null_value;
+		}
 		if(f == item->frame.load(std::memory_order_relaxed)) {
 			if(!item->is_taken()) {
 				// Boundary item is still active. Put it in local queue, so we don't have to steal it another time
@@ -158,22 +167,44 @@ public:
 							Item* spy_item = b->get_item(i);
 							// First do cheap taken check
 							if(spy_item != item && !spy_item->taken.load(std::memory_order_acquire)) {
+								// Should never happen, we must have observed taken being set or we wouldn't
+								// need to spy
+								pheet_assert(spy_item->owner != this);
 								Frame* spy_frame = spy_item->frame;
-								FrameReg& spy_reg = frame_regs[spy_frame];
+								FrameReg* spy_reg = &(frame_regs[spy_frame]);
 
-								spy_reg.add_ref(spy_frame);
+								// We do not need to see all items, so only proceed if we succeed
+								// registering for the frame
+								if(spy_reg->try_add_ref(spy_frame)) {
 
-								if(item->is_taken_or_dead()) {
-									// We do not keep items that are already taken or marked as dead
-									spy_reg.rem_ref(spy_frame);
-								}
-								else {
-									// Store item, but do not store in parent! (It's not a boundary after all!)
-									put(item);
+									// Frame might have changed between read and registration
+									Frame* spy_frame2 = spy_item->frame;
+									if(spy_frame2 == spy_frame) {
+										// Frame is still the same, we can proceed
+
+										if(spy_item->is_taken_or_dead()) {
+											// We do not keep items that are already taken or marked as dead
+											spy_reg->rem_ref(spy_frame);
+										}
+										else {
+											// Store item, but do not store in parent! (It's not a boundary after all!)
+											put(spy_item);
+										}
+									}
+									else {
+										// Frame has changed, just skip item
+										spy_reg->rem_ref(spy_frame);
+
+										// If item has changed, so has the block, so we can skip
+										// the rest of the block
+										break;
+									}
 								}
 							}
 						}
 
+						// Not wait-free yet, since theoretically we might loop through blocks
+						// of same size all the time (unrealistic, but not impossible)
 						b = b->acquire_next();
 					}
 				}
@@ -192,6 +223,7 @@ public:
 			}
 		}
 		else {
+			// Frame has changed in the meantime, just deregister
 			reg.rem_ref(f);
 		}
 

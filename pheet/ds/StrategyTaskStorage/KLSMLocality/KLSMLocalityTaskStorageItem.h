@@ -35,35 +35,12 @@ struct KLSMLocalityTaskStorageItem : public BaseItem {
 		return last_phase.load(std::memory_order_acquire) != -1 || strategy.dead_task();
 	}
 
-	/*
-	 * Local version of take, called by owner
-	 */
-	T take(Place* place) {
+	T take() {
 		ptrdiff_t expected = -1;
-		if(last_phase.compare_exchange_strong(expected, frame.load(std::memory_order_relaxed)->get_phase(), std::memory_order_release, std::memory_order_acquire)) {
-			pheet_assert(used_locally);
+		if(last_phase.compare_exchange_strong(expected, frame.load(std::memory_order_relaxed)->get_take_phase(), std::memory_order_release, std::memory_order_acquire)) {
 			this->taken.store(true, std::memory_order_relaxed);
-			used_locally = false;
 			return this->data;
 		}
-		used_locally = false;
-		return nullable_traits<T>::null_value;
-	}
-
-	/*
-	 * Remote version of take, called by all threads except the owner
-	 */
-	T take(FrameReg& reg) {
-		ptrdiff_t expected = -1;
-		Frame* f = frame.load(std::memory_order_relaxed);
-		if(last_phase.compare_exchange_strong(expected, reg.get_phase(), std::memory_order_release, std::memory_order_acquire)) {
-			this->taken.store(true, std::memory_order_relaxed);
-			T data = this->data;
-
-			reg.rem_ref(f);
-			return data;
-		}
-		reg.rem_ref(f);
 		return nullable_traits<T>::null_value;
 	}
 
@@ -71,30 +48,13 @@ struct KLSMLocalityTaskStorageItem : public BaseItem {
 	 * Local version of take_and_delete, called by owner
 	 * Tries to take item and deletes it on success
 	 */
-	void take_and_delete(Place* place) {
+	void take_and_delete() {
 		ptrdiff_t expected = -1;
-		if(last_phase.compare_exchange_strong(expected, frame.load(std::memory_order_relaxed)->get_phase(), std::memory_order_release, std::memory_order_acquire)) {
+		if(last_phase.compare_exchange_strong(expected, frame.load(std::memory_order_relaxed)->get_take_phase(), std::memory_order_release, std::memory_order_acquire)) {
 			this->taken.store(true, std::memory_order_relaxed);
 
 			this->data.drop_item();
 		}
-		pheet_assert(used_locally);
-		used_locally = false;
-	}
-
-	/*
-	 * Remote version of take_and_delete, called by all threads except the owner
-	 * Tries to take item and deletes it on success
-	 */
-	void take_and_delete(FrameReg& reg) {
-		ptrdiff_t expected = -1;
-		Frame* f = frame.load(std::memory_order_relaxed);
-		if(last_phase.compare_exchange_strong(expected, reg.get_phase(), std::memory_order_release, std::memory_order_acquire)) {
-			this->taken.store(true, std::memory_order_relaxed);
-
-			this->data.drop_item();
-		}
-		reg.rem_ref(f);
 	}
 
 	Place* owner;

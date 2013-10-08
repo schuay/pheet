@@ -21,8 +21,8 @@ public:
 	typedef Strategy2QuicksortStrategy<Pheet> Self;
 	typedef typename Pheet::Environment::BaseStrategy BaseStrategy;
 
-	typedef KLSMLocalityTaskStorage<Pheet, Self> TaskStorage;
-//	typedef typename Pheet::Environment::TaskStorage TaskStorage;
+//	typedef KLSMLocalityTaskStorage<Pheet, Self> TaskStorage;
+	typedef typename Pheet::Environment::TaskStorage TaskStorage;
 	typedef typename TaskStorage::Place TaskStoragePlace;
 	typedef typename Pheet::Place Place;
 

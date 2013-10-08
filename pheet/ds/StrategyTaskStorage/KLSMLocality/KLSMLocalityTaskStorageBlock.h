@@ -117,15 +117,28 @@ public:
 			if(item->last_phase.load(std::memory_order_relaxed) == -1) {
 				if(item->strategy.dead_task()) {
 					// If we don't succeed someone else will, either way we won't execute the task
+					item->take_and_delete();
 					if(item->owner == local_place) {
-						item->take_and_delete(local_place);
+						pheet_assert(item->used_locally);
+						item->used_locally = false;
 					}
 					else {
-						item->take_and_delete(frame_regs[item->frame.load(std::memory_order_relaxed)]);
+						auto frame = item->frame.load(std::memory_order_relaxed);
+						frame_regs[frame].rem_ref(frame);
 					}
 				}
 				else {
 					break;
+				}
+			}
+			else {
+				if(item->owner == local_place) {
+					pheet_assert(item->used_locally);
+					item->used_locally = false;
+				}
+				else {
+					auto frame = item->frame.load(std::memory_order_relaxed);
+					frame_regs[frame].rem_ref(frame);
 				}
 			}
 			f = f2;
@@ -160,14 +173,14 @@ public:
 	size_t acquire_filled() {
 		return filled.load(std::memory_order_acquire);
 	}
-
+/*
 	void drop_empty() {
 		Self* n = next.load(std::memory_order_relaxed);
 		while(n != nullptr && n->filled == 0) {
 			n = n->next.load(std::memory_order_relaxed);
 		}
 		next.store(n, std::memory_order_relaxed);
-	}
+	}*/
 
 	/*
 	 * Not thread-safe. Only to be called by owner
@@ -204,6 +217,8 @@ public:
 	void merge_into(Self* left, Self* right, Place* local_place, Hashtable& frame_regs) {
 		pheet_assert(filled.load(std::memory_order_relaxed) == 0);
 		pheet_assert(left->level <= right->level);
+		pheet_assert(left->in_use);
+		pheet_assert(right->in_use);
 
 		size_t f = 0;
 		size_t l_max = left->filled.load(std::memory_order_relaxed);
@@ -212,25 +227,44 @@ public:
 		size_t r = right->find_next_non_dead(0, local_place, frame_regs);
 
 		while(l != l_max && r != r_max) {
+			pheet_assert(l < l_max);
+			pheet_assert(r < r_max);
+
 			Item* l_item = left->data[l].load(std::memory_order_relaxed);
 			Item* r_item = right->data[r].load(std::memory_order_relaxed);
 			pheet_assert(l_item != nullptr);
 			pheet_assert(r_item != nullptr);
-			if(l_item->strategy.prioritize(
+			if(l_item == r_item) {
+				// Get rid of doubles. Might not recognize doubles if there are different tasks
+				// with exactly the same priority
+				if(r_item->owner == local_place) {
+					pheet_assert(r_item->used_locally);
+					r_item->used_locally = false;
+				}
+				else {
+					auto frame = r_item->frame.load(std::memory_order_relaxed);
+					frame_regs[frame].rem_ref(frame);
+				}
+				r = right->find_next_non_dead(r + 1, local_place, frame_regs);
+			}
+			else if(l_item->strategy.prioritize(
 					r_item->strategy)) {
 				data[f].store(r_item, std::memory_order_relaxed);
 				r = right->find_next_non_dead(r + 1, local_place, frame_regs);
+				++f;
 			}
 			else {
 				data[f].store(l_item, std::memory_order_relaxed);
 				l = left->find_next_non_dead(l + 1, local_place, frame_regs);
+				++f;
 			}
-			++f;
 		}
 
 		if(l != l_max) {
 			pheet_assert(r == r_max);
 			do {
+				pheet_assert(l < l_max);
+
 				Item* l_item = left->data[l].load(std::memory_order_relaxed);
 				pheet_assert(l_item != nullptr);
 				data[f].store(l_item, std::memory_order_relaxed);
@@ -240,6 +274,8 @@ public:
 		}
 		else {
 			while(r != r_max) {
+				pheet_assert(r < r_max);
+
 				Item* r_item = right->data[r].load(std::memory_order_relaxed);
 				pheet_assert(r_item != nullptr);
 				data[f].store(r_item, std::memory_order_relaxed);
@@ -287,6 +323,11 @@ public:
 	}
 
 private:
+	/*
+	 * Is used by merge_into to go through list.
+	 * Should be called in a way so that each offset is processed exactly once, since some
+	 * clean-up is performed on the way
+	 */
 	template <class Place, class Hashtable>
 	size_t find_next_non_dead(size_t offset, Place* local_place, Hashtable& frame_regs) {
 		size_t f = filled.load(std::memory_order_relaxed);
@@ -295,16 +336,20 @@ private:
 			if(item->last_phase == -1) {
 				if(item->strategy.dead_task()) {
 					// If we don't succeed someone else will, either way we won't execute the task
-					if(item->owner == local_place) {
-						item->take_and_delete(local_place);
-					}
-					else {
-						item->take_and_delete(frame_regs[item->frame.load(std::memory_order_relaxed)]);
-					}
+					item->take_and_delete();
 				}
 				else {
 					break;
 				}
+			}
+			// Items will never be touched again, so remove reference
+			if(item->owner == local_place) {
+				pheet_assert(item->used_locally);
+				item->used_locally = false;
+			}
+			else {
+				auto frame = item->frame.load(std::memory_order_relaxed);
+				frame_regs[frame].rem_ref(frame);
 			}
 			++offset;
 		}
