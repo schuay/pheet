@@ -33,7 +33,7 @@ public:
 
 	virtual void operator()() {
 		pc.last_task_time.take_time();
-		size_t d = graph[node].distance;
+		size_t d = graph[node].distance.load(std::memory_order_relaxed);
 		if(d != distance) {
 			pc.num_dead_tasks.incr();
 			// Distance has already been improved in the meantime
@@ -45,9 +45,9 @@ public:
 		for(size_t i = 0; i < graph[node].num_edges; ++i) {
 			size_t new_d = d + graph[node].edges[i].weight;
 			size_t target = graph[node].edges[i].target;
-			size_t old_d = graph[target].distance;
+			size_t old_d = graph[target].distance.load(std::memory_order_relaxed);
 			while(old_d > new_d) {
-				if(SIZET_CAS(&(graph[target].distance), old_d, new_d)) {
+				if(graph[target].distance.compare_exchange_strong(old_d, new_d, std::memory_order_relaxed)) {
 					pc.last_update_time.take_time();
 
 					Pheet::template
@@ -56,7 +56,6 @@ public:
 								graph, target, new_d, pc);
 					break;
 				}
-				old_d = graph[target].distance;
 			}
 		}
 	}

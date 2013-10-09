@@ -10,6 +10,7 @@
 #define ADAPTIVESSSPSTRATEGY_H_
 
 #include <limits>
+#include <atomic>
 
 namespace pheet {
 
@@ -19,7 +20,7 @@ public:
 	typedef AdaptiveSsspStrategy<Pheet> Self;
 	typedef typename Pheet::Environment::BaseStrategy BaseStrategy;
 
-	AdaptiveSsspStrategy(size_t distance, size_t& stored_distance, size_t k)
+	AdaptiveSsspStrategy(size_t distance, std::atomic<size_t>& stored_distance, size_t k)
 	: distance(distance), stored_distance(stored_distance)/*, rnd(Pheet::rand_int((1 + distance) << 4))*/ {
 		this->set_k(k);
 	}
@@ -55,7 +56,7 @@ public:
 	}
 
 	inline bool dead_task() {
-		return stored_distance < distance;
+		return stored_distance.load(std::memory_order_relaxed) < distance;
 	}
 /*
 	inline void rebase() {
@@ -64,7 +65,7 @@ public:
 	}*/
 private:
 	size_t distance;
-	size_t& stored_distance;
+	std::atomic<size_t>& stored_distance;
 //	size_t rnd;
 };
 

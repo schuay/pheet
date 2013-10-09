@@ -12,6 +12,8 @@
 #include <atomic>
 #include <algorithm>
 
+#include "KLSMLocalityTaskStorageGlobalListItem.h"
+
 namespace pheet {
 
 /*
@@ -32,9 +34,10 @@ template <class Pheet, class Item>
 class KLSMLocalityTaskStorageBlock {
 public:
 	typedef KLSMLocalityTaskStorageBlock<Pheet, Item> Self;
+	typedef KLSMLocalityTaskStorageGlobalListItem<Pheet, Self> GlobalListItem;
 
 	KLSMLocalityTaskStorageBlock(size_t size)
-	:filled(0), size(size), level(0), level_boundary(1), next(nullptr), prev(nullptr), k(std::numeric_limits<size_t>::max()), in_use(false) {
+	:filled(0), size(size), level(0), level_boundary(1), next(nullptr), prev(nullptr), k(std::numeric_limits<size_t>::max()), local_items(0), in_use(false), global_list_item(nullptr), newly_global(false) {
 		data = new std::atomic<Item*>[size];
 	}
 	~KLSMLocalityTaskStorageBlock() {
@@ -46,7 +49,7 @@ public:
 	 */
 	bool try_put(Item* item) {
 		size_t f = filled.load(std::memory_order_relaxed);
-		if(f == size) {
+		if(newly_global || f == size) {
 			return false;
 		}
 		else if(f == 0 ||
@@ -82,6 +85,34 @@ public:
 		}
 	}
 
+	/*
+	 * Bookkeeping for k-relaxation
+	 * Updated from outside
+	 * (Since not all put operations add local items, and block
+	 * does not have enough information to figure this out)
+	 */
+	void added_local_item(size_t item_k) {
+		pheet_assert(k > 0);
+		k = std::min(k - 1, item_k);
+		++local_items;
+	}
+
+	size_t get_k() {
+		return k;
+	}
+
+	bool has_local_items() {
+		return local_items != 0;
+	}
+
+	void mark_newly_global(GlobalListItem* gli) {
+		newly_global = true;
+		k = std::numeric_limits<size_t>::max();
+		local_items = 0;
+
+		global_list_item = gli;
+	}
+
 	Item* top() {
 		size_t f = filled.load(std::memory_order_relaxed);
 		pheet_assert(f > 0);
@@ -92,7 +123,7 @@ public:
 		pheet_assert(pos < size);
 		return data[pos].load(std::memory_order_relaxed);
 	}
-
+/*
 	void pop() {
 		size_t f = filled.load(std::memory_order_relaxed);
 		pheet_assert(f > 0);
@@ -103,7 +134,7 @@ public:
 			pheet_assert(level_boundary > 0);
 			level_boundary >>= 1;
 		}
-	}
+	}*/
 
 	/*
 	 * Scans the top tasks until either the block is empty or the top is not dead and not taken
@@ -148,6 +179,8 @@ public:
 		if(f == 0) {
 			level = 0;
 			level_boundary = 1;
+			k = std::numeric_limits<size_t>::max();
+			local_items = 0;
 		}
 		else {
 			size_t next_boundary = level_boundary >> 1;
@@ -219,6 +252,11 @@ public:
 		pheet_assert(left->level <= right->level);
 		pheet_assert(left->in_use);
 		pheet_assert(right->in_use);
+		pheet_assert(!left->empty());
+		pheet_assert(!right->empty());
+
+		size_t min_k = std::numeric_limits<size_t>::max();
+		size_t merged_local = 0;
 
 		size_t f = 0;
 		size_t l_max = left->filled.load(std::memory_order_relaxed);
@@ -249,11 +287,33 @@ public:
 			}
 			else if(l_item->strategy.prioritize(
 					r_item->strategy)) {
+				if(r_item->owner == local_place) {
+					if(right->newly_global) {
+						r_item->global = true;
+					}
+					else if(!r_item->global) {
+						++merged_local;
+						size_t k = r_item->strategy.get_k();
+						if(k < min_k) min_k = k;
+					}
+				}
+
 				data[f].store(r_item, std::memory_order_relaxed);
 				r = right->find_next_non_dead(r + 1, local_place, frame_regs);
 				++f;
 			}
 			else {
+				if(l_item->owner == local_place) {
+					if(left->newly_global) {
+						l_item->global = true;
+					}
+					else if(!l_item->global) {
+						++merged_local;
+						size_t k = l_item->strategy.get_k();
+						if(k < min_k) min_k = k;
+					}
+				}
+
 				data[f].store(l_item, std::memory_order_relaxed);
 				l = left->find_next_non_dead(l + 1, local_place, frame_regs);
 				++f;
@@ -267,6 +327,18 @@ public:
 
 				Item* l_item = left->data[l].load(std::memory_order_relaxed);
 				pheet_assert(l_item != nullptr);
+
+				if(l_item->owner == local_place) {
+					if(left->newly_global) {
+						l_item->global = true;
+					}
+					else if(!l_item->global) {
+						++merged_local;
+						size_t k = l_item->strategy.get_k();
+						if(k < min_k) min_k = k;
+					}
+				}
+
 				data[f].store(l_item, std::memory_order_relaxed);
 				l = left->find_next_non_dead(l + 1, local_place, frame_regs);
 				++f;
@@ -278,6 +350,18 @@ public:
 
 				Item* r_item = right->data[r].load(std::memory_order_relaxed);
 				pheet_assert(r_item != nullptr);
+
+				if(r_item->owner == local_place) {
+					if(right->newly_global) {
+						r_item->global = true;
+					}
+					else if(!r_item->global) {
+						++merged_local;
+						size_t k = r_item->strategy.get_k();
+						if(k < min_k) min_k = k;
+					}
+				}
+
 				data[f].store(r_item, std::memory_order_relaxed);
 				r = right->find_next_non_dead(r + 1, local_place, frame_regs);
 				++f;
@@ -293,6 +377,38 @@ public:
 			++level;
 			level_boundary <<= 1;
 		}
+
+		// Bookkeeping for k-relaxation
+		// Since items are reordered we have to assume for each item that it is the oldest
+		// Sometimes this will lead to worse values for k than for the previous lists
+		// In this case we just use the values from the previous lists (combined in alternative_k)
+		pheet_assert(left->k >= right->local_items);
+		size_t alternative_k = std::min(left->k - right->local_items, right->k);
+		if(min_k < merged_local || alternative_k > (min_k - merged_local)) {
+			k = alternative_k;
+		} else {
+			k = min_k - merged_local;
+		}
+		local_items = merged_local;
+		pheet_assert(local_items <= left->local_items + right->local_items);
+
+		// Update global list items to this block, since the previous blocks might be reused now
+		if(right->global_list_item != nullptr) {
+			// Make sure global list item was not reused yet
+			if(right->global_list_item->get_block() == right) {
+				global_list_item = right->global_list_item;
+				global_list_item->update_block(this);
+				right->global_list_item = nullptr;
+			}
+		}
+		else if(left->global_list_item != nullptr) {
+			// Make sure global list item was not reused yet
+			if(left->global_list_item->get_block() == left) {
+				global_list_item = left->global_list_item;
+				global_list_item->update_block(this);
+				left->global_list_item = nullptr;
+			}
+		}
 	}
 
 	size_t get_level() {
@@ -300,6 +416,11 @@ public:
 	}
 
 	void reset() {
+		if(global_list_item != nullptr && (global_list_item->get_block() == this)) {
+			global_list_item->update_block(nullptr);
+			global_list_item = nullptr;
+		}
+
 		// Make sure new list is visible when this list is encountered as empty
 		filled.store(0, std::memory_order_release);
 
@@ -311,6 +432,9 @@ public:
 		in_use = false;
 
 		k = std::numeric_limits<size_t>::max();
+		local_items = 0;
+
+		newly_global = false;
 	}
 
 	bool reusable() {
@@ -366,8 +490,12 @@ private:
 	Self* prev;
 
 	size_t k;
+	size_t local_items;
 
 	bool in_use;
+
+	GlobalListItem* global_list_item;
+	bool newly_global;
 };
 
 } /* namespace pheet */

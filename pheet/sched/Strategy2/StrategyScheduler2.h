@@ -158,45 +158,45 @@ StrategyScheduler2Impl<Pheet, TaskStorageT, FinishStack>* StrategyScheduler2Impl
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack>
 StrategyScheduler2Impl<Pheet, TaskStorageT, FinishStack>::StrategyScheduler2Impl()
 : num_places(machine_model.get_num_leaves()), task_storage() {
+	pheet_assert(singleton == nullptr);
+	singleton = this;
 
 	places = new Place*[num_places];
 	places[0] = new Place(machine_model, &task_storage, places, num_places, &state, performance_counters);
 	places[0]->prepare_root();
-
-	singleton = this;
 }
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack>
 StrategyScheduler2Impl<Pheet, TaskStorageT, FinishStack>::StrategyScheduler2Impl(typename Place::PerformanceCounters& performance_counters)
 : num_places(machine_model.get_num_leaves()), task_storage() {
+	pheet_assert(singleton == nullptr);
+	singleton = this;
 
 	places = new Place*[num_places];
 	places[0] = new Place(machine_model, &task_storage, places, num_places, &state, performance_counters);
 	places[0]->prepare_root();
-
-	singleton = this;
 }
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack>
 StrategyScheduler2Impl<Pheet, TaskStorageT, FinishStack>::StrategyScheduler2Impl(procs_t num_places)
 : num_places(num_places), task_storage() {
+	pheet_assert(singleton == nullptr);
+	singleton = this;
 
 	places = new Place*[num_places];
 	places[0] = new Place(machine_model, &task_storage, places, num_places, &state, performance_counters);
 	places[0]->prepare_root();
-
-	singleton = this;
 }
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack>
 StrategyScheduler2Impl<Pheet, TaskStorageT, FinishStack>::StrategyScheduler2Impl(procs_t num_places, typename Place::PerformanceCounters& performance_counters)
 : num_places(num_places), task_storage() {
+	pheet_assert(singleton == nullptr);
+	singleton = this;
 
 	places = new Place*[num_places];
 	places[0] = new Place(machine_model, &task_storage, places, num_places, &state, performance_counters);
 	places[0]->prepare_root();
-
-	singleton = this;
 }
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack>

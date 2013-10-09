@@ -12,6 +12,7 @@
 #include "KLSMLocalityTaskStorageItem.h"
 #include "KLSMLocalityTaskStorageBlock.h"
 #include "KLSMLocalityTaskStorageFrame.h"
+#include "KLSMLocalityTaskStorageGlobalListItem.h"
 
 #include <pheet/memory/BlockItemReuse/BlockItemReuseMemoryManager.h>
 #include <pheet/memory/ItemReuse/ItemReuseMemoryManager.h>
@@ -32,18 +33,22 @@ public:
 	typedef typename ParentTaskStoragePlace::BaseItem BaseItem;
 	typedef KLSMLocalityTaskStorageItem<Pheet, Self, Frame, FrameReg, BaseItem, Strategy> Item;
 	typedef KLSMLocalityTaskStorageBlock<Pheet, Item> Block;
+	typedef KLSMLocalityTaskStorageGlobalListItem<Pheet, Block> GlobalListItem;
 
 	typedef typename BaseItem::T T;
 
 	typedef BlockItemReuseMemoryManager<Pheet, Item, KLSMLocalityTaskStorageItemReuseCheck<Item, Frame> > ItemMemoryManager;
 	typedef ItemReuseMemoryManager<Pheet, Frame, KLSMLocalityTaskStorageFrameReuseCheck<Frame> > FrameMemoryManager;
+	typedef ItemReuseMemoryManager<Pheet, GlobalListItem, KLSMLocalityTaskStorageGlobalListItemReuseCheck<GlobalListItem> > GlobalListItemMemoryManager;
 
 	KLSMLocalityTaskStoragePlace(ParentTaskStoragePlace* parent_place)
-	:parent_place(parent_place), current_frame(&(frames.acquire_item())), missed_tasks(0), tasks(0) {
+	:parent_place(parent_place), current_frame(&(frames.acquire_item())), remaining_k(std::numeric_limits<size_t>::max()), missed_tasks(0), tasks(0) {
 
 		// Get central task storage at end of initialization (not before,
 		// since this place becomes visible as soon as we retrieve it)
 		task_storage = TaskStorage::get(this, parent_place->get_central_task_storage(), created_task_storage);
+
+		global_list = task_storage->get_global_list_head();
 
 		// Fill in blocks usable for storing a single item
 		// Might make sense to precreate more, but for now let's leave it at that
@@ -55,6 +60,7 @@ public:
 		bottom_block = blocks[0];
 		bottom_block->mark_in_use();
 	}
+
 	~KLSMLocalityTaskStoragePlace() {
 		for(auto i = blocks.begin(); i != blocks.end(); ++i) {
 			delete *i;
@@ -63,6 +69,12 @@ public:
 		if(created_task_storage) {
 			delete task_storage;
 		}
+	}
+
+	GlobalListItem* create_global_list_item() {
+		GlobalListItem* ret = &(global_list_items.acquire_item());
+		ret->reset();
+		return ret;
 	}
 
 	void push(Strategy&& strategy, T data) {
@@ -84,10 +96,19 @@ public:
 		// It is guaranteed to be newly initialized and the strategy set.
 		it.taken.store(false, std::memory_order_release);
 		it.last_phase.store(-1, std::memory_order_release);
+		it.global = false;
 
 		put(&it);
 
 		parent_place->push(&it);
+
+		// Bookkeeping for k-relaxation
+		size_t k = it.strategy.get_k();
+		bottom_block->added_local_item(k);
+		remaining_k = std::min(remaining_k - 1, bottom_block->get_k());
+		if(remaining_k == 0) {
+			add_to_global_list();
+		}
 	}
 
 	T pop(BaseItem* boundary) {
@@ -95,11 +116,12 @@ public:
 
 		// Check whether boundary item is still available
 		while(!item->is_taken()) {
+			process_global_list();
 
 			// We can assume that boundary is stored in this task storage, so we just get the best item
 			Block* best = find_best_block();
 
-			if(best == nullptr) {
+			if(best == nullptr || item->is_taken()) {
 				return nullable_traits<T>::null_value;
 			}
 
@@ -241,6 +263,105 @@ public:
 	}
 
 private:
+	void process_global_list() {
+		GlobalListItem* next = global_list->move_next();
+		while(next != nullptr) {
+			global_list = next;
+
+			Block* prev = nullptr;
+			Block* b = global_list->acquire_block();
+			// We might have to do this multiple times, since a block might be reused in the meantime
+			// If block == nullptr all tasks in block have been taken or appear in a later global block
+			// So we can safely skip it then
+			while(b != nullptr && prev != b) {
+				size_t filled = b->acquire_filled();
+				for(size_t i = 0; i < filled; ++i) {
+					Item* spy_item = b->get_item(i);
+					// First do cheap taken check
+					if(spy_item->owner != this && !spy_item->taken.load(std::memory_order_acquire)) {
+						Frame* spy_frame = spy_item->frame;
+						FrameReg* spy_reg = &(frame_regs[spy_frame]);
+
+						spy_reg->add_ref(spy_frame);
+
+						// Frame might have changed between read and registration
+						Frame* spy_frame2 = spy_item->frame;
+						if(spy_frame2 == spy_frame) {
+							// Frame is still the same, we can proceed
+
+							if(spy_item->is_taken_or_dead()) {
+								// We do not keep items that are already taken or marked as dead
+								spy_reg->rem_ref(spy_frame);
+							}
+							else {
+								// Store item, but do not store in parent! (It's not a boundary after all!)
+								put(spy_item);
+							}
+						}
+						else {
+							// Frame has changed, just skip item
+							spy_reg->rem_ref(spy_frame);
+
+							// If item has changed, so has the block, so we can skip
+							// the rest of the block. (either filled is now smaller or
+							// block has been replaced)
+							break;
+						}
+					}
+				}
+
+
+				prev = b;
+				// Reload block, to see if it changed
+				b = global_list->acquire_block();
+			}
+
+			next = global_list->move_next();
+		}
+
+		missed_tasks = 0;
+	}
+
+	void add_to_global_list() {
+		Block* end = nullptr;
+		Block* b = bottom_block;
+
+		size_t tasks = 0;
+		size_t min_k = std::numeric_limits<size_t>::max();
+
+		while(b->get_k() > tasks) {
+			if(b->get_k() - tasks < min_k) {
+				min_k = b->get_k() - tasks;
+			}
+			tasks += b->get_filled();
+			end = b;
+			b = b->get_prev();
+			if(b == nullptr) {
+				remaining_k = min_k;
+				return;
+			}
+		}
+
+		Block* begin = top_block.load(std::memory_order_relaxed);
+		// Some blocks need to be made global (starting with oldest block)
+
+		while(begin != end) {
+			if(begin->has_local_items()) {
+				GlobalListItem* gli = create_global_list_item();
+				gli->update_block(begin);
+
+				while(!global_list->link(gli)) {
+					process_global_list();
+				}
+				global_list = gli;
+				begin->mark_newly_global(gli);
+			}
+			begin = begin->get_next();
+		}
+
+		remaining_k = min_k;
+	}
+
 	void put(Item* item) {
 		tasks.store(tasks.load(std::memory_order_relaxed) + 1, std::memory_order_relaxed);
 
@@ -284,6 +405,26 @@ private:
 
 		Block* pre_merge = block->get_next();
 		Block* last_merge = block->get_prev();
+		while(last_merge->empty()) {
+			Block* empty = last_merge;
+			last_merge = last_merge->get_prev();
+			if(last_merge == nullptr) {
+				block->set_prev(nullptr);
+				top_block.store(block, std::memory_order_release);
+
+				pheet_assert(empty != bottom_block);
+				empty->reset();
+				return block;
+			}
+			block->set_prev(last_merge);
+			last_merge->release_next(block);
+
+			pheet_assert(empty != bottom_block);
+			empty->reset();
+		}
+		if(last_merge->get_level() > block->get_level()) {
+			return block;
+		}
 		pheet_assert(block == last_merge->get_next());
 		Block* merged = find_free_block(block->get_level() + 1);
 		merged->merge_into(last_merge, block, this, frame_regs);
@@ -301,6 +442,7 @@ private:
 				merged2->merge_into(last_merge, merged, this, frame_regs);
 
 				// The merged block was never made visible, we can reset it at any time
+				pheet_assert(merged != bottom_block);
 				merged->reset();
 				merged = merged2;
 				merged->mark_in_use();
@@ -338,6 +480,7 @@ private:
 		// Recount number of tasks (might change due to merging, dead tasks, so it's easiest to recalculate)
 		size_t num_tasks = 0;
 
+
 		Block* b = bottom_block;
 		if(b->empty()) {
 			Block* prev = b->get_prev();
@@ -351,7 +494,10 @@ private:
 		}
 
 		if(b == nullptr) {
-		//	bottom_block = top_block.load(std::memory_order_relaxed);
+			remaining_k = std::numeric_limits<size_t>::max();
+			missed_tasks = 0;
+
+			//	bottom_block = top_block.load(std::memory_order_relaxed);
 			return nullptr;
 		}
 
@@ -359,6 +505,9 @@ private:
 		Block* best = b;
 		Block* next = b;
 		num_tasks += b->get_filled();
+		// Recalculate k
+		remaining_k = b->get_k();
+
 		b = b->get_prev();
 
 		while(b != nullptr) {
@@ -373,6 +522,7 @@ private:
 					top_block.store(next, std::memory_order_relaxed);
 
 					// Contains a release
+					pheet_assert(b != bottom_block);
 					b->reset();
 
 					tasks = num_tasks;
@@ -385,6 +535,7 @@ private:
 					p->set_next(next);
 
 					// Contains a release
+					pheet_assert(b != bottom_block);
 					b->reset();
 
 					b = p;
@@ -403,6 +554,14 @@ private:
 				if(b->top()->strategy.prioritize(best->top()->strategy)) {
 					best = b;
 				}
+				if(b->has_local_items()) {
+					pheet_assert(b->get_k() >= num_tasks);
+					size_t block_k = b->get_k() - num_tasks;
+					if(block_k < remaining_k) {
+						remaining_k = block_k;
+					}
+				}
+
 				num_tasks += b->get_filled();
 				next = b;
 				b = p;
@@ -443,6 +602,7 @@ private:
 
 	ItemMemoryManager items;
 	FrameMemoryManager frames;
+	GlobalListItemMemoryManager global_list_items;
 
 	// Stores 3 blocks per level.
 	// 2 would be enough in general, but with 3 less synchronization is required
@@ -455,8 +615,11 @@ private:
 
 //	Block* best_block;
 
+	size_t remaining_k;
 	size_t missed_tasks;
 	std::atomic<size_t> tasks;
+
+	GlobalListItem* global_list;
 };
 
 } /* namespace pheet */

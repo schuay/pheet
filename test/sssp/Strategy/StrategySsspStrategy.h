@@ -10,6 +10,7 @@
 #define STRATEGYSSSPSTRATEGY_H_
 
 #include <limits>
+#include <atomic>
 
 namespace pheet {
 
@@ -19,7 +20,7 @@ public:
 	typedef StrategySsspStrategy<Pheet> Self;
 	typedef typename Pheet::Environment::BaseStrategy BaseStrategy;
 
-	StrategySsspStrategy(size_t distance, size_t& stored_distance)
+	StrategySsspStrategy(size_t distance, std::atomic<size_t>& stored_distance)
 	: distance(distance), stored_distance(stored_distance)/*, rnd(Pheet::rand_int((1 + distance) << 4))*/ {
 		this->set_k(default_k);
 	}
@@ -55,7 +56,7 @@ public:
 	}
 
 	inline bool dead_task() {
-		return stored_distance < distance;
+		return stored_distance.load(std::memory_order_relaxed) < distance;
 	}
 /*
 	inline void rebase() {
@@ -65,7 +66,7 @@ public:
 	static size_t default_k;
 private:
 	size_t distance;
-	size_t& stored_distance;
+	std::atomic<size_t>& stored_distance;
 //	size_t rnd;
 };
 

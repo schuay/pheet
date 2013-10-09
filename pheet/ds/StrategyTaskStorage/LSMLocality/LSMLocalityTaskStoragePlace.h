@@ -99,7 +99,7 @@ public:
 			// We can assume that boundary is stored in this task storage, so we just get the best item
 			Block* best = find_best_block();
 
-			if(best == nullptr) {
+			if(best == nullptr || item->is_taken()) {
 				return nullable_traits<T>::null_value;
 			}
 

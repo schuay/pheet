@@ -11,6 +11,7 @@
 #include "Simple/SimpleSssp.h"
 #include "Strategy/StrategySssp.h"
 #include "Strategy2/Strategy2Sssp.h"
+//#include "Strategy2Lazy/Strategy2LazySssp.h"
 #include "Adaptive/AdaptiveSssp.h"
 #include "Reference/ReferenceSssp.h"
 #include "Analysis/SsspAnalysis.h"

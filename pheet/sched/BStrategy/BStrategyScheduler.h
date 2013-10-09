@@ -92,9 +92,13 @@ public:
 
 //	static void print_performance_counter_headers();
 
+	static Self* get() {
+		return singleton;
+	}
 	static Place* get_place();
 	static procs_t get_place_id();
 	Place* get_place_at(procs_t place_id);
+	procs_t get_num_places() { return num_places; }
 
 	template<class CallTaskType, typename ... TaskParams>
 		void finish(TaskParams&& ... params);
@@ -139,6 +143,7 @@ private:
 	State state;
 
 	PerformanceCounters performance_counters;
+	static Self* singleton;
 };
 
 
@@ -149,8 +154,13 @@ template <class Pheet, template <class P, typename T> class TaskStorageT, templa
 procs_t const BStrategySchedulerImpl<Pheet, TaskStorageT, FinishStack, BaseStrategyT>::max_cpus = std::numeric_limits<procs_t>::max() >> 1;
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack, template <class P> class BaseStrategyT>
+BStrategySchedulerImpl<Pheet, TaskStorageT, FinishStack, BaseStrategyT>* BStrategySchedulerImpl<Pheet, TaskStorageT, FinishStack, BaseStrategyT>::singleton = nullptr;
+
+template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack, template <class P> class BaseStrategyT>
 BStrategySchedulerImpl<Pheet, TaskStorageT, FinishStack, BaseStrategyT>::BStrategySchedulerImpl()
 : num_places(machine_model.get_num_leaves()), task_storage(num_places) {
+	pheet_assert(singleton == nullptr);
+	singleton = this;
 
 	places = new Place*[num_places];
 	places[0] = new Place(machine_model, &task_storage, places, num_places, &state, performance_counters);
@@ -160,6 +170,8 @@ BStrategySchedulerImpl<Pheet, TaskStorageT, FinishStack, BaseStrategyT>::BStrate
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack, template <class P> class BaseStrategyT>
 BStrategySchedulerImpl<Pheet, TaskStorageT, FinishStack, BaseStrategyT>::BStrategySchedulerImpl(typename Place::PerformanceCounters& performance_counters)
 : num_places(machine_model.get_num_leaves()), task_storage(num_places) {
+	pheet_assert(singleton == nullptr);
+	singleton = this;
 
 	places = new Place*[num_places];
 	places[0] = new Place(machine_model, &task_storage, places, num_places, &state, performance_counters);
@@ -169,6 +181,8 @@ BStrategySchedulerImpl<Pheet, TaskStorageT, FinishStack, BaseStrategyT>::BStrate
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack, template <class P> class BaseStrategyT>
 BStrategySchedulerImpl<Pheet, TaskStorageT, FinishStack, BaseStrategyT>::BStrategySchedulerImpl(procs_t num_places)
 : num_places(num_places), task_storage(num_places) {
+	pheet_assert(singleton == nullptr);
+	singleton = this;
 
 	places = new Place*[num_places];
 	places[0] = new Place(machine_model, &task_storage, places, num_places, &state, performance_counters);
@@ -178,6 +192,8 @@ BStrategySchedulerImpl<Pheet, TaskStorageT, FinishStack, BaseStrategyT>::BStrate
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack, template <class P> class BaseStrategyT>
 BStrategySchedulerImpl<Pheet, TaskStorageT, FinishStack, BaseStrategyT>::BStrategySchedulerImpl(procs_t num_places, typename Place::PerformanceCounters& performance_counters)
 : num_places(num_places), task_storage(num_places) {
+	pheet_assert(singleton == nullptr);
+	singleton = this;
 
 	places = new Place*[num_places];
 	places[0] = new Place(machine_model, &task_storage, places, num_places, &state, performance_counters);
@@ -188,6 +204,8 @@ template <class Pheet, template <class P, typename T> class TaskStorageT, templa
 BStrategySchedulerImpl<Pheet, TaskStorageT, FinishStack, BaseStrategyT>::~BStrategySchedulerImpl() {
 	delete places[0];
 	delete[] places;
+
+	singleton = nullptr;
 }
 
 template <class Pheet, template <class P, typename T> class TaskStorageT, template <class> class FinishStack, template <class P> class BaseStrategyT>

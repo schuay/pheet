@@ -28,7 +28,7 @@ public:
 	virtual ~AdaptiveSssp() {}
 
 	virtual void operator()() {
-		size_t d = graph[node].distance;
+		size_t d = graph[node].distance.load(std::memory_order_relaxed);
 		if(d != distance) {
 			pc.num_dead_tasks.incr();
 			// Distance has already been improved in the meantime
@@ -40,17 +40,16 @@ public:
 			++total;
 			size_t new_d = d + graph[node].edges[i].weight;
 			size_t target = graph[node].edges[i].target;
-			size_t old_d = graph[target].distance;
+			size_t old_d = graph[target].distance.load(std::memory_order_relaxed);
 			while(old_d > new_d) {
-				if(SIZET_CAS(&(graph[target].distance), old_d, new_d)) {
+				if(graph[target].distance.compare_exchange_strong(old_d, new_d, std::memory_order_relaxed)) {
 					++successes;
 					Pheet::template
 						spawn_s<Self>(
-								Strategy(new_d, graph[target].distance, k),
+								Strategy(new_d, graph[target].distance.load(std::memory_order_relaxed), k),
 								graph, target, size, new_d, successes, total, pc);
 					break;
 				}
-				old_d = graph[target].distance;
 			}
 		}
 	}

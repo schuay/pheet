@@ -60,6 +60,8 @@ struct KLSMLocalityTaskStorageItem : public BaseItem {
 	Place* owner;
 	Strategy strategy;
 	bool used_locally;
+	// Used to determine whether item was alre
+	bool global;
 
 	std::atomic<Frame*> frame;
 	std::atomic<ptrdiff_t> last_phase;

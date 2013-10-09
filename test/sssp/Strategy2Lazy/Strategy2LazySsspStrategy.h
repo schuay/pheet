@@ -1,13 +1,13 @@
 /*
- * Strategy2SsspStrategy.h
+ * Strategy2LazySsspStrategy.h
  *
  *  Created on: Oct 08, 2013
  *      Author: Martin Wimmer
  *	   License: Boost Software License 1.0
  */
 
-#ifndef STRATEGY2SSSPSTRATEGY_H_
-#define STRATEGY2SSSPSTRATEGY_H_
+#ifndef STRATEGY2LAZYSSSPSTRATEGY_H_
+#define STRATEGY2LAZYSSSPSTRATEGY_H_
 
 #include <limits>
 #include <atomic>
@@ -17,33 +17,33 @@
 namespace pheet {
 
 template <class Pheet>
-class Strategy2SsspStrategy : public Pheet::Environment::BaseStrategy {
+class Strategy2LazySsspStrategy : public Pheet::Environment::BaseStrategy {
 public:
-	typedef Strategy2SsspStrategy<Pheet> Self;
+	typedef Strategy2LazySsspStrategy<Pheet> Self;
 	typedef typename Pheet::Environment::BaseStrategy BaseStrategy;
 
 	typedef KLSMLocalityTaskStorage<Pheet, Self> TaskStorage;
 	typedef typename TaskStorage::Place TaskStoragePlace;
 	typedef typename Pheet::Place Place;
 
-	Strategy2SsspStrategy() {
+	Strategy2LazySsspStrategy() {
 
 	}
 
-	Strategy2SsspStrategy(size_t distance, std::atomic<size_t>& stored_distance)
+	Strategy2LazySsspStrategy(size_t distance, std::atomic<size_t>& stored_distance)
 	: distance(distance), stored_distance(&stored_distance)/*, rnd(Pheet::rand_int((1 + distance) << 4))*/ {
 //		this->set_k(default_k);
 	}
 
-	Strategy2SsspStrategy(Self& other)
+	Strategy2LazySsspStrategy(Self& other)
 	: BaseStrategy(other), distance(other.distance), stored_distance(other.stored_distance)/*, rnd(other.rnd)*/ {
 
 	}
 
-	Strategy2SsspStrategy(Self&& other)
+	Strategy2LazySsspStrategy(Self&& other)
 	: BaseStrategy(other), distance(other.distance), stored_distance(other.stored_distance)/*, rnd(other.rnd)*/ {}
 
-	~Strategy2SsspStrategy() {}
+	~Strategy2LazySsspStrategy() {}
 
 	Self& operator=(Self&& other) {
 //		BaseStrategy::operator=(other);
@@ -57,7 +57,7 @@ public:
 	}
 
 	bool dead_task() {
-		return stored_distance->load(std::memory_order_relaxed) < distance;
+		return stored_distance->load(std::memory_order_relaxed) <= distance;
 	}
 
 	/*
@@ -84,7 +84,7 @@ private:
 };
 
 template <class Pheet>
-size_t Strategy2SsspStrategy<Pheet>::default_k = 1024;
+size_t Strategy2LazySsspStrategy<Pheet>::default_k = 1024;
 
 } /* namespace pheet */
-#endif /* STRATEGY2SSSPSTRATEGY_H_ */
+#endif /* STRATEGY2LAZYSSSPSTRATEGY_H_ */

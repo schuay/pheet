@@ -48,7 +48,7 @@ public:
 			n = heap.pop();
 			size_t node = n.node_id;
 
-			size_t d = graph[node].distance;
+			size_t d = graph[node].distance.load(std::memory_order_relaxed);
 			if(d != n.distance) {
 				pc.num_dead_tasks.incr();
 				// Distance has already been improved in the meantime
@@ -61,7 +61,7 @@ public:
 				size_t target = graph[node].edges[i].target;
 				size_t old_d = graph[target].distance;
 				if(old_d > new_d) {
-					graph[target].distance = new_d;
+					graph[target].distance.store(new_d, std::memory_order_relaxed);
 					n.distance = new_d;
 					n.node_id = target;
 					heap.push(n);

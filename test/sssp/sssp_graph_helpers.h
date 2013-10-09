@@ -9,6 +9,8 @@
 #ifndef SSSP_GRAPH_HELPERS_H_
 #define SSSP_GRAPH_HELPERS_H_
 
+#include <atomic>
+
 namespace pheet {
 struct SsspGraphEdge {
 	size_t target;
@@ -18,7 +20,7 @@ struct SsspGraphEdge {
 struct SsspGraphVertex {
 	SsspGraphEdge* edges;
 	size_t num_edges;
-	size_t distance;
+	std::atomic<size_t> distance;
 };
 
 }

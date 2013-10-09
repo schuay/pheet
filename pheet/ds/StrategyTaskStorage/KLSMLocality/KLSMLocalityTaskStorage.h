@@ -23,6 +23,7 @@ public:
 	typedef typename ParentTaskStorage::BaseItem BaseItem;
 	typedef typename BaseItem::T T;
 	typedef KLSMLocalityTaskStoragePlace<Pheet, Self, typename ParentTaskStorage::Place, Strategy> Place;
+	typedef typename Place::GlobalListItem GlobalListItem;
 
 	KLSMLocalityTaskStorage(ParentTaskStorage* parent)
 	:parent(parent) {
@@ -47,6 +48,7 @@ public:
 		if(ret == nullptr) {
 			// We try to create a task storage
 			ret = new Self(parent);
+			ret->global_list = place->create_global_list_item();
 
 			Self* expected = nullptr;
 			if(singleton.compare_exchange_strong(expected, ret, std::memory_order_acq_rel, std::memory_order_relaxed)) {
@@ -98,12 +100,18 @@ public:
 		return place->steal(boundary);
 	}
 
+	GlobalListItem* get_global_list_head() {
+		return global_list;
+	}
+
 private:
 	static std::atomic<Self*> singleton;
 
 	ParentTaskStorage* parent;
 
 	std::atomic<Place*>* places;
+
+	GlobalListItem* global_list;
 };
 
 template <class Pheet, class Strategy>
