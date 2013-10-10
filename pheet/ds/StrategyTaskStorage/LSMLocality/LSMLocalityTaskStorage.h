@@ -98,6 +98,10 @@ public:
 		return place->steal(boundary);
 	}
 
+	static void print_name() {
+		std::cout << "LSMLocalityTaskStorage";
+	}
+
 private:
 	static std::atomic<Self*> singleton;
 

@@ -12,24 +12,28 @@
 #include "Strategy2SsspStrategy.h"
 #include "Strategy2SsspPerformanceCounters.h"
 
+#include <pheet/ds/StrategyTaskStorage/KLSMLocality/KLSMLocalityTaskStorage.h>
+#include <pheet/ds/StrategyTaskStorage/LSMLocality/LSMLocalityTaskStorage.h>
+
 namespace pheet {
 
-template <class Pheet>
-class Strategy2Sssp : public Pheet::Task {
+template <class Pheet, template <class, class> class TaskStorageT>
+class Strategy2SsspImpl : public Pheet::Task {
 public:
-	typedef Strategy2Sssp<Pheet> Self;
-	typedef Strategy2SsspStrategy<Pheet> Strategy;
+	typedef Strategy2SsspImpl<Pheet, TaskStorageT> Self;
+	typedef Strategy2SsspStrategy<Pheet, TaskStorageT> Strategy;
+	typedef typename Strategy::TaskStorage TaskStorage;
 	typedef Strategy2SsspPerformanceCounters<Pheet> PerformanceCounters;
 
-	Strategy2Sssp(SsspGraphVertex* graph, size_t size, PerformanceCounters& pc)
+	Strategy2SsspImpl(SsspGraphVertex* graph, size_t size, PerformanceCounters& pc)
 	:graph(graph), node(0), distance(0), pc(pc) {
 		pc.last_non_dead_time.start_timer();
 		pc.last_task_time.start_timer();
 		pc.last_update_time.start_timer();
 	}
-	Strategy2Sssp(SsspGraphVertex* graph, size_t node, size_t distance, PerformanceCounters& pc)
+	Strategy2SsspImpl(SsspGraphVertex* graph, size_t node, size_t distance, PerformanceCounters& pc)
 	:graph(graph), node(node), distance(distance), pc(pc) {}
-	virtual ~Strategy2Sssp() {}
+	virtual ~Strategy2SsspImpl() {}
 
 	virtual void operator()() {
 		pc.last_task_time.take_time();
@@ -64,6 +68,12 @@ public:
 		Strategy::default_k = k;
 	}
 
+	static void print_name() {
+		std::cout << name << "<";
+		TaskStorage::print_name();
+		std::cout << ">";
+	}
+
 	static char const name[];
 private:
 	SsspGraphVertex* graph;
@@ -72,8 +82,15 @@ private:
 	PerformanceCounters pc;
 };
 
+template <class Pheet, template <class, class> class TaskStorageT>
+char const Strategy2SsspImpl<Pheet, TaskStorageT>::name[] = "Strategy2 Sssp";
+
 template <class Pheet>
-char const Strategy2Sssp<Pheet>::name[] = "Strategy2 Sssp";
+using Strategy2Sssp = Strategy2SsspImpl<Pheet, KLSMLocalityTaskStorage >;
+
+template <class Pheet>
+using Strategy2SsspNoK = Strategy2SsspImpl<Pheet, LSMLocalityTaskStorage >;
+
 
 } /* namespace pheet */
 #endif /* STRATEGY2SSSP_H_ */

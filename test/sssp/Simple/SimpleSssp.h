@@ -51,6 +51,10 @@ public:
 
 	static void set_k(size_t k) {}
 
+	static void print_name() {
+		std::cout << name;
+	}
+
 	static char const name[];
 private:
 	SsspGraphVertex* graph;

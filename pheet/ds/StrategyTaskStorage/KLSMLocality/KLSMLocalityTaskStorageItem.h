@@ -62,6 +62,7 @@ struct KLSMLocalityTaskStorageItem : public BaseItem {
 	bool used_locally;
 	// Used to determine whether item was alre
 	bool global;
+	size_t id;
 
 	std::atomic<Frame*> frame;
 	std::atomic<ptrdiff_t> last_phase;

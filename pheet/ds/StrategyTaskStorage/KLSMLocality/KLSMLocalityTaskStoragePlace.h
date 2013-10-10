@@ -42,7 +42,7 @@ public:
 	typedef ItemReuseMemoryManager<Pheet, GlobalListItem, KLSMLocalityTaskStorageGlobalListItemReuseCheck<GlobalListItem> > GlobalListItemMemoryManager;
 
 	KLSMLocalityTaskStoragePlace(ParentTaskStoragePlace* parent_place)
-	:parent_place(parent_place), current_frame(&(frames.acquire_item())), remaining_k(std::numeric_limits<size_t>::max()), missed_tasks(0), tasks(0) {
+	:parent_place(parent_place), current_frame(&(frames.acquire_item())), remaining_k(std::numeric_limits<size_t>::max()), missed_tasks(0), tasks(0), last_item(0), last_sync_item(0) {
 
 		// Get central task storage at end of initialization (not before,
 		// since this place becomes visible as soon as we retrieve it)
@@ -97,6 +97,7 @@ public:
 		it.taken.store(false, std::memory_order_release);
 		it.last_phase.store(-1, std::memory_order_release);
 		it.global = false;
+		it.id = ++last_item;
 
 		put(&it);
 
@@ -116,8 +117,6 @@ public:
 
 		// Check whether boundary item is still available
 		while(!item->is_taken()) {
-			process_global_list();
-
 			// We can assume that boundary is stored in this task storage, so we just get the best item
 			Block* best = find_best_block();
 
@@ -126,6 +125,11 @@ public:
 			}
 
 			Item* best_item = best->top();
+			if(best_item->strategy.get_k() <= missed_tasks ||
+					(best_item->owner == this && ((ptrdiff_t)(last_sync_item - best_item->id)) < 0)) {
+				process_global_list();
+				continue;
+			}
 
 			// Take does not do any deregistration, this is done by pop_taken_and_dead
 			T data = best_item->take();
@@ -138,6 +142,7 @@ public:
 				tasks.store(tasks.load(std::memory_order_relaxed) - 1, std::memory_order_relaxed);
 				return data;
 			}
+			++missed_tasks;
 		}
 
 		// Linearized to check of boundary item
@@ -320,6 +325,7 @@ private:
 		}
 
 		missed_tasks = 0;
+		last_sync_item = last_item;
 	}
 
 	void add_to_global_list() {
@@ -333,7 +339,7 @@ private:
 			if(b->get_k() - tasks < min_k) {
 				min_k = b->get_k() - tasks;
 			}
-			tasks += b->get_filled();
+			tasks += b->get_num_local_items();
 			end = b;
 			b = b->get_prev();
 			if(b == nullptr) {
@@ -345,18 +351,34 @@ private:
 		Block* begin = top_block.load(std::memory_order_relaxed);
 		// Some blocks need to be made global (starting with oldest block)
 
+		GlobalListItem* gli_first = nullptr;
+		GlobalListItem* gli_last = nullptr;
+
+		// First construct a list of GlobalListItems locally
 		while(begin != end) {
 			if(begin->has_local_items()) {
 				GlobalListItem* gli = create_global_list_item();
 				gli->update_block(begin);
 
-				while(!global_list->link(gli)) {
-					process_global_list();
+				if(gli_last == nullptr) {
+					gli_first = gli;
+					gli_last = gli;
 				}
-				global_list = gli;
+				else {
+					gli_last->local_link(gli);
+				}
 				begin->mark_newly_global(gli);
 			}
 			begin = begin->get_next();
+		}
+
+		// And then connect it to the global list
+		if(gli_first != nullptr) {
+			while(!global_list->link(gli_first)) {
+				// Global List has been extended by other thread, process it first
+				process_global_list();
+			}
+			global_list = gli_first;
 		}
 
 		remaining_k = min_k;
@@ -479,7 +501,7 @@ private:
 	Block* find_best_block() {
 		// Recount number of tasks (might change due to merging, dead tasks, so it's easiest to recalculate)
 		size_t num_tasks = 0;
-
+		size_t num_local_tasks = 0;
 
 		Block* b = bottom_block;
 		if(b->empty()) {
@@ -505,6 +527,7 @@ private:
 		Block* best = b;
 		Block* next = b;
 		num_tasks += b->get_filled();
+		num_local_tasks += b->get_num_local_items();
 		// Recalculate k
 		remaining_k = b->get_k();
 
@@ -555,14 +578,15 @@ private:
 					best = b;
 				}
 				if(b->has_local_items()) {
-					pheet_assert(b->get_k() >= num_tasks);
-					size_t block_k = b->get_k() - num_tasks;
+					pheet_assert(b->get_k() >= num_local_tasks);
+					size_t block_k = b->get_k() - num_local_tasks;
 					if(block_k < remaining_k) {
 						remaining_k = block_k;
 					}
 				}
 
 				num_tasks += b->get_filled();
+				num_local_tasks += b->get_num_local_items();
 				next = b;
 				b = p;
 			}
@@ -620,6 +644,9 @@ private:
 	std::atomic<size_t> tasks;
 
 	GlobalListItem* global_list;
+
+	size_t last_item;
+	size_t last_sync_item;
 };
 
 } /* namespace pheet */

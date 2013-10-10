@@ -84,7 +84,9 @@ void SsspTest<Pheet, Algorithm>::run_test() {
 	Algorithm<Pheet>::PerformanceCounters::print_headers();
 	Pheet::Environment::PerformanceCounters::print_headers();
 	std::cout << std::endl;
-	std::cout << "sssp\t" << Algorithm<Pheet>::name << "\t";
+	std::cout << "sssp\t";
+	Algorithm<Pheet>::print_name();
+	std::cout << "\t";
 	Pheet::Environment::print_name();
 	std::cout << "\t" << types[type] << "\t" << size << "\t" << p << "\t" << max_w << "\t" << k << "\t" << seed << "\t" << cpus << "\t" << seconds << "\t" << correct << "\t";
 //	Algorithm<Pheet>::print_configuration();

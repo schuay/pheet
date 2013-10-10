@@ -16,13 +16,14 @@
 
 namespace pheet {
 
-template <class Pheet>
+template <class Pheet, template <class, class> class TaskStorageT>
 class Strategy2SsspStrategy : public Pheet::Environment::BaseStrategy {
 public:
-	typedef Strategy2SsspStrategy<Pheet> Self;
+	typedef Strategy2SsspStrategy<Pheet, TaskStorageT> Self;
 	typedef typename Pheet::Environment::BaseStrategy BaseStrategy;
 
-	typedef KLSMLocalityTaskStorage<Pheet, Self> TaskStorage;
+//	typedef KLSMLocalityTaskStorage<Pheet, Self> TaskStorage;
+	typedef TaskStorageT<Pheet, Self> TaskStorage;
 	typedef typename TaskStorage::Place TaskStoragePlace;
 	typedef typename Pheet::Place Place;
 
@@ -83,8 +84,8 @@ private:
 //	size_t rnd;
 };
 
-template <class Pheet>
-size_t Strategy2SsspStrategy<Pheet>::default_k = 1024;
+template <class Pheet, template <class, class> class TaskStorageT>
+size_t Strategy2SsspStrategy<Pheet, TaskStorageT>::default_k = 1024;
 
 } /* namespace pheet */
 #endif /* STRATEGY2SSSPSTRATEGY_H_ */

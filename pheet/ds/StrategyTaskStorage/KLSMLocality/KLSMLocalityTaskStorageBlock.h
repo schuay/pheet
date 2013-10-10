@@ -105,6 +105,10 @@ public:
 		return local_items != 0;
 	}
 
+	size_t get_num_local_items() {
+		return local_items;
+	}
+
 	void mark_newly_global(GlobalListItem* gli) {
 		newly_global = true;
 		k = std::numeric_limits<size_t>::max();
@@ -183,6 +187,9 @@ public:
 			local_items = 0;
 		}
 		else {
+			if(local_items > f)
+				local_items = f;
+
 			size_t next_boundary = level_boundary >> 1;
 			while(f <= next_boundary) {
 				pheet_assert(level > 0);

@@ -18,7 +18,7 @@ class KLSMLocalityTaskStorageGlobalListItem {
 public:
 	typedef KLSMLocalityTaskStorageGlobalListItem<Pheet, Block> Self;
 	KLSMLocalityTaskStorageGlobalListItem()
-	:block(nullptr), registered(0) {
+	:block(nullptr), registered(0), next(this) {
 
 	}
 	~KLSMLocalityTaskStorageGlobalListItem() {
@@ -26,6 +26,7 @@ public:
 	}
 
 	void reset() {
+		pheet_assert(is_reusable());
 //		block.store(nullptr, std::memory_order_relaxed);
 		// The thread linking the new item does not decrement registered, so we only need P-1
 		registered.store(Pheet::get_num_places() - 1, std::memory_order_relaxed);
@@ -35,6 +36,7 @@ public:
 	Self* move_next() {
 		Self* ret = next.load(std::memory_order_relaxed);
 		if(ret != nullptr) {
+			pheet_assert(registered.load(std::memory_order_relaxed) != 0);
 			registered.fetch_sub(1, std::memory_order_relaxed);
 		}
 		return ret;
@@ -66,6 +68,11 @@ public:
 			}
 		}
 		return false;
+	}
+
+	void local_link(Self* i) {
+		pheet_assert(next.load(std::memory_order_relaxed) == nullptr);
+		next.store(i, std::memory_order_relaxed);
 	}
 
 private:

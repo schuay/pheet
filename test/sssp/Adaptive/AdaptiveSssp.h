@@ -54,6 +54,10 @@ public:
 		}
 	}
 
+	static void print_name() {
+		std::cout << name;
+	}
+
 	static char const name[];
 private:
 	SsspGraphVertex* graph;

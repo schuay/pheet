@@ -12,6 +12,7 @@
 #include "KLSMLocalityTaskStoragePlace.h"
 
 #include <atomic>
+#include <iostream>
 
 namespace pheet {
 
@@ -80,6 +81,7 @@ public:
 		Place* place = places[place_id].load(std::memory_order_relaxed);
 		// Should already be filled, otherwise there would be no pop
 		pheet_assert(place != nullptr);
+		pheet_assert(place == Pheet::get_place()->template get_task_storage<Strategy>());
 
 		return place->pop(boundary);
 	}
@@ -96,12 +98,17 @@ public:
 		Place* place = Pheet::get_place()->template get_task_storage<Strategy>();
 		// Place should be created if it does not exist
 		pheet_assert(place != nullptr);
+		pheet_assert(place == places[Pheet::get_place_id()]);
 
 		return place->steal(boundary);
 	}
 
 	GlobalListItem* get_global_list_head() {
 		return global_list;
+	}
+
+	static void print_name() {
+		std::cout << "KLSMLocalityTaskStorage";
 	}
 
 private:
