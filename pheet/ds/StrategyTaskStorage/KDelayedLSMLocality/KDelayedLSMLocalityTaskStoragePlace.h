@@ -41,8 +41,13 @@ public:
 	typedef ItemReuseMemoryManager<Pheet, Frame, KDelayedLSMLocalityTaskStorageFrameReuseCheck<Frame> > FrameMemoryManager;
 	typedef ItemReuseMemoryManager<Pheet, GlobalListItem, KDelayedLSMLocalityTaskStorageGlobalListItemReuseCheck<GlobalListItem> > GlobalListItemMemoryManager;
 
+	typedef typename ParentTaskStoragePlace::PerformanceCounters PerformanceCounters;
+
 	KDelayedLSMLocalityTaskStoragePlace(ParentTaskStoragePlace* parent_place)
-	:parent_place(parent_place), current_frame(&(frames.acquire_item())), remaining_k(std::numeric_limits<size_t>::max()), tasks_popped_since_sync(0), tasks(0), last_item(0), last_sync_item(0) {
+	:pc(parent_place->pc),
+	 parent_place(parent_place), current_frame(&(frames.acquire_item())),
+	 remaining_k(std::numeric_limits<size_t>::max()), tasks_popped_since_sync(0),
+	 tasks(0), last_item(0), last_sync_item(0) {
 
 		// Get central task storage at end of initialization (not before,
 		// since this place becomes visible as soon as we retrieve it)
@@ -53,8 +58,11 @@ public:
 		// Fill in blocks usable for storing a single item
 		// Might make sense to precreate more, but for now let's leave it at that
 		blocks.push_back(new Block(1));
+		pc.num_blocks_created.incr();
 		blocks.push_back(new Block(1));
+		pc.num_blocks_created.incr();
 		blocks.push_back(new Block(1));
+		pc.num_blocks_created.incr();
 
 		top_block.store(blocks[0], std::memory_order_relaxed);
 		bottom_block = blocks[0];
@@ -266,6 +274,7 @@ public:
 
 	}
 
+	PerformanceCounters pc;
 private:
 	void process_global_list() {
 		GlobalListItem* next = global_list->move_next();
@@ -278,9 +287,11 @@ private:
 			// If block == nullptr all tasks in block have been taken or appear in a later global block
 			// So we can safely skip it then
 			while(b != nullptr && prev != b) {
-				size_t filled = b->acquire_filled();
+				size_t filled = b->acquire_owned_filled();
 				for(size_t i = 0; i < filled; ++i) {
-					Item* spy_item = b->get_item(i);
+					Item* spy_item = b->get_owned_item(i);
+					pc.num_inspected_global_items.incr();
+
 					// First do cheap taken check
 					if(spy_item->owner != this && !spy_item->taken.load(std::memory_order_acquire)) {
 						Frame* spy_frame = spy_item->frame;
@@ -359,12 +370,14 @@ private:
 				GlobalListItem* gli = create_global_list_item();
 				gli->update_block(begin);
 
+				pc.num_global_blocks.incr();
 				if(gli_last == nullptr) {
 					gli_first = gli;
 					gli_last = gli;
 				}
 				else {
 					gli_last->local_link(gli);
+					gli_last = gli;
 				}
 				begin->mark_newly_global(gli);
 			}
@@ -377,7 +390,7 @@ private:
 				// Global List has been extended by other thread, process it first
 				process_global_list();
 			}
-			global_list = gli_first;
+			global_list = gli_last;
 		}
 
 		remaining_k = min_k;
@@ -389,7 +402,7 @@ private:
 		Block* bb = bottom_block;
 		pheet_assert(bb->get_next() == nullptr);
 		pheet_assert(!bb->reusable());
-		if(!bb->try_put(item)) {
+		if(!bb->try_put(item, item->owner == this)) {
 			// Check whether a merge is required
 			if(bb->get_prev() != nullptr && bb->get_level() >= bb->get_prev()->get_level()) {
 				bb = merge(bb);
@@ -411,7 +424,7 @@ private:
 			bb->release_next(new_bb);
 
 			// We know we have space in here, so no try_put needed
-			new_bb->put(item);
+			new_bb->put(item, item->owner == this);
 
 			bottom_block = new_bb;
 		}
@@ -456,7 +469,7 @@ private:
 		Block* prev = last_merge->get_prev();
 		pheet_assert(prev == nullptr || prev->get_next() == last_merge);
 
-		while(prev != nullptr && merged->get_level() >= prev->get_level()) {
+		while(prev != nullptr && !merged->empty() && merged->get_level() >= prev->get_level()) {
 			last_merge = prev;
 
 			if(!last_merge->empty()) {
@@ -608,6 +621,7 @@ private:
 			do {
 				size_t l = blocks.size() / 3;
 				blocks.push_back(new Block(1 << l));
+				pc.num_blocks_created.incr();
 			}while(offset >= blocks.size());
 
 			return blocks.back();
@@ -618,6 +632,7 @@ private:
 				size_t l = offset / 3;
 				Block* ret = new Block(1 << l);
 				blocks.push_back(ret);
+				pc.num_blocks_created.incr();
 				return ret;
 			}
 		}
