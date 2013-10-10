@@ -463,7 +463,7 @@ private:
 		Block* prev = last_merge->get_prev();
 		pheet_assert(prev == nullptr || prev->get_next() == last_merge);
 
-		while(prev != nullptr && merged->get_level() >= prev->get_level()) {
+		while(prev != nullptr && !merged->empty() && merged->get_level() >= prev->get_level()) {
 			last_merge = prev;
 
 			if(!last_merge->empty()) {
