@@ -1,18 +1,18 @@
 /*
- * KLSMLocalityTaskStorageBlock.h
+ * KDelayedLSMLocalityTaskStorageBlock.h
  *
  *  Created on: Sep 24, 2013
  *      Author: Martin Wimmer
  *	   License: Boost Software License 1.0
  */
 
-#ifndef KLSMLOCALITYTASKSTORAGEBLOCK_H_
-#define KLSMLOCALITYTASKSTORAGEBLOCK_H_
+#ifndef KDELAYEDLSMLOCALITYTASKSTORAGEBLOCK_H_
+#define KDELAYEDLSMLOCALITYTASKSTORAGEBLOCK_H_
 
 #include <atomic>
 #include <algorithm>
 
-#include "KLSMLocalityTaskStorageGlobalListItem.h"
+#include "KDelayedLSMLocalityTaskStorageGlobalListItem.h"
 
 namespace pheet {
 
@@ -31,27 +31,23 @@ namespace pheet {
  * block, and merge with larger, whereas it makes more sense for other threads to start with the largest block
  */
 template <class Pheet, class Item>
-class KLSMLocalityTaskStorageBlock {
+class KDelayedLSMLocalityTaskStorageBlock {
 public:
-	typedef KLSMLocalityTaskStorageBlock<Pheet, Item> Self;
-	typedef KLSMLocalityTaskStorageGlobalListItem<Pheet, Self> GlobalListItem;
+	typedef KDelayedLSMLocalityTaskStorageBlock<Pheet, Item> Self;
+	typedef KDelayedLSMLocalityTaskStorageGlobalListItem<Pheet, Self> GlobalListItem;
 
-	KLSMLocalityTaskStorageBlock(size_t size)
-	:filled(0), owned_filled(0), size(size), level(0), level_boundary(1), next(nullptr),
-	 prev(nullptr), k(std::numeric_limits<size_t>::max()), local_items(0),
-	 in_use(false), global_list_item(nullptr), newly_global(false) {
+	KDelayedLSMLocalityTaskStorageBlock(size_t size)
+	:filled(0), size(size), level(0), level_boundary(1), next(nullptr), prev(nullptr), k(std::numeric_limits<size_t>::max()), local_items(0), in_use(false), global_list_item(nullptr), newly_global(false) {
 		data = new std::atomic<Item*>[size];
-		owned_data = new std::atomic<Item*>[size];
 	}
-	~KLSMLocalityTaskStorageBlock() {
+	~KDelayedLSMLocalityTaskStorageBlock() {
 		delete[] data;
-		delete[] owned_data;
 	}
 
 	/*
 	 * Assumes given item is already registered in frame if necessary
 	 */
-	bool try_put(Item* item, bool owned) {
+	bool try_put(Item* item) {
 		size_t f = filled.load(std::memory_order_relaxed);
 		if(newly_global || f == size) {
 			return false;
@@ -61,11 +57,6 @@ public:
 			data[f].store(item, std::memory_order_relaxed);
 			// If new value for filled is seen, so is the item stored in it
 			filled.store(f + 1, std::memory_order_release);
-			if(owned) {
-				size_t fo = owned_filled.load(std::memory_order_relaxed);
-				owned_data[fo].store(item, std::memory_order_relaxed);
-				owned_filled.store(fo + 1, std::memory_order_release);
-			}
 
 			if(f + 1 > (level_boundary)) {
 				++level;
@@ -79,7 +70,7 @@ public:
 	/*
 	 * Assumes given item is already registered in frame if necessary
 	 */
-	void put(Item* item, bool owned) {
+	void put(Item* item) {
 		size_t f = filled.load(std::memory_order_relaxed);
 		pheet_assert(f < size);
 		pheet_assert(f == 0 ||
@@ -87,11 +78,6 @@ public:
 		data[f].store(item, std::memory_order_relaxed);
 		// If new value for filled is seen, so is the item stored in it
 		filled.store(f + 1, std::memory_order_release);
-		if(owned) {
-			size_t fo = owned_filled.load(std::memory_order_relaxed);
-			owned_data[fo].store(item, std::memory_order_relaxed);
-			owned_filled.store(fo + 1, std::memory_order_release);
-		}
 
 		if(f + 1 > (level_boundary)) {
 			++level;
@@ -124,12 +110,6 @@ public:
 	}
 
 	void mark_newly_global(GlobalListItem* gli) {
-		pheet_assert(!newly_global);
-		if(global_list_item != nullptr && global_list_item->get_block() == this) {
-			// Contains a release. So if nullptr is seen, so is the new GlobalListItem
-			global_list_item->update_block(nullptr);
-		}
-
 		newly_global = true;
 		k = std::numeric_limits<size_t>::max();
 		local_items = 0;
@@ -146,11 +126,6 @@ public:
 	Item* get_item(size_t pos) {
 		pheet_assert(pos < size);
 		return data[pos].load(std::memory_order_relaxed);
-	}
-
-	Item* get_owned_item(size_t pos) {
-		pheet_assert(pos < size);
-		return owned_data[pos].load(std::memory_order_relaxed);
 	}
 /*
 	void pop() {
@@ -169,23 +144,21 @@ public:
 	 * Scans the top tasks until either the block is empty or the top is not dead and not taken
 	 */
 	template <class Place, class Hashtable>
-	void pop_taken_and_dead(Place* local_place, Hashtable& frame_regs) {
+	size_t pop_taken_and_dead(Place* local_place, Hashtable& frame_regs) {
+		size_t popped = 0;
 		size_t f = filled.load(std::memory_order_relaxed);
-		size_t fo = owned_filled.load(std::memory_order_relaxed);
 		while(f > 0) {
 			size_t f2 = f - 1;
 			Item* item = data[f2].load(std::memory_order_relaxed);
 			if(item->last_phase.load(std::memory_order_relaxed) == -1) {
 				if(item->strategy.dead_task()) {
+					++popped;
+
 					// If we don't succeed someone else will, either way we won't execute the task
 					item->take_and_delete();
 					if(item->owner == local_place) {
 						pheet_assert(item->used_locally);
 						item->used_locally = false;
-
-						pheet_assert(fo > 0);
-						--fo;
-						pheet_assert(owned_data[fo].load(std::memory_order_relaxed) == item);
 					}
 					else {
 						auto frame = item->frame.load(std::memory_order_relaxed);
@@ -197,13 +170,10 @@ public:
 				}
 			}
 			else {
+				++popped;
 				if(item->owner == local_place) {
 					pheet_assert(item->used_locally);
 					item->used_locally = false;
-
-					pheet_assert(fo > 0);
-					--fo;
-					pheet_assert(owned_data[fo].load(std::memory_order_relaxed) == item);
 				}
 				else {
 					auto frame = item->frame.load(std::memory_order_relaxed);
@@ -213,7 +183,6 @@ public:
 			f = f2;
 		}
 		filled.store(f, std::memory_order_relaxed);
-		owned_filled.store(fo, std::memory_order_relaxed);
 
 		if(f == 0) {
 			level = 0;
@@ -234,6 +203,7 @@ public:
 			}
 			level_boundary = 1 << level;
 		}
+		return popped;
 	}
 
 	bool empty() {
@@ -247,10 +217,6 @@ public:
 
 	size_t acquire_filled() {
 		return filled.load(std::memory_order_acquire);
-	}
-
-	size_t acquire_owned_filled() {
-		return owned_filled.load(std::memory_order_acquire);
 	}
 /*
 	void drop_empty() {
@@ -305,7 +271,6 @@ public:
 		size_t merged_local = 0;
 
 		size_t f = 0;
-		size_t fo = 0;
 		size_t l_max = left->filled.load(std::memory_order_relaxed);
 		size_t r_max = right->filled.load(std::memory_order_relaxed);
 		size_t l = left->find_next_non_dead(0, local_place, frame_regs);
@@ -343,9 +308,6 @@ public:
 						size_t k = r_item->strategy.get_k();
 						if(k < min_k) min_k = k;
 					}
-
-					owned_data[fo].store(r_item, std::memory_order_relaxed);
-					++fo;
 				}
 
 				data[f].store(r_item, std::memory_order_relaxed);
@@ -362,9 +324,6 @@ public:
 						size_t k = l_item->strategy.get_k();
 						if(k < min_k) min_k = k;
 					}
-
-					owned_data[fo].store(l_item, std::memory_order_relaxed);
-					++fo;
 				}
 
 				data[f].store(l_item, std::memory_order_relaxed);
@@ -390,9 +349,6 @@ public:
 						size_t k = l_item->strategy.get_k();
 						if(k < min_k) min_k = k;
 					}
-
-					owned_data[fo].store(l_item, std::memory_order_relaxed);
-					++fo;
 				}
 
 				data[f].store(l_item, std::memory_order_relaxed);
@@ -416,9 +372,6 @@ public:
 						size_t k = r_item->strategy.get_k();
 						if(k < min_k) min_k = k;
 					}
-
-					owned_data[fo].store(r_item, std::memory_order_relaxed);
-					++fo;
 				}
 
 				data[f].store(r_item, std::memory_order_relaxed);
@@ -429,7 +382,6 @@ public:
 
 		// No synchronization needed. Merged list is made visible using a release
 		filled.store(f, std::memory_order_relaxed);
-		owned_filled.store(fo, std::memory_order_relaxed);
 
 		pheet_assert(level == 0);
 		pheet_assert(level_boundary == 1);
@@ -460,10 +412,6 @@ public:
 				global_list_item->update_block(this);
 				right->global_list_item = nullptr;
 			}
-			if(left->global_list_item != nullptr && left->global_list_item->get_block() == left) {
-				left->global_list_item->update_block(nullptr);
-				left->global_list_item = nullptr;
-			}
 		}
 		else if(left->global_list_item != nullptr) {
 			// Make sure global list item was not reused yet
@@ -487,7 +435,6 @@ public:
 
 		// Make sure new list is visible when this list is encountered as empty
 		filled.store(0, std::memory_order_release);
-		owned_filled.store(0, std::memory_order_release);
 
 		level = 0;
 		level_boundary = 1;
@@ -546,9 +493,7 @@ private:
 	}
 
 	std::atomic<Item*>* data;
-	std::atomic<Item*>* owned_data;
 	std::atomic<size_t> filled;
-	std::atomic<size_t> owned_filled;
 	size_t size;
 	size_t level;
 	size_t level_boundary;
@@ -566,4 +511,4 @@ private:
 };
 
 } /* namespace pheet */
-#endif /* KLSMLOCALITYTASKSTORAGEBLOCK_H_ */
+#endif /* KDELAYEDLSMLOCALITYTASKSTORAGEBLOCK_H_ */

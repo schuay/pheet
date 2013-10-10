@@ -1,18 +1,18 @@
 /*
- * KLSMLocalityTaskStoragePlace.h
+ * KDelayedLSMLocalityTaskStoragePlace.h
  *
  *  Created on: Sep 18, 2013
  *      Author: Martin Wimmer
  *	   License: Boost Software License 1.0
  */
 
-#ifndef KLSMLOCALITYTASKSTORAGEPLACE_H_
-#define KLSMLOCALITYTASKSTORAGEPLACE_H_
+#ifndef KDELAYEDLSMLOCALITYTASKSTORAGEPLACE_H_
+#define KDELAYEDLSMLOCALITYTASKSTORAGEPLACE_H_
 
-#include "KLSMLocalityTaskStorageItem.h"
-#include "KLSMLocalityTaskStorageBlock.h"
-#include "KLSMLocalityTaskStorageFrame.h"
-#include "KLSMLocalityTaskStorageGlobalListItem.h"
+#include "KDelayedLSMLocalityTaskStorageItem.h"
+#include "KDelayedLSMLocalityTaskStorageBlock.h"
+#include "KDelayedLSMLocalityTaskStorageFrame.h"
+#include "KDelayedLSMLocalityTaskStorageGlobalListItem.h"
 
 #include <pheet/memory/BlockItemReuse/BlockItemReuseMemoryManager.h>
 #include <pheet/memory/ItemReuse/ItemReuseMemoryManager.h>
@@ -23,30 +23,26 @@
 namespace pheet {
 
 template <class Pheet, class TaskStorage, class ParentTaskStoragePlace, class Strategy>
-class KLSMLocalityTaskStoragePlace : public ParentTaskStoragePlace::BaseTaskStoragePlace {
+class KDelayedLSMLocalityTaskStoragePlace : public ParentTaskStoragePlace::BaseTaskStoragePlace {
 public:
-	typedef KLSMLocalityTaskStoragePlace<Pheet, TaskStorage, ParentTaskStoragePlace, Strategy> Self;
+	typedef KDelayedLSMLocalityTaskStoragePlace<Pheet, TaskStorage, ParentTaskStoragePlace, Strategy> Self;
 
 	typedef typename ParentTaskStoragePlace::BaseTaskStoragePlace BaseTaskStoragePlace;
-	typedef KLSMLocalityTaskStorageFrame<Pheet> Frame;
-	typedef KLSMLocalityTaskStorageFrameRegistration<Pheet, Frame> FrameReg;
+	typedef KDelayedLSMLocalityTaskStorageFrame<Pheet> Frame;
+	typedef KDelayedLSMLocalityTaskStorageFrameRegistration<Pheet, Frame> FrameReg;
 	typedef typename ParentTaskStoragePlace::BaseItem BaseItem;
-	typedef KLSMLocalityTaskStorageItem<Pheet, Self, Frame, FrameReg, BaseItem, Strategy> Item;
-	typedef KLSMLocalityTaskStorageBlock<Pheet, Item> Block;
-	typedef KLSMLocalityTaskStorageGlobalListItem<Pheet, Block> GlobalListItem;
+	typedef KDelayedLSMLocalityTaskStorageItem<Pheet, Self, Frame, FrameReg, BaseItem, Strategy> Item;
+	typedef KDelayedLSMLocalityTaskStorageBlock<Pheet, Item> Block;
+	typedef KDelayedLSMLocalityTaskStorageGlobalListItem<Pheet, Block> GlobalListItem;
 
 	typedef typename BaseItem::T T;
 
-	typedef BlockItemReuseMemoryManager<Pheet, Item, KLSMLocalityTaskStorageItemReuseCheck<Item, Frame> > ItemMemoryManager;
-	typedef ItemReuseMemoryManager<Pheet, Frame, KLSMLocalityTaskStorageFrameReuseCheck<Frame> > FrameMemoryManager;
-	typedef ItemReuseMemoryManager<Pheet, GlobalListItem, KLSMLocalityTaskStorageGlobalListItemReuseCheck<GlobalListItem> > GlobalListItemMemoryManager;
+	typedef BlockItemReuseMemoryManager<Pheet, Item, KDelayedLSMLocalityTaskStorageItemReuseCheck<Item, Frame> > ItemMemoryManager;
+	typedef ItemReuseMemoryManager<Pheet, Frame, KDelayedLSMLocalityTaskStorageFrameReuseCheck<Frame> > FrameMemoryManager;
+	typedef ItemReuseMemoryManager<Pheet, GlobalListItem, KDelayedLSMLocalityTaskStorageGlobalListItemReuseCheck<GlobalListItem> > GlobalListItemMemoryManager;
 
-	typedef typename ParentTaskStoragePlace::PerformanceCounters PerformanceCounters;
-
-	KLSMLocalityTaskStoragePlace(ParentTaskStoragePlace* parent_place)
-	:pc(parent_place->pc),
-	 parent_place(parent_place), current_frame(&(frames.acquire_item())),
-	 remaining_k(std::numeric_limits<size_t>::max()), tasks(0) {
+	KDelayedLSMLocalityTaskStoragePlace(ParentTaskStoragePlace* parent_place)
+	:parent_place(parent_place), current_frame(&(frames.acquire_item())), remaining_k(std::numeric_limits<size_t>::max()), tasks_popped_since_sync(0), tasks(0), last_item(0), last_sync_item(0) {
 
 		// Get central task storage at end of initialization (not before,
 		// since this place becomes visible as soon as we retrieve it)
@@ -57,18 +53,15 @@ public:
 		// Fill in blocks usable for storing a single item
 		// Might make sense to precreate more, but for now let's leave it at that
 		blocks.push_back(new Block(1));
-		pc.num_blocks_created.incr();
 		blocks.push_back(new Block(1));
-		pc.num_blocks_created.incr();
 		blocks.push_back(new Block(1));
-		pc.num_blocks_created.incr();
 
 		top_block.store(blocks[0], std::memory_order_relaxed);
 		bottom_block = blocks[0];
 		bottom_block->mark_in_use();
 	}
 
-	~KLSMLocalityTaskStoragePlace() {
+	~KDelayedLSMLocalityTaskStoragePlace() {
 		for(auto i = blocks.begin(); i != blocks.end(); ++i) {
 			delete *i;
 		}
@@ -104,6 +97,7 @@ public:
 		it.taken.store(false, std::memory_order_release);
 		it.last_phase.store(-1, std::memory_order_release);
 		it.global = false;
+		it.id = ++last_item;
 
 		put(&it);
 
@@ -123,8 +117,6 @@ public:
 
 		// Check whether boundary item is still available
 		while(!item->is_taken()) {
-			process_global_list();
-
 			// We can assume that boundary is stored in this task storage, so we just get the best item
 			Block* best = find_best_block();
 
@@ -133,12 +125,17 @@ public:
 			}
 
 			Item* best_item = best->top();
+			if(best_item->strategy.get_k() <= tasks_popped_since_sync ||
+					(best_item->owner == this && ((ptrdiff_t)(last_sync_item - best_item->id)) < 0)) {
+				process_global_list();
+				continue;
+			}
 
 			// Take does not do any deregistration, this is done by pop_taken_and_dead
 			T data = best_item->take();
 
 			// There is at least one taken task now, let's do a cleanup
-			best->pop_taken_and_dead(this, frame_regs);
+			tasks_popped_since_sync += best->pop_taken_and_dead(this, frame_regs);
 
 			// Check whether we succeeded
 			if(data != nullable_traits<T>::null_value) {
@@ -269,7 +266,6 @@ public:
 
 	}
 
-PerformanceCounters pc;
 private:
 	void process_global_list() {
 		GlobalListItem* next = global_list->move_next();
@@ -282,11 +278,9 @@ private:
 			// If block == nullptr all tasks in block have been taken or appear in a later global block
 			// So we can safely skip it then
 			while(b != nullptr && prev != b) {
-				size_t filled = b->acquire_owned_filled();
+				size_t filled = b->acquire_filled();
 				for(size_t i = 0; i < filled; ++i) {
-					Item* spy_item = b->get_owned_item(i);
-					pc.num_inspected_global_items.incr();
-
+					Item* spy_item = b->get_item(i);
 					// First do cheap taken check
 					if(spy_item->owner != this && !spy_item->taken.load(std::memory_order_acquire)) {
 						Frame* spy_frame = spy_item->frame;
@@ -365,14 +359,12 @@ private:
 				GlobalListItem* gli = create_global_list_item();
 				gli->update_block(begin);
 
-				pc.num_global_blocks.incr();
 				if(gli_last == nullptr) {
 					gli_first = gli;
 					gli_last = gli;
 				}
 				else {
 					gli_last->local_link(gli);
-					gli_last = gli;
 				}
 				begin->mark_newly_global(gli);
 			}
@@ -385,7 +377,7 @@ private:
 				// Global List has been extended by other thread, process it first
 				process_global_list();
 			}
-			global_list = gli_last;
+			global_list = gli_first;
 		}
 
 		remaining_k = min_k;
@@ -397,7 +389,7 @@ private:
 		Block* bb = bottom_block;
 		pheet_assert(bb->get_next() == nullptr);
 		pheet_assert(!bb->reusable());
-		if(!bb->try_put(item, item->owner == this)) {
+		if(!bb->try_put(item)) {
 			// Check whether a merge is required
 			if(bb->get_prev() != nullptr && bb->get_level() >= bb->get_prev()->get_level()) {
 				bb = merge(bb);
@@ -419,7 +411,7 @@ private:
 			bb->release_next(new_bb);
 
 			// We know we have space in here, so no try_put needed
-			new_bb->put(item, item->owner == this);
+			new_bb->put(item);
 
 			bottom_block = new_bb;
 		}
@@ -459,6 +451,7 @@ private:
 		merged->merge_into(last_merge, block, this, frame_regs);
 		merged->mark_in_use();
 		pheet_assert(merged->get_filled() <= last_merge->get_filled() + block->get_filled());
+		tasks_popped_since_sync += last_merge->get_filled() + block->get_filled() - merged->get_filled();
 
 		Block* prev = last_merge->get_prev();
 		pheet_assert(prev == nullptr || prev->get_next() == last_merge);
@@ -472,6 +465,7 @@ private:
 				merged2->merge_into(last_merge, merged, this, frame_regs);
 
 				pheet_assert(merged2->get_filled() <= last_merge->get_filled() + merged->get_filled());
+				tasks_popped_since_sync += last_merge->get_filled() + merged->get_filled() - merged2->get_filled();
 
 				// The merged block was never made visible, we can reset it at any time
 				pheet_assert(merged != bottom_block);
@@ -527,6 +521,7 @@ private:
 
 		if(b == nullptr) {
 			remaining_k = std::numeric_limits<size_t>::max();
+			tasks_popped_since_sync = 0;
 
 			//	bottom_block = top_block.load(std::memory_order_relaxed);
 			return nullptr;
@@ -613,7 +608,6 @@ private:
 			do {
 				size_t l = blocks.size() / 3;
 				blocks.push_back(new Block(1 << l));
-				pc.num_blocks_created.incr();
 			}while(offset >= blocks.size());
 
 			return blocks.back();
@@ -624,7 +618,6 @@ private:
 				size_t l = offset / 3;
 				Block* ret = new Block(1 << l);
 				blocks.push_back(ret);
-				pc.num_blocks_created.incr();
 				return ret;
 			}
 		}
@@ -661,4 +654,4 @@ private:
 };
 
 } /* namespace pheet */
-#endif /* KLSMLOCALITYTASKSTORAGEPLACE_H_ */
+#endif /* KDELAYEDLSMLOCALITYTASKSTORAGEPLACE_H_ */

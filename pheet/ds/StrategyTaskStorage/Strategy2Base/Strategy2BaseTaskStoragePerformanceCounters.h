@@ -9,6 +9,8 @@
 #ifndef STRATEGY2BASETASKSTORAGEPERFORMANCECOUNTERS_H_
 #define STRATEGY2BASETASKSTORAGEPERFORMANCECOUNTERS_H_
 
+#include <pheet/primitives/PerformanceCounter/Basic/BasicPerformanceCounter.h>
+
 namespace pheet {
 
 template <class Pheet>
@@ -17,14 +19,28 @@ public:
 	typedef Strategy2BaseTaskStoragePerformanceCounters<Pheet> Self;
 
 	Strategy2BaseTaskStoragePerformanceCounters() {}
-	Strategy2BaseTaskStoragePerformanceCounters(Self& other) {}
+	Strategy2BaseTaskStoragePerformanceCounters(Self& other)
+	:num_blocks_created(other.num_blocks_created),
+	 num_global_blocks(other.num_global_blocks),
+	 num_inspected_global_items(other.num_inspected_global_items) {}
 	~Strategy2BaseTaskStoragePerformanceCounters() {}
 
 	inline static void print_headers() {
+		BasicPerformanceCounter<Pheet, task_storage_count_blocks_created>::print_header("num_blocks_created\t");
+		BasicPerformanceCounter<Pheet, task_storage_count_global_blocks>::print_header("num_global_blocks\t");
+		BasicPerformanceCounter<Pheet, task_storage_count_inspected_global_items>::print_header("num_inspected_global_items\t");
 	}
 
 	inline void print_values() {
+		num_blocks_created.print("%d\t");
+		num_global_blocks.print("%d\t");
+		num_inspected_global_items.print("%d\t");
 	}
+
+	BasicPerformanceCounter<Pheet, task_storage_count_blocks_created> num_blocks_created;
+	BasicPerformanceCounter<Pheet, task_storage_count_global_blocks> num_global_blocks;
+	BasicPerformanceCounter<Pheet, task_storage_count_inspected_global_items> num_inspected_global_items;
+
 };
 
 } /* namespace pheet */

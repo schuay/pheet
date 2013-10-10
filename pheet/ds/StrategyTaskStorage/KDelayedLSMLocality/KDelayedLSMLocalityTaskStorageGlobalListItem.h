@@ -1,27 +1,27 @@
 /*
- * KLSMLocalityTaskStorageGlobalListItem.h
+ * KDelayedLSMLocalityTaskStorageGlobalListItem.h
  *
  *  Created on: Oct 9, 2013
  *      Author: Martin Wimmer
  *	   License: Boost Software License 1.0
  */
 
-#ifndef KLSMLOCALITYTASKSTORAGEGLOBALLISTITEM_H_
-#define KLSMLOCALITYTASKSTORAGEGLOBALLISTITEM_H_
+#ifndef KDELAYEDLSMLOCALITYTASKSTORAGEGLOBALLISTITEM_H_
+#define KDELAYEDLSMLOCALITYTASKSTORAGEGLOBALLISTITEM_H_
 
 #include <atomic>
 
 namespace pheet {
 
 template <class Pheet, class Block>
-class KLSMLocalityTaskStorageGlobalListItem {
+class KDelayedLSMLocalityTaskStorageGlobalListItem {
 public:
-	typedef KLSMLocalityTaskStorageGlobalListItem<Pheet, Block> Self;
-	KLSMLocalityTaskStorageGlobalListItem()
+	typedef KDelayedLSMLocalityTaskStorageGlobalListItem<Pheet, Block> Self;
+	KDelayedLSMLocalityTaskStorageGlobalListItem()
 	:block(nullptr), registered(0), next(this) {
 
 	}
-	~KLSMLocalityTaskStorageGlobalListItem() {
+	~KDelayedLSMLocalityTaskStorageGlobalListItem() {
 
 	}
 
@@ -63,7 +63,6 @@ public:
 	bool link(Self* i) {
 		Self* n = next.load(std::memory_order_relaxed);
 		if(n == nullptr) {
-			pheet_assert(i->registered.load(std::memory_order_relaxed) == Pheet::get_num_places() - 1);
 			if(next.compare_exchange_strong(n, i, std::memory_order_release, std::memory_order_acquire)) {
 				return true;
 			}
@@ -73,23 +72,22 @@ public:
 
 	void local_link(Self* i) {
 		pheet_assert(next.load(std::memory_order_relaxed) == nullptr);
-		pheet_assert(i->registered.load(std::memory_order_relaxed) == Pheet::get_num_places() - 1);
 		next.store(i, std::memory_order_relaxed);
 	}
 
 private:
 	std::atomic<Block*> block;
-	std::atomic<procs_t> registered;
+	std::atomic<s_procs_t> registered;
 	std::atomic<Self*> next;
 };
 
 
 template <class Item>
-struct KLSMLocalityTaskStorageGlobalListItemReuseCheck {
+struct KDelayedLSMLocalityTaskStorageGlobalListItemReuseCheck {
 	bool operator() (Item const& item) const {
 		return item.is_reusable();
 	}
 };
 
 } /* namespace pheet */
-#endif /* KLSMLOCALITYTASKSTORAGEGLOBALLISTITEM_H_ */
+#endif /* KDELAYEDLSMLOCALITYTASKSTORAGEGLOBALLISTITEM_H_ */

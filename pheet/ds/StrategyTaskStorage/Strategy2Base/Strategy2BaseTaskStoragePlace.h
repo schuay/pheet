@@ -281,6 +281,8 @@ public:
 	void clean_up() {
 		// No need for cleanup, everything is automatically cleaned up in destructor
 	}
+
+PerformanceCounters pc;
 private:
 	/*
 	 * Tries to steal a single task from any other place. Places are selected semirandomly
@@ -489,8 +491,6 @@ private:
 		}
 		return db;
 	}
-
-	PerformanceCounters pc;
 
 	ItemMemoryManager items;
 	DataBlockMemoryManager data_blocks;

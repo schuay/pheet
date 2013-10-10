@@ -1,23 +1,23 @@
 /*
- * KLSMLocalityTaskStorageItem.h
+ * KDelayedLSMLocalityTaskStorageItem.h
  *
  *  Created on: Sep 18, 2013
  *      Author: Martin Wimmer
  *	   License: Boost Software License 1.0
  */
 
-#ifndef KLSMLOCALITYTASKSTORAGEITEM_H_
-#define KLSMLOCALITYTASKSTORAGEITEM_H_
+#ifndef KDELAYEDLSMLOCALITYTASKSTORAGEITEM_H_
+#define KDELAYEDLSMLOCALITYTASKSTORAGEITEM_H_
 
 #include <atomic>
 
 namespace pheet {
 
 template <class Pheet, class Place, class Frame, class FrameReg, class BaseItem, class Strategy>
-struct KLSMLocalityTaskStorageItem : public BaseItem {
+struct KDelayedLSMLocalityTaskStorageItem : public BaseItem {
 	typedef typename BaseItem::T T;
 
-	KLSMLocalityTaskStorageItem()
+	KDelayedLSMLocalityTaskStorageItem()
 	:owner(nullptr), used_locally(false), frame(nullptr), last_phase(0) {
 	}
 
@@ -62,13 +62,14 @@ struct KLSMLocalityTaskStorageItem : public BaseItem {
 	bool used_locally;
 	// Used to determine whether item was alre
 	bool global;
+	size_t id;
 
 	std::atomic<Frame*> frame;
 	std::atomic<ptrdiff_t> last_phase;
 };
 
 template <class Item, class Frame>
-struct KLSMLocalityTaskStorageItemReuseCheck {
+struct KDelayedLSMLocalityTaskStorageItemReuseCheck {
 	bool operator() (Item const& item) const {
 		Frame* f = item.frame.load(std::memory_order_relaxed);
 		// item.taken is always set after last_phase is set, therefore use this for checks
@@ -77,4 +78,4 @@ struct KLSMLocalityTaskStorageItemReuseCheck {
 };
 
 } /* namespace pheet */
-#endif /* KLSMLOCALITYTASKSTORAGEITEM_H_ */
+#endif /* KDELAYEDLSMLOCALITYTASKSTORAGEITEM_H_ */
