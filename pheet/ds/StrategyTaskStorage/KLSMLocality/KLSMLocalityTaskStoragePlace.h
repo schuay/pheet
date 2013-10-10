@@ -46,7 +46,7 @@ public:
 	KLSMLocalityTaskStoragePlace(ParentTaskStoragePlace* parent_place)
 	:pc(parent_place->pc),
 	 parent_place(parent_place), current_frame(&(frames.acquire_item())),
-	 remaining_k(std::numeric_limits<size_t>::max()), tasks(0) {
+	 remaining_k(std::numeric_limits<size_t>::max()), enforce_global(false), tasks(0) {
 
 		// Get central task storage at end of initialization (not before,
 		// since this place becomes visible as soon as we retrieve it)
@@ -113,7 +113,7 @@ public:
 		size_t k = it.strategy.get_k();
 		bottom_block->added_local_item(k);
 		remaining_k = std::min(remaining_k - 1, bottom_block->get_k());
-		if(remaining_k == 0) {
+		if(remaining_k == 0 || enforce_global) {
 			add_to_global_list();
 		}
 	}
@@ -328,19 +328,17 @@ private:
 
 			next = global_list->move_next();
 		}
-
-		tasks_popped_since_sync = 0;
-		last_sync_item = last_item;
 	}
 
 	void add_to_global_list() {
+		enforce_global = false;
 		Block* end = nullptr;
 		Block* b = bottom_block;
 
 		size_t tasks = 0;
 		size_t min_k = std::numeric_limits<size_t>::max();
 
-		while(b->get_k() > tasks) {
+		while(b->get_k() > tasks && b->get_num_local_items() < b->get_k()) {
 			if(b->get_k() - tasks < min_k) {
 				min_k = b->get_k() - tasks;
 			}
@@ -401,7 +399,6 @@ private:
 			// Check whether a merge is required
 			if(bb->get_prev() != nullptr && bb->get_level() >= bb->get_prev()->get_level()) {
 				bb = merge(bb);
-				bottom_block = bb;
 			}
 
 			size_t l = bb->get_level();
@@ -463,6 +460,11 @@ private:
 		Block* prev = last_merge->get_prev();
 		pheet_assert(prev == nullptr || prev->get_next() == last_merge);
 
+		GlobalListItem* gli = block->get_global_list_item();
+		if(gli == nullptr) {
+			gli = last_merge->get_global_list_item();
+		}
+
 		while(prev != nullptr && !merged->empty() && merged->get_level() >= prev->get_level()) {
 			last_merge = prev;
 
@@ -471,6 +473,9 @@ private:
 				Block* merged2 = find_free_block(merged->get_level() + 1);
 				merged2->merge_into(last_merge, merged, this, frame_regs);
 
+				if(gli == nullptr) {
+					gli = last_merge->get_global_list_item();
+				}
 				pheet_assert(merged2->get_filled() <= last_merge->get_filled() + merged->get_filled());
 
 				// The merged block was never made visible, we can reset it at any time
@@ -498,11 +503,25 @@ private:
 			// Make all changes visible now using a release
 			prev->release_next(merged);
 		}
+
+		if(pre_merge == nullptr) {
+			bottom_block = merged;
+		}
+
+		// Now we need to update the global list item if necessary
+		if(gli != nullptr) {
+			gli->update_block(merged);
+		}
+
 		// Now reset old blocks
 		while(last_merge != pre_merge) {
 			Block* next = last_merge->get_next();
 			last_merge->reset();
 			last_merge = next;
+		}
+
+		if(merged->has_local_items() && merged->get_num_local_items() > merged->get_k()) {
+			enforce_global = true;
 		}
 
 		return merged;
@@ -520,6 +539,7 @@ private:
 				bottom_block = prev;
 				prev->set_next(nullptr);
 				b->reset();
+				b = prev;
 				prev = prev->get_prev();
 			}
 			b = prev;
@@ -651,13 +671,10 @@ private:
 //	Block* best_block;
 
 	size_t remaining_k;
-	size_t tasks_popped_since_sync;
+	bool enforce_global;
 	std::atomic<size_t> tasks;
 
 	GlobalListItem* global_list;
-
-	size_t last_item;
-	size_t last_sync_item;
 };
 
 } /* namespace pheet */
