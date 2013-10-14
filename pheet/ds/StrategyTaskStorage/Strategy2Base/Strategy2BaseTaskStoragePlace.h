@@ -315,7 +315,7 @@ private:
 
 			// Don't care about memory ordering, just give me some partner to check
 			Self* partner_partner = partner.last_partner.load(std::memory_order_relaxed);
-			if(partner_partner != nullptr) {
+			if(partner_partner != nullptr && partner_partner != this) {
 				ret = partner_partner->steal_from();
 				if(ret != nullable_traits<T>::null_value) {
 					// Found some work. Recheck this partner next time we steal
