@@ -53,7 +53,8 @@ public:
 	 */
 	bool try_put(Item* item, bool owned) {
 		size_t f = filled.load(std::memory_order_relaxed);
-		if(newly_global || f == size) {
+		pheet_assert(!is_global() || f != 0);
+		if(is_global() || f == size) {
 			return false;
 		}
 		else if(f == 0 ||
@@ -107,6 +108,7 @@ public:
 	 */
 	void added_local_item(size_t item_k) {
 		pheet_assert(k > 0);
+		pheet_assert(!is_global());
 		k = std::min(k - 1, item_k);
 		++local_items;
 	}
@@ -121,6 +123,10 @@ public:
 
 	size_t get_num_local_items() {
 		return local_items;
+	}
+
+	bool is_global() {
+		return global_list_item != nullptr && global_list_item->get_block() == this;
 	}
 
 	void mark_newly_global(GlobalListItem* gli) {
@@ -310,6 +316,7 @@ public:
 		pheet_assert(right->in_use);
 		pheet_assert(!left->empty());
 		pheet_assert(!right->empty());
+		pheet_assert(!newly_global);
 
 		size_t min_k = std::numeric_limits<size_t>::max();
 		size_t merged_local = 0;
