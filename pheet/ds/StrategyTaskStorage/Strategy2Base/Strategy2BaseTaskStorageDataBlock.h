@@ -63,6 +63,13 @@ public:
 		return items[pos].load(std::memory_order_relaxed);
 	}
 
+	/**
+	 * Gets item without modifying index by offset
+	 */
+	BaseItem* direct_acquire(size_t pos) {
+		return items[pos].load(std::memory_order_acquire);
+	}
+
 	size_t get_block_offset() {
 		return offset.load(std::memory_order_relaxed);
 	}

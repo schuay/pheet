@@ -47,7 +47,7 @@ public:
 
 	Strategy2BaseTaskStoragePlace(TaskStorage* task_storage, SchedulerPlace* scheduler_place, PerformanceCounters pc)
 	:pc(pc), task_storage(task_storage),
-	 bottom(0), top(0),
+	 bottom(0), top(0), phase(0), pop_in_phase(false),
 	 last_partner(nullptr),
 	 scheduler_place(scheduler_place)  {
 		bottom_block = &(data_blocks.acquire_item());
@@ -68,6 +68,11 @@ public:
 	~Strategy2BaseTaskStoragePlace() {}
 
 	void push(T data) {
+		if(pop_in_phase) {
+			// Update phase if we had a pop and then a subsequent push
+			phase.store(phase.load(std::memory_order_relaxed) + 1, std::memory_order_release);
+			pop_in_phase = false;
+		}
 		Item& it = items.acquire_item();
 
 		size_t b = bottom.load(std::memory_order_relaxed);
@@ -108,7 +113,12 @@ public:
 	}
 
 	void push(BaseItem* item) {
+		if(pop_in_phase) {
+			phase.store(phase.load(std::memory_order_relaxed) + 1, std::memory_order_release);
+			pop_in_phase = false;
+		}
 		size_t b = bottom.load(std::memory_order_relaxed);
+		pheet_assert(((ptrdiff_t)(b - top.load(std::memory_order_relaxed))) >= 0);
 
 		// If item does not fit in existing block, add a new block
 		if(!bottom_block->fits(b)) {
@@ -181,7 +191,7 @@ public:
 			if(ret->task_storage != task_storage) {
 				size_t b2 = bottom.load(std::memory_order_relaxed);
 				// Make sure bottom is corrected before trying to pop task
-				if(b2 != b) {
+				if(b2 != (b + 1)) {
 					// If task_storage->pop has at least one release statement on success,
 					// this statement can be relaxed completely
 					// Proof: write of new value for bottom happens before acquire of taken item
@@ -189,6 +199,7 @@ public:
 					// (On failure of pop, bottom is reset, no danger there, nothing
 					// to steal anyway, but some thread may change top, so bottom needs to be reset)
 					bottom.store(b + 1, std::memory_order_relaxed);
+					pop_in_phase = true;
 				}
 
 				// Try popping ret or some higher priority task from the sub task-storage
@@ -206,7 +217,9 @@ public:
 				// (would be dangerous for push)
 				// Stealing threads may still see bottom < top for a short time but this is ok
 				// (will just lead to a failed steal attempt, and queue is empty in this case anyway)
-				bottom.store(b2, std::memory_order_relaxed);
+				if(b2 != (b + 1)) {
+					bottom.store(b2, std::memory_order_relaxed);
+				}
 
 				continue;
 			}
@@ -334,6 +347,8 @@ private:
 	 * Executed in the context of the stealer, should only do thread-safe things
 	 */
 	T steal_from() {
+		size_t p = phase.load(std::memory_order_acquire);
+
 		// The only dangerous case is that we might see b > t although
 		// b = t, but acquire makes sure we see the b that the last updater to t saw.
 		// b=t can only be achieved by updating t so this is ordered.
@@ -373,10 +388,14 @@ private:
 			break;
 		}
 
-		BaseItem* ret = db->direct_get(t - offset);
+		BaseItem* ret = db->direct_acquire(t - offset);
 
 		// Skip items that have been marked as taken
 		while(ret->taken.load(std::memory_order_acquire)) {
+			if(ret->task_storage == task_storage) {
+				// If item from base task storage is taken there are no successors
+				return nullable_traits<T>::null_value;
+			}
 			// Reload bottom, it might have changed after ret->taken was set
 			size_t b = bottom.load(std::memory_order_acquire);
 
@@ -407,7 +426,13 @@ private:
 				}
 			}
 
-			ret = db->direct_get(t - offset);
+			ret = db->direct_acquire(t - offset);
+		}
+		// If we are skipping items we need to be sure that we are still in the same phase
+		if(t != old_t && p != phase.load(std::memory_order_relaxed)) {
+			// Phase changed. Might lead to an ABA problem where we skip some items removed by a pop
+			// which are filled up again by a subsequent push
+			return nullable_traits<T>::null_value;
 		}
 
 		if(ret->task_storage != task_storage) {
@@ -424,7 +449,7 @@ private:
 			// We were successful in stealing the given task or a task after that one.
 			// So we know for sure that pop will not find any tasks that are not taken before this one
 			// Therefore we can correct the top pointer to the position before ret (ret might not yet be taken)
-			if(t - old_t > 16) {
+			if(t - old_t > 16 && p == phase.load(std::memory_order_relaxed)) {
 				// We do not do this every time to reduce congestion
 				// 16 was chosen arbitrarily and may be tuned
 
@@ -501,6 +526,10 @@ private:
 	// Arora-like top and bottom. Used for local tasks
 	std::atomic<size_t> bottom;
 	std::atomic<size_t> top;
+	// Every time a push is called after a pop a new phase is started
+	// Top is not allowed to be updated if the phase changed in the meantime
+	std::atomic<size_t> phase;
+	bool pop_in_phase;
 
 	DataBlock* bottom_block;
 	std::atomic<DataBlock*> top_block;
