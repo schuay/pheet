@@ -38,8 +38,11 @@ public:
 	typedef BlockItemReuseMemoryManager<Pheet, Item, LSMLocalityTaskStorageItemReuseCheck<Item, Frame> > ItemMemoryManager;
 	typedef ItemReuseMemoryManager<Pheet, Frame, LSMLocalityTaskStorageFrameReuseCheck<Frame> > FrameMemoryManager;
 
+	typedef typename ParentTaskStoragePlace::PerformanceCounters PerformanceCounters;
+
 	LSMLocalityTaskStoragePlace(ParentTaskStoragePlace* parent_place)
-	:parent_place(parent_place), current_frame(&(frames.acquire_item())), tasks(0) {
+	:pc(parent_place->pc),
+	 parent_place(parent_place), current_frame(&(frames.acquire_item())), tasks(0) {
 
 		// Get central task storage at end of initialization (not before,
 		// since this place becomes visible as soon as we retrieve it)
@@ -187,6 +190,8 @@ public:
 											spy_reg->rem_ref(spy_frame);
 										}
 										else {
+											pc.num_spied_tasks.incr();
+
 											// Store item, but do not store in parent! (It's not a boundary after all!)
 											put(spy_item);
 										}
@@ -240,6 +245,7 @@ public:
 
 	}
 
+	PerformanceCounters pc;
 private:
 	void put(Item* item) {
 		tasks.store(tasks.load(std::memory_order_relaxed) + 1, std::memory_order_relaxed);

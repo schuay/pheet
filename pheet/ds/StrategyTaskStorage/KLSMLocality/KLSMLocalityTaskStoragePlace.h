@@ -216,6 +216,8 @@ public:
 											spy_reg->rem_ref(spy_frame);
 										}
 										else {
+											pc.num_spied_tasks.incr();
+
 											// Store item, but do not store in parent! (It's not a boundary after all!)
 											put(spy_item);
 										}
@@ -269,7 +271,7 @@ public:
 
 	}
 
-PerformanceCounters pc;
+	PerformanceCounters pc;
 private:
 	void process_global_list() {
 		GlobalListItem* next = global_list->move_next();
@@ -304,6 +306,9 @@ private:
 								spy_reg->rem_ref(spy_frame);
 							}
 							else {
+								pc.num_spied_tasks.incr();
+								pc.num_spied_global_tasks.incr();
+
 								// Store item, but do not store in parent! (It's not a boundary after all!)
 								put(spy_item);
 							}
@@ -396,9 +401,14 @@ private:
 		pheet_assert(bb->get_next() == nullptr);
 		pheet_assert(!bb->reusable());
 		if(!bb->try_put(item, item->owner == this)) {
+			Block* p = bb->get_prev();
 			// Check whether a merge is required
-			if(bb->get_prev() != nullptr && bb->get_level() >= bb->get_prev()->get_level()) {
+			if(p != nullptr &&
+					(bb->get_level() > p->get_level() ||
+					(bb->get_level() == p->get_level() &&
+					(bb->get_num_local_items() == 0 || p->get_num_local_items() != 0)))) {
 				bb = merge(bb);
+				bottom_block = bb;
 			}
 
 			size_t l = bb->get_level();
@@ -451,6 +461,11 @@ private:
 		if(last_merge->get_level() > block->get_level()) {
 			return block;
 		}
+		else if(last_merge->get_level() == block->get_level() &&
+				last_merge->get_num_local_items() == 0 &&
+				block->get_num_local_items() != 0) {
+			return block;
+		}
 		pheet_assert(block == last_merge->get_next());
 		Block* merged = find_free_block(block->get_level() + 1);
 		merged->merge_into(last_merge, block, this, frame_regs);
@@ -465,7 +480,10 @@ private:
 			gli = last_merge->get_global_list_item();
 		}
 
-		while(prev != nullptr && !merged->empty() && merged->get_level() >= prev->get_level()) {
+		while(prev != nullptr && !merged->empty() &&
+				(merged->get_level() > prev->get_level() ||
+				(merged->get_level() == prev->get_level() &&
+				(merged->get_num_local_items() == 0 || prev->get_num_local_items() != 0)))) {
 			last_merge = prev;
 
 			if(!last_merge->empty()) {
@@ -593,7 +611,10 @@ private:
 					b = p;
 				}
 			}
-			else if(p != nullptr && b->get_level() >= p->get_level()) {
+			else if(p != nullptr &&
+					(b->get_level() > p->get_level() ||
+					(b->get_level() == p->get_level() &&
+					(b->get_num_local_items() == 0 || p->get_num_local_items() != 0)))) {
 				pheet_assert(b != best);
 				b = merge(b);
 				pheet_assert(!b->reusable());

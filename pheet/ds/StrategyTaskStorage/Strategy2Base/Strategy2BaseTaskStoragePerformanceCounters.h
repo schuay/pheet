@@ -22,24 +22,33 @@ public:
 	Strategy2BaseTaskStoragePerformanceCounters(Self& other)
 	:num_blocks_created(other.num_blocks_created),
 	 num_global_blocks(other.num_global_blocks),
-	 num_inspected_global_items(other.num_inspected_global_items) {}
+	 num_inspected_global_items(other.num_inspected_global_items),
+	 num_spied_tasks(other.num_spied_tasks),
+	 num_spied_global_tasks(other.num_spied_global_tasks) {}
+
 	~Strategy2BaseTaskStoragePerformanceCounters() {}
 
 	inline static void print_headers() {
 		BasicPerformanceCounter<Pheet, task_storage_count_blocks_created>::print_header("num_blocks_created\t");
 		BasicPerformanceCounter<Pheet, task_storage_count_global_blocks>::print_header("num_global_blocks\t");
 		BasicPerformanceCounter<Pheet, task_storage_count_inspected_global_items>::print_header("num_inspected_global_items\t");
+		BasicPerformanceCounter<Pheet, task_storage_count_spied_tasks>::print_header("num_spied_tasks\t");
+		BasicPerformanceCounter<Pheet, task_storage_count_spied_global_tasks>::print_header("num_spied_global_tasks\t");
 	}
 
 	inline void print_values() {
 		num_blocks_created.print("%d\t");
 		num_global_blocks.print("%d\t");
 		num_inspected_global_items.print("%d\t");
+		num_spied_tasks.print("%d\t");
+		num_spied_global_tasks.print("%d\t");
 	}
 
 	BasicPerformanceCounter<Pheet, task_storage_count_blocks_created> num_blocks_created;
 	BasicPerformanceCounter<Pheet, task_storage_count_global_blocks> num_global_blocks;
 	BasicPerformanceCounter<Pheet, task_storage_count_inspected_global_items> num_inspected_global_items;
+	BasicPerformanceCounter<Pheet, task_storage_count_spied_tasks> num_spied_tasks;
+	BasicPerformanceCounter<Pheet, task_storage_count_spied_global_tasks> num_spied_global_tasks;
 
 };
 

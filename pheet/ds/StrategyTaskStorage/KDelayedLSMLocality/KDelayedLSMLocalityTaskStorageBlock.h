@@ -458,7 +458,7 @@ public:
 		pheet_assert(local_items <= left->local_items + right->local_items);
 
 		// Update global list items to this block, since the previous blocks might be reused now
-		if(right->global_list_item != nullptr) {
+/*		if(right->global_list_item != nullptr) {
 			// Make sure global list item was not reused yet
 			if(right->global_list_item->get_block() == right) {
 				global_list_item = right->global_list_item;
@@ -477,7 +477,7 @@ public:
 				global_list_item->update_block(this);
 				left->global_list_item = nullptr;
 			}
-		}
+		}*/
 	}
 
 	size_t get_level() {
@@ -516,6 +516,15 @@ public:
 		in_use = true;
 	}
 
+	GlobalListItem* get_global_list_item() {
+		if(global_list_item == nullptr || global_list_item->get_block() != this)
+			return nullptr;
+		return global_list_item;
+	}
+/*
+	void set_global_list_item(GlobalListItem* item) {
+		global_list_item = item;
+	}*/
 private:
 	/*
 	 * Is used by merge_into to go through list.
