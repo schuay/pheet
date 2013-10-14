@@ -224,6 +224,11 @@ public:
 			level_boundary = 1;
 			k = std::numeric_limits<size_t>::max();
 			local_items = 0;
+			newly_global = false;
+
+			if(global_list_item != nullptr && global_list_item->get_block() == this) {
+				global_list_item->update_block(nullptr);
+			}
 		}
 		else {
 			if(local_items > f)
