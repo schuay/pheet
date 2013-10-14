@@ -404,9 +404,9 @@ private:
 			Block* p = bb->get_prev();
 			// Check whether a merge is required
 			if(p != nullptr &&
-					(bb->get_level() > p->get_level() ||
-					(bb->get_level() == p->get_level() &&
-					(bb->is_global() || !p->is_global())))) {
+					(bb->get_level() >= p->get_level()/* ||
+					(bb->get_level() == p->get_level()*/ &&
+					(bb->is_global() || !p->is_global()))) {
 				bb = merge(bb);
 				bottom_block = bb;
 			}
@@ -461,7 +461,7 @@ private:
 		if(last_merge->get_level() > block->get_level()) {
 			return block;
 		}
-		else if(last_merge->get_level() == block->get_level() &&
+		else if(/*last_merge->get_level() == block->get_level() &&*/
 				last_merge->is_global() &&
 				!block->is_global()) {
 			return block;
@@ -481,9 +481,9 @@ private:
 		}
 
 		while(prev != nullptr && !merged->empty() &&
-				(merged->get_level() > prev->get_level() ||
-				(merged->get_level() == prev->get_level() &&
-				(merged->is_global() || !prev->is_global())))) {
+				(merged->get_level() >= prev->get_level()/* ||
+				(merged->get_level() == prev->get_level()*/ &&
+				(merged->is_global() || !prev->is_global()))) {
 			last_merge = prev;
 
 			if(!last_merge->empty()) {
@@ -612,9 +612,9 @@ private:
 				}
 			}
 			else if(p != nullptr &&
-					(b->get_level() > p->get_level() ||
-					(b->get_level() == p->get_level() &&
-					(b->is_global() || !p->is_global())))) {
+					(b->get_level() >= p->get_level()/* ||
+					(b->get_level() == p->get_level()*/ &&
+					(b->is_global() || !p->is_global()))) {
 				pheet_assert(b != best);
 				b = merge(b);
 				pheet_assert(!b->reusable());
