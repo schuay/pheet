@@ -45,7 +45,10 @@ public:
 
 	KLSMLocalityTaskStoragePlace(ParentTaskStoragePlace* parent_place)
 	:pc(parent_place->pc),
-	 parent_place(parent_place), current_frame(&(frames.acquire_item())),
+	 parent_place(parent_place), top_block_shared(nullptr), bottom_block_shared(nullptr),
+	 best_block(nullptr), best_block_known(true),
+	 needs_rescan(false),
+	 current_frame(&(frames.acquire_item())),
 	 remaining_k(std::numeric_limits<size_t>::max()), enforce_global(false), tasks(0) {
 
 		// Get central task storage at end of initialization (not before,
@@ -55,16 +58,8 @@ public:
 		global_list = task_storage->get_global_list_head();
 
 		// Fill in blocks usable for storing a single item
-		// Might make sense to precreate more, but for now let's leave it at that
-		blocks.push_back(new Block(1));
-		pc.num_blocks_created.incr();
-		blocks.push_back(new Block(1));
-		pc.num_blocks_created.incr();
-		blocks.push_back(new Block(1));
-		pc.num_blocks_created.incr();
-
-		top_block.store(blocks[0], std::memory_order_relaxed);
-		bottom_block = blocks[0];
+		bottom_block = find_free_block(0);
+		top_block.store(bottom_block, std::memory_order_relaxed);
 		bottom_block->mark_in_use();
 	}
 
@@ -103,7 +98,6 @@ public:
 		// It is guaranteed to be newly initialized and the strategy set.
 		it.taken.store(false, std::memory_order_release);
 		it.last_phase.store(-1, std::memory_order_release);
-		it.global = false;
 
 		put(&it);
 
@@ -113,7 +107,7 @@ public:
 		size_t k = it.strategy.get_k();
 		bottom_block->added_local_item(k);
 		remaining_k = std::min(remaining_k - 1, bottom_block->get_k());
-		if(remaining_k == 0 || enforce_global) {
+		if(remaining_k == 0) {
 			add_to_global_list();
 		}
 	}
@@ -125,8 +119,9 @@ public:
 		while(!item->is_taken()) {
 			process_global_list();
 
+			pheet_assert(best_block_known);
 			// We can assume that boundary is stored in this task storage, so we just get the best item
-			Block* best = find_best_block();
+			Block* best = best_block;
 
 			if(best == nullptr || item->is_taken()) {
 				return nullable_traits<T>::null_value;
@@ -137,8 +132,28 @@ public:
 			// Take does not do any deregistration, this is done by pop_taken_and_dead
 			T data = best_item->take();
 
+			// Check level of best block
+			size_t level = best->get_level();
+
 			// There is at least one taken task now, let's do a cleanup
 			best->pop_taken_and_dead(this, frame_regs);
+			best_block_known = false;
+			best_block = nullptr;
+
+			if(best->empty() || best->get_level() != level) {
+				scan();
+			}
+			// Check whether we can merge blocks first
+			else if(needs_rescan) {
+				scan();
+			}
+
+			if(!best_block_known) {
+				find_best_block();
+			}
+
+			// Will be automatically called in scan
+	//		find_best_block();
 
 			// Check whether we succeeded
 			if(data != nullable_traits<T>::null_value) {
@@ -147,6 +162,7 @@ public:
 			}
 		}
 
+		pheet_assert(best_block_known);
 		// Linearized to check of boundary item
 		return nullable_traits<T>::null_value;
 	}
@@ -337,49 +353,29 @@ private:
 
 	void add_to_global_list() {
 		enforce_global = false;
-		Block* end = nullptr;
-		Block* b = bottom_block;
-
-		size_t tasks = 0;
-		size_t min_k = std::numeric_limits<size_t>::max();
-
-		while(b->get_k() > tasks && b->get_num_local_items() < b->get_k()) {
-			if(b->get_k() - tasks < min_k) {
-				min_k = b->get_k() - tasks;
-			}
-			tasks += b->get_num_local_items();
-			end = b;
-			b = b->get_prev();
-			if(b == nullptr) {
-				remaining_k = min_k;
-				return;
-			}
-		}
-
 		Block* begin = top_block.load(std::memory_order_relaxed);
+		Block* b = begin;
 		// Some blocks need to be made global (starting with oldest block)
 
 		GlobalListItem* gli_first = nullptr;
 		GlobalListItem* gli_last = nullptr;
 
 		// First construct a list of GlobalListItems locally
-		while(begin != end) {
-			if(begin->has_local_items()) {
-				GlobalListItem* gli = create_global_list_item();
-				gli->update_block(begin);
+		while(b != nullptr) {
+			GlobalListItem* gli = create_global_list_item();
+			gli->update_block(b);
 
-				pc.num_global_blocks.incr();
-				if(gli_last == nullptr) {
-					gli_first = gli;
-					gli_last = gli;
-				}
-				else {
-					gli_last->local_link(gli);
-					gli_last = gli;
-				}
-				begin->mark_newly_global(gli);
+			pc.num_global_blocks.incr();
+			if(gli_last == nullptr) {
+				gli_first = gli;
+				gli_last = gli;
 			}
-			begin = begin->get_next();
+			else {
+				gli_last->local_link(gli);
+				gli_last = gli;
+			}
+			b->mark_newly_global(gli);
+			b = b->get_next();
 		}
 
 		// And then connect it to the global list
@@ -391,44 +387,121 @@ private:
 			global_list = gli_last;
 		}
 
-		remaining_k = min_k;
+		// Now add each block to shared list
+		b = begin;
+		while(b != nullptr) {
+			Block* next = b->get_next();
+			// To ensure all tasks remain visible to other threads
+			top_block.store(next, std::memory_order_relaxed);
+
+			link_to_shared_list(b);
+			b = next;
+		}
+
+		// Now find new block for local list and reset local list
+		Block* new_bb = find_free_block(blocks.size() >> 2);
+		new_bb->mark_in_use();
+		pheet_assert(new_bb->get_prev() == nullptr);
+		pheet_assert(new_bb->get_next() == nullptr);
+
+		bottom_block = new_bb;
+		top_block.store(bottom_block, std::memory_order_release);
+
+		// Restart counting
+		remaining_k = std::numeric_limits<size_t>::max();
+
+		if(!best_block_known) {
+			find_best_block();
+		}
+	}
+
+	void link_to_shared_list(Block* block) {
+		Block* next = nullptr;
+		Block* b = bottom_block_shared;
+
+		while(b != nullptr && block->get_max_level() > b->get_max_level()) {
+			next = b;
+			b = b->get_prev();
+		}
+
+		if(next == nullptr) {
+			bottom_block_shared = block;
+		}
+		else {
+			next->set_prev(block);
+		}
+		block->set_prev(b);
+		block->release_next(next);
+		if(b == nullptr) {
+			top_block_shared = block;
+		}
+		else {
+			b->set_next(block);
+
+			if(b->get_level() <= block->get_level() || b->get_max_level() == block->get_max_level()) {
+				merge_shared(block);
+			}
+		}
+		pheet_assert(bottom_block_shared->get_next() == nullptr);
+		pheet_assert(top_block_shared->get_prev() == nullptr);
 	}
 
 	void put(Item* item) {
+		pheet_assert(best_block_known);
+
 		tasks.store(tasks.load(std::memory_order_relaxed) + 1, std::memory_order_relaxed);
 
 		Block* bb = bottom_block;
 		pheet_assert(bb->get_next() == nullptr);
 		pheet_assert(!bb->reusable());
 		if(!bb->try_put(item, item->owner == this)) {
-			Block* p = bb->get_prev();
-			// Check whether a merge is required
-			if(p != nullptr &&
-					(bb->get_level() >= p->get_level()/* ||
-					(bb->get_level() == p->get_level()*/ &&
-					(bb->is_global() || !p->is_global()))) {
-				bb = merge(bb);
-				bottom_block = bb;
-			}
+			// Lazy merging, blocks will only be merged when looking for the best block
+			// or when running out of blocks to use
 
 			size_t l = bb->get_level();
-			size_t offset = std::min((l*3) + 2, blocks.size() - 1);
+			size_t offset = l << 2;
 
-			Block* new_bb = blocks[offset];
-			while(!new_bb->reusable()) {
-				--offset;
-				new_bb = blocks[offset];
+			Block* new_bb = nullptr;
+			size_t found = 0;
+			for(int i = 0; i < 4; ++i) {
+				if(blocks[offset + i]->reusable()) {
+					++found;
+					new_bb = blocks[offset + i];
+				}
 			}
+			if(found == 1) {
+				// Can't take the last block or we might fail when trying to merge blocks
+				// We need to scan existing blocks to free more blocks
+				scan();
+				bb = bottom_block;
+
+				for(int i = 0; i < 4; ++i) {
+					if(blocks[offset + i]->reusable()) {
+						// Now we can just assume there are at least 2 free blocks
+						new_bb = blocks[offset + i];
+						break;
+					}
+				}
+			}
+			pheet_assert(found != 0);
+
 			new_bb->mark_in_use();
 			new_bb->set_prev(bb);
 			pheet_assert(new_bb->get_next() == nullptr);
 			// Make sure that if block is seen, so are the changes to the block
+			pheet_assert(bb != bottom_block_shared);
 			bb->release_next(new_bb);
+			bottom_block = new_bb;
 
 			// We know we have space in here, so no try_put needed
-			new_bb->put(item, item->owner == this);
+			bottom_block->put(item, item->owner == this);
 
-			bottom_block = new_bb;
+			if(best_block == nullptr || (best_block != bottom_block && item->strategy.prioritize(best_block->top()->strategy))) {
+				best_block = bottom_block;
+			}
+		}
+		else if(best_block == nullptr || (best_block != bb && item->strategy.prioritize(best_block->top()->strategy))) {
+			best_block = bb;
 		}
 	}
 
@@ -441,36 +514,113 @@ private:
 
 		Block* pre_merge = block->get_next();
 		Block* last_merge = block->get_prev();
-		while(last_merge->empty()) {
-			Block* empty = last_merge;
-			last_merge = last_merge->get_prev();
-			if(last_merge == nullptr) {
-				block->set_prev(nullptr);
-				top_block.store(block, std::memory_order_release);
-
-				pheet_assert(empty != bottom_block);
-				empty->reset();
-				return block;
-			}
-			block->set_prev(last_merge);
-			last_merge->release_next(block);
-
-			pheet_assert(empty != bottom_block);
-			empty->reset();
-		}
-		if(last_merge->get_level() > block->get_level()) {
-			return block;
-		}
-		else if(/*last_merge->get_level() == block->get_level() &&*/
-				last_merge->is_global() &&
-				!block->is_global()) {
-			return block;
-		}
+		pheet_assert(!last_merge->empty());
 		pheet_assert(block == last_merge->get_next());
-		Block* merged = find_free_block(block->get_level() + 1);
+		Block* merged = find_free_block(std::max(block->get_level() + 1, block->get_max_level()));
 		merged->merge_into(last_merge, block, this, frame_regs);
 		merged->mark_in_use();
 		pheet_assert(merged->get_filled() <= last_merge->get_filled() + block->get_filled());
+		pheet_assert(merged->get_owned_filled() <= last_merge->get_owned_filled() + block->get_owned_filled());
+		pheet_assert(merged->get_k() >= std::min(last_merge->get_k() - block->get_owned_filled(), block->get_k()));
+
+		Block* prev = last_merge->get_prev();
+		pheet_assert(prev == nullptr || prev->get_next() == last_merge);
+
+		while(prev != nullptr && !merged->empty() &&
+				(merged->get_level() >= prev->get_level())) {
+			last_merge = prev;
+
+			pheet_assert(!last_merge->empty());
+
+			// Only merge if the other block is not empty
+			// Each subsequent merge takes a block one greater than the previous one to ensure we don't run out of blocks
+			Block* merged2 = find_free_block(merged->get_max_level() + 1);
+			merged2->merge_into(last_merge, merged, this, frame_regs);
+
+			pheet_assert(merged2->get_filled() <= last_merge->get_filled() + merged->get_filled());
+			pheet_assert(merged2->get_owned_filled() <= last_merge->get_owned_filled() + merged->get_owned_filled());
+			pheet_assert(merged2->get_k() >= std::min(last_merge->get_k() - merged->get_owned_filled(), merged->get_k()));
+
+			// The merged block was never made visible, we can reset it at any time
+			pheet_assert(merged != bottom_block);
+			pheet_assert(merged != bottom_block_shared);
+			merged->reset();
+			merged = merged2;
+			merged->mark_in_use();
+
+			prev = last_merge->get_prev();
+			pheet_assert(prev == nullptr || prev->get_next() == last_merge);
+		}
+
+		// Will be released when merged block is made visible through update of top block or next pointer
+		merged->set_next(block->get_next());
+
+		// Now we need to make new blocks visible, and reset the old blocks
+		if(prev != nullptr) {
+			merged->set_prev(prev);
+
+			// Make all changes visible now using a release
+			pheet_assert(prev != bottom_block_shared);
+			prev->release_next(merged);
+		}
+		else {
+			// Everything merged into one block
+			// Make all changes visible now using a release
+			top_block.store(merged, std::memory_order_release);
+		}
+
+		if(pre_merge == nullptr) {
+			bottom_block = merged;
+		}
+		else {
+			pheet_assert(pre_merge != top_block.load(std::memory_order_relaxed));
+			pheet_assert(pre_merge != top_block_shared);
+			pre_merge->set_prev(merged);
+		}
+
+		// Now reset old blocks
+		while(last_merge != pre_merge) {
+			Block* next = last_merge->get_next();
+			if(last_merge == best_block) {
+				best_block = nullptr;
+				best_block_known = false;
+			}
+			pheet_assert(last_merge != bottom_block);
+			last_merge->reset();
+			last_merge = next;
+		}
+
+		if(merged->get_owned_filled() > merged->get_k()) {
+			enforce_global = true;
+		}
+
+		return merged;
+	}
+
+	Block* merge_shared(Block* block) {
+		// Only do this if merge is actually required
+		pheet_assert(block->get_prev() != nullptr &&
+				(block->get_level() >= block->get_prev()->get_level() ||
+						block->get_max_level() == block->get_prev()->get_max_level()));
+
+		pheet_assert(bottom_block_shared->get_next() == nullptr);
+		pheet_assert(top_block_shared->get_prev() == nullptr);
+
+		// Block should not be empty or try_put would have succeeded
+		pheet_assert(!block->empty());
+
+		Block* pre_merge = block->get_next();
+		Block* last_merge = block->get_prev();
+		pheet_assert(!last_merge->empty());
+		pheet_assert(block == last_merge->get_next());
+		// Choose a block big enough to fit data of both blocks, but never smaller than the smaller of
+		// the two blocks (No point in using a smaller block, larger is definitely free)
+		Block* merged = find_free_block(std::max(block->get_level() + 1, std::max(last_merge->get_level() + 1, block->get_max_level())));
+		merged->merge_into(last_merge, block, this, frame_regs);
+		merged->mark_in_use();
+		pheet_assert(merged->get_filled() <= last_merge->get_filled() + block->get_filled());
+		pheet_assert(merged->get_owned_filled() <= last_merge->get_owned_filled() + block->get_owned_filled());
+		pheet_assert(merged->get_k() >= std::min(last_merge->get_k() - block->get_owned_filled(), block->get_k()));
 
 		Block* prev = last_merge->get_prev();
 		pheet_assert(prev == nullptr || prev->get_next() == last_merge);
@@ -481,27 +631,30 @@ private:
 		}
 
 		while(prev != nullptr && !merged->empty() &&
-				(merged->get_level() >= prev->get_level()/* ||
-				(merged->get_level() == prev->get_level()*/ &&
-				(merged->is_global() || !prev->is_global()))) {
+				(merged->get_level() >= prev->get_level() || merged->get_max_level() == prev->get_max_level())) {
 			last_merge = prev;
 
-			if(!last_merge->empty()) {
-				// Only merge if the other block is not empty
-				Block* merged2 = find_free_block(merged->get_level() + 1);
-				merged2->merge_into(last_merge, merged, this, frame_regs);
+			pheet_assert(!last_merge->empty());
 
-				if(gli == nullptr) {
-					gli = last_merge->get_global_list_item();
-				}
-				pheet_assert(merged2->get_filled() <= last_merge->get_filled() + merged->get_filled());
+			// Only merge if the other block is not empty
+			// Each subsequent merge takes a block one greater than the previous one to ensure we don't run out of blocks
+			Block* merged2 = find_free_block(merged->get_max_level() + 1);
+			merged2->merge_into(last_merge, merged, this, frame_regs);
 
-				// The merged block was never made visible, we can reset it at any time
-				pheet_assert(merged != bottom_block);
-				merged->reset();
-				merged = merged2;
-				merged->mark_in_use();
+			if(gli == nullptr) {
+				gli = last_merge->get_global_list_item();
 			}
+			pheet_assert(merged2->get_filled() <= last_merge->get_filled() + merged->get_filled());
+			pheet_assert(merged2->get_owned_filled() <= last_merge->get_owned_filled() + merged->get_owned_filled());
+			pheet_assert(merged2->get_k() >= std::min(last_merge->get_k() - merged->get_owned_filled(), merged->get_k()));
+
+			// The merged block was never made visible, we can reset it at any time
+			pheet_assert(merged != bottom_block);
+			pheet_assert(merged != bottom_block_shared);
+			merged->reset();
+			merged = merged2;
+			merged->mark_in_use();
+
 			prev = last_merge->get_prev();
 			pheet_assert(prev == nullptr || prev->get_next() == last_merge);
 		}
@@ -510,20 +663,23 @@ private:
 		merged->set_next(block->get_next());
 
 		// Now we need to make new blocks visible, and reset the old blocks
-		if(prev == nullptr) {
-			// Everything merged into one block
-			// Make all changes visible now using a release
-			top_block.store(merged, std::memory_order_release);
-		}
-		else {
+		if(prev != nullptr) {
 			merged->set_prev(prev);
 
 			// Make all changes visible now using a release
 			prev->release_next(merged);
 		}
+		else {
+			// Everything merged into one block
+			// Make all changes visible now using a release
+			top_block_shared = merged;
+		}
 
 		if(pre_merge == nullptr) {
-			bottom_block = merged;
+			bottom_block_shared = merged;
+		}
+		else {
+			pre_merge->set_prev(merged);
 		}
 
 		// Now we need to update the global list item if necessary
@@ -534,142 +690,180 @@ private:
 		// Now reset old blocks
 		while(last_merge != pre_merge) {
 			Block* next = last_merge->get_next();
+			if(last_merge == best_block) {
+				best_block = nullptr;
+				best_block_known = false;
+			}
+			pheet_assert(last_merge != bottom_block_shared);
 			last_merge->reset();
 			last_merge = next;
 		}
-
-		if(merged->has_local_items() && merged->get_num_local_items() > merged->get_k()) {
-			enforce_global = true;
-		}
+		pheet_assert(bottom_block_shared->get_next() == nullptr);
+		pheet_assert(top_block_shared->get_prev() == nullptr);
 
 		return merged;
 	}
 
-	Block* find_best_block() {
+	void find_best_block() {
+		Block* b = bottom_block;
+		pheet_assert(b != nullptr);
+
+		do {
+			if(!b->empty() &&
+					(best_block == nullptr ||
+						b->top()->strategy.prioritize(best_block->top()->strategy))) {
+				best_block = b;
+			}
+			b = b->get_prev();
+		} while(b != nullptr);
+
+		b = top_block_shared;
+		while(b != nullptr) {
+			if(!b->empty() &&
+					(best_block == nullptr ||
+						b->top()->strategy.prioritize(best_block->top()->strategy))) {
+				best_block = b;
+			}
+			b = b->get_next();
+		}
+
+		best_block_known = true;
+	}
+
+	/*
+	 * Goes through local lists of blocks and merges all mergeable blocks and removes empty
+	 * blocks
+	 */
+	void scan() {
 		// Recount number of tasks (might change due to merging, dead tasks, so it's easiest to recalculate)
 		size_t num_tasks = 0;
-		size_t num_local_tasks = 0;
+		remaining_k = std::numeric_limits<size_t>::max();
 
-		Block* b = bottom_block;
-		if(b->empty()) {
-			Block* prev = b->get_prev();
-			while(prev != nullptr && prev->empty()) {
-				bottom_block = prev;
-				prev->set_next(nullptr);
-				b->reset();
-				b = prev;
-				prev = prev->get_prev();
-			}
-			b = prev;
-		}
+		Block* prev = nullptr;
+		Block* b = top_block.load(std::memory_order_relaxed);
+		pheet_assert(b != nullptr);
 
-		if(b == nullptr) {
-			remaining_k = std::numeric_limits<size_t>::max();
+		do {
+			num_tasks += b->get_filled();
 
-			//	bottom_block = top_block.load(std::memory_order_relaxed);
-			return nullptr;
-		}
-
-		pheet_assert(!b->empty());
-		Block* best = b;
-		Block* next = b;
-		num_tasks += b->get_filled();
-		num_local_tasks += b->get_num_local_items();
-		// Recalculate k
-		remaining_k = b->get_k();
-
-		b = b->get_prev();
-
-		while(b != nullptr) {
-			pheet_assert(!b->reusable());
-
-			Block* p = b->get_prev();
-			pheet_assert(p == nullptr || p->get_next() == b);
+			Block* next = b->get_next();
 			if(b->empty()) {
-				next->set_prev(p);
-				if(p == nullptr) {
-					// No need to order, we didn't change the block
-					top_block.store(next, std::memory_order_relaxed);
-
-					// Contains a release
-					pheet_assert(b != bottom_block);
+				if(next != nullptr) {
+					next->set_prev(prev);
+					if(prev != nullptr) {
+						// No need to order, we didn't change the block
+						prev->set_next(next);
+					}
+					else {
+						// No need to order, we didn't change the block
+						top_block.store(next, std::memory_order_relaxed);
+					}
 					b->reset();
-
-					tasks = num_tasks;
-
-					// End of list, just return best
-					return best;
+					b = next;
 				}
 				else {
-					// No need to order, we didn't change the block
-					p->set_next(next);
-
-					// Contains a release
-					pheet_assert(b != bottom_block);
-					b->reset();
-
-					b = p;
+					// Never remove first (bottom) block if it is empty, it is used for adding items
+					pheet_assert(next == nullptr || next->get_prev() == b);
+					prev = b;
+					b = next;
 				}
 			}
-			else if(p != nullptr &&
-					(b->get_level() >= p->get_level()/* ||
-					(b->get_level() == p->get_level()*/ &&
-					(b->is_global() || !p->is_global()))) {
-				pheet_assert(b != best);
+			else if(prev != nullptr && b->get_level() >= prev->get_level()) {
 				b = merge(b);
-				pheet_assert(!b->reusable());
-				pheet_assert(!best->reusable());
-				next->set_prev(b);
 
-				// We need to redo cycle, since merged block might be empty!
+				// Repeat cycle since block might now be empty
+				pheet_assert(b->get_next() == next);
+				prev = b->get_prev();
 			}
 			else {
-				if(b->top()->strategy.prioritize(best->top()->strategy)) {
-					best = b;
-				}
-				if(b->has_local_items()) {
-					pheet_assert(b->get_k() >= num_local_tasks);
-					size_t block_k = b->get_k() - num_local_tasks;
-					if(block_k < remaining_k) {
-						remaining_k = block_k;
+				remaining_k = std::min(remaining_k - b->get_owned_filled(), b->get_k());
+
+				pheet_assert(next == nullptr || next->get_prev() == b);
+				prev = b;
+				b = next;
+			}
+		} while(b != nullptr);
+
+		prev = nullptr;
+		b = top_block_shared;
+
+		// Now go through list of shared blocks
+		// No need to order memory accesses list is not accessed globally through these pointers
+		while(b != nullptr) {
+			num_tasks += b->get_filled();
+
+			Block* next = b->get_next();
+			if(b->empty()) {
+				if(next != nullptr) {
+					next->set_prev(prev);
+					if(prev != nullptr) {
+						prev->set_next(next);
+					}
+					else {
+						top_block_shared = next;
 					}
 				}
+				else if(prev != nullptr) {
+					prev->set_next(nullptr);
+					pheet_assert(bottom_block_shared == b);
+					bottom_block_shared = prev;
+				}
+				else {
+					pheet_assert(top_block_shared == b);
+					pheet_assert(bottom_block_shared == b);
+					top_block_shared = nullptr;
+					bottom_block_shared = nullptr;
+				}
+				b->reset();
+				b = next;
+			}
+			else if(prev != nullptr && b->get_level() >= prev->get_level()) {
+				b = merge_shared(b);
 
-				num_tasks += b->get_filled();
-				num_local_tasks += b->get_num_local_items();
-				next = b;
-				b = p;
+				// Repeat cycle since block might now be empty
+				pheet_assert(b->get_next() == next);
+				prev = b->get_prev();
+			}
+			else {
+				pheet_assert(next == nullptr || next->get_prev() == b);
+				prev = b;
+				b = next;
 			}
 		}
 
 		tasks.store(num_tasks, std::memory_order_relaxed);
+		needs_rescan = false;
 
-		return best;
+		if(!best_block_known) {
+			find_best_block();
+		}
+
+		if(enforce_global) {
+			add_to_global_list();
+		}
 	}
 
 	Block* find_free_block(size_t level) {
-		size_t offset = level * 3;
+		size_t offset = level << 2;
 
 		if(offset >= blocks.size()) {
 			do {
-				size_t l = blocks.size() / 3;
-				blocks.push_back(new Block(1 << l));
-				pc.num_blocks_created.incr();
+				size_t l = blocks.size() >> 2;
+				size_t s = (1 << l);
+				for(int i = 0; i < 4; ++i) {
+					blocks.push_back(new Block(s, l));
+					pc.num_blocks_created.incr();
+				}
 			}while(offset >= blocks.size());
 
 			return blocks.back();
 		}
-		while(!blocks[offset]->reusable()) {
-			++offset;
-			if(blocks.size() == offset) {
-				size_t l = offset / 3;
-				Block* ret = new Block(1 << l);
-				blocks.push_back(ret);
-				pc.num_blocks_created.incr();
-				return ret;
+		for(int i = 0; i < 4; ++i) {
+			if(blocks[offset + i]->reusable()) {
+				return blocks[offset + i];
 			}
 		}
-		return blocks[offset];
+		return nullptr;
 	}
 
 	ParentTaskStoragePlace* parent_place;
@@ -685,6 +879,11 @@ private:
 	std::vector<Block*> blocks;
 	std::atomic<Block*> top_block;
 	Block* bottom_block;
+	Block* top_block_shared;
+	Block* bottom_block_shared;
+	Block* best_block;
+	bool best_block_known;
+	bool needs_rescan;
 
 	Frame* current_frame;
 	std::unordered_map<Frame*, FrameReg> frame_regs;
