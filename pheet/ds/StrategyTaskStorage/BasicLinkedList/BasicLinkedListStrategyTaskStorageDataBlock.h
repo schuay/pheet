@@ -192,7 +192,7 @@ bool BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, TaskStorage, BlockSi
 
 template <class Pheet, typename TT, class TaskStorage, size_t BlockSize>
 bool BasicLinkedListStrategyTaskStorageDataBlock<Pheet, TT, TaskStorage, BlockSize>::take(size_t index, size_t stored_taken_offset) {
-	pheet_assert(index < filled);
+//	pheet_assert(index < filled);
 	pheet_assert((stored_taken_offset & 1) == 0);
 
 	if(data[index].taken == stored_taken_offset) {

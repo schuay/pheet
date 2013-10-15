@@ -499,6 +499,7 @@ private:
 				while(!db->fits(t)) {
 					DataBlock* next = db->get_next();
 					pheet_assert(next != nullptr);
+					pheet_assert(((ptrdiff_t)(t - next->get_block_offset() - t)) > 0);
 					top_block.store(next, std::memory_order_release);
 					// Has release semantics
 					db->mark_reusable();
