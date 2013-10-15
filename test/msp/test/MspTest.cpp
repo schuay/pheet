@@ -4,10 +4,12 @@
 
 #include "Sequential/SequentialMsp.h"
 #include "Strategy/StrategyMspTask.h"
+#include "Strategy2/Strategy2MspTask.h"
 #include "lib/Graph/Generator/Generator.h"
 #include "lib/Pareto/Less.h"
 #include "pheet/pheet.h"
 #include "pheet/sched/Synchroneous/SynchroneousScheduler.h"
+#include "pheet/sched/Strategy2/StrategyScheduler2.h"
 
 using namespace graph;
 using namespace pareto;
@@ -18,7 +20,7 @@ using namespace sp;
  *
  * GenericTest: The generic test class. Responsible for constructing the
  *		graph, running the algorithm, and cleaning up.
- * Typed test classes (SequentialTest, StrategyTest, ...): Used to abstract
+ * Typed test classes (SequentialTest, StrategyTest, Strategy2Test, ...): Used to abstract
  *		differences between types. This *could* theoretically be done by using
  *      more than one template parameter in GenericTest, but GTest is limited to
  *		one.
@@ -89,7 +91,35 @@ private:
 	PathPtr const path;
 };
 
-typedef ::testing::Types<SequentialTest, StrategyTest> TestTypes;
+class Strategy2Test
+{
+public:
+	typedef Pheet::WithScheduler<StrategyScheduler2>
+	Strategy2Pheet;
+
+	Strategy2Test(Graph const* graph,
+	              PathPtr const path)
+		: graph(graph), path(path) {
+	}
+
+	ShortestPaths*
+	operator()() {
+		MspPerformanceCounters<Strategy2Pheet> pc;
+		Sets q(graph, path->head());
+		{
+			typename Strategy2Pheet::Environment env;
+			Strategy2MspTask<Strategy2Pheet> msp(graph, path, &q, pc);
+			msp();
+		}
+		return q.shortest_paths();
+	}
+
+private:
+	Graph const* graph;
+	PathPtr const path;
+};
+
+typedef ::testing::Types<SequentialTest, StrategyTest, Strategy2Test> TestTypes;
 TYPED_TEST_CASE(TESTCASE, TestTypes);
 
 template <typename T>
