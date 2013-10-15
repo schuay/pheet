@@ -45,22 +45,22 @@ public:
 	typedef Pheet::WithScheduler<SynchroneousScheduler> SyncPheet;
 
 	SequentialTest(Graph const* graph,
-	               PathPtr const path)
-		: graph(graph), path(path) {
+	               PathPtr const start)
+		: graph(graph), start(start) {
 	}
 
 	ShortestPaths*
 	operator()() {
 		MspPerformanceCounters<SyncPheet> pc;
-		Sets q(graph, path->head());
-		SequentialMsp<SyncPheet> msp(graph, path, &q, pc);
+		Sets q(graph, start->head());
+		SequentialMsp<SyncPheet> msp(graph, start, &q, pc);
 		msp();
 		return q.shortest_paths();
 	}
 
 private:
 	Graph const* graph;
-	PathPtr const path;
+	PathPtr const start;
 };
 
 class StrategyTest
@@ -70,17 +70,17 @@ public:
 	DistKPheet;
 
 	StrategyTest(Graph const* graph,
-	             PathPtr const path)
-		: graph(graph), path(path) {
+	             PathPtr const start)
+		: graph(graph), start(start) {
 	}
 
 	ShortestPaths*
 	operator()() {
 		MspPerformanceCounters<DistKPheet> pc;
-		Sets q(graph, path->head());
+		Sets q(graph, start->head());
 		{
 			typename DistKPheet::Environment env;
-			StrategyMspTask<DistKPheet> msp(graph, path, &q, pc);
+			StrategyMspTask<DistKPheet> msp(graph, start, &q, pc);
 			msp();
 		}
 		return q.shortest_paths();
@@ -88,7 +88,7 @@ public:
 
 private:
 	Graph const* graph;
-	PathPtr const path;
+	PathPtr const start;
 };
 
 class Strategy2Test
@@ -98,17 +98,17 @@ public:
 	Strategy2Pheet;
 
 	Strategy2Test(Graph const* graph,
-	              PathPtr const path)
-		: graph(graph), path(path) {
+	              PathPtr const start)
+		: graph(graph), start(start) {
 	}
 
 	ShortestPaths*
 	operator()() {
 		MspPerformanceCounters<Strategy2Pheet> pc;
-		Sets q(graph, path->head());
+		Sets q(graph, start->head());
 		{
 			typename Strategy2Pheet::Environment env;
-			Strategy2MspTask<Strategy2Pheet> msp(graph, path, &q, pc);
+			Strategy2MspTask<Strategy2Pheet> msp(graph, start, &q, pc);
 			msp();
 		}
 		return q.shortest_paths();
@@ -116,7 +116,7 @@ public:
 
 private:
 	Graph const* graph;
-	PathPtr const path;
+	PathPtr const start;
 };
 
 typedef ::testing::Types<SequentialTest, StrategyTest, Strategy2Test> TestTypes;
