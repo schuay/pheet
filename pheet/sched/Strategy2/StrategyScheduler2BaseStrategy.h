@@ -25,17 +25,17 @@ public:
 	{
 	}
 
-	StrategyScheduler2BaseStrategy(Self const& other)
+	StrategyScheduler2BaseStrategy(Self const&)
 	{
 	}
 
-	StrategyScheduler2BaseStrategy(Self&& other)
+	StrategyScheduler2BaseStrategy(Self&&)
 	{
 	}
 
 	virtual ~StrategyScheduler2BaseStrategy() {}
 
-	Self& operator=(Self&& other) {
+	Self& operator=(Self&&) {
 	}
 
 private:
