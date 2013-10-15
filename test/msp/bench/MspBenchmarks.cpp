@@ -8,9 +8,11 @@
 
 #include "MspBenchmark.h"
 #include "pheet/sched/BStrategy/BStrategyScheduler.h"
+#include "pheet/sched/Strategy2/StrategyScheduler2.h"
 #include "pheet/sched/Synchroneous/SynchroneousScheduler.h"
 #include "Sequential/SequentialMsp.h"
 #include "Strategy/StrategyMspTask.h"
+#include "Strategy2/Strategy2MspTask.h"
 
 namespace
 {
@@ -54,8 +56,19 @@ run_benchmarks(BenchOpts const& opts)
 			}
 		}
 
+		if (opts.strategy2) {
+			for (auto & it : opts.ncpus) {
+				for (int i = 0; i < opts.repetitions; i++) {
+					::run_algorithm < Pheet::WithScheduler<StrategyScheduler2>, Strategy2MspTask > (g, src, it);
+
+				}
+			}
+		}
+
 		delete g;
 	}
+
+
 }
 
 } /* namespace pheet */
