@@ -7,8 +7,6 @@
 #ifndef STRATEGYMSPSTRATEGY_H_
 #define STRATEGYMSPSTRATEGY_H_
 
-#include <vector>
-
 #include "lib/ShortestPath/Path.h"
 
 namespace pheet
@@ -28,7 +26,6 @@ class StrategyMspStrategy : public Pheet::Environment::BaseStrategy
 public:
 	typedef StrategyMspStrategy<Pheet> Self;
 	typedef typename Pheet::Environment::BaseStrategy BaseStrategy;
-	typedef std::vector<int> Weights;
 
 	StrategyMspStrategy(sp::PathPtr path);
 	StrategyMspStrategy(Self& other);
