@@ -428,6 +428,12 @@ private:
 			next = b;
 			b = b->get_prev();
 		}
+		while(b != nullptr && b->empty()) {
+			Block* p = b->get_prev();
+			b->reset();
+			// No need to update pointers, will be corrected when linking in block anyway
+			b = p;
+		}
 
 		if(next == nullptr) {
 			bottom_block_shared = block;
