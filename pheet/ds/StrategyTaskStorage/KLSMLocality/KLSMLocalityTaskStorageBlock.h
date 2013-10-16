@@ -269,7 +269,7 @@ public:
 	template <class Place, class Hashtable>
 	void merge_into(Self* left, Self* right, Place* local_place, Hashtable& frame_regs) {
 		pheet_assert(filled.load(std::memory_order_relaxed) == 0);
-		pheet_assert(left->max_level >= right->max_level);
+		pheet_assert((left->max_level + 1) >= right->max_level);
 		pheet_assert(left->in_use);
 		pheet_assert(right->in_use);
 		pheet_assert(!left->empty());

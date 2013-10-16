@@ -544,7 +544,7 @@ private:
 		}
 
 		while(prev != nullptr && !merged->empty() &&
-				(merged->get_level() >= prev->get_level())) {
+				(merged->get_level() >= prev->get_level() || merged->get_max_level() > prev->get_max_level())) {
 			last_merge = prev;
 
 			pheet_assert(!last_merge->empty());
