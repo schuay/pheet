@@ -9,6 +9,8 @@
 
 #include "ParetoLocalityTaskStorageItem.h"
 
+#include "pheet/misc/type_traits.h"
+
 namespace pheet
 {
 
@@ -84,7 +86,7 @@ typename ParetoLocalityTaskStoragePlace<Pheet, TaskStorage, ParentTaskStoragePla
 ParetoLocalityTaskStoragePlace<Pheet, TaskStorage, ParentTaskStoragePlace, Strategy>::
 steal(BaseItem* boundary)
 {
-
+	return nullable_traits<T>::null_value;
 }
 
 template < class Pheet,
