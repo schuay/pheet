@@ -38,20 +38,29 @@ public:
 	T steal(BaseItem* boundary, procs_t place_id);
 
 	static void print_name();
+
+private:
+	ParentTaskStorage* parent;
+	std::atomic<Place*>* places;
 };
 
 template <class Pheet, class Strategy>
 ParetoLocalityTaskStorage<Pheet, Strategy>::
 ParetoLocalityTaskStorage(ParentTaskStorage* parent)
+	: parent(parent)
 {
-
+	procs_t num_places = Pheet::get_num_places();
+	places = new std::atomic<Place*>[num_places];
+	for (procs_t i = 0; i < num_places; ++i) {
+		places[i].store(nullptr, std::memory_order_relaxed);
+	}
 }
 
 template <class Pheet, class Strategy>
 ParetoLocalityTaskStorage<Pheet, Strategy>::
 ~ParetoLocalityTaskStorage()
 {
-
+	delete[] places;
 }
 
 template <class Pheet, class Strategy>
