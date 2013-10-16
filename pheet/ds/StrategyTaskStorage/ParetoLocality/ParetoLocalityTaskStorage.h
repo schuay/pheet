@@ -37,10 +37,7 @@ public:
 	 */
 	T steal(BaseItem* boundary, procs_t place_id);
 
-	static void print_name() {
-		std::cout << "ParetoLocalityTaskStorage";
-	}
-
+	static void print_name();
 };
 
 template <class Pheet, class Strategy>
@@ -80,6 +77,15 @@ steal(BaseItem* boundary, procs_t place_id)
 {
 	return nullptr;
 }
+
+template <class Pheet, class Strategy>
+void
+ParetoLocalityTaskStorage<Pheet, Strategy>::
+print_name()
+{
+	std::cout << "ParetoLocalityTaskStorage";
+}
+
 
 } /* namespace pheet */
 
