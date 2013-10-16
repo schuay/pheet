@@ -424,7 +424,7 @@ private:
 		Block* next = nullptr;
 		Block* b = bottom_block_shared;
 
-		while(b != nullptr && block->get_max_level() > b->get_max_level()) {
+		while(b != nullptr && block->get_max_level() > b->get_max_level() && (block->get_level() > b->get_level() || b->empty())) {
 			next = b;
 			b = b->get_prev();
 		}
@@ -624,7 +624,7 @@ private:
 		// Only do this if merge is actually required
 		pheet_assert(block->get_prev() != nullptr &&
 				(block->get_level() >= block->get_prev()->get_level() ||
-						block->get_max_level() == block->get_prev()->get_max_level()));
+						block->get_max_level() >= block->get_prev()->get_max_level()));
 
 		pheet_assert(bottom_block_shared->get_next() == nullptr);
 		pheet_assert(top_block_shared->get_prev() == nullptr);
@@ -638,7 +638,7 @@ private:
 		pheet_assert(block == last_merge->get_next());
 		// Choose a block big enough to fit data of both blocks, but never smaller than the smaller of
 		// the two blocks (No point in using a smaller block, larger is definitely free)
-		Block* merged = find_free_block(std::max(block->get_level() + 1, std::max(last_merge->get_level() + 1, block->get_max_level())));
+		Block* merged = find_free_block(std::max(std::max(block->get_level() + 1, last_merge->get_level() + 1), std::min(block->get_max_level(), last_merge->get_max_level())));
 		merged->merge_into(last_merge, block, this, frame_regs);
 		merged->mark_in_use();
 		pheet_assert(merged->get_filled() <= last_merge->get_filled() + block->get_filled());
@@ -657,26 +657,26 @@ private:
 				(merged->get_level() >= prev->get_level() || merged->get_max_level() == prev->get_max_level())) {
 			last_merge = prev;
 
-			pheet_assert(!last_merge->empty());
+			if(!last_merge->empty()) {
+				// Only merge if the other block is not empty
+				// Each subsequent merge takes a block one greater than the previous one to ensure we don't run out of blocks
+				Block* merged2 = find_free_block(merged->get_max_level() + 1);
+				merged2->merge_into(last_merge, merged, this, frame_regs);
 
-			// Only merge if the other block is not empty
-			// Each subsequent merge takes a block one greater than the previous one to ensure we don't run out of blocks
-			Block* merged2 = find_free_block(merged->get_max_level() + 1);
-			merged2->merge_into(last_merge, merged, this, frame_regs);
+				if(gli == nullptr) {
+					gli = last_merge->get_global_list_item();
+				}
+				pheet_assert(merged2->get_filled() <= last_merge->get_filled() + merged->get_filled());
+				pheet_assert(merged2->get_owned_filled() <= last_merge->get_owned_filled() + merged->get_owned_filled());
+				pheet_assert(merged2->get_k() >= std::min(last_merge->get_k() - merged->get_owned_filled(), merged->get_k()));
 
-			if(gli == nullptr) {
-				gli = last_merge->get_global_list_item();
+				// The merged block was never made visible, we can reset it at any time
+				pheet_assert(merged != bottom_block);
+				pheet_assert(merged != bottom_block_shared);
+				merged->reset();
+				merged = merged2;
+				merged->mark_in_use();
 			}
-			pheet_assert(merged2->get_filled() <= last_merge->get_filled() + merged->get_filled());
-			pheet_assert(merged2->get_owned_filled() <= last_merge->get_owned_filled() + merged->get_owned_filled());
-			pheet_assert(merged2->get_k() >= std::min(last_merge->get_k() - merged->get_owned_filled(), merged->get_k()));
-
-			// The merged block was never made visible, we can reset it at any time
-			pheet_assert(merged != bottom_block);
-			pheet_assert(merged != bottom_block_shared);
-			merged->reset();
-			merged = merged2;
-			merged->mark_in_use();
 
 			prev = last_merge->get_prev();
 			pheet_assert(prev == nullptr || prev->get_next() == last_merge);
