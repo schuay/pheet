@@ -765,6 +765,10 @@ private:
 			b = b->get_prev();
 		}
 
+		if(best_block == nullptr) {
+			remaining_k = std::numeric_limits<size_t>::max();
+		}
+
 		best_block_known = true;
 	}
 
