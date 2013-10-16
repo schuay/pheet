@@ -38,7 +38,7 @@ public:
 	T steal(BaseItem* boundary, procs_t place_id);
 
 	static void print_name() {
-		std::cout << "LSMLocalityTaskStorage";
+		std::cout << "ParetoLocalityTaskStorage";
 	}
 
 };
