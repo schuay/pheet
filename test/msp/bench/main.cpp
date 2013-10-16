@@ -59,14 +59,16 @@ parse(char const* name,
 static void
 usage()
 {
-	std::cerr << "\n msp-bench [-r] [-n...] [--seq] [--strategy] [DIRECTORY...] [FILE...]\n\n"
+	std::cerr <<
+	          "\n msp-bench [-r] [-n...] [--seq] [--strategy] [--strategy2] [DIRECTORY...] [FILE...]\n\n"
 	          << "Benchmark multi-objective shortest path algorithms\n"
 	          << "PARAMETERS:\n"
 	          << "-r\t\t number of repetitions to be used for each benchmark\n"
 	          << "-n\t\t number of processors to be used for benchmarking\n"
 	          << "--seq\t\t benchmark the sequential algorithm."
 	          << " Benchmark will be run for n=1.\n"
-	          << "--strategy\t benchmark the parallel algorithm.\n\n";
+	          << "--strategy\t benchmark the parallel algorithm.\n\n"
+	          << "--strategy2\t benchmark the parallel algorithm (Strategy2 scheduler variant).\n\n";
 	exit(EXIT_FAILURE);
 }
 
@@ -90,11 +92,13 @@ main(int argc, char** argv)
 
 	int sequential = 0;
 	int strategy = 0;
+	int strategy2 = 0;
 
 	while (1) {
 		static struct option long_options[] = {
 			{"seq",      no_argument,       &sequential, 1},
 			{"strategy", no_argument,       &strategy,   1},
+			{"strategy2", no_argument,       &strategy2,   1},
 			{"ncpus",    required_argument, 0,           'n'},
 			{"reps",     required_argument, 0,           'r'},
 			{0, 0, 0, 0}
@@ -139,9 +143,11 @@ main(int argc, char** argv)
 
 	opts.sequential = (sequential != 0);
 	opts.strategy   = (strategy != 0);
+	opts.strategy2   = (strategy2 != 0);
 
-	if (opts.strategy && opts.ncpus.size() == 0) {
-		std::cerr << "Number of processors needs to be specified when --strategy is given.\n";
+	if ((opts.strategy || opts.strategy2) && opts.ncpus.size() == 0) {
+		std::cerr <<
+		          "Number of processors needs to be specified when --strategy or --strategy2 is given.\n";
 		usage();
 	}
 
