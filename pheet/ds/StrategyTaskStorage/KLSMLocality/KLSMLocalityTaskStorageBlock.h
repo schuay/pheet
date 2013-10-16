@@ -111,6 +111,7 @@ public:
 	 */
 	void added_local_item(size_t item_k) {
 		pheet_assert(!is_global());
+		pheet_assert(!empty());
 		if(item_k < k)
 			k = item_k;
 	}
@@ -310,7 +311,7 @@ public:
 			else if(l_item->strategy.prioritize(
 					r_item->strategy)) {
 				if(r_item->owner == local_place) {
-					if(global) {
+					if(!global) {
 						++merged_local;
 						size_t k = r_item->strategy.get_k();
 						if(k < min_k) min_k = k;
@@ -326,7 +327,7 @@ public:
 			}
 			else {
 				if(l_item->owner == local_place) {
-					if(global) {
+					if(!global) {
 						++merged_local;
 						size_t k = l_item->strategy.get_k();
 						if(k < min_k) min_k = k;

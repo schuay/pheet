@@ -49,7 +49,7 @@ public:
 	 best_block(nullptr), best_block_known(true),
 	 needs_rescan(false),
 	 current_frame(&(frames.acquire_item())),
-	 remaining_k(std::numeric_limits<size_t>::max()), enforce_global(false), tasks(0) {
+	 remaining_k(std::numeric_limits<size_t>::max()), tasks(0) {
 
 		// Get central task storage at end of initialization (not before,
 		// since this place becomes visible as soon as we retrieve it)
@@ -352,9 +352,9 @@ private:
 	}
 
 	void add_to_global_list() {
-		enforce_global = false;
-		Block* begin = top_block.load(std::memory_order_relaxed);
-		Block* b = begin;
+		process_global_list();
+
+		Block* b = top_block.load(std::memory_order_relaxed);
 		// Some blocks need to be made global (starting with oldest block)
 
 		GlobalListItem* gli_first = nullptr;
@@ -362,19 +362,24 @@ private:
 
 		// First construct a list of GlobalListItems locally
 		while(b != nullptr) {
-			GlobalListItem* gli = create_global_list_item();
-			gli->update_block(b);
+			if(b->get_owned_filled() != 0) {
+				GlobalListItem* gli = create_global_list_item();
+				gli->update_block(b);
 
-			pc.num_global_blocks.incr();
-			if(gli_last == nullptr) {
-				gli_first = gli;
-				gli_last = gli;
+				pc.num_global_blocks.incr();
+				if(gli_last == nullptr) {
+					gli_first = gli;
+					gli_last = gli;
+				}
+				else {
+					gli_last->local_link(gli);
+					gli_last = gli;
+				}
+				b->mark_newly_global(gli);
 			}
 			else {
-				gli_last->local_link(gli);
-				gli_last = gli;
+				b->mark_newly_global(nullptr);
 			}
-			b->mark_newly_global(gli);
 			b = b->get_next();
 		}
 
@@ -388,18 +393,18 @@ private:
 		}
 
 		// Now add each block to shared list
-		b = begin;
+		b = top_block.load(std::memory_order_relaxed);
 		while(b != nullptr) {
 			Block* next = b->get_next();
-			// To ensure all tasks remain visible to other threads
-			top_block.store(next, std::memory_order_relaxed);
+			pheet_assert(next == nullptr || !next->reusable());
+			pheet_assert(next != nullptr || b == bottom_block);
 
 			link_to_shared_list(b);
 			b = next;
 		}
 
 		// Now find new block for local list and reset local list
-		Block* new_bb = find_free_block(blocks.size() >> 2);
+		Block* new_bb = find_free_block((blocks.size() >> 2) - 1);
 		new_bb->mark_in_use();
 		pheet_assert(new_bb->get_prev() == nullptr);
 		pheet_assert(new_bb->get_next() == nullptr);
@@ -526,6 +531,12 @@ private:
 		Block* prev = last_merge->get_prev();
 		pheet_assert(prev == nullptr || prev->get_next() == last_merge);
 
+		// Blocks might already have global list items when they are being prepared for publishing
+		GlobalListItem* gli = block->get_global_list_item();
+		if(gli == nullptr) {
+			gli = last_merge->get_global_list_item();
+		}
+
 		while(prev != nullptr && !merged->empty() &&
 				(merged->get_level() >= prev->get_level())) {
 			last_merge = prev;
@@ -535,8 +546,12 @@ private:
 			// Only merge if the other block is not empty
 			// Each subsequent merge takes a block one greater than the previous one to ensure we don't run out of blocks
 			Block* merged2 = find_free_block(merged->get_max_level() + 1);
+			pheet_assert(merged2 != bottom_block_shared);
 			merged2->merge_into(last_merge, merged, this, frame_regs);
 
+			if(gli == nullptr) {
+				gli = last_merge->get_global_list_item();
+			}
 			pheet_assert(merged2->get_filled() <= last_merge->get_filled() + merged->get_filled());
 			pheet_assert(merged2->get_owned_filled() <= last_merge->get_owned_filled() + merged->get_owned_filled());
 			pheet_assert(merged2->get_k() >= std::min(last_merge->get_k() - merged->get_owned_filled(), merged->get_k()));
@@ -578,6 +593,11 @@ private:
 			pre_merge->set_prev(merged);
 		}
 
+		// Now we need to update the global list item if necessary
+		if(gli != nullptr) {
+			gli->update_block(merged);
+		}
+
 		// Now reset old blocks
 		while(last_merge != pre_merge) {
 			Block* next = last_merge->get_next();
@@ -586,12 +606,9 @@ private:
 				best_block_known = false;
 			}
 			pheet_assert(last_merge != bottom_block);
+			pheet_assert(last_merge != bottom_block_shared);
 			last_merge->reset();
 			last_merge = next;
-		}
-
-		if(merged->get_owned_filled() > merged->get_k()) {
-			enforce_global = true;
 		}
 
 		return merged;
@@ -717,14 +734,14 @@ private:
 			b = b->get_prev();
 		} while(b != nullptr);
 
-		b = top_block_shared;
+		b = bottom_block_shared;
 		while(b != nullptr) {
 			if(!b->empty() &&
 					(best_block == nullptr ||
 						b->top()->strategy.prioritize(best_block->top()->strategy))) {
 				best_block = b;
 			}
-			b = b->get_next();
+			b = b->get_prev();
 		}
 
 		best_block_known = true;
@@ -769,13 +786,31 @@ private:
 				}
 			}
 			else if(prev != nullptr && b->get_level() >= prev->get_level()) {
+				pheet_assert(remaining_k >= b->get_owned_filled());
+				remaining_k = std::min(remaining_k - b->get_owned_filled(), b->get_k());
 				b = merge(b);
 
-				// Repeat cycle since block might now be empty
-				pheet_assert(b->get_next() == next);
-				prev = b->get_prev();
+				if(b->empty() && next != nullptr) {
+					prev = b->get_prev();
+					next->set_prev(prev);
+					if(prev != nullptr) {
+						// No need to order, we didn't change the block
+						prev->set_next(next);
+					}
+					else {
+						// No need to order, we didn't change the block
+						top_block.store(next, std::memory_order_relaxed);
+					}
+					b->reset();
+					b = next;
+				}
+				else {
+					prev = b;
+					b = next;
+				}
 			}
 			else {
+				pheet_assert(remaining_k >= b->get_owned_filled());
 				remaining_k = std::min(remaining_k - b->get_owned_filled(), b->get_k());
 
 				pheet_assert(next == nullptr || next->get_prev() == b);
@@ -783,6 +818,7 @@ private:
 				b = next;
 			}
 		} while(b != nullptr);
+		pheet_assert(prev == bottom_block);
 
 		prev = nullptr;
 		b = top_block_shared;
@@ -795,8 +831,10 @@ private:
 			Block* next = b->get_next();
 			if(b->empty()) {
 				if(next != nullptr) {
+					pheet_assert(!next->reusable());
 					next->set_prev(prev);
 					if(prev != nullptr) {
+						pheet_assert(!prev->reusable());
 						prev->set_next(next);
 					}
 					else {
@@ -804,6 +842,7 @@ private:
 					}
 				}
 				else if(prev != nullptr) {
+					pheet_assert(!prev->reusable());
 					prev->set_next(nullptr);
 					pheet_assert(bottom_block_shared == b);
 					bottom_block_shared = prev;
@@ -836,10 +875,6 @@ private:
 
 		if(!best_block_known) {
 			find_best_block();
-		}
-
-		if(enforce_global) {
-			add_to_global_list();
 		}
 	}
 
@@ -891,7 +926,6 @@ private:
 //	Block* best_block;
 
 	size_t remaining_k;
-	bool enforce_global;
 	std::atomic<size_t> tasks;
 
 	GlobalListItem* global_list;
