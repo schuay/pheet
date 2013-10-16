@@ -454,7 +454,7 @@ private:
 		else {
 			b->set_next(block);
 
-			if(b->get_level() <= block->get_level() || b->get_max_level() == block->get_max_level()) {
+			if(b->get_level() <= block->get_level() || b->get_max_level() <= block->get_max_level()) {
 				merge_shared(block);
 			}
 		}
@@ -474,18 +474,24 @@ private:
 			// Lazy merging, blocks will only be merged when looking for the best block
 			// or when running out of blocks to use
 
+			if(bb->get_prev() != nullptr && bb->get_prev()->get_max_level() == bb->get_max_level()) {
+				scan();
+				bb = bottom_block;
+			}
+
 			size_t l = bb->get_level();
 			size_t offset = l << 2;
 
 			Block* new_bb = nullptr;
-			size_t found = 0;
+//			size_t found = 0;
 			for(int i = 0; i < 4; ++i) {
 				if(blocks[offset + i]->reusable()) {
-					++found;
+//					++found;
 					new_bb = blocks[offset + i];
+					break;
 				}
 			}
-			if(found == 1) {
+/*			if(found == 1) {
 				// Can't take the last block or we might fail when trying to merge blocks
 				// We need to scan existing blocks to free more blocks
 				scan();
@@ -499,7 +505,7 @@ private:
 					}
 				}
 			}
-			pheet_assert(found != 0);
+			pheet_assert(found != 0);*/
 
 			new_bb->mark_in_use();
 			new_bb->set_prev(bb);
@@ -570,6 +576,7 @@ private:
 			// The merged block was never made visible, we can reset it at any time
 			pheet_assert(merged != bottom_block);
 			pheet_assert(merged != bottom_block_shared);
+			pc.num_merges.add(merged->get_filled());
 			merged->reset();
 			merged = merged2;
 			merged->mark_in_use();
@@ -616,6 +623,7 @@ private:
 				best_block = nullptr;
 				best_block_known = false;
 			}
+			pc.num_merges.add(last_merge->get_filled());
 			pheet_assert(last_merge != bottom_block);
 			pheet_assert(last_merge != bottom_block_shared);
 			last_merge->reset();
@@ -678,6 +686,7 @@ private:
 				// The merged block was never made visible, we can reset it at any time
 				pheet_assert(merged != bottom_block);
 				pheet_assert(merged != bottom_block_shared);
+				pc.num_merges.add(merged->get_filled());
 				merged->reset();
 				merged = merged2;
 				merged->mark_in_use();
@@ -722,6 +731,7 @@ private:
 				best_block = nullptr;
 				best_block_known = false;
 			}
+			pc.num_merges.add(last_merge->get_filled());
 			pheet_assert(last_merge != bottom_block_shared);
 			last_merge->reset();
 			last_merge = next;

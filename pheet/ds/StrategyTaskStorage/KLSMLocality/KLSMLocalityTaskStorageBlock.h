@@ -216,19 +216,19 @@ public:
 		return f == 0;
 	}
 
-	size_t get_filled() {
+	size_t get_filled() const {
 		return filled.load(std::memory_order_relaxed);
 	}
 
-	size_t acquire_filled() {
+	size_t acquire_filled() const {
 		return filled.load(std::memory_order_acquire);
 	}
 
-	size_t get_owned_filled() {
+	size_t get_owned_filled() const {
 		return owned_filled.load(std::memory_order_acquire);
 	}
 
-	size_t acquire_owned_filled() {
+	size_t acquire_owned_filled() const {
 		return owned_filled.load(std::memory_order_acquire);
 	}
 

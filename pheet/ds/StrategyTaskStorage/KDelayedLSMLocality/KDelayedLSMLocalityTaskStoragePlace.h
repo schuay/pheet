@@ -508,6 +508,7 @@ private:
 
 				// The merged block was never made visible, we can reset it at any time
 				pheet_assert(merged != bottom_block);
+				pc.num_merges.add(merged->get_filled());
 				merged->reset();
 				merged = merged2;
 				merged->mark_in_use();
@@ -544,6 +545,7 @@ private:
 		// Now reset old blocks
 		while(last_merge != pre_merge) {
 			Block* next = last_merge->get_next();
+			pc.num_merges.add(last_merge->get_filled());
 			last_merge->reset();
 			last_merge = next;
 		}

@@ -24,7 +24,8 @@ public:
 	 num_global_blocks(other.num_global_blocks),
 	 num_inspected_global_items(other.num_inspected_global_items),
 	 num_spied_tasks(other.num_spied_tasks),
-	 num_spied_global_tasks(other.num_spied_global_tasks) {}
+	 num_spied_global_tasks(other.num_spied_global_tasks),
+	 num_merges(other.num_merges) {}
 
 	~Strategy2BaseTaskStoragePerformanceCounters() {}
 
@@ -34,6 +35,7 @@ public:
 		BasicPerformanceCounter<Pheet, task_storage_count_inspected_global_items>::print_header("num_inspected_global_items\t");
 		BasicPerformanceCounter<Pheet, task_storage_count_spied_tasks>::print_header("num_spied_tasks\t");
 		BasicPerformanceCounter<Pheet, task_storage_count_spied_global_tasks>::print_header("num_spied_global_tasks\t");
+		BasicPerformanceCounter<Pheet, task_storage_count_merges>::print_header("num_merges\t");
 	}
 
 	inline void print_values() {
@@ -42,6 +44,7 @@ public:
 		num_inspected_global_items.print("%d\t");
 		num_spied_tasks.print("%d\t");
 		num_spied_global_tasks.print("%d\t");
+		num_merges.print("%d\t");
 	}
 
 	BasicPerformanceCounter<Pheet, task_storage_count_blocks_created> num_blocks_created;
@@ -49,6 +52,7 @@ public:
 	BasicPerformanceCounter<Pheet, task_storage_count_inspected_global_items> num_inspected_global_items;
 	BasicPerformanceCounter<Pheet, task_storage_count_spied_tasks> num_spied_tasks;
 	BasicPerformanceCounter<Pheet, task_storage_count_spied_global_tasks> num_spied_global_tasks;
+	BasicPerformanceCounter<Pheet, task_storage_count_merges> num_merges;
 
 };
 
