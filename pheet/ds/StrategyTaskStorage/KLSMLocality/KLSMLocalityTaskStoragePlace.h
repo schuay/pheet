@@ -399,7 +399,12 @@ private:
 			pheet_assert(next == nullptr || !next->reusable());
 			pheet_assert(next != nullptr || b == bottom_block);
 
-			link_to_shared_list(b);
+			if(!b->empty()) {
+				link_to_shared_list(b);
+			} else {
+				top_block.store(next, std::memory_order_relaxed);
+				b->reset();
+			}
 			b = next;
 		}
 
