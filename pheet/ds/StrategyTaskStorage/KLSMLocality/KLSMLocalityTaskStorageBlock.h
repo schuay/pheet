@@ -240,7 +240,6 @@ public:
 	}
 
 	void set_prev(Self* prev) {
-		pheet_assert(prev == nullptr || prev->max_level >= max_level);
 		this->prev = prev;
 	}
 
@@ -253,12 +252,10 @@ public:
 	}
 
 	void set_next(Self* next) {
-		pheet_assert(next == nullptr || next->max_level <= max_level);
 		this->next.store(next, std::memory_order_relaxed);
 	}
 
 	void release_next(Self* next) {
-		pheet_assert(next == nullptr || next->max_level <= max_level);
 		this->next.store(next, std::memory_order_release);
 	}
 
