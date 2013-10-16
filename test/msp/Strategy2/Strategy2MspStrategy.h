@@ -28,7 +28,6 @@ public:
 	Strategy2MspStrategy(Self&& other);
 
 	inline bool prioritize(Self& other) const;
-	inline bool forbid_call_conversion() const;
 	inline bool dead_task();
 	inline bool can_call(TaskStoragePlace*);
 
@@ -65,14 +64,6 @@ Strategy2MspStrategy<Pheet, TaskStorageT>::
 prioritize(Self& other) const
 {
 	return (path->weight_sum() < other.path->weight_sum());
-}
-
-template <class Pheet, template <class, class> class TaskStorageT>
-inline bool
-Strategy2MspStrategy<Pheet, TaskStorageT>::
-forbid_call_conversion() const
-{
-	return true;
 }
 
 template <class Pheet, template <class, class> class TaskStorageT>
