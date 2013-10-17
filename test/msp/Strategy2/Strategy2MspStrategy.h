@@ -23,6 +23,7 @@ public:
 	typedef typename TaskStorage::Place TaskStoragePlace;
 	typedef typename Pheet::Place Place;
 
+	Strategy2MspStrategy();
 	Strategy2MspStrategy(sp::PathPtr path);
 	Strategy2MspStrategy(Self& other);
 	Strategy2MspStrategy(Self&& other);
@@ -31,9 +32,17 @@ public:
 	inline bool dead_task();
 	inline bool can_call(TaskStoragePlace*);
 
+	Self& operator=(Self && other);
+
 private:
 	sp::PathPtr path;
 };
+
+template <class Pheet, template <class, class> class TaskStorageT>
+Strategy2MspStrategy<Pheet, TaskStorageT>::
+Strategy2MspStrategy()
+{
+}
 
 template <class Pheet, template <class, class> class TaskStorageT>
 Strategy2MspStrategy<Pheet, TaskStorageT>::
@@ -80,6 +89,15 @@ Strategy2MspStrategy<Pheet, TaskStorageT>::
 can_call(TaskStoragePlace*)
 {
 	return false;
+}
+
+template <class Pheet, template <class, class> class TaskStorageT>
+typename Strategy2MspStrategy<Pheet, TaskStorageT>::Self&
+Strategy2MspStrategy<Pheet, TaskStorageT>::
+operator=(Strategy2MspStrategy<Pheet, TaskStorageT>::Self && other)
+{
+	path = other.path;
+	return *this;
 }
 
 

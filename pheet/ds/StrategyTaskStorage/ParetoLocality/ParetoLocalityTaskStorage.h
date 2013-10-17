@@ -66,6 +66,7 @@ ParetoLocalityTaskStorage<Pheet, Strategy>::
 ~ParetoLocalityTaskStorage()
 {
 	delete[] places;
+	singleton = nullptr;
 }
 
 template <class Pheet, class Strategy>
@@ -129,6 +130,7 @@ steal(BaseItem* boundary, procs_t place_id)
 	pheet_assert(place == places[Pheet::get_place_id()]);
 
 	return place->steal(boundary);
+
 }
 
 template <class Pheet, class Strategy>
@@ -139,6 +141,9 @@ print_name()
 	std::cout << "ParetoLocalityTaskStorage";
 }
 
+template <class Pheet, class Strategy>
+std::atomic<ParetoLocalityTaskStorage<Pheet, Strategy>*>
+ParetoLocalityTaskStorage<Pheet, Strategy>::singleton(nullptr);
 
 } /* namespace pheet */
 

@@ -80,7 +80,6 @@ operator()()
 
 	/* Insert into the Pareto set. Mark dominated paths and spawn tasks for
 	 * newly added paths. */
-
 	sets->insert(d.candidates, d.added, d.removed);
 
 	for (sp::PathPtr & p : d.removed) {
