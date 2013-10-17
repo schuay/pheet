@@ -41,6 +41,9 @@ struct KDelayedLSMLocalityTaskStorageItem : public BaseItem {
 			this->taken.store(true, std::memory_order_relaxed);
 			return this->data;
 		}
+		else if(!this->taken.load(std::memory_order_relaxed)) {
+			this->taken.store(true, std::memory_order_relaxed);
+		}
 		return nullable_traits<T>::null_value;
 	}
 
