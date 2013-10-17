@@ -18,6 +18,8 @@
 #include <pheet/memory/BlockItemReuse/BlockItemReuseMemoryManager.h>
 
 #include <limits>
+#include <unordered_map>
+#include <tuple>
 
 namespace pheet {
 
@@ -131,6 +133,10 @@ public:
 			}
 			bottom_block = next;
 		}
+		pheet_assert(item_locations.find(item) == item_locations.end());
+		std::tuple<DataBlock*, size_t>& il = item_locations[item];
+		std::get<0>(il) = bottom_block;
+		std::get<1>(il) = b;
 
 		// Put item in block at position b
 		bottom_block->put(item, b);
@@ -185,7 +191,7 @@ public:
 			ret = db->get(b);
 			// Has item been taken? (Due to stealing or due to other execution orders for tasks
 			// with different strategies) If yes, skip task and continue
-			if(ret->taken.load(std::memory_order_acquire)) {
+			if(ret == nullptr || ret->taken.load(std::memory_order_acquire)) {
 				continue;
 			}
 
@@ -214,6 +220,9 @@ public:
 					bottom_block = db;
 					return ret_data;
 				}
+
+				// Make sure we don't encounter a reused variant of this item later again
+				db->put(nullptr, b);
 
 				// Need to reset bottom to make sure that top cannot overtake bottom
 				// (would be dangerous for push)
@@ -277,6 +286,14 @@ public:
 		return steal();
 	}
 
+	inline void drop_item(BaseItem* item) {
+		auto il = item_locations.find(item);
+		if(il != item_locations.end()) {
+			std::get<0>(il->second)->put(nullptr, std::get<1>(il->second));
+			item_locations.erase(il);
+		}
+	}
+
 	bool is_full() {
 		return false;
 	}
@@ -319,7 +336,7 @@ private:
 			BaseItem* ret = db->get(b);
 			// Has item been taken? (Due to stealing or due to other execution orders for tasks
 			// with different strategies) If yes, skip task and continue
-			if(!ret->taken.load(std::memory_order_relaxed)) {
+			if(ret != nullptr && !ret->taken.load(std::memory_order_relaxed)) {
 				return false;
 			}
 		}
@@ -420,8 +437,8 @@ private:
 		BaseItem* ret = db->direct_acquire(t - offset);
 
 		// Skip items that have been marked as taken
-		while(ret->taken.load(std::memory_order_acquire)) {
-			if(ret->task_storage == task_storage) {
+		while(ret == nullptr || ret->taken.load(std::memory_order_acquire)) {
+			if(ret != nullptr && ret->task_storage == task_storage) {
 				// If item from base task storage is taken there are no successors
 				return nullable_traits<T>::null_value;
 			}
@@ -568,6 +585,8 @@ private:
 	std::atomic<Self*> last_partner;
 
 	SchedulerPlace* scheduler_place;
+
+	std::unordered_map<BaseItem*, std::tuple<DataBlock*, size_t> > item_locations;
 };
 
 } /* namespace pheet */

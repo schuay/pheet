@@ -93,18 +93,6 @@ public:
 		return data[pos].load(std::memory_order_relaxed);
 	}
 
-	void pop() {
-		size_t f = filled.load(std::memory_order_relaxed);
-		pheet_assert(f > 0);
-		filled.store(f-1, std::memory_order_relaxed);
-		if(f-1 < (level_boundary >> 1)) {
-			pheet_assert(level > 0);
-			--level;
-			pheet_assert(level_boundary > 0);
-			level_boundary >>= 1;
-		}
-	}
-
 	/*
 	 * Scans the top tasks until either the block is empty or the top is not dead and not taken
 	 */
@@ -118,6 +106,9 @@ public:
 				if(item->strategy.dead_task()) {
 					// If we don't succeed someone else will, either way we won't execute the task
 					item->take_and_delete();
+					// Remove item from task storage to ensure it will not be encountered when reused
+					local_place->drop_item(item);
+
 					if(item->owner == local_place) {
 						pheet_assert(item->used_locally);
 						item->used_locally = false;
@@ -132,6 +123,9 @@ public:
 				}
 			}
 			else {
+				// Remove item from task storage to ensure it will not be encountered when reused
+				local_place->drop_item(item);
+
 				if(item->owner == local_place) {
 					pheet_assert(item->used_locally);
 					item->used_locally = false;
@@ -340,6 +334,8 @@ private:
 					break;
 				}
 			}
+			// Remove item from task storage to ensure it will not be encountered when reused
+			local_place->drop_item(item);
 			// Items will never be touched again, so remove reference
 			if(item->owner == local_place) {
 				pheet_assert(item->used_locally);

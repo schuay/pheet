@@ -115,6 +115,11 @@ public:
 		}
 	}
 
+	inline void drop_item(Item* item) {
+		// Drop item from parent task storage to ensure a reused version if the item will not be encountered
+		parent_place->drop_item(item);
+	}
+
 	T pop(BaseItem* boundary) {
 		Item* item = reinterpret_cast<Item*>(boundary);
 

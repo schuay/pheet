@@ -51,6 +51,17 @@ public:
 	}
 
 	bool is_reusable() const {
+/*		if(registered.load(std::memory_order_relaxed) == 0) {
+			pheet_assert(next.load(std::memory_order_relaxed) != nullptr);
+			return true;
+		}
+		Self* n = next.load(std::memory_order_relaxed);
+		if(n == nullptr) {
+			pheet_assert()
+			return false;
+		}*/
+
+
 		// TODO: switch to more sophisticated scheme where some empty items can be reused
 		// even if not seen by all threads
 		return registered.load(std::memory_order_relaxed) == 0 && next.load(std::memory_order_relaxed) != nullptr;
