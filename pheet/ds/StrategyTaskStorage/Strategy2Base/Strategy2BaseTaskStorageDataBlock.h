@@ -60,6 +60,7 @@ public:
 	 * Gets item without modifying index by offset
 	 */
 	BaseItem* direct_get(size_t pos) {
+		pheet_assert(pos < BlockSize);
 		return items[pos].load(std::memory_order_relaxed);
 	}
 
@@ -67,6 +68,7 @@ public:
 	 * Gets item without modifying index by offset
 	 */
 	BaseItem* direct_acquire(size_t pos) {
+		pheet_assert(pos < BlockSize);
 		return items[pos].load(std::memory_order_acquire);
 	}
 

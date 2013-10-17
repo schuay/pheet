@@ -164,9 +164,11 @@ public:
 				while(t != b) {
 					// Make sure top has not overtaken bottom
 					pheet_assert(((ptrdiff_t)(b - t)) > 0);
+					// Make sure all tasks in this range have really been taken
+					pheet_assert(all_taken_local(b, t));
 					// If we fail, some other thread will succeed
 					// If afterwards still t != b we can just CAS again
-					top.compare_exchange_weak(t, b, std::memory_order_relaxed);
+					top.compare_exchange_weak(t, b, std::memory_order_acq_rel);
 				}
 
 				return steal();
@@ -297,6 +299,33 @@ public:
 
 PerformanceCounters pc;
 private:
+	/*
+	 * Required for an assertion to make sure all tasks in this range are really taken
+	 */
+	bool all_taken_local(size_t b, size_t t) {
+		pheet_assert(((ptrdiff_t)(b - t)) >= 0);
+		DataBlock* db = bottom_block;
+
+		while(b != t) {
+			--b;
+
+			// Did we empty current block? If yes go to predecessor
+			if(!db->fits(b)) {
+				db = db->get_prev();
+				pheet_assert(db != nullptr);
+				pheet_assert(db->fits(b));
+			}
+
+			BaseItem* ret = db->get(b);
+			// Has item been taken? (Due to stealing or due to other execution orders for tasks
+			// with different strategies) If yes, skip task and continue
+			if(!ret->taken.load(std::memory_order_relaxed)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	/*
 	 * Tries to steal a single task from any other place. Places are selected semirandomly
 	 * Steal attempts for tasks stored in different task storages will trigger a steal

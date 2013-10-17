@@ -94,6 +94,7 @@ public:
 		Place* place = Pheet::get_place()->template get_task_storage<Strategy>();
 		// Place should be created if it does not exist
 		pheet_assert(place != nullptr);
+		pheet_assert(place == places[Pheet::get_place_id()]);
 
 		return place->steal(boundary);
 	}
