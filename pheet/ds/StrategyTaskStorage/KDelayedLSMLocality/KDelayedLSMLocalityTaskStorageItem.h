@@ -25,7 +25,14 @@ struct KDelayedLSMLocalityTaskStorageItem : public BaseItem {
 	 * Is only safe to be called if the thread owns the item or is registered to the frame
 	 */
 	bool is_taken() {
-		return last_phase.load(std::memory_order_acquire) != -1;
+		if(last_phase.load(std::memory_order_acquire) != -1) {
+			if(!this->taken.load(std::memory_order_relaxed)) {
+				// Helping scheme to make sure we encounter item as taken in the future
+				this->taken.store(true, std::memory_order_relaxed);
+			}
+			return true;
+		}
+		return false;
 	}
 
 	/*
