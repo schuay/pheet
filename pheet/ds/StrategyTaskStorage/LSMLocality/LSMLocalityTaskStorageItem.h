@@ -39,6 +39,7 @@ struct LSMLocalityTaskStorageItem : public BaseItem {
 		ptrdiff_t expected = -1;
 		if(last_phase.compare_exchange_strong(expected, frame.load(std::memory_order_relaxed)->get_take_phase(), std::memory_order_release, std::memory_order_acquire)) {
 			this->taken.store(true, std::memory_order_relaxed);
+			this->version.store(this->version.load(std::memory_order_relaxed) + 1, std::memory_order_relaxed);
 			return this->data;
 		}
 		else if(!this->taken.load(std::memory_order_relaxed)) {
@@ -55,6 +56,7 @@ struct LSMLocalityTaskStorageItem : public BaseItem {
 		ptrdiff_t expected = -1;
 		if(last_phase.compare_exchange_strong(expected, frame.load(std::memory_order_relaxed)->get_take_phase(), std::memory_order_release, std::memory_order_acquire)) {
 			this->taken.store(true, std::memory_order_relaxed);
+			this->version.store(this->version.load(std::memory_order_relaxed) + 1, std::memory_order_relaxed);
 
 			this->data.drop_item();
 		}

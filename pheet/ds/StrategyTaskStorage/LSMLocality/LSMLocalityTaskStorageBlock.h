@@ -106,8 +106,6 @@ public:
 				if(item->strategy.dead_task()) {
 					// If we don't succeed someone else will, either way we won't execute the task
 					item->take_and_delete();
-					// Remove item from task storage to ensure it will not be encountered when reused
-					local_place->drop_item(item);
 
 					if(item->owner == local_place) {
 						pheet_assert(item->used_locally);
@@ -123,9 +121,6 @@ public:
 				}
 			}
 			else {
-				// Remove item from task storage to ensure it will not be encountered when reused
-				local_place->drop_item(item);
-
 				if(item->owner == local_place) {
 					pheet_assert(item->used_locally);
 					item->used_locally = false;
@@ -231,6 +226,7 @@ public:
 			if(l_item == r_item) {
 				// Get rid of doubles. Might not recognize doubles if there are different tasks
 				// with exactly the same priority
+
 				if(r_item->owner == local_place) {
 					pheet_assert(r_item->used_locally);
 					r_item->used_locally = false;
@@ -334,8 +330,7 @@ private:
 					break;
 				}
 			}
-			// Remove item from task storage to ensure it will not be encountered when reused
-			local_place->drop_item(item);
+
 			// Items will never be touched again, so remove reference
 			if(item->owner == local_place) {
 				pheet_assert(item->used_locally);

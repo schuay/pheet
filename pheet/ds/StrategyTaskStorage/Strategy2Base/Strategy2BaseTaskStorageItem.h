@@ -19,7 +19,7 @@ struct Strategy2BaseTaskStorageBaseItem {
 	typedef TT T;
 
 	Strategy2BaseTaskStorageBaseItem()
-	:taken(true) {}
+	:taken(true), version(0) {}
 	~Strategy2BaseTaskStorageBaseItem() {}
 
 	TT data;
@@ -27,6 +27,7 @@ struct Strategy2BaseTaskStorageBaseItem {
 	// By a release fence
 	std::atomic<bool> taken;
 	TaskStorage* task_storage;
+	std::atomic<size_t> version;
 //	BaseStrategy* strategy;
 };
 
@@ -46,7 +47,7 @@ struct Strategy2BaseTaskStorageItem : Strategy2BaseTaskStorageBaseItem<Pheet, Ta
 template <class Item>
 struct Strategy2BaseTaskStorageItemReuseCheck {
 	bool operator() (Item const& item) const {
-		return item.taken;
+		return item.taken.load(std::memory_order_relaxed);
 	}
 };
 

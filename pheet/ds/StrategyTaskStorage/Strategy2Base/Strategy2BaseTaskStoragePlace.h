@@ -18,7 +18,7 @@
 #include <pheet/memory/BlockItemReuse/BlockItemReuseMemoryManager.h>
 
 #include <limits>
-#include <unordered_map>
+//#include <unordered_map>
 #include <tuple>
 
 namespace pheet {
@@ -133,10 +133,13 @@ public:
 			}
 			bottom_block = next;
 		}
-		pheet_assert(item_locations.find(item) == item_locations.end());
+	/*	pheet_assert(item_locations.find(item) == item_locations.end());
 		std::tuple<DataBlock*, size_t>& il = item_locations[item];
 		std::get<0>(il) = bottom_block;
-		std::get<1>(il) = b;
+		std::get<1>(il) = b;*/
+//		item_locations.put(item, std::tuple<DataBlock*, size_t>(bottom_block, b));
+
+//		item->version.store(item->version.load(std::memory_order_relaxed) + 1, std::memory_order_relaxed);
 
 		// Put item in block at position b
 		bottom_block->put(item, b);
@@ -188,10 +191,11 @@ public:
 				pheet_assert(db->fits(b));
 			}
 
-			ret = db->get(b);
+			bool valid;
+			ret = db->get(b, valid);
 			// Has item been taken? (Due to stealing or due to other execution orders for tasks
 			// with different strategies) If yes, skip task and continue
-			if(ret == nullptr || ret->taken.load(std::memory_order_acquire)) {
+			if(!valid || ret->taken.load(std::memory_order_acquire)) {
 				continue;
 			}
 
@@ -222,7 +226,7 @@ public:
 				}
 
 				// Make sure we don't encounter a reused variant of this item later again
-				db->put(nullptr, b);
+//				db->put(nullptr, b);
 
 				// Need to reset bottom to make sure that top cannot overtake bottom
 				// (would be dangerous for push)
@@ -286,14 +290,6 @@ public:
 		return steal();
 	}
 
-	inline void drop_item(BaseItem* item) {
-		auto il = item_locations.find(item);
-		if(il != item_locations.end()) {
-			std::get<0>(il->second)->put(nullptr, std::get<1>(il->second));
-			item_locations.erase(il);
-		}
-	}
-
 	bool is_full() {
 		return false;
 	}
@@ -333,10 +329,11 @@ private:
 				pheet_assert(db->fits(b));
 			}
 
-			BaseItem* ret = db->get(b);
+			bool valid;
+			BaseItem* ret = db->get(b, valid);
 			// Has item been taken? (Due to stealing or due to other execution orders for tasks
 			// with different strategies) If yes, skip task and continue
-			if(ret != nullptr && !ret->taken.load(std::memory_order_relaxed)) {
+			if(valid && !ret->taken.load(std::memory_order_relaxed)) {
 				return false;
 			}
 		}
@@ -434,11 +431,12 @@ private:
 			break;
 		}
 
-		BaseItem* ret = db->direct_acquire(t - offset);
+		bool valid;
+		BaseItem* ret = db->direct_acquire(t - offset, valid);
 
 		// Skip items that have been marked as taken
-		while(ret == nullptr || ret->taken.load(std::memory_order_acquire)) {
-			if(ret != nullptr && ret->task_storage == task_storage) {
+		while(!valid || ret->taken.load(std::memory_order_acquire)) {
+			if(ret->task_storage == task_storage) {
 				// If item from base task storage is taken there are no successors
 				return nullable_traits<T>::null_value;
 			}
@@ -448,7 +446,7 @@ private:
 			// Reread item at position to omit ABA problem where bottom < t for
 			// a short while, but a few pushes happened afterwards
 			// Needs to be read after an acquire to bottom of course
-			BaseItem* ret2 = db->direct_get(t - offset);
+			BaseItem* ret2 = db->direct_get(t - offset, valid);
 			if(ret2 != ret) {
 				// ABA problem, to stay wait-free just abort
 				return nullable_traits<T>::null_value;
@@ -472,7 +470,7 @@ private:
 				}
 			}
 
-			ret = db->direct_acquire(t - offset);
+			ret = db->direct_acquire(t - offset, valid);
 		}
 		// If we are skipping items we need to be sure that we are still in the same phase
 		if(t != old_t && p != phase.load(std::memory_order_relaxed)) {
@@ -585,8 +583,6 @@ private:
 	std::atomic<Self*> last_partner;
 
 	SchedulerPlace* scheduler_place;
-
-	std::unordered_map<BaseItem*, std::tuple<DataBlock*, size_t> > item_locations;
 };
 
 } /* namespace pheet */

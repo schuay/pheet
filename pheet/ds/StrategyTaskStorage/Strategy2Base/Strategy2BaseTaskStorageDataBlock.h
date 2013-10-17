@@ -51,25 +51,29 @@ public:
 		}
 	}
 
-	BaseItem* get(size_t pos) {
+	BaseItem* get(size_t pos, bool& valid) {
 		pheet_assert(pos - offset.load(std::memory_order_relaxed) < BlockSize);
-		return items[pos - offset.load(std::memory_order_relaxed)].load(std::memory_order_relaxed);
+		return direct_get(pos - offset.load(std::memory_order_relaxed), valid);
 	}
 
 	/**
 	 * Gets item without modifying index by offset
 	 */
-	BaseItem* direct_get(size_t pos) {
+	BaseItem* direct_get(size_t pos, bool& valid) {
 		pheet_assert(pos < BlockSize);
-		return items[pos].load(std::memory_order_relaxed);
+		BaseItem* ret = items[pos].item.load(std::memory_order_relaxed);
+		valid = (items[pos].version.load(std::memory_order_relaxed) == ret->version.load(std::memory_order_relaxed));
+		return ret;
 	}
 
 	/**
 	 * Gets item without modifying index by offset
 	 */
-	BaseItem* direct_acquire(size_t pos) {
+	BaseItem* direct_acquire(size_t pos, bool& valid) {
 		pheet_assert(pos < BlockSize);
-		return items[pos].load(std::memory_order_acquire);
+		BaseItem* ret = items[pos].item.load(std::memory_order_acquire);
+		valid = (items[pos].version.load(std::memory_order_relaxed) == ret->version.load(std::memory_order_relaxed));
+		return ret;
 	}
 
 	size_t get_block_offset() {
@@ -78,7 +82,9 @@ public:
 
 	void put(BaseItem* item, size_t pos) {
 		pheet_assert(pos - offset.load(std::memory_order_relaxed) < BlockSize);
-		items[pos - offset.load(std::memory_order_relaxed)].store(item, std::memory_order_relaxed);
+		size_t i = pos - offset.load(std::memory_order_relaxed);
+		items[i].version.store(item->version.load(std::memory_order_relaxed), std::memory_order_relaxed);
+		items[i].item.store(item, std::memory_order_release);
 	}
 
 	bool fits(size_t pos) {
@@ -117,7 +123,7 @@ public:
 private:
 	Place* place;
 
-	std::atomic<BaseItem*> items[BlockSize];
+	struct {std::atomic<BaseItem*> item; std::atomic<size_t> version;} items[BlockSize];
 	std::atomic<size_t> offset;
 	std::atomic<bool> reuse;
 
