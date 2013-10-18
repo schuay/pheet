@@ -267,6 +267,28 @@ public:
 	}
 
 	/*
+	 * Only used for special cases to copy the content of a block into a smaller block
+	 * Only the owner of both blocks may call this
+	 */
+	void copy_items(Self* other) {
+		size_t f = other->filled.load(std::memory_order_relaxed);
+		pheet_assert(f <= size);
+		size_t fo = other->owned_filled.load(std::memory_order_relaxed);
+		for(size_t i = 0; i < f; ++i) {
+			data[i].store(other->data[i].load(std::memory_order_relaxed), std::memory_order_relaxed);
+		}
+		for(size_t i = 0; i < fo; ++i) {
+			owned_data[i].store(other->owned_data[i].load(std::memory_order_relaxed), std::memory_order_relaxed);
+		}
+
+		filled.store(f, std::memory_order_relaxed);
+		owned_filled.store(fo, std::memory_order_relaxed);
+		level = other->level;
+		level_boundary = other->level_boundary;
+		k = other->k;
+	}
+
+	/*
 	 * Merges the two given blocks into this block
 	 * Assumes this block is empty
 	 */

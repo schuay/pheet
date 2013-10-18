@@ -463,7 +463,8 @@ private:
 		Block* next = nullptr;
 		Block* b = bottom_block_shared;
 
-		while(b != nullptr && block->get_max_level() > b->get_max_level() && (block->get_level() > b->get_level() || b->empty())) {
+		while(b != nullptr && block->get_level() > b->get_max_level() &&
+				(block->get_level() > b->get_level() || b->empty())) {
 			next = b;
 			b = b->get_prev();
 		}
@@ -472,6 +473,25 @@ private:
 			b->reset();
 			// No need to update pointers, will be corrected when linking in block anyway
 			b = p;
+		}
+		if(b != nullptr && block->get_level() < b->get_level() &&
+				block->get_max_level() >= b->get_max_level()) {
+			// We need to guarantee that each block size only appears in shared list once
+			// and that they are ordered by size
+			// In case no merge will occur we need to copy the data into a smaller block to
+			// guarantee this
+			Block* new_b = find_free_block(block->get_level());
+			new_b->copy_items(block);
+			new_b->mark_in_use();
+			GlobalListItem* gli = block->get_global_list_item();
+			if(gli != nullptr) {
+				gli->update_block(new_b);
+			}
+			if(block == best_block) {
+				best_block = new_b;
+			}
+			block->reset();
+			block = new_b;
 		}
 
 		if(next == nullptr) {
