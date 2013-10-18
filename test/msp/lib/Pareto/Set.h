@@ -20,9 +20,15 @@ class Set
 {
 public:
 	/**
-	 * Attempts to inserts path into the set. Returns true, iff the path
-	 * has been successfully inserted. Otherwise, the removed vector contains
-	 * a list of paths which were dominated by path.
+	 * Attempts to inserts path into the set.
+	 *
+	 * If path has been added successfully, added contains path on return. Otherwise
+	 * added.empty() == true.
+	 * removed contains all paths found to be dominated by path. 1) If path was added,
+	 * these are all paths currently in the set dominated by path. 2) Otherwise,
+	 * removed will only contain paths found to be dominated by path until a path
+	 * that dominates path was found (i.e., a subset of case 1).
+	 *
 	 */
 	virtual void insert(sp::PathPtr& path,
 	                    sp::Paths& added,
