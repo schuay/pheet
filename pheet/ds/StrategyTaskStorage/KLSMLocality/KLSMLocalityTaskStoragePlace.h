@@ -49,7 +49,7 @@ public:
 	 best_block(nullptr), best_block_known(true),
 	 needs_rescan(false),
 	 current_frame(&(frames.acquire_item())),
-	 remaining_k(std::numeric_limits<size_t>::max()), tasks(0) {
+	 remaining_k(std::numeric_limits<size_t>::max()), tasks(0), sequential(Pheet::get_num_places() == 1) {
 
 		// Get central task storage at end of initialization (not before,
 		// since this place becomes visible as soon as we retrieve it)
@@ -360,11 +360,17 @@ private:
 		GlobalListItem* gli_first = nullptr;
 		GlobalListItem* gli_last = nullptr;
 
+		size_t next_id = global_list->get_id() + 1;
+
 		// First construct a list of GlobalListItems locally
 		while(b != nullptr) {
-			if(b->get_owned_filled() != 0) {
+			// Check whether we are sequential is necessary since reference counting for
+			// global list items only works correctly with P > 1
+			if(!sequential && b->get_owned_filled() != 0) {
 				GlobalListItem* gli = create_global_list_item();
 				gli->update_block(b);
+				gli->set_id(next_id);
+				++next_id;
 
 				pc.num_global_blocks.incr();
 				if(gli_last == nullptr) {
@@ -385,11 +391,39 @@ private:
 
 		// And then connect it to the global list
 		if(gli_first != nullptr) {
-			while(!global_list->link(gli_first)) {
+			while(gli_first != nullptr && !global_list->link(gli_first)) {
 				// Global List has been extended by other thread, process it first
 				process_global_list();
+
+				// Go through list again to update ids and clean out potentially unnecessary items
+				GlobalListItem* prev = nullptr;
+				GlobalListItem* curr = gli_first;
+				next_id = global_list->get_id() + 1;
+				while(curr != nullptr) {
+					GlobalListItem* next = curr->get_next();
+					// Skip blocks that are empty now
+					if(curr->get_block() == nullptr) {
+						if(prev == nullptr) {
+							gli_first = next;
+						}
+						else {
+							prev->local_link(next);
+						}
+						curr->mark_reusable();
+						curr = next;
+					}
+					else {
+						curr->set_id(next_id);
+						++next_id;
+						prev = curr;
+						curr = next;
+					}
+				}
+				gli_last = prev;
 			}
-			global_list = gli_last;
+			if(gli_last != nullptr) {
+				global_list = gli_last;
+			}
 		}
 
 		// Now add each block to shared list
@@ -483,30 +517,12 @@ private:
 			size_t offset = l << 2;
 
 			Block* new_bb = nullptr;
-//			size_t found = 0;
 			for(int i = 0; i < 4; ++i) {
 				if(blocks[offset + i]->reusable()) {
-//					++found;
 					new_bb = blocks[offset + i];
 					break;
 				}
 			}
-/*			if(found == 1) {
-				// Can't take the last block or we might fail when trying to merge blocks
-				// We need to scan existing blocks to free more blocks
-				scan();
-				bb = bottom_block;
-
-				for(int i = 0; i < 4; ++i) {
-					if(blocks[offset + i]->reusable()) {
-						// Now we can just assume there are at least 2 free blocks
-						new_bb = blocks[offset + i];
-						break;
-					}
-				}
-			}
-			pheet_assert(found != 0);*/
-
 			new_bb->mark_in_use();
 			new_bb->set_prev(bb);
 			pheet_assert(new_bb->get_next() == nullptr);
@@ -954,6 +970,7 @@ private:
 	std::atomic<size_t> tasks;
 
 	GlobalListItem* global_list;
+	bool sequential;
 };
 
 } /* namespace pheet */
