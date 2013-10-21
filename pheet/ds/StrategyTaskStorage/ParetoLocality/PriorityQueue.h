@@ -9,8 +9,6 @@
 
 #include <queue>
 
-#include "ParetoLocalityTaskStorageItem.h"
-
 namespace pheet
 {
 
