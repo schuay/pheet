@@ -7,18 +7,34 @@
 #ifndef PRIORITYQUEUE_H_
 #define PRIORITYQUEUE_H_
 
+#include "ParetoQueue.h"
 #include <queue>
 
 namespace pheet
 {
 
-template <class Pheet, class Item>
-class PriorityQueue
+template <class Item>
+class PriorityQueue : public ParetoQueue<Item>
 {
 public:
-	Item* first();
-	void insert(Item* item);
-	bool empty();
+	/**
+	 * Returns the first non-dominated element e and removes it from the queue.
+	 *
+	 * Dominated elements encoutered while searching for e are removed from
+	 * the queue. If no such item is in the queue, the nullptr is returned.
+	 *
+	 */
+	Item* first() override;
+
+
+	void insert(Item* item) override;
+
+	/**
+	 * Returns true if the queue contains zero non-dominated items.
+	 *
+	 * All dominated items are removed from the queue.
+	 */
+	bool empty() override;
 
 private:
 	class comp
@@ -34,9 +50,9 @@ private:
 };
 
 
-template <class Pheet, class Item>
+template <class Item>
 Item*
-PriorityQueue<Pheet, Item>::
+PriorityQueue<Item>::
 first()
 {
 	Item* item;
@@ -48,17 +64,17 @@ first()
 	return item;
 }
 
-template <class Pheet, class Item>
+template <class Item>
 void
-PriorityQueue<Pheet, Item>::
+PriorityQueue<Item>::
 insert(Item* item)
 {
 	queue.push(item);
 }
 
-template <class Pheet, class Item>
+template <class Item>
 bool
-PriorityQueue<Pheet, Item>::
+PriorityQueue<Item>::
 empty()
 {
 	while (!queue.empty() && queue.top()->strategy.dead_task()) {

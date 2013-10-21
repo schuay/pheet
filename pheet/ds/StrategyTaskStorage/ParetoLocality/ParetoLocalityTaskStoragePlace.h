@@ -12,10 +12,8 @@
 
 #include "pheet/misc/type_traits.h"
 
-
 #include <mutex>
 #include <vector>
-
 
 namespace pheet
 {
@@ -45,7 +43,7 @@ private:
 	TaskStorage* task_storage;
 	bool created_task_storage;
 	std::mutex mutex;
-	PriorityQueue<Pheet, Item> queue;
+	PriorityQueue<Item> queue;
 };
 
 template < class Pheet,
