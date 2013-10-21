@@ -534,6 +534,7 @@ private:
 			}
 
 			size_t l = bb->get_level();
+			pheet_assert(bb->get_prev() == nullptr || bb->get_prev()->get_max_level() > l);
 			size_t offset = l << 2;
 
 			Block* new_bb = nullptr;
@@ -631,6 +632,8 @@ private:
 
 			prev = last_merge->get_prev();
 			pheet_assert(prev == nullptr || prev->get_next() == last_merge);
+			pheet_assert(prev == nullptr || prev->get_prev() == nullptr ||
+					prev->get_prev()->get_max_level() > merged->get_max_level() || prev->get_level() <= merged->get_level());
 		}
 
 		// Will be released when merged block is made visible through update of top block or next pointer
@@ -833,7 +836,7 @@ private:
 	 * blocks
 	 */
 	void scan() {
-		// Recount number of tasks (might change due to merging, dead tasks, so it's easiest to recalculate)
+		// Recount number of tasks (might change due to merging dead tasks, so it's easiest to recalculate)
 		size_t num_tasks = 0;
 		remaining_k = std::numeric_limits<size_t>::max();
 
