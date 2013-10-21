@@ -15,12 +15,12 @@
 namespace pheet
 {
 
-template <class Pheet>
+template <class Pheet, template <class, class> class TaskStorageT>
 class Strategy2MspTask : public Pheet::Task
 {
 public:
-	typedef Strategy2MspTask<Pheet> Self;
-	typedef Strategy2MspStrategy<Pheet, ParetoLocalityTaskStorage> Strategy;
+	typedef Strategy2MspTask<Pheet, TaskStorageT> Self;
+	typedef Strategy2MspStrategy<Pheet, TaskStorageT> Strategy;
 	typedef MspPerformanceCounters<Pheet> PerformanceCounters;
 
 
@@ -41,12 +41,12 @@ private:
 	PerformanceCounters& pc;
 };
 
-template <class Pheet>
-char const Strategy2MspTask<Pheet>::
+template <class Pheet, template <class, class> class TaskStorageT>
+char const Strategy2MspTask<Pheet, TaskStorageT>::
 name[] = "Strategy2 Msp";
 
-template <class Pheet>
-Strategy2MspTask<Pheet>::
+template <class Pheet, template <class, class> class TaskStorageT>
+Strategy2MspTask<Pheet, TaskStorageT>::
 Strategy2MspTask(const graph::Graph* graph,
                  const sp::PathPtr path,
                  pareto::Sets* sets,
@@ -55,9 +55,9 @@ Strategy2MspTask(const graph::Graph* graph,
 {
 }
 
-template <class Pheet>
+template <class Pheet, template <class, class> class TaskStorageT>
 void
-Strategy2MspTask<Pheet>::
+Strategy2MspTask<Pheet, TaskStorageT>::
 operator()()
 {
 	if (path->dominated()) {
@@ -91,6 +91,9 @@ operator()()
 		Pheet::template spawn_s<Self>(Strategy(p), graph, p, sets, pc);
 	}
 }
+
+template <class Pheet>
+using Strategy2Msp = Strategy2MspTask<Pheet, ParetoLocalityTaskStorage>;
 
 } /* namespace pheet */
 

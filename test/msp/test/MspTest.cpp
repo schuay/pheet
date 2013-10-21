@@ -108,7 +108,7 @@ public:
 		Sets q(graph, start->head());
 		{
 			typename Strategy2Pheet::Environment env;
-			Strategy2MspTask<Strategy2Pheet> msp(graph, start, &q, pc);
+			Strategy2MspTask<Strategy2Pheet, ParetoLocalityTaskStorage> msp(graph, start, &q, pc);
 			msp();
 		}
 		return q.shortest_paths();

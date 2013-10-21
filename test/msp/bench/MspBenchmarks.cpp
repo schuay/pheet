@@ -51,7 +51,8 @@ run_benchmarks(BenchOpts const& opts)
 			for (auto & it : opts.ncpus) {
 				for (int i = 0; i < opts.repetitions; i++) {
 					::run_algorithm < Pheet::WithScheduler<BStrategyScheduler>
-					::WithTaskStorage<DistKStrategyTaskStorage>, StrategyMspTask > (g, src, it);
+					::WithTaskStorage<DistKStrategyTaskStorage>,
+					StrategyMspTask > (g, src, it);
 				}
 			}
 		}
@@ -59,7 +60,8 @@ run_benchmarks(BenchOpts const& opts)
 		if (opts.strategy2) {
 			for (auto & it : opts.ncpus) {
 				for (int i = 0; i < opts.repetitions; i++) {
-					::run_algorithm < Pheet::WithScheduler<StrategyScheduler2>, Strategy2MspTask > (g, src, it);
+					::run_algorithm < Pheet::WithScheduler<StrategyScheduler2>,
+					Strategy2Msp > (g, src, it);
 
 				}
 			}
