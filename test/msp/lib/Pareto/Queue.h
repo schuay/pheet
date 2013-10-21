@@ -20,21 +20,18 @@ class Queue
 {
 public:
 	/**
-	 * Returns the first element and removes it the queue.
+	 * Returns the first non-dominated element e and removes it from the queue.
 	 */
 	virtual sp::PathPtr first() = 0;
 
 	/**
 	 * Inserts path into the queue.
-	 *
-	 * Let ps be the set of all paths p' with p'.head() == path.head()
-	 * (including path itself).
-	 *
-	 * insert() additionally removes all nodes <- ps which are dominated by
-	 * any other node <- ps.
 	 */
 	virtual void insert(sp::PathPtr path) = 0;
 
+	/**
+	 * Returns true if the queue contains zero non-dominated items.
+	 */
 	virtual bool empty() = 0;
 };
 
