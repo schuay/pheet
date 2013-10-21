@@ -31,6 +31,8 @@ public:
 	void
 	operator()();
 
+	static void print_name();
+private:
 	static char const name[];
 
 private:
@@ -43,10 +45,6 @@ private:
 
 	PerformanceCounters& pc;
 };
-
-template <class Pheet>
-char const SequentialMsp<Pheet>::name[] = "Sequential Msp";
-
 }
 
 #endif /* __SEQUENTIAL_MSP_H */

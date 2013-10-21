@@ -102,8 +102,9 @@ run_test()
 
 	/* Values. */
 
-	std::cout << "msp" << "\t"
-	          << Algorithm<Pheet>::name << "\t";
+	std::cout << "msp" << "\t";
+	Algorithm<Pheet>::print_name();
+	std::cout << "\t";
 	Pheet::Environment::print_name();
 	std::cout << "\t"
 	          << g->node_count() << "\t"

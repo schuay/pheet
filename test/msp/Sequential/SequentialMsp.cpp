@@ -74,6 +74,17 @@ operator()()
 	}
 }
 
+template <class Pheet>
+char const SequentialMsp<Pheet>::name[] = "Sequential Msp";
+
+template <class Pheet>
+void
+SequentialMsp<Pheet>::
+print_name()
+{
+	std::cout << name;
+}
+
 template class SequentialMsp < pheet::PheetEnv < pheet::SynchroneousScheduler,
          pheet::SystemModel,
          pheet::Primitives,

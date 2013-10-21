@@ -21,6 +21,7 @@ class Strategy2MspTask : public Pheet::Task
 public:
 	typedef Strategy2MspTask<Pheet, TaskStorageT> Self;
 	typedef Strategy2MspStrategy<Pheet, TaskStorageT> Strategy;
+	typedef typename Strategy::TaskStorage TaskStorage;
 	typedef MspPerformanceCounters<Pheet> PerformanceCounters;
 
 
@@ -30,7 +31,9 @@ public:
 	                 PerformanceCounters& pc);
 
 	virtual void operator()();
+	static void print_name();
 
+private:
 	static char const name[];
 
 
@@ -44,6 +47,16 @@ private:
 template <class Pheet, template <class, class> class TaskStorageT>
 char const Strategy2MspTask<Pheet, TaskStorageT>::
 name[] = "Strategy2 Msp";
+
+template <class Pheet, template <class, class> class TaskStorageT>
+void
+Strategy2MspTask<Pheet, TaskStorageT>::
+print_name()
+{
+	std::cout << name << "<";
+	TaskStorage::print_name();
+	std::cout << ">";
+}
 
 template <class Pheet, template <class, class> class TaskStorageT>
 Strategy2MspTask<Pheet, TaskStorageT>::

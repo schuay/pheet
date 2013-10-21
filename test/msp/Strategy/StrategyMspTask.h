@@ -71,7 +71,9 @@ public:
 	virtual void operator()();
 
 	static void set_k(size_t k);
+	static void print_name();
 
+private:
 	static char const name[];
 
 private:
@@ -85,6 +87,14 @@ private:
 
 template <class Pheet>
 char const StrategyMspTask<Pheet>::name[] = "Strategy Msp";
+
+template <class Pheet>
+void
+StrategyMspTask<Pheet>::
+print_name()
+{
+	std::cout << name;
+}
 
 template <class Pheet>
 StrategyMspTask<Pheet>::
