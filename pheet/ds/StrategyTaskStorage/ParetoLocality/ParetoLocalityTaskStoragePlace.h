@@ -8,7 +8,11 @@
 #define PARETOLOCALITYTASKSTORAGEPLACE_H_
 
 #include "ParetoLocalityTaskStorageItem.h"
+#include "PriorityQueue.h"
+
 #include "pheet/misc/type_traits.h"
+
+
 #include <mutex>
 #include <vector>
 
@@ -40,8 +44,8 @@ private:
 	ParentTaskStoragePlace* parent_place;
 	TaskStorage* task_storage;
 	bool created_task_storage;
-	std::vector<Item*> items;
 	std::mutex mutex;
+	PriorityQueue<Pheet, Item> queue;
 };
 
 template < class Pheet,
@@ -82,7 +86,7 @@ push(Strategy&& strategy, T data)
 	item->strategy = std::move(strategy);
 	item->data = data;
 	item->task_storage = task_storage;
-	items.push_back(item);
+	queue.insert(item);
 	item->taken.store(false, std::memory_order_release);
 
 	parent_place->push(item);
@@ -97,10 +101,9 @@ ParetoLocalityTaskStoragePlace<Pheet, TaskStorage, ParentTaskStoragePlace, Strat
 pop(BaseItem* boundary)
 {
 	std::lock_guard<std::mutex> lock(mutex);
-	if (!items.empty()) {
-		Item* item = items.front();
-		items.erase(items.begin());
-		return item->data;
+	if (!queue.empty()) {
+		Item* item = queue.first();
+		return item->take();
 	}
 	return nullable_traits<T>::null_value;
 }

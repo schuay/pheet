@@ -20,6 +20,8 @@ struct ParetoLocalityTaskStorageItem : public BaseItem
 
 	ParetoLocalityTaskStorageItem();
 	T take();
+	void take_and_delete();
+
 
 	Place* owner;
 	Strategy strategy;
@@ -45,7 +47,21 @@ ParetoLocalityTaskStorageItem<Pheet, Place, BaseItem, Strategy>::
 take()
 {
 	//TODO: no concurrency yet
+	this->taken.store(true, std::memory_order_relaxed);
 	return this->data;
+}
+
+template < class Pheet,
+         class Place,
+         class BaseItem,
+         class Strategy >
+void
+ParetoLocalityTaskStorageItem<Pheet, Place, BaseItem, Strategy>::
+take_and_delete()
+{
+	//TODO: no concurrency yet
+	this->taken.store(true, std::memory_order_relaxed);
+	this->data.drop_item();
 }
 
 } /* namespace pheet */
