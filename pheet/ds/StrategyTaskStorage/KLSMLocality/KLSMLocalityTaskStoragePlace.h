@@ -526,9 +526,9 @@ private:
 		pheet_assert(!bb->reusable());
 		if(!bb->try_put(item, item->owner == this)) {
 			// Lazy merging, blocks will only be merged when looking for the best block
-			// or when running out of blocks to use
+			// or when running out of blocks to use, or when the guarantees about blocks used would be violated
 
-			if(bb->get_prev() != nullptr && bb->get_prev()->get_max_level() == bb->get_max_level()) {
+			if(bb->get_prev() != nullptr && bb->get_prev()->get_level() <= bb->get_max_level()) {
 				scan();
 				bb = bottom_block;
 			}
@@ -596,10 +596,11 @@ private:
 		}
 
 		while(prev != nullptr && !merged->empty() &&
-				(merged->get_level() >= prev->get_level() || merged->get_max_level() > prev->get_max_level())) {
+				merged->get_level() >= prev->get_level()) {
 			last_merge = prev;
 
 			pheet_assert(!last_merge->empty());
+			pheet_assert(merged->get_max_level() <= prev->get_max_level());
 
 			// Only merge if the other block is not empty
 			// Each subsequent merge takes a block one greater than the previous one to ensure we don't run out of blocks
@@ -639,6 +640,7 @@ private:
 			pheet_assert(prev == nullptr || prev->get_prev() == nullptr ||
 					prev->get_prev()->get_max_level() > merged->get_max_level() || prev->get_level() <= merged->get_level());
 		}
+		pheet_assert(prev == nullptr || merged->get_max_level() <= prev->get_max_level());
 
 		// Will be released when merged block is made visible through update of top block or next pointer
 		merged->set_next(block->get_next());
