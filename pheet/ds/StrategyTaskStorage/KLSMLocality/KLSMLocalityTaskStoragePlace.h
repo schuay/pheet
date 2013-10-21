@@ -650,6 +650,8 @@ private:
 			// Make all changes visible now using a release
 			pheet_assert(prev != bottom_block_shared);
 			prev->release_next(merged);
+
+			pheet_assert(prev->get_prev() == nullptr || prev->get_prev()->get_max_level() > merged->get_max_level());
 		}
 		else {
 			// Everything merged into one block
@@ -664,6 +666,9 @@ private:
 			pheet_assert(pre_merge != top_block.load(std::memory_order_relaxed));
 			pheet_assert(pre_merge != top_block_shared);
 			pre_merge->set_prev(merged);
+			pheet_assert(pre_merge->get_max_level() < merged->get_max_level() ||
+					merged->get_prev() == nullptr ||
+					merged->get_prev()->get_max_level() > merged->get_max_level());
 		}
 
 		// Now we need to update the global list item if necessary
