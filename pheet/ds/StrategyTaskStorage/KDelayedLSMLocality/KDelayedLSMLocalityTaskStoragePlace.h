@@ -607,7 +607,19 @@ private:
 
 			// Only merge if the other block is not empty
 			// Each subsequent merge takes a block one greater than the previous one to ensure we don't run out of blocks
-			Block* merged2 = find_free_block(merged->get_max_level() + 1);
+			size_t l = std::max(last_merge->get_level() + 1, merged->get_level() + 1);
+			Block* merged2 = find_free_block(l);
+			if(merged2 == nullptr) {
+				// Can sometimes happen if previous merge used exactly the same block size and both predecessors have
+				// the same block size
+				pheet_assert(l < merged->get_max_level() + 1);
+				pheet_assert(last_merge->get_max_level() == l);
+				pheet_assert(last_merge->get_prev() != nullptr);
+				pheet_assert(last_merge->get_prev()->get_max_level() == l);
+				// We can assume that there will be a block available since a block may only occur
+				// at most once in the shared list, and twice in the local list
+				merged2 = find_free_block(l + 1);
+			}
 			pheet_assert(merged2 != bottom_block_shared);
 			merged2->merge_into(last_merge, merged, this, frame_regs);
 
@@ -719,8 +731,16 @@ private:
 
 			if(!last_merge->empty()) {
 				// Only merge if the other block is not empty
-				// Each subsequent merge takes a block one greater than the previous one to ensure we don't run out of blocks
-				Block* merged2 = find_free_block(merged->get_max_level() + 1);
+				size_t l = std::max(last_merge->get_level() + 1, merged->get_level() + 1);
+				Block* merged2 = find_free_block(l);
+				if(merged2 == nullptr) {
+					// May happen if both blocks have same level, and 2 blocks of same size are used in local list
+					pheet_assert(l == last_merge->get_max_level());
+					pheet_assert(l == merged->get_max_level());
+					// A block with l + 1 is guaranteed to be available (the 4th block is only for merging,
+					// so, conflict only occurs when a merged block is merged again)
+					merged2 = find_free_block(l + 1);
+				}
 				merged2->merge_into(last_merge, merged, this, frame_regs);
 
 				if(gli == nullptr) {
