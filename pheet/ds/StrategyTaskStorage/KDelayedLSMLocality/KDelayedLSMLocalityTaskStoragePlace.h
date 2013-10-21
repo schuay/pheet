@@ -542,6 +542,7 @@ private:
 			}
 
 			size_t l = bb->get_level();
+			pheet_assert(bb->get_prev() == nullptr || bb->get_prev()->get_max_level() > l);
 			size_t offset = l << 2;
 
 			Block* new_bb = nullptr;
@@ -578,11 +579,15 @@ private:
 		// Block should not be empty or try_put would have succeeded
 		pheet_assert(!block->empty());
 
+		// Never go below this level to ensure we never destroy the guarantees that max_levels are strictly
+		// increasing and that never more than 2 blocks in local list have the same max_level
+		size_t l_min = block->get_max_level();
+
 		Block* pre_merge = block->get_next();
 		Block* last_merge = block->get_prev();
 		pheet_assert(!last_merge->empty());
 		pheet_assert(block == last_merge->get_next());
-		Block* merged = find_free_block(std::max(block->get_level() + 1, block->get_max_level()));
+		Block* merged = find_free_block(std::max(l_min, block->get_level() + 1));
 		merged->merge_into(last_merge, block, this, frame_regs);
 		merged->mark_in_use();
 		pheet_assert(merged->get_filled() <= last_merge->get_filled() + block->get_filled());
@@ -607,7 +612,7 @@ private:
 
 			// Only merge if the other block is not empty
 			// Each subsequent merge takes a block one greater than the previous one to ensure we don't run out of blocks
-			size_t l = std::max(last_merge->get_level() + 1, merged->get_level() + 1);
+			size_t l = std::max(l_min, std::max(last_merge->get_level() + 1, merged->get_level() + 1));
 			Block* merged2 = find_free_block(l);
 			if(merged2 == nullptr) {
 				// Can sometimes happen if previous merge used exactly the same block size and both predecessors have
@@ -641,6 +646,8 @@ private:
 
 			prev = last_merge->get_prev();
 			pheet_assert(prev == nullptr || prev->get_next() == last_merge);
+			pheet_assert(prev == nullptr || prev->get_prev() == nullptr ||
+					prev->get_prev()->get_max_level() > merged->get_max_level() || prev->get_level() <= merged->get_level());
 		}
 
 		// Will be released when merged block is made visible through update of top block or next pointer
@@ -846,7 +853,7 @@ private:
 	 * blocks
 	 */
 	void scan() {
-		// Recount number of tasks (might change due to merging, dead tasks, so it's easiest to recalculate)
+		// Recount number of tasks (might change due to merging dead tasks, so it's easiest to recalculate)
 		size_t num_tasks = 0;
 		remaining_k = std::numeric_limits<size_t>::max();
 
