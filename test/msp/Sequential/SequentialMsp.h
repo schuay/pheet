@@ -39,7 +39,6 @@ private:
 	graph::Graph const* graph;
 	sp::PathPtr const path;
 
-	pareto::less dominates;
 	pareto::PriorityQueue m_queue;
 	pareto::Sets* sets;
 
