@@ -7,13 +7,15 @@
 #ifndef PARETOLOCALITYTASKSTORAGEPLACE_H_
 #define PARETOLOCALITYTASKSTORAGEPLACE_H_
 
+#include "Block.h"
 #include "ParetoLocalityTaskStorageItem.h"
-#include "PriorityQueue.h"
+
 
 #include "pheet/misc/type_traits.h"
 
-#include <mutex>
 #include <vector>
+
+#define MAX_PARTITION_SIZE (100)
 
 namespace pheet
 {
@@ -24,10 +26,12 @@ template < class Pheet,
          class Strategy >
 class ParetoLocalityTaskStoragePlace : public ParentTaskStoragePlace::BaseTaskStoragePlace
 {
+
 public:
 	typedef ParetoLocalityTaskStoragePlace<Pheet, TaskStorage, ParentTaskStoragePlace, Strategy> Self;
 	typedef typename ParentTaskStoragePlace::BaseItem BaseItem;
 	typedef ParetoLocalityTaskStorageItem<Pheet, Self, BaseItem, Strategy> Item;
+	typedef Block<Item, MAX_PARTITION_SIZE> Block;
 	typedef typename BaseItem::T T;
 
 	ParetoLocalityTaskStoragePlace(ParentTaskStoragePlace* parent_place);
@@ -39,11 +43,22 @@ public:
 	void clean_up();
 
 private:
+	/**
+	 * A merge is required if:
+	 * - last->prev() exists
+	 * - and has the same level (equal to same capacity) as last
+	 */
+	bool merge_required();
+
+private:
 	ParentTaskStoragePlace* parent_place;
 	TaskStorage* task_storage;
 	bool created_task_storage;
-	std::mutex mutex;
-	PriorityQueue<Item> queue;
+
+	VirtualArray<Item*>* m_array;
+	PivotQueue m_pivots;
+	Block* first;
+	Block* last;
 };
 
 template < class Pheet,
@@ -54,6 +69,10 @@ ParetoLocalityTaskStoragePlace<Pheet, TaskStorage, ParentTaskStoragePlace, Strat
 ParetoLocalityTaskStoragePlace(ParentTaskStoragePlace* parent_place)
 	: parent_place(parent_place)
 {
+
+	m_array = new VirtualArray<Item*>();
+	first = new Block(m_array, 0, &m_pivots);
+	last = first;
 	task_storage = TaskStorage::get(this, parent_place->get_central_task_storage(),
 	                                created_task_storage);
 }
@@ -68,6 +87,14 @@ ParetoLocalityTaskStoragePlace<Pheet, TaskStorage, ParentTaskStoragePlace, Strat
 	if (created_task_storage) {
 		delete task_storage;
 	}
+
+	while (last->prev()) {
+		last = last->prev();
+		delete last->next();
+	}
+	delete last;
+
+	delete m_array;
 }
 
 template < class Pheet,
@@ -78,14 +105,31 @@ void
 ParetoLocalityTaskStoragePlace<Pheet, TaskStorage, ParentTaskStoragePlace, Strategy>::
 push(Strategy&& strategy, T data)
 {
-	std::lock_guard<std::mutex> lock(mutex);
-	Item* item = new Item();
-	item->owner = this;
-	item->strategy = std::move(strategy);
-	item->data = data;
+	Item* item = new Item(std::forward < Strategy && > (strategy), data);
 	item->task_storage = task_storage;
-	queue.insert(item);
-	item->taken.store(false, std::memory_order_release);
+
+	if (!last->try_put(item)) {
+		//merge if neccessary
+		if (merge_required()) {
+			//merge recursivly, if previous block has same level
+			while (merge_required()) {
+				last = last->prev()->merge_next();
+			}
+			//repartition block that resulted from merge
+			last->partition();
+		}
+
+		//create new block
+		size_t nb_offset = last->offset() + last->capacity();
+		Block* nb = new Block(m_array, nb_offset, &m_pivots);
+		nb->prev(last);
+		assert(!last->next());
+		last->next(nb);
+		last = nb;
+
+		//put the item in the new block
+		last->put(item);
+	}
 
 	parent_place->push(item);
 }
@@ -98,12 +142,24 @@ typename ParetoLocalityTaskStoragePlace<Pheet, TaskStorage, ParentTaskStoragePla
 ParetoLocalityTaskStoragePlace<Pheet, TaskStorage, ParentTaskStoragePlace, Strategy>::
 pop(BaseItem* boundary)
 {
-	std::lock_guard<std::mutex> lock(mutex);
-	if (!queue.empty()) {
-		Item* item = queue.first();
-		return item->take();
+	//iterate through all blocks
+	Block* it = first;
+	Block* best;
+	Item* item = nullptr;
+	do {
+		if (item == nullptr ||
+		        (it->top() &&
+		         it->top()->strategy()->prioritize(*(item->strategy())))) {
+			item = it->top();
+			best = it;
+		}
+		it = it->next();
+	} while (it);
+
+	if (item == nullptr) {
+		return nullable_traits<T>::null_value;
 	}
-	return nullable_traits<T>::null_value;
+	return best->take(item);
 }
 
 template < class Pheet,
@@ -114,6 +170,7 @@ typename ParetoLocalityTaskStoragePlace<Pheet, TaskStorage, ParentTaskStoragePla
 ParetoLocalityTaskStoragePlace<Pheet, TaskStorage, ParentTaskStoragePlace, Strategy>::
 steal(BaseItem* boundary)
 {
+	//TODO: use spy semantics
 	return nullable_traits<T>::null_value;
 }
 
@@ -126,6 +183,17 @@ ParetoLocalityTaskStoragePlace<Pheet, TaskStorage, ParentTaskStoragePlace, Strat
 clean_up()
 {
 
+}
+
+template < class Pheet,
+         class TaskStorage,
+         class ParentTaskStoragePlace,
+         class Strategy >
+bool
+ParetoLocalityTaskStoragePlace<Pheet, TaskStorage, ParentTaskStoragePlace, Strategy>::
+merge_required()
+{
+	return last->prev() && last->lvl() == last->prev()->lvl();
 }
 
 } /* namepsace pheet */

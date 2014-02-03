@@ -11,20 +11,22 @@ namespace pheet
 {
 
 template < class Pheet,
-         class Place,
+         class Place,   //TODO: do we need the place that owns the item here?
          class BaseItem,
          class Strategy >
-struct ParetoLocalityTaskStorageItem : public BaseItem
+class ParetoLocalityTaskStorageItem : public BaseItem
 {
+public:
 	typedef typename BaseItem::T T;
 
-	ParetoLocalityTaskStorageItem();
+	ParetoLocalityTaskStorageItem(Strategy&& strategy, T data);
 	T take();
 	void take_and_delete();
+	bool is_taken_or_dead();
+	Strategy* strategy();
 
-
-	Place* owner;
-	Strategy strategy;
+private:
+	Strategy m_strategy;
 };
 
 template < class Pheet,
@@ -32,10 +34,11 @@ template < class Pheet,
          class BaseItem,
          class Strategy >
 ParetoLocalityTaskStorageItem<Pheet, Place, BaseItem, Strategy>::
-ParetoLocalityTaskStorageItem()
-	: owner(nullptr)
+ParetoLocalityTaskStorageItem(Strategy&& strategy, T t)
 {
-
+	m_strategy = std::move(strategy);
+	this->data = t;
+	this->taken.store(false, std::memory_order_release);
 }
 
 template < class Pheet,
@@ -63,6 +66,29 @@ take_and_delete()
 	this->taken.store(true, std::memory_order_relaxed);
 	this->data.drop_item();
 }
+
+template < class Pheet,
+         class Place,
+         class BaseItem,
+         class Strategy >
+bool
+ParetoLocalityTaskStorageItem<Pheet, Place, BaseItem, Strategy>::
+is_taken_or_dead()
+{
+	return m_strategy.dead_task() || this->taken.load();
+}
+
+template < class Pheet,
+         class Place,
+         class BaseItem,
+         class Strategy >
+Strategy*
+ParetoLocalityTaskStorageItem<Pheet, Place, BaseItem, Strategy>::
+strategy()
+{
+	return &m_strategy;
+}
+
 
 } /* namespace pheet */
 #endif /* PARETOLOCALITYTASKSTORAGEITEM_H_ */

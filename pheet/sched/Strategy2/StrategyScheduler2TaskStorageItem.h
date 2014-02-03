@@ -9,7 +9,8 @@
 #ifndef STRATEGYSCHEDULER2TASKSTORAGEITEM_H_
 #define STRATEGYSCHEDULER2TASKSTORAGEITEM_H_
 
-namespace pheet {
+namespace pheet
+{
 
 template <class Pheet, typename Task, typename StackElement>
 struct StrategyScheduler2TaskStorageItem {
@@ -21,6 +22,7 @@ struct StrategyScheduler2TaskStorageItem {
 	 * Drop item without ever executing it. Can be used to implement removal of dead tasks
 	 */
 	void drop_item() {
+		std::cout << "drop\n";
 		Pheet::get_place()->drop_item(this);
 	}
 
@@ -34,29 +36,36 @@ struct StrategyScheduler2TaskStorageItem {
 
 template <class Pheet, typename Task, typename StackElement>
 StrategyScheduler2TaskStorageItem<Pheet, Task, StackElement>::StrategyScheduler2TaskStorageItem()
-: task(NULL), stack_element(NULL) {
+	: task(NULL), stack_element(NULL)
+{
 
 }
 
 template <class Pheet, typename Task, typename StackElement>
-bool StrategyScheduler2TaskStorageItem<Pheet, Task, StackElement>::operator==(Self const& other) const {
+bool StrategyScheduler2TaskStorageItem<Pheet, Task, StackElement>::operator==
+(Self const& other) const
+{
 	return other.task == task;
 }
 
 template <class Pheet, typename Task, typename StackElement>
-bool StrategyScheduler2TaskStorageItem<Pheet, Task, StackElement>::operator!=(Self const& other) const {
+bool StrategyScheduler2TaskStorageItem<Pheet, Task, StackElement>::operator!=
+(Self const& other) const
+{
 	return other.task != task;
 }
 
 
 template <class Pheet, typename Task, typename StackElement>
-class nullable_traits<StrategyScheduler2TaskStorageItem<Pheet, Task, StackElement> > {
+class nullable_traits<StrategyScheduler2TaskStorageItem<Pheet, Task, StackElement> >
+{
 public:
 	static StrategyScheduler2TaskStorageItem<Pheet, Task, StackElement> const null_value;
 };
 
 template <class Pheet, typename Task, typename StackElement>
-StrategyScheduler2TaskStorageItem<Pheet, Task, StackElement> const nullable_traits<StrategyScheduler2TaskStorageItem<Pheet, Task, StackElement> >::null_value;
+StrategyScheduler2TaskStorageItem<Pheet, Task, StackElement> const
+nullable_traits<StrategyScheduler2TaskStorageItem<Pheet, Task, StackElement> >::null_value;
 
 
 }
