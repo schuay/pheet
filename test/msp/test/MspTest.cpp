@@ -158,7 +158,7 @@ protected:
 bool
 is_optimal_path_set(const Paths& paths)
 {
-	less dominates;
+	pareto::less dominates;
 
 	for (size_t i = 0; i < paths.size(); i++) {
 		for (size_t j = i + 1; j < paths.size(); j++) {
