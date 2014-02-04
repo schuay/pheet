@@ -310,6 +310,7 @@ private:
 		m_data->swap(left + m_offset, right + m_offset);
 	}
 
+	//TODO: use VirtualArray::get and ::set instead
 	Item*& data_at(size_t idx) {
 		assert(idx < m_capacity);
 		return (*m_data)[m_offset + idx];
