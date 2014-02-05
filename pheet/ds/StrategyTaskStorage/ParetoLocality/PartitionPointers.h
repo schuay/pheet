@@ -36,10 +36,6 @@ public: //methods required for white box testing
 		return m_last;
 	}
 
-	void increase_last() {
-		m_last++;
-	}
-
 	void last(size_t val) {
 		m_last = val;
 	}
