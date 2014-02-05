@@ -72,6 +72,7 @@ public:
 				best = top();
 			}
 		}
+		assert(!(best && best->is_taken_or_dead())); //don't return dead or taken items
 		return best;
 	}
 
