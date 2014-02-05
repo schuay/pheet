@@ -61,7 +61,7 @@ public:
 				best = data_at(i);
 			}
 		}
-		//only happens if no more item that is not taken or dead is in current position
+		//only happens if no more item that is not taken or dead is in current partition
 		if (best == nullptr) {
 			//fall back to previous partition, if possible
 			if (m_partitions->can_fall_back()) {
