@@ -56,10 +56,8 @@ public:
 		for (size_t i = m_partitions->last(); i < m_partitions->end()
 		        && i < m_partitions->dead() - 1; i++) { //TODO: make semantics of dead and end clearer
 			//TODO: make readable
-			if ((best == nullptr || data_at(i) == nullptr ||
-			        !data_at(i)->is_taken_or_dead()
-			        && data_at(i)->strategy()->prioritize(*(best->strategy()))) //TODO: ugly
-			   ) {
+			if (data_at(i) && !data_at(i)->is_taken_or_dead() && (!best
+			        || data_at(i)->strategy()->prioritize(*(best->strategy())))) {
 				best = data_at(i);
 			}
 		}
