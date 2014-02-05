@@ -4,5 +4,5 @@ add_library(msp-sp
 )
 
 target_link_libraries(msp-sp
-    graph
+    msp-graph
 )
