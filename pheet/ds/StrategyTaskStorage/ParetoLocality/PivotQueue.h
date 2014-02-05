@@ -50,6 +50,7 @@ public:
 	}
 
 	void release(size_t idx) {
+		assert(idx < elements.size());
 		elements[idx]->decrement_refcnt();
 		assert(elements[idx]->refcnt() >= 0);
 		if (elements[idx]->refcnt() == 0) {
