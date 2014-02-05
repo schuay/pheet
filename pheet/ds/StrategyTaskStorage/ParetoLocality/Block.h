@@ -316,7 +316,10 @@ private:
 		}
 
 		if ((m_partitions->dead() - left > MAX_PARTITION_SIZE) && m_failed_attempts < MAX_ATTEMPTS) {
-			partition(depth + 1, left, m_partitions->dead() - 1);
+			if (m_failed_attempts == 0) {
+				++depth;
+			}
+			partition(depth, left, m_partitions->dead() - 1);
 		}
 		m_failed_attempts = 0;
 	}
