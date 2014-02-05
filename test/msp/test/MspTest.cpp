@@ -107,7 +107,7 @@ public:
 		MspPerformanceCounters<Strategy2Pheet> pc;
 		Sets q(graph, start->head());
 		{
-			typename Strategy2Pheet::Environment env();
+			typename Strategy2Pheet::Environment env(1);
 			Strategy2MspTask<Strategy2Pheet, ParetoLocalityTaskStorage> msp(graph, start, &q, pc);
 			msp();
 		}
@@ -119,7 +119,7 @@ private:
 	PathPtr const start;
 };
 
-typedef ::testing::Types<SequentialTest, Strategy2Test, Strategy2Test> TestTypes;
+typedef ::testing::Types<Strategy2Test> TestTypes;
 TYPED_TEST_CASE(TESTCASE, TestTypes);
 
 template <typename T>
