@@ -257,16 +257,20 @@ private:
 
 		assert(left == right);
 
-		//check if left points to dead item
+		//check if left==right points to dead item
 		if (!data_at(left) || data_at(left)->is_taken_or_dead()) {
-			//assert(left + 1 == m_partitions->dead());
 			m_partitions->decrease_dead();
-			swap(left, m_partitions->dead());
+			if (left == m_partitions->dead()) {
+				--left;
+			} else {
+				swap(left, m_partitions->dead());
+			}
 		}
 
-		//check if item at left belongs to left or right partition
 		assert(data_at(left));
-		assert(data_at(right));
+		//assert(data_at(right));
+
+		//check if item at left belongs to left or right partition
 		if (data_at(left)->strategy()->greater_priority(p_dim, p_val)) {
 			++left;
 		}
