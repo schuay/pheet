@@ -67,6 +67,8 @@ public:
 			if (m_partitions->can_fall_back()) {
 				m_partitions->fall_back();
 				//reduce reference count on pivot element used for that partition step
+				//Note: first partition pointer is always index 0 and is not associated
+				//with a pivot element
 				m_pivots->release(m_partitions->size());
 				//call top() again, now operating on previous partition
 				best = top();
