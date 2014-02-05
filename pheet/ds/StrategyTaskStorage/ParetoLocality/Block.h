@@ -55,9 +55,10 @@ public:
 		//iterate through items in right-most partition
 		for (size_t i = m_partitions->last(); i < m_partitions->end(); i++) {
 			//TODO: make readable
-			if ((best == nullptr ||
-			        data_at(i)->strategy()->prioritize(*(best->strategy()))) //TODO: ugly
-			        && !data_at(i)->is_taken_or_dead()) {
+			if ((best == nullptr || data_at(i) == nullptr ||
+			        !data_at(i)->is_taken_or_dead()
+			        && data_at(i)->strategy()->prioritize(*(best->strategy()))) //TODO: ugly
+			   ) {
 				best = data_at(i);
 			}
 		}
@@ -207,19 +208,19 @@ private:
 
 		do {
 			//TODO: try to call is_taken_or_dead as less as possible (may be expensive, since user implemented)
-			while (left < right && !data_at(left)->is_taken_or_dead()
+			while (left < right && data_at(left) && !data_at(left)->is_taken_or_dead()
 			        && data_at(left)->strategy()->less_priority(p_dim, p_val)) {
 				++left;
 			}
 
-			while (left < right && !data_at(right)->is_taken_or_dead()
+			while (left < right && data_at(right) && !data_at(right)->is_taken_or_dead()
 			        && (data_at(right)->strategy()->greater_priority(p_dim, p_val)
 			            || data_at(right)->strategy()->equal_priority(p_dim, p_val))) {
 				--right;
 			}
 
 			if (left != right) {
-				if (data_at(right)->is_taken_or_dead()) {
+				if (!data_at(right) || data_at(right)->is_taken_or_dead()) {
 					//right is dead
 					if (m_partitions->dead() - right == 1) {
 						//element after right is dead too. Advance dead and right.
@@ -232,7 +233,7 @@ private:
 						m_partitions->decrease_dead();
 						swap(right, m_partitions->dead());
 					}
-				} else if (data_at(left)->is_taken_or_dead()) {
+				} else if (!data_at(left) || data_at(left)->is_taken_or_dead()) {
 					/* left is dead. Note that left+1==dead may never occur while
 					 * left < right, since right < dead holds. */
 					assert(left + 1 < m_partitions->dead());
@@ -256,8 +257,8 @@ private:
 		assert(left == right);
 
 		//check if left points to dead item
-		if (data_at(left)->is_taken_or_dead()) {
-			assert(left + 1 == m_partitions->dead());
+		if (!data_at(left) || data_at(left)->is_taken_or_dead()) {
+			//assert(left + 1 == m_partitions->dead());
 			m_partitions->decrease_dead();
 		}
 
