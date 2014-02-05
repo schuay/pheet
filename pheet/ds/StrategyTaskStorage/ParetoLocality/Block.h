@@ -347,12 +347,14 @@ private:
 		while (attempts < MAX_ATTEMPTS) {
 			//random element from block in the range we need to partition
 			Item* item = data_at(dist_e(rng));
-			//random dimension
-			size_t d = dist_d(rng);
+			if (item && !item->is_taken_or_dead()) {
+				//random dimension
+				size_t d = dist_d(rng);
 
-			PivotElement* pivot = new PivotElement(d, item->strategy()->priority_at(d));
-			if (m_pivots->try_put(pivot)) {
-				return pivot;
+				PivotElement* pivot = new PivotElement(d, item->strategy()->priority_at(d));
+				if (m_pivots->try_put(pivot)) {
+					return pivot;
+				}
 			}
 			++attempts;
 		}
