@@ -320,8 +320,10 @@ private:
 	}
 
 	void swap(size_t left, size_t right) {
-		assert(left < right);
-		m_data->swap(left + m_offset, right + m_offset);
+		assert(left <= right);
+		if (left < right) {
+			m_data->swap(left + m_offset, right + m_offset);
+		}
 	}
 
 	//TODO: use VirtualArray::get and ::set instead
