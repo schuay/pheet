@@ -53,7 +53,8 @@ public:
 	Item* top() {
 		Item* best = nullptr;
 		//iterate through items in right-most partition
-		for (size_t i = m_partitions->last(); i < m_partitions->end(); i++) {
+		for (size_t i = m_partitions->last(); i < m_partitions->end()
+		        && i < m_partitions->dead() - 1; i++) { //TODO: make semantics of dead and end clearer
 			//TODO: make readable
 			if ((best == nullptr || data_at(i) == nullptr ||
 			        !data_at(i)->is_taken_or_dead()
