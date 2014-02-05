@@ -172,14 +172,16 @@ private:
 	 * Drop all items in the "dead tasks" partition
 	 */
 	void drop_dead_items() {
-		for (size_t i = m_partitions->dead(); i < m_partitions->end(); i++) {
+		for (size_t i = m_partitions->dead(); i < m_capacity; i++) {
 			Item* item = data_at(i);
-			assert(item->is_taken_or_dead());
-			if (!item->is_taken()) {
+			assert(!item || item->is_taken_or_dead());
+			if (item && !item->is_taken()) {
 				item->data.drop_item();
 			}
 
-			delete item;
+			if (item) {
+				delete item;
+			}
 			//TODO: make sure item is free'ed or reused
 			data_at(i) = nullptr;
 		}
@@ -261,9 +263,12 @@ private:
 		if (!data_at(left) || data_at(left)->is_taken_or_dead()) {
 			//assert(left + 1 == m_partitions->dead());
 			m_partitions->decrease_dead();
+			swap(left, m_partitions->dead());
 		}
 
 		//check if item at left belongs to left or right partition
+		assert(data_at(left));
+		assert(data_at(right));
 		if (data_at(left)->strategy()->greater_priority(p_dim, p_val)) {
 			++left;
 		}
