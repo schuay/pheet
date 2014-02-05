@@ -22,6 +22,7 @@ public:
 	ParetoLocalityTaskStorageItem(Strategy&& strategy, T data);
 	T take();
 	void take_and_delete();
+	bool is_taken();
 	bool is_taken_or_dead();
 	Strategy* strategy();
 
@@ -65,6 +66,17 @@ take_and_delete()
 	//TODO: no concurrency yet
 	this->taken.store(true, std::memory_order_relaxed);
 	this->data.drop_item();
+}
+
+template < class Pheet,
+         class Place,
+         class BaseItem,
+         class Strategy >
+bool
+ParetoLocalityTaskStorageItem<Pheet, Place, BaseItem, Strategy>::
+is_taken()
+{
+	return this->taken.load();
 }
 
 template < class Pheet,

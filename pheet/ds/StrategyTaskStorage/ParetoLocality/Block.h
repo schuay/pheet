@@ -172,9 +172,13 @@ private:
 		for (size_t i = m_partitions->dead(); i < m_partitions->end(); i++) {
 			Item* item = data_at(i);
 			assert(item->is_taken_or_dead());
-			item->data.drop_item();
+			if (!item->is_taken()) {
+				item->data.drop_item();
+			}
+
+			delete item;
 			//TODO: make sure item is free'ed or reused
-			//data_at(i) = nullptr;
+			data_at(i) = nullptr;
 		}
 	}
 
