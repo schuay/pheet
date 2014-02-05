@@ -2,30 +2,35 @@
 #define PARTITION_POINTERS_H_
 
 #include <vector>
+#include "PivotQueue.h"
 
 class PartitionPointers
 {
 public:
-	PartitionPointers(size_t block_size, size_t last_element = 0)
-		: m_last(0), m_dead(block_size), m_end(last_element) {
+	PartitionPointers(PivotQueue* pivot_queue, size_t block_size, size_t last_element = 0)
+		: m_pivot_queue(pivot_queue), m_last(0), m_dead(block_size), m_end(last_element) {
 		m_idx.push_back(0);
 	}
 
-	void fall_back() {
+	~PartitionPointers() {
+		for (size_t i = 1; i < m_idx.size(); i++) {
+			m_pivot_queue->release(i - 1);
+		}
+	}
+
+	bool fall_back() {
+		if (m_idx.size() == 1) {
+			return false;
+		}
 		m_dead = m_last;
 		m_idx.pop_back();
 		assert(m_idx.size() > 0);
 		m_last = m_idx.back();
-	}
-
-	bool can_fall_back() {
-		return m_idx.size() > 1;
-	}
-
-
-public: //methods required for white box testing
-	size_t at(size_t idx) {
-		return m_idx[idx];
+		//reduce reference count on pivot element used for that partition step
+		//Note: first partition pointer is always index 0 and is not associated
+		//with a pivot element
+		m_pivot_queue->release(m_idx.size() - 1);
+		return true;
 	}
 
 	size_t size() {
@@ -65,7 +70,13 @@ public: //methods required for white box testing
 		m_idx.push_back(idx);
 	}
 
+public: //methods required for white box testing
+	size_t at(size_t idx) {
+		return m_idx[idx];
+	}
+
 private:
+	PivotQueue* m_pivot_queue;
 	std::vector<size_t> m_idx;
 	/* start of last partition (excluding dead items) */
 	size_t m_last;

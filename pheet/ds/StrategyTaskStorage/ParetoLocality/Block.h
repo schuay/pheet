@@ -26,7 +26,7 @@ public:
 		: m_data(ary), m_offset(offset), m_size(0), m_lvl(lvl), m_pivots(pivots) {
 		assert(ary != nullptr);
 		m_capacity = MAX_PARTITION_SIZE * pow(2, m_lvl);
-		m_partitions = new PartitionPointers(m_capacity);
+		m_partitions = new PartitionPointers(m_pivots, m_capacity);
 	}
 
 	bool try_put(Item* item) {
@@ -64,12 +64,7 @@ public:
 		//only happens if no more item that is not taken or dead is in current partition
 		if (best == nullptr) {
 			//fall back to previous partition, if possible
-			if (m_partitions->can_fall_back()) {
-				m_partitions->fall_back();
-				//reduce reference count on pivot element used for that partition step
-				//Note: first partition pointer is always index 0 and is not associated
-				//with a pivot element
-				m_pivots->release(m_partitions->size() - 1);
+			if (m_partitions->fall_back()) {
 				//call top() again, now operating on previous partition
 				best = top();
 			}
@@ -113,7 +108,7 @@ public:
 
 	void partition() {
 		delete m_partitions;
-		m_partitions = new PartitionPointers(m_capacity, m_capacity);
+		m_partitions = new PartitionPointers(m_pivots, m_capacity, m_capacity);
 		partition(0, 0, m_capacity - 1);
 		drop_dead_items();
 	}
