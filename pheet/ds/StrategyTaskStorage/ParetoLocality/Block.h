@@ -174,7 +174,7 @@ private:
 			Item* item = data_at(i);
 			assert(!item || item->is_taken_or_dead());
 			if (item && !item->is_taken()) {
-				item->data.drop_item();
+				item->take_and_delete();
 			}
 
 			if (item) {
