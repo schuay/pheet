@@ -312,7 +312,15 @@ test_full(const Graph* graph,
 	test_against_sequential(graph, start, sp);
 }
 
-TYPED_TEST(TESTCASE, SanityCheck)
+/**
+ * Using a tree is input graph
+ */
+TYPED_TEST(TESTCASE, SanityCheckTree)
+{
+	this->init(51, 50, 3, 10, 42);
+}
+
+TYPED_TEST(TESTCASE, SanityCheckSparseGraph)
 {
 	this->init(50, 150, 3, 10, 42);
 }

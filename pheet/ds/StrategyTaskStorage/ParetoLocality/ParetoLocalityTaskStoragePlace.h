@@ -15,7 +15,7 @@
 
 #include <vector>
 
-#define MAX_PARTITION_SIZE (100)
+#define MAX_PARTITION_SIZE (4)
 
 namespace pheet
 {
