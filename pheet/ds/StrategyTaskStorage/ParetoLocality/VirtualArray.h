@@ -55,12 +55,12 @@ public:
 		set(right, tmp);
 	}
 
-	size_t size()
+	size_t size() const
 	{
 		return DATA_BLOCK_SIZE * (m_block_cnt - 1) + m_last->size();
 	}
 
-	size_t block_size()
+	constexpr size_t block_size()
 	{
 		return DATA_BLOCK_SIZE;
 	}
@@ -69,7 +69,7 @@ private:
 	typedef VirtualArrayBlock<T, DATA_BLOCK_SIZE> Block;
 
 private:
-	Block* find_block(size_t idx)
+	Block* find_block(size_t idx) const
 	{
 		//find block that stores element at location idx
 		Block* tmp = m_first;
@@ -109,9 +109,6 @@ private:
 	size_t m_block_cnt;
 
 };
-
-
-
 
 
 #endif /* VIRTUAL_ARRAY_H_ */

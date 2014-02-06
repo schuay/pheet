@@ -121,7 +121,7 @@ public:
 		drop_dead_items();
 	}
 
-	ParetoLocalityTaskStorageBlock* prev()
+	ParetoLocalityTaskStorageBlock* prev() const
 	{
 		return m_prev;
 	}
@@ -131,7 +131,7 @@ public:
 		m_prev = b;
 	}
 
-	ParetoLocalityTaskStorageBlock* next()
+	ParetoLocalityTaskStorageBlock* next() const
 	{
 		return m_next;
 	}
@@ -141,17 +141,17 @@ public:
 		m_next = b;
 	}
 
-	size_t lvl()
+	size_t lvl() const
 	{
 		return m_lvl;
 	}
 
-	size_t capacity()
+	size_t capacity() const
 	{
 		return m_capacity;
 	}
 
-	size_t offset()
+	size_t offset() const
 	{
 		return m_offset;
 	}
@@ -174,7 +174,7 @@ public: //methods required for white box testing
 		return data_at(idx);
 	}
 
-	PartitionPointers* partition_pointers()
+	PartitionPointers* partition_pointers() const
 	{
 		return m_partitions;
 	}

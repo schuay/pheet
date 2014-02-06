@@ -37,12 +37,12 @@ public:
 		return data[idx];
 	}
 
-	size_t size()
+	size_t size() const
 	{
 		return m_size;
 	}
 
-	size_t capacity()
+	size_t capacity() const
 	{
 		return N;
 	}
@@ -52,7 +52,7 @@ public:
 		m_next = next;
 	}
 
-	Self* next()
+	Self* next() const
 	{
 		return m_next;
 	}
@@ -62,7 +62,7 @@ public:
 		m_prev = prev;
 	}
 
-	Self* prev()
+	Self* prev() const
 	{
 		return m_prev;
 	}
@@ -74,7 +74,5 @@ private:
 	Self* m_prev;
 
 };
-
-
 
 #endif /* DATA_BLOCK_H_ */

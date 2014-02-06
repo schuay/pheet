@@ -37,12 +37,12 @@ public:
 		return true;
 	}
 
-	size_t size()
+	size_t size() const
 	{
 		return m_idx.size();
 	}
 
-	size_t last()
+	size_t last() const
 	{
 		return m_last;
 	}
@@ -53,7 +53,7 @@ public:
 	}
 
 	//TODO: dead is not a good name, since it is also used for dead tasks
-	size_t dead()
+	size_t dead() const
 	{
 		return m_dead;
 	}
@@ -68,7 +68,7 @@ public:
 		m_dead--;
 	}
 
-	size_t end()
+	size_t end() const
 	{
 		return m_end;
 	}
@@ -85,7 +85,7 @@ public:
 	}
 
 public: //methods required for white box testing
-	size_t at(size_t idx)
+	size_t at(size_t idx) const
 	{
 		return m_idx[idx];
 	}

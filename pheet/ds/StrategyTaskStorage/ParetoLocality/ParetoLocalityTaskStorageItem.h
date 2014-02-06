@@ -22,7 +22,7 @@ public:
 	ParetoLocalityTaskStorageItem(Strategy&& strategy, T data);
 	T take();
 	void take_and_delete();
-	bool is_taken();
+	bool is_taken() const;
 	bool is_taken_or_dead();
 	Strategy* strategy();
 
@@ -74,7 +74,7 @@ template < class Pheet,
            class Strategy >
 bool
 ParetoLocalityTaskStorageItem<Pheet, Place, BaseItem, Strategy>::
-is_taken()
+is_taken() const
 {
 	return this->taken.load();
 }

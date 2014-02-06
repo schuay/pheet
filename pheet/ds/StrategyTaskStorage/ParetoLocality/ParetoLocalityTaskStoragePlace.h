@@ -48,7 +48,7 @@ private:
 	 * - last->prev() exists
 	 * - and has the same level (equal to same capacity) as last
 	 */
-	bool merge_required();
+	bool merge_required() const;
 
 private:
 	ParentTaskStoragePlace* parent_place;
@@ -191,7 +191,7 @@ template < class Pheet,
            class Strategy >
 bool
 ParetoLocalityTaskStoragePlace<Pheet, TaskStorage, ParentTaskStoragePlace, Strategy>::
-merge_required()
+merge_required() const
 {
 	return last->prev() && last->lvl() == last->prev()->lvl();
 }

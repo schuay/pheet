@@ -41,7 +41,7 @@ public:
 		return true;
 	}
 
-	size_t refcnt(size_t idx)
+	size_t refcnt(size_t idx) const
 	{
 		return elements[idx]->refcnt();
 	}
@@ -65,7 +65,7 @@ public:
 		}
 	}
 
-	size_t size()
+	size_t size() const
 	{
 		return elements.size();
 	}
