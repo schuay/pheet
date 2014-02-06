@@ -17,13 +17,6 @@ class PivotQueue
 {
 public:
 
-	void put(PivotElement* element)
-	{
-		//TODO: shall not contain equal elements
-		element->increment_refcnt();
-		elements.push_back(element);
-	}
-
 	/**
 	 * Put the PivotElement into this PivotQueue iff no equal PivotElement is in
 	 * the queue.
@@ -75,6 +68,13 @@ public:
 	size_t size() const
 	{
 		return elements.size();
+	}
+
+private:
+	void put(PivotElement* element)
+	{
+		element->increment_refcnt();
+		elements.push_back(element);
 	}
 
 private:
