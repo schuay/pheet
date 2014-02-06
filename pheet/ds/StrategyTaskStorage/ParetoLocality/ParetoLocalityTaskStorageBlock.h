@@ -65,6 +65,8 @@ public:
 	 *
 	 * Do not remove this item from the block. If such an item does not exist,
 	 * return nullptr.
+	 *
+	 * Any dead items that are inspected are cleaned up.
 	 */
 	Item* top()
 	{
@@ -73,12 +75,28 @@ public:
 		//iterate through items in right-most partition
 		const size_t end = std::min(m_partitions->end(), m_partitions->dead() - 1);
 		for (size_t i = m_partitions->last(); i < end; i++) {
-			//TODO: make readable
-			if (data_at(i) && !data_at(i)->is_taken_or_dead() && (!best
-			        || data_at(i)->strategy()->prioritize(*(best->strategy())))) {
-				best = data_at(i);
+			Item* item = data_at(i);
+			if (item == nullptr) {
+				continue;
+			}
+
+			if (item->is_dead()) {
+				/* TODO: With multiple threads, this can lead to errors. */
+				item->take_and_delete();
+				delete item;
+				data_at(i) = nullptr;
+				continue;
+			}
+
+			if (item->is_taken()) {
+				continue;
+			}
+
+			if (best == nullptr || item->strategy()->prioritize(*best->strategy())) {
+				best = item;
 			}
 		}
+
 		//only happens if no more item that is not taken or dead is in current partition
 		if (best == nullptr) {
 			//fall back to previous partition, if possible
