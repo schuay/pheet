@@ -4,7 +4,7 @@
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  */
 
-#include "KDSet.h"
+#include "NaiveSet.h"
 #include "LockedSet.h"
 #include "Sets.h"
 
@@ -18,9 +18,9 @@ Sets(graph::Graph const* g, graph::Node const* src)
 		Set* set;
 		if (node->id() == src->id()) {
 			sp::PathPtr p(new sp::Path(src));
-			set = new LockedSet<KDSet>(p);
+			set = new LockedSet<NaiveSet>(p);
 		} else {
-			set = new LockedSet<KDSet>();
+			set = new LockedSet<NaiveSet>();
 		}
 		map.insert(std::pair<graph::Node const*, Set*>(node, set));
 	}
