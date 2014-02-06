@@ -147,10 +147,11 @@ pop(BaseItem* /* boundary */)
 	Block* best;
 	Item* item = nullptr;
 	do {
+		Item* const top = it->top();
 		if (item == nullptr ||
-		        (it->top() &&
-		         it->top()->strategy()->prioritize(*(item->strategy())))) {
-			item = it->top();
+		        (top != nullptr &&
+		         top->strategy()->prioritize(*(item->strategy())))) {
+			item = top;
 			best = it;
 		}
 		it = it->next();
