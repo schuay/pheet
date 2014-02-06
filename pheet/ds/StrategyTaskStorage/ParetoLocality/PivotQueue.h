@@ -59,7 +59,6 @@ public:
 		assert(idx < elements.size());
 		pivot->decrement_refcnt();
 		if (pivot->refcnt() == 0) {
-			assert(idx == elements.size() - 1);
 			PivotElement* element = elements.back();
 			elements.pop_back();
 			delete element;

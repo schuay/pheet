@@ -235,7 +235,6 @@ private:
 	void partition(size_t depth, size_t left, size_t right)
 	{
 		assert(left < right);
-		assert(depth + 1 == m_partitions->size());
 		size_t old_left = left;
 
 		//generate new pivot element if neccesarry
@@ -333,14 +332,17 @@ private:
 		} else {
 			/* all items were partitioned into left or dead partition. Thus, our
 			 * rightmost partition is [old_left, dead[. In other words: [left, dead[
-			 * is an empty partition. If the pivot element used to generate this
-			 * (empty) partition is not used in other blocks, release it and try
-			 * again. Else, add a partition pointer and continue.
+			 * is an empty partition. Thus, we do not store a partition pointer and
+			 * can release the pivot element.
 			 */
-			size_t pivot_idx = pivot->pos();
-			if (m_pivots->refcnt(pivot_idx) == 1) {
-				m_pivots->release(pivot);
+			m_pivots->release(pivot);
+			if (pivot->refcnt() == 0) {
+				/* The pivot element isn't used anywhere else. Thus, delete it
+				 * and try to partition again (a new pivot element will be
+				 * generated).
+				 */
 				left = old_left;
+				delete pivot;
 				/* If right-most partition > MAX_PARTITION_SIZE, we will partition again.
 				 * This could potentially run indefinitely (think of all items having
 				 * the same priority vector). Thus, bound the number of subsequent
@@ -349,14 +351,9 @@ private:
 				++m_failed_attempts;
 			} else {
 				/* the pivot element that caused [left, dead[ to be empty
-				 * is already in the PivotQueue. Create the partition pointer for the
-				 * empty partition and continue partitioning
-				 */
-				/* TODO: do we really need to store the partition pointer? maybe
-				 * we can just skip it and continue partitioning with the next
-				 * pivot element?
-				 */
-				add_partition_pointer(left, pivot);
+				 * is already used by other blocks. We do not need to create the
+				 * partition, but cannot remove the pivot element.
+				*/
 				m_failed_attempts = 0;
 			}
 		}
