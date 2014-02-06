@@ -31,6 +31,7 @@ public:
 
 	void decrement_refcnt()
 	{
+		assert(m_refcnt > 0);
 		--m_refcnt;
 	}
 
