@@ -73,7 +73,7 @@ public:
 		Item* best = nullptr;
 
 		//iterate through items in right-most partition
-		const size_t end = std::min(m_partitions->end(), m_partitions->dead() - 1);
+		const size_t end = std::min(m_partitions->end(), m_partitions->dead());
 		for (size_t i = m_partitions->last(); i < end; i++) {
 			Item* item = data_at(i);
 			if (item == nullptr) {
