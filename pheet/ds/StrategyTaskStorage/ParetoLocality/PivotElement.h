@@ -9,17 +9,17 @@ public:
 	PivotElement(size_t dimension, size_t value)
 		: m_dim(dimension), m_val(value), m_refcnt(0) {}
 
-	size_t value()
+	size_t value() const
 	{
 		return m_val;
 	}
 
-	size_t dimension()
+	size_t dimension() const
 	{
 		return m_dim;
 	}
 
-	size_t refcnt()
+	size_t refcnt() const
 	{
 		return m_refcnt;
 	}
@@ -35,14 +35,14 @@ public:
 		--m_refcnt;
 	}
 
-	bool equal(PivotElement* other)
+	bool equal(PivotElement const* other) const
 	{
 		return (m_dim == other->dimension() &&  m_val == other->value());
 	}
 
 private:
-	size_t m_dim;
-	size_t m_val;
+	const size_t m_dim;
+	const size_t m_val;
 	size_t m_refcnt;
 };
 
