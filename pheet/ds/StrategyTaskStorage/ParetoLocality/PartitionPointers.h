@@ -14,7 +14,7 @@ public:
 
 	~PartitionPointers() {
 		for (size_t i = 1; i < m_idx.size(); i++) {
-			m_pivot_queue->release(i - 1);
+			m_pivot_queue->release(m_idx.size() - 1 - i);
 		}
 	}
 
