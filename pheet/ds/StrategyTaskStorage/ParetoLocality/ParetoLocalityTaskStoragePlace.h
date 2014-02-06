@@ -140,7 +140,7 @@ template < class Pheet,
            class Strategy >
 typename ParetoLocalityTaskStoragePlace<Pheet, TaskStorage, ParentTaskStoragePlace, Strategy>::T
 ParetoLocalityTaskStoragePlace<Pheet, TaskStorage, ParentTaskStoragePlace, Strategy>::
-pop(BaseItem* boundary)
+pop(BaseItem* /* boundary */)
 {
 	//iterate through all blocks
 	Block* it = first;
@@ -168,7 +168,7 @@ template < class Pheet,
            class Strategy >
 typename ParetoLocalityTaskStoragePlace<Pheet, TaskStorage, ParentTaskStoragePlace, Strategy>::T
 ParetoLocalityTaskStoragePlace<Pheet, TaskStorage, ParentTaskStoragePlace, Strategy>::
-steal(BaseItem* boundary)
+steal(BaseItem* /* boundary */)
 {
 	//TODO: use spy semantics
 	return nullable_traits<T>::null_value;
