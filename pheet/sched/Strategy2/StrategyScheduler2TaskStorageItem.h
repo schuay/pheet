@@ -22,7 +22,6 @@ struct StrategyScheduler2TaskStorageItem {
 	 * Drop item without ever executing it. Can be used to implement removal of dead tasks
 	 */
 	void drop_item() {
-		std::cout << "drop\n";
 		Pheet::get_place()->drop_item(this);
 	}
 
