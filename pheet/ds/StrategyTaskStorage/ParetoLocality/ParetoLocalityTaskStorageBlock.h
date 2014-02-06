@@ -1,5 +1,5 @@
-#ifndef BLOCK_H_
-#define BLOCK_H_
+#ifndef PARETOLOCALITYTASKSTORAGEBLOCK_H_
+#define PARETOLOCALITYTASKSTORAGEBLOCK_H_
 
 #include "PartitionPointers.h"
 #include "PivotQueue.h"
@@ -16,13 +16,13 @@
 #define MAX_ATTEMPTS (3)
 
 template<class Item, size_t MAX_PARTITION_SIZE>
-class Block
+class ParetoLocalityTaskStorageBlock
 {
 public:
 	typedef typename Item::T T;
 
 
-	Block(VirtualArray<Item*>* ary, size_t offset, PivotQueue* pivots, size_t lvl = 0)
+	ParetoLocalityTaskStorageBlock(VirtualArray<Item*>* ary, size_t offset, PivotQueue* pivots, size_t lvl = 0)
 		: m_data(ary), m_offset(offset), m_size(0), m_lvl(lvl), m_pivots(pivots) {
 		assert(ary != nullptr);
 		m_capacity = MAX_PARTITION_SIZE * pow(2, m_lvl);
@@ -83,7 +83,7 @@ public:
 		return item->take();
 	}
 
-	Block* merge_next() {
+	ParetoLocalityTaskStorageBlock* merge_next() {
 		assert(m_next != nullptr);
 		assert(m_next ->lvl() == m_lvl);
 		//we only merge full blocks
@@ -96,7 +96,7 @@ public:
 		m_size = m_capacity;
 
 		//splice out next
-		Block* tmp  = m_next;
+		ParetoLocalityTaskStorageBlock* tmp  = m_next;
 		if (tmp->next()) {
 			tmp->next()->prev(this);
 		}
@@ -113,19 +113,19 @@ public:
 		drop_dead_items();
 	}
 
-	Block* prev() {
+	ParetoLocalityTaskStorageBlock* prev() {
 		return m_prev;
 	}
 
-	void prev(Block* b) {
+	void prev(ParetoLocalityTaskStorageBlock* b) {
 		m_prev = b;
 	}
 
-	Block* next() {
+	ParetoLocalityTaskStorageBlock* next() {
 		return m_next;
 	}
 
-	void next(Block* b) {
+	void next(ParetoLocalityTaskStorageBlock* b) {
 		m_next = b;
 	}
 
@@ -379,9 +379,9 @@ private:
 	PivotQueue* m_pivots;
 	size_t m_failed_attempts;
 
-	Block* m_next = nullptr;
-	Block* m_prev = nullptr;
+	ParetoLocalityTaskStorageBlock* m_next = nullptr;
+	ParetoLocalityTaskStorageBlock* m_prev = nullptr;
 
 };
 
-#endif /* BLOCK_H_ */
+#endif /* PARETOLOCALITYTASKSTORAGEBLOCK_H_ */

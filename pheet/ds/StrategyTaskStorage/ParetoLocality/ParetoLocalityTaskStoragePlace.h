@@ -7,7 +7,7 @@
 #ifndef PARETOLOCALITYTASKSTORAGEPLACE_H_
 #define PARETOLOCALITYTASKSTORAGEPLACE_H_
 
-#include "Block.h"
+#include "ParetoLocalityTaskStorageBlock.h"
 #include "ParetoLocalityTaskStorageItem.h"
 
 
@@ -21,9 +21,9 @@ namespace pheet
 {
 
 template < class Pheet,
-         class TaskStorage,
-         class ParentTaskStoragePlace,
-         class Strategy >
+           class TaskStorage,
+           class ParentTaskStoragePlace,
+           class Strategy >
 class ParetoLocalityTaskStoragePlace : public ParentTaskStoragePlace::BaseTaskStoragePlace
 {
 
@@ -31,7 +31,7 @@ public:
 	typedef ParetoLocalityTaskStoragePlace<Pheet, TaskStorage, ParentTaskStoragePlace, Strategy> Self;
 	typedef typename ParentTaskStoragePlace::BaseItem BaseItem;
 	typedef ParetoLocalityTaskStorageItem<Pheet, Self, BaseItem, Strategy> Item;
-	typedef Block<Item, MAX_PARTITION_SIZE> Block;
+	typedef ParetoLocalityTaskStorageBlock<Item, MAX_PARTITION_SIZE> Block;
 	typedef typename BaseItem::T T;
 
 	ParetoLocalityTaskStoragePlace(ParentTaskStoragePlace* parent_place);
@@ -62,9 +62,9 @@ private:
 };
 
 template < class Pheet,
-         class TaskStorage,
-         class ParentTaskStoragePlace,
-         class Strategy >
+           class TaskStorage,
+           class ParentTaskStoragePlace,
+           class Strategy >
 ParetoLocalityTaskStoragePlace<Pheet, TaskStorage, ParentTaskStoragePlace, Strategy>::
 ParetoLocalityTaskStoragePlace(ParentTaskStoragePlace* parent_place)
 	: parent_place(parent_place)
@@ -78,9 +78,9 @@ ParetoLocalityTaskStoragePlace(ParentTaskStoragePlace* parent_place)
 }
 
 template < class Pheet,
-         class TaskStorage,
-         class ParentTaskStoragePlace,
-         class Strategy >
+           class TaskStorage,
+           class ParentTaskStoragePlace,
+           class Strategy >
 ParetoLocalityTaskStoragePlace<Pheet, TaskStorage, ParentTaskStoragePlace, Strategy>::
 ~ParetoLocalityTaskStoragePlace()
 {
@@ -98,9 +98,9 @@ ParetoLocalityTaskStoragePlace<Pheet, TaskStorage, ParentTaskStoragePlace, Strat
 }
 
 template < class Pheet,
-         class TaskStorage,
-         class ParentTaskStoragePlace,
-         class Strategy >
+           class TaskStorage,
+           class ParentTaskStoragePlace,
+           class Strategy >
 void
 ParetoLocalityTaskStoragePlace<Pheet, TaskStorage, ParentTaskStoragePlace, Strategy>::
 push(Strategy&& strategy, T data)
@@ -135,9 +135,9 @@ push(Strategy&& strategy, T data)
 }
 
 template < class Pheet,
-         class TaskStorage,
-         class ParentTaskStoragePlace,
-         class Strategy >
+           class TaskStorage,
+           class ParentTaskStoragePlace,
+           class Strategy >
 typename ParetoLocalityTaskStoragePlace<Pheet, TaskStorage, ParentTaskStoragePlace, Strategy>::T
 ParetoLocalityTaskStoragePlace<Pheet, TaskStorage, ParentTaskStoragePlace, Strategy>::
 pop(BaseItem* boundary)
@@ -163,9 +163,9 @@ pop(BaseItem* boundary)
 }
 
 template < class Pheet,
-         class TaskStorage,
-         class ParentTaskStoragePlace,
-         class Strategy >
+           class TaskStorage,
+           class ParentTaskStoragePlace,
+           class Strategy >
 typename ParetoLocalityTaskStoragePlace<Pheet, TaskStorage, ParentTaskStoragePlace, Strategy>::T
 ParetoLocalityTaskStoragePlace<Pheet, TaskStorage, ParentTaskStoragePlace, Strategy>::
 steal(BaseItem* boundary)
@@ -175,9 +175,9 @@ steal(BaseItem* boundary)
 }
 
 template < class Pheet,
-         class TaskStorage,
-         class ParentTaskStoragePlace,
-         class Strategy >
+           class TaskStorage,
+           class ParentTaskStoragePlace,
+           class Strategy >
 void
 ParetoLocalityTaskStoragePlace<Pheet, TaskStorage, ParentTaskStoragePlace, Strategy>::
 clean_up()
@@ -186,9 +186,9 @@ clean_up()
 }
 
 template < class Pheet,
-         class TaskStorage,
-         class ParentTaskStoragePlace,
-         class Strategy >
+           class TaskStorage,
+           class ParentTaskStoragePlace,
+           class Strategy >
 bool
 ParetoLocalityTaskStoragePlace<Pheet, TaskStorage, ParentTaskStoragePlace, Strategy>::
 merge_required()
@@ -196,6 +196,6 @@ merge_required()
 	return last->prev() && last->lvl() == last->prev()->lvl();
 }
 
-} /* namepsace pheet */
+} /* namespace pheet */
 
 #endif /* PARETOLOCALITYTASKSTORAGEPLACE_H_ */
