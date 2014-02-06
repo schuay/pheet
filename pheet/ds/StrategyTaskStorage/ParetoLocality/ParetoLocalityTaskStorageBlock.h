@@ -241,7 +241,7 @@ private:
 		//generate new pivot element if neccesarry
 		PivotElement* pivot;
 		if (m_pivots->size() <= depth) {
-			pivot = generate_pivot(left, right);
+			pivot = generate_pivot(left, right, depth);
 			if (pivot == nullptr) {
 				/* could not generate suitable pivot element -> Abort partitioning
 				 * Right-most partition will exceed MAX_PARTITION_SIZE
@@ -337,9 +337,9 @@ private:
 			 * (empty) partition is not used in other blocks, release it and try
 			 * again. Else, add a partition pointer and continue.
 			 */
-			size_t pivot_idx = m_pivots->size() - 1;
+			size_t pivot_idx = pivot->pos();
 			if (m_pivots->refcnt(pivot_idx) == 1) {
-				m_pivots->release(pivot_idx);
+				m_pivots->release(pivot);
 				left = old_left;
 				/* If right-most partition > MAX_PARTITION_SIZE, we will partition again.
 				 * This could potentially run indefinitely (think of all items having
@@ -386,7 +386,7 @@ private:
 	}
 
 	//TODO: move to class PivotQueue? Problem: need range of current elements
-	PivotElement* generate_pivot(size_t left, size_t right)
+	PivotElement* generate_pivot(size_t left, size_t right, size_t pos)
 	{
 		std::mt19937 rng;
 		rng.seed(std::random_device()());
@@ -405,7 +405,7 @@ private:
 				//random dimension
 				size_t d = dist_d(rng);
 
-				PivotElement* pivot = new PivotElement(d, item->strategy()->priority_at(d));
+				PivotElement* pivot = new PivotElement(d, item->strategy()->priority_at(d), pos);
 				if (m_pivots->try_put(pivot)) {
 					return pivot;
 				}

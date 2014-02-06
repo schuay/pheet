@@ -22,8 +22,9 @@ public:
 
 	~PartitionPointers()
 	{
-		for (size_t i = 1; i < m_idx.size(); i++) {
-			m_pivot_queue->release(m_idx.size() - 1 - i);
+		while (m_idx.size() > 1) {
+			m_pivot_queue->release(m_idx.back().second);
+			m_idx.pop_back();
 		}
 	}
 
@@ -34,13 +35,15 @@ public:
 			return false;
 		}
 		m_dead = m_last;
-		m_idx.pop_back();
-		assert(m_idx.size() > 0);
-		m_last = m_idx.back().first;
 		//reduce reference count on pivot element used for that partition step
 		//Note: first partition pointer is always index 0 and is not associated
 		//with a pivot element
-		m_pivot_queue->release(m_idx.size() - 1);
+		m_pivot_queue->release(m_idx.back().second);
+		//remove the partition pointer
+		m_idx.pop_back();
+		assert(m_idx.size() > 0);
+		m_last = m_idx.back().first;
+
 		return true;
 	}
 

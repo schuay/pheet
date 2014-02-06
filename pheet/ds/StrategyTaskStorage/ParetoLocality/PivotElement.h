@@ -13,8 +13,8 @@
 class PivotElement
 {
 public:
-	PivotElement(size_t dimension, size_t value)
-		: m_dim(dimension), m_val(value), m_refcnt(0) {}
+	PivotElement(size_t dimension, size_t value, size_t pos)
+		: m_dim(dimension), m_val(value), m_pos(pos), m_refcnt(0) {}
 
 	size_t value() const
 	{
@@ -31,6 +31,11 @@ public:
 		return m_refcnt;
 	}
 
+	size_t pos() const
+	{
+		return m_pos;
+	}
+
 	void increment_refcnt()
 	{
 		++m_refcnt;
@@ -42,14 +47,10 @@ public:
 		--m_refcnt;
 	}
 
-	bool equal(PivotElement const* other) const
-	{
-		return (m_dim == other->dimension() &&  m_val == other->value());
-	}
-
 private:
 	const size_t m_dim;
 	const size_t m_val;
+	const size_t m_pos;
 	size_t m_refcnt;
 };
 

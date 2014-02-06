@@ -53,11 +53,12 @@ public:
 		return elements[idx];
 	}
 
-	void release(size_t idx)
+	void release(PivotElement* pivot)
 	{
+		size_t idx = pivot->pos();
 		assert(idx < elements.size());
-		elements[idx]->decrement_refcnt();
-		if (elements[idx]->refcnt() == 0) {
+		pivot->decrement_refcnt();
+		if (pivot->refcnt() == 0) {
 			assert(idx == elements.size() - 1);
 			PivotElement* element = elements.back();
 			elements.pop_back();
