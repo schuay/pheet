@@ -143,19 +143,20 @@ ParetoLocalityTaskStoragePlace<Pheet, TaskStorage, ParentTaskStoragePlace, Strat
 pop(BaseItem* /* boundary */)
 {
 	//iterate through all blocks
-	Block* it = first;
 	Block* best;
 	Item* item = nullptr;
-	do {
+
+	for (Block* it = first; it != nullptr; it = it->next()) {
 		Item* const top = it->top();
-		if (item == nullptr ||
-		        (top != nullptr &&
-		         top->strategy()->prioritize(*(item->strategy())))) {
+		if (top == nullptr) {
+			continue;
+		}
+
+		if (item == nullptr || top->strategy()->prioritize(*(item->strategy()))) {
 			item = top;
 			best = it;
 		}
-		it = it->next();
-	} while (it);
+	}
 
 	if (item == nullptr) {
 		return nullable_traits<T>::null_value;
