@@ -69,9 +69,10 @@ public:
 	Item* top()
 	{
 		Item* best = nullptr;
+
 		//iterate through items in right-most partition
-		for (size_t i = m_partitions->last(); i < m_partitions->end()
-		        && i < m_partitions->dead() - 1; i++) { //TODO: make semantics of dead and end clearer
+		const size_t end = std::min(m_partitions->end(), m_partitions->dead() - 1);
+		for (size_t i = m_partitions->last(); i < end; i++) {
 			//TODO: make readable
 			if (data_at(i) && !data_at(i)->is_taken_or_dead() && (!best
 			        || data_at(i)->strategy()->prioritize(*(best->strategy())))) {
