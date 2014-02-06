@@ -31,6 +31,11 @@ public:
 		m_partitions = new PartitionPointers(m_pivots, m_capacity);
 	}
 
+	~ParetoLocalityTaskStorageBlock()
+	{
+		delete m_partitions;
+	}
+
 	bool try_put(Item* item)
 	{
 		if (m_size == m_capacity) {
