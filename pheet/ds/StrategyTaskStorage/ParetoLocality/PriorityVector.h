@@ -16,13 +16,15 @@ public:
 
 	PriorityVector() {}
 
-	PriorityVector(std::vector<size_t>* w) {
+	PriorityVector(std::vector<size_t>* w)
+	{
 		assert(w->size() == N);
 		m_w = w;
 	}
 
 	//TODO: this is just a temp quick and dirty fix
-	PriorityVector(sp::PathPtr path) {
+	PriorityVector(sp::PathPtr path)
+	{
 		assert(path->degree() == N);
 		m_w = new std::vector<size_t>();
 		for (size_t i = 0; i < N; i++) {
@@ -31,11 +33,13 @@ public:
 
 	}
 
-	size_t dimensions() const {
+	size_t dimensions() const
+	{
 		return N;
 	}
 
-	void print() {
+	void print()
+	{
 		std::cout << "[";
 		for (size_t i = 0; i < N; i++) {
 			std::cout << (*m_w)[i];
@@ -46,7 +50,8 @@ public:
 		std::cout << "]";
 	}
 
-	size_t at(size_t idx) const {
+	size_t at(size_t idx) const
+	{
 		assert(idx < N);
 		return (*m_w)[idx];
 	}

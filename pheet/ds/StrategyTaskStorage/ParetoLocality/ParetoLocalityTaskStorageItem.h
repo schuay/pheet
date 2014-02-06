@@ -11,9 +11,9 @@ namespace pheet
 {
 
 template < class Pheet,
-         class Place,   //TODO: do we need the place that owns the item here?
-         class BaseItem,
-         class Strategy >
+           class Place,   //TODO: do we need the place that owns the item here?
+           class BaseItem,
+           class Strategy >
 class ParetoLocalityTaskStorageItem : public BaseItem
 {
 public:
@@ -31,9 +31,9 @@ private:
 };
 
 template < class Pheet,
-         class Place,
-         class BaseItem,
-         class Strategy >
+           class Place,
+           class BaseItem,
+           class Strategy >
 ParetoLocalityTaskStorageItem<Pheet, Place, BaseItem, Strategy>::
 ParetoLocalityTaskStorageItem(Strategy&& strategy, T t)
 {
@@ -43,9 +43,9 @@ ParetoLocalityTaskStorageItem(Strategy&& strategy, T t)
 }
 
 template < class Pheet,
-         class Place,
-         class BaseItem,
-         class Strategy >
+           class Place,
+           class BaseItem,
+           class Strategy >
 typename ParetoLocalityTaskStorageItem<Pheet, Place, BaseItem, Strategy>::T
 ParetoLocalityTaskStorageItem<Pheet, Place, BaseItem, Strategy>::
 take()
@@ -56,9 +56,9 @@ take()
 }
 
 template < class Pheet,
-         class Place,
-         class BaseItem,
-         class Strategy >
+           class Place,
+           class BaseItem,
+           class Strategy >
 void
 ParetoLocalityTaskStorageItem<Pheet, Place, BaseItem, Strategy>::
 take_and_delete()
@@ -69,9 +69,9 @@ take_and_delete()
 }
 
 template < class Pheet,
-         class Place,
-         class BaseItem,
-         class Strategy >
+           class Place,
+           class BaseItem,
+           class Strategy >
 bool
 ParetoLocalityTaskStorageItem<Pheet, Place, BaseItem, Strategy>::
 is_taken()
@@ -80,9 +80,9 @@ is_taken()
 }
 
 template < class Pheet,
-         class Place,
-         class BaseItem,
-         class Strategy >
+           class Place,
+           class BaseItem,
+           class Strategy >
 bool
 ParetoLocalityTaskStorageItem<Pheet, Place, BaseItem, Strategy>::
 is_taken_or_dead()
@@ -91,9 +91,9 @@ is_taken_or_dead()
 }
 
 template < class Pheet,
-         class Place,
-         class BaseItem,
-         class Strategy >
+           class Place,
+           class BaseItem,
+           class Strategy >
 Strategy*
 ParetoLocalityTaskStorageItem<Pheet, Place, BaseItem, Strategy>::
 strategy()

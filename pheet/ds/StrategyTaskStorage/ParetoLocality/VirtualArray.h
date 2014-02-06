@@ -14,12 +14,14 @@ class VirtualArray
 {
 public:
 	VirtualArray()
-		: m_block_cnt(1) {
+		: m_block_cnt(1)
+	{
 		m_first = new Block();
 		m_last = m_first;
 	}
 
-	~VirtualArray() {
+	~VirtualArray()
+	{
 		while (m_first->next()) {
 			m_first = m_first->next();
 			delete m_first->prev();
@@ -27,7 +29,8 @@ public:
 		delete m_first;
 	}
 
-	void push(T item) {
+	void push(T item)
+	{
 		if (m_last->size() == m_last->capacity()) {
 			add_block();
 		}
@@ -35,14 +38,16 @@ public:
 	}
 
 	//TODO: implement element access using iterators instead?
-	T& operator[](size_t idx) {
+	T& operator[](size_t idx)
+	{
 		assert(idx < size());
 
 		Block* block =  find_block(idx);
 		return (*block)[idx % block_size()];
 	}
 
-	void swap(size_t left, size_t right) {
+	void swap(size_t left, size_t right)
+	{
 		//TODO: tmp should be the last element of a block (so that spy finds the
 		//element currently swapped out)
 		T tmp = get(left);
@@ -50,11 +55,13 @@ public:
 		set(right, tmp);
 	}
 
-	size_t size() {
+	size_t size()
+	{
 		return DATA_BLOCK_SIZE * (m_block_cnt - 1) + m_last->size();
 	}
 
-	size_t block_size() {
+	size_t block_size()
+	{
 		return DATA_BLOCK_SIZE;
 	}
 
@@ -62,7 +69,8 @@ private:
 	typedef VirtualArrayBlock<T, DATA_BLOCK_SIZE> Block;
 
 private:
-	Block* find_block(size_t idx) {
+	Block* find_block(size_t idx)
+	{
 		//find block that stores element at location idx
 		Block* tmp = m_first;
 		size_t cnt = block_size();
@@ -74,17 +82,20 @@ private:
 		return tmp;
 	}
 
-	void set(size_t idx, T& item) {
+	void set(size_t idx, T& item)
+	{
 		Block* block  = find_block(idx);
 		(*block)[idx % block_size()] = item;
 	}
 
-	T& get(size_t idx) {
+	T& get(size_t idx)
+	{
 		Block* block  = find_block(idx);
 		return (*block)[idx % block_size()];
 	}
 
-	void add_block() {
+	void add_block()
+	{
 		Block* tmp = new Block();
 		tmp->prev(m_last);
 		m_last->next(tmp);

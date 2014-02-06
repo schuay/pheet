@@ -22,14 +22,17 @@ public:
 	typedef typename Item::T T;
 
 
-	ParetoLocalityTaskStorageBlock(VirtualArray<Item*>* ary, size_t offset, PivotQueue* pivots, size_t lvl = 0)
-		: m_data(ary), m_offset(offset), m_size(0), m_lvl(lvl), m_pivots(pivots) {
+	ParetoLocalityTaskStorageBlock(VirtualArray<Item*>* ary, size_t offset, PivotQueue* pivots,
+	                               size_t lvl = 0)
+		: m_data(ary), m_offset(offset), m_size(0), m_lvl(lvl), m_pivots(pivots)
+	{
 		assert(ary != nullptr);
 		m_capacity = MAX_PARTITION_SIZE * pow(2, m_lvl);
 		m_partitions = new PartitionPointers(m_pivots, m_capacity);
 	}
 
-	bool try_put(Item* item) {
+	bool try_put(Item* item)
+	{
 		if (m_size == m_capacity) {
 			return false;
 		}
@@ -37,7 +40,8 @@ public:
 		return true;
 	}
 
-	void put(Item* item) {
+	void put(Item* item)
+	{
 		assert(m_size < m_capacity);
 		//we only put data in a lvl 0 block
 		assert(m_lvl == 0);
@@ -50,7 +54,8 @@ public:
 	 * Do not remove this item from the block. If such an item does not exist,
 	 * return nullptr.
 	 */
-	Item* top() {
+	Item* top()
+	{
 		Item* best = nullptr;
 		//iterate through items in right-most partition
 		for (size_t i = m_partitions->last(); i < m_partitions->end()
@@ -79,11 +84,13 @@ public:
 	 * An item that is taken is marked for deletion/reuse and will not be returned
 	 * via a call to top() anymore.
 	 */
-	T take(Item* item) {
+	T take(Item* item)
+	{
 		return item->take();
 	}
 
-	ParetoLocalityTaskStorageBlock* merge_next() {
+	ParetoLocalityTaskStorageBlock* merge_next()
+	{
 		assert(m_next != nullptr);
 		assert(m_next ->lvl() == m_lvl);
 		//we only merge full blocks
@@ -106,38 +113,46 @@ public:
 		return this;
 	}
 
-	void partition() {
+	void partition()
+	{
 		delete m_partitions;
 		m_partitions = new PartitionPointers(m_pivots, m_capacity, m_capacity);
 		partition(0, 0, m_capacity - 1);
 		drop_dead_items();
 	}
 
-	ParetoLocalityTaskStorageBlock* prev() {
+	ParetoLocalityTaskStorageBlock* prev()
+	{
 		return m_prev;
 	}
 
-	void prev(ParetoLocalityTaskStorageBlock* b) {
+	void prev(ParetoLocalityTaskStorageBlock* b)
+	{
 		m_prev = b;
 	}
 
-	ParetoLocalityTaskStorageBlock* next() {
+	ParetoLocalityTaskStorageBlock* next()
+	{
 		return m_next;
 	}
 
-	void next(ParetoLocalityTaskStorageBlock* b) {
+	void next(ParetoLocalityTaskStorageBlock* b)
+	{
 		m_next = b;
 	}
 
-	size_t lvl() {
+	size_t lvl()
+	{
 		return m_lvl;
 	}
 
-	size_t capacity() {
+	size_t capacity()
+	{
 		return m_capacity;
 	}
 
-	size_t offset() {
+	size_t offset()
+	{
 		return m_offset;
 	}
 
@@ -145,19 +160,22 @@ public: //methods required for white box testing
 	/**
 	 * Allow putting items into blocks of level > 0. Allows for easier testing.
 	 */
-	void put_internal(Item* item) {
+	void put_internal(Item* item)
+	{
 		m_data->push(item);
 		m_partitions->end(m_partitions->end() + 1);
 		++m_size;
 	}
 
 
-	Item* at(size_t idx) {
+	Item* at(size_t idx)
+	{
 		assert(idx < m_capacity);
 		return data_at(idx);
 	}
 
-	PartitionPointers* partition_pointers() {
+	PartitionPointers* partition_pointers()
+	{
 		return m_partitions;
 	}
 
@@ -166,7 +184,8 @@ private:
 	/**
 	 * Drop all items in the "dead tasks" partition
 	 */
-	void drop_dead_items() {
+	void drop_dead_items()
+	{
 		for (size_t i = m_partitions->dead(); i < m_capacity; i++) {
 			Item* item = data_at(i);
 			assert(!item || item->is_taken_or_dead());
@@ -182,7 +201,8 @@ private:
 		}
 	}
 
-	void partition(size_t depth, size_t left, size_t right) {
+	void partition(size_t depth, size_t left, size_t right)
+	{
 		assert(left < right);
 		assert(depth + 1 == m_partitions->size());
 		size_t old_left = left;
@@ -319,7 +339,8 @@ private:
 		m_failed_attempts = 0;
 	}
 
-	void swap(size_t left, size_t right) {
+	void swap(size_t left, size_t right)
+	{
 		assert(left <= right);
 		if (left < right) {
 			m_data->swap(left + m_offset, right + m_offset);
@@ -327,13 +348,15 @@ private:
 	}
 
 	//TODO: use VirtualArray::get and ::set instead
-	Item*& data_at(size_t idx) {
+	Item*& data_at(size_t idx)
+	{
 		assert(idx < m_capacity);
 		return (*m_data)[m_offset + idx];
 	}
 
 	//TODO: move to class PivotQueue? Problem: need range of current elements
-	PivotElement* generate_pivot(size_t left, size_t right) {
+	PivotElement* generate_pivot(size_t left, size_t right)
+	{
 		std::mt19937 rng;
 		rng.seed(std::random_device()());
 
@@ -363,7 +386,8 @@ private:
 
 private:
 
-	void add_partition_pointer(size_t idx) {
+	void add_partition_pointer(size_t idx)
+	{
 		m_partitions->add(idx);
 		m_partitions->last(idx);
 	}
