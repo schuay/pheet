@@ -3,7 +3,7 @@
 
 #include "VirtualArrayBlock.h"
 
-#define DATA_BLOCK_SIZE (2)
+#define DATA_BLOCK_SIZE (100)
 
 
 /**
