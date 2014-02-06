@@ -19,6 +19,7 @@ public:
 	}
 
 	bool fall_back() {
+		assert(m_pivot_queue->size() >= m_idx.size() - 1);
 		if (m_idx.size() == 1) {
 			return false;
 		}
@@ -68,6 +69,7 @@ public:
 
 	void add(size_t idx) {
 		m_idx.push_back(idx);
+		assert(m_pivot_queue->refcnt(m_idx.size() - 2) > 0);
 	}
 
 public: //methods required for white box testing
