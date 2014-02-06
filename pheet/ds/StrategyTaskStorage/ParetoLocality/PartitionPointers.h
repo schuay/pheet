@@ -17,7 +17,7 @@ public:
 	PartitionPointers(PivotQueue* pivot_queue, size_t block_size, size_t last_element = 0)
 		: m_pivot_queue(pivot_queue), m_last(0), m_dead(block_size), m_end(last_element)
 	{
-		m_idx.push_back(0);
+		m_idx.push_back(std::make_pair(0, nullptr));
 	}
 
 	~PartitionPointers()
@@ -36,7 +36,7 @@ public:
 		m_dead = m_last;
 		m_idx.pop_back();
 		assert(m_idx.size() > 0);
-		m_last = m_idx.back();
+		m_last = m_idx.back().first;
 		//reduce reference count on pivot element used for that partition step
 		//Note: first partition pointer is always index 0 and is not associated
 		//with a pivot element
@@ -85,21 +85,15 @@ public:
 		m_end = val;
 	}
 
-	void add(size_t idx)
+	void add(size_t idx, PivotElement* pivot)
 	{
-		m_idx.push_back(idx);
+		m_idx.push_back(std::make_pair(idx, pivot));
 		assert(m_pivot_queue->refcnt(m_idx.size() - 2) > 0);
-	}
-
-public: //methods required for white box testing
-	size_t at(size_t idx) const
-	{
-		return m_idx[idx];
 	}
 
 private:
 	PivotQueue* m_pivot_queue;
-	std::vector<size_t> m_idx;
+	std::vector<std::pair<size_t, PivotElement*>> m_idx;
 	/* start of last partition (excluding dead items) */
 	size_t m_last;
 	/* Dead items are stored right of the right-most partition, i.e., at the

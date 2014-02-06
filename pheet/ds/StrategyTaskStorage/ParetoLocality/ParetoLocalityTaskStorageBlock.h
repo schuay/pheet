@@ -328,7 +328,7 @@ private:
 		if (left != m_partitions->dead()) {
 			/* if rightmost partition contains at least 1 item, add a partition
 			   pointer */
-			add_partition_pointer(left);
+			add_partition_pointer(left, pivot);
 			m_failed_attempts = 0;
 		} else {
 			/* all items were partitioned into left or dead partition. Thus, our
@@ -356,7 +356,7 @@ private:
 				 * we can just skip it and continue partitioning with the next
 				 * pivot element?
 				 */
-				add_partition_pointer(left);
+				add_partition_pointer(left, pivot);
 				m_failed_attempts = 0;
 			}
 		}
@@ -417,9 +417,9 @@ private:
 
 private:
 
-	void add_partition_pointer(size_t idx)
+	void add_partition_pointer(size_t idx, PivotElement* pivot)
 	{
-		m_partitions->add(idx);
+		m_partitions->add(idx, pivot);
 		m_partitions->last(idx);
 	}
 
