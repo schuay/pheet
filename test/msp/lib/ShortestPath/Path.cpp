@@ -8,6 +8,7 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <iostream>
 
 using namespace graph;
 using std::vector;
@@ -66,7 +67,7 @@ print() const
 {
 	printf("%lu --> %lu", m_tail->id(), m_head->id());
 	printf(" (");
-	for (auto const & w : m_weight) {
+	for (auto const& w : m_weight) {
 		printf("%d ", w);
 	}
 	printf(")\n");
@@ -79,7 +80,7 @@ print_verbose() const
 	if (m_pred != nullptr) {
 		m_pred->print_verbose();
 		printf("\t-- (");
-		for (auto const & w : m_weight) {
+		for (auto const& w : m_weight) {
 			printf("%d ", w);
 		}
 		printf(")");
