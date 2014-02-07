@@ -57,11 +57,6 @@ public:
 		return m_last;
 	}
 
-	void last(size_t val)
-	{
-		m_last = val;
-	}
-
 	//TODO: dead is not a good name, since it is also used for dead tasks
 	size_t dead() const
 	{
@@ -92,6 +87,7 @@ public:
 	{
 		m_idx.push_back(std::make_pair(idx, pivot));
 		assert(m_pivot_queue->refcnt(m_idx.size() - 2) > 0);
+		m_last = idx;
 	}
 
 private:

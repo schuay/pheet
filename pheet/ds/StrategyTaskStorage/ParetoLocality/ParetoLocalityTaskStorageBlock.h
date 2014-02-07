@@ -373,7 +373,6 @@ private:
 			/* if rightmost partition contains at least 1 item, add a partition
 			   pointer */
 			m_partitions->add(left, pivot);
-			m_partitions->last(left);
 			return false;
 		}
 		/* all items were partitioned into left or dead partition. Thus, our
