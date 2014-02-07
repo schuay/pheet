@@ -313,58 +313,89 @@ private:
 				swap(left, m_partitions->dead());
 			}
 		}
-
 		assert(data_at(left));
-		//assert(data_at(right));
 
 		//check if item at left belongs to left or right partition
 		if (data_at(left)->strategy()->greater_priority(p_dim, p_val)) {
 			++left;
 		}
-
 		assert(left <= m_partitions->dead());
 
-		if (left != m_partitions->dead()) {
-			/* if rightmost partition contains at least 1 item, add a partition
-			   pointer */
-			add_partition_pointer(left, pivot);
+		//check if the last partitioning step needs to be redone
+		if (!partition_failed(pivot, left)) {
 			m_failed_attempts = 0;
 		} else {
-			/* all items were partitioned into left or dead partition. Thus, our
-			 * rightmost partition is [old_left, dead[. In other words: [left, dead[
-			 * is an empty partition. Thus, we do not store a partition pointer and
-			 * can release the pivot element.
+			/* partitioning failed. Reset the start of the section that needs
+			 * to be partitioned further. Note: The end of this section is
+			 * the start of the dead partition.
 			 */
-			m_pivots->release(pivot);
-			if (pivot->refcnt() == 0) {
-				/* The pivot element isn't used anywhere else. Thus, delete it
-				 * and try to partition again (a new pivot element will be
-				 * generated).
-				 */
-				left = old_left;
-				delete pivot;
-				/* If right-most partition > MAX_PARTITION_SIZE, we will partition again.
-				 * This could potentially run indefinitely (think of all items having
-				 * the same priority vector). Thus, bound the number of subsequent
-				 * partitioning attempts that do not create a new partition.
-				 */
-				++m_failed_attempts;
-			} else {
-				/* the pivot element that caused [left, dead[ to be empty
-				 * is already used by other blocks. We do not need to create the
-				 * partition, but cannot remove the pivot element.
-				*/
-				m_failed_attempts = 0;
-			}
+			left = old_left;
+			/* If right-most partition > MAX_PARTITION_SIZE, we will partition again.
+			 * This could potentially run indefinitely (think of all items having
+			 * the same priority vector). Thus, bound the number of subsequent
+			 * partitioning attempts that do not create a new partition.
+			 */
+			++m_failed_attempts;
 		}
 
 		if ((m_partitions->dead() - left > MAX_PARTITION_SIZE) && m_failed_attempts < MAX_ATTEMPTS) {
+			/* If partitioning succeeded but the resulting right-most (excluding
+			 * dead) partition is >MAX_PARTITION_SIZE, partition recursively */
 			if (m_failed_attempts == 0) {
 				++depth;
 			}
 			partition(depth, left, m_partitions->dead() - 1);
 		}
 		m_failed_attempts = 0;
+	}
+
+	/**
+	 *
+	 * A partitioning step failed iff
+	 * - The newly created right-most partition (excluding dead partition) is
+	 *   empty; and
+	 * - The pivot element used for the partitioning step is not used by any
+	 *   other block
+	 *
+	 * If the partitioning step did not fail, a new partition pointer is saved if
+	 * neccessary.
+	 *
+	 * @param pivot The pivot element used for the partition step
+	 * @param left Start of the newly created partition (which is the right-most
+	 * partition of the block, except for the dead partition).
+	 * @return False, iff partition can proceed with the next step. True
+	 * otherwise (implying that the last partitioning step has to be repeated
+	 * with a new pivot element).
+	 */
+	bool partition_failed(PivotElement* pivot, size_t left)
+	{
+		if (left != m_partitions->dead()) {
+			/* if rightmost partition contains at least 1 item, add a partition
+			   pointer */
+			add_partition_pointer(left, pivot);
+			return false;
+		}
+		/* all items were partitioned into left or dead partition. Thus, our
+		 * rightmost non- empty partition is [old_left, dead[. In other words:
+		 * [left, dead[ is an empty partition. Thus, we can release the pivot
+		 * element.
+		 */
+		m_pivots->release(pivot);
+		if (pivot->refcnt() == 0) {
+			/* The pivot element isn't used anywhere else. Thus, delete it and
+			 * tell the caller that partitioning failed (So that he can try again
+			 * with a different pivot element).
+			 */
+			delete pivot;
+			return true;
+		}
+		/* the pivot element that caused [left, dead[ to be empty
+		 * is already used by other blocks. We do not need to create the
+		 * partition and can continue to partition recursively, but cannot
+		 * remove the pivot element or try to partition again with a different
+		 * pivot element.
+		 */
+		return false;
 	}
 
 	void swap(size_t left, size_t right)
