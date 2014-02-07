@@ -194,7 +194,7 @@ public: //methods required for white box testing
 	void put_internal(Item* item)
 	{
 		m_data->push(item);
-		m_partitions->end(m_partitions->end() + 1);
+		m_partitions->increment_end();
 		++m_size;
 	}
 

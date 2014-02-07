@@ -78,9 +78,9 @@ public:
 		return m_end;
 	}
 
-	void end(size_t val)
+	void increment_end()
 	{
-		m_end = val;
+		++m_end ;
 	}
 
 	void add(size_t idx, PivotElement* pivot)
