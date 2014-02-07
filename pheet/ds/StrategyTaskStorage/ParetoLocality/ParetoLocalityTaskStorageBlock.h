@@ -372,7 +372,8 @@ private:
 		if (left != m_partitions->dead()) {
 			/* if rightmost partition contains at least 1 item, add a partition
 			   pointer */
-			add_partition_pointer(left, pivot);
+			m_partitions->add(left, pivot);
+			m_partitions->last(left);
 			return false;
 		}
 		/* all items were partitioned into left or dead partition. Thus, our
@@ -441,14 +442,6 @@ private:
 			++attempts;
 		}
 		return nullptr;
-	}
-
-private:
-
-	void add_partition_pointer(size_t idx, PivotElement* pivot)
-	{
-		m_partitions->add(idx, pivot);
-		m_partitions->last(idx);
 	}
 
 private:
