@@ -57,7 +57,9 @@ public:
 		assert(m_size < m_capacity);
 		//we only put data in a lvl 0 block
 		assert(m_lvl == 0);
-		put_internal(item);
+		m_data->push(item);
+		m_partitions->increment_end();
+		++m_size;
 	}
 
 	/**
@@ -185,29 +187,6 @@ public:
 	size_t offset() const
 	{
 		return m_offset;
-	}
-
-public: //methods required for white box testing
-	/**
-	 * Allow putting items into blocks of level > 0. Allows for easier testing.
-	 */
-	void put_internal(Item* item)
-	{
-		m_data->push(item);
-		m_partitions->increment_end();
-		++m_size;
-	}
-
-
-	Item* at(size_t idx)
-	{
-		assert(idx < m_capacity);
-		return data_at(idx);
-	}
-
-	PartitionPointers* partition_pointers() const
-	{
-		return m_partitions;
 	}
 
 private:
