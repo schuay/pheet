@@ -12,6 +12,9 @@
 
 #include <vector>
 
+namespace pheet
+{
+
 class PivotQueue
 {
 public:
@@ -79,5 +82,7 @@ private:
 private:
 	std::vector<PivotElement*> elements;
 };
+
+} /* namespace pheet */
 
 #endif /* PIVOT_QUEUE_H_ */

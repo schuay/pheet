@@ -3,6 +3,9 @@
 
 #include "pheet/ds/StrategyTaskStorage/ParetoLocality/PriorityVector.h"
 
+namespace pheet
+{
+
 /**
  *
  * The pareto less operator returns true iff:
@@ -21,7 +24,8 @@ template<size_t N>
 class less //TODO: we have pareto::less as well
 {
 public:
-	bool operator()(PriorityVector<N> const*  l, PriorityVector<N> const* r) const {
+	bool operator()(PriorityVector<N> const*  l, PriorityVector<N> const* r) const
+	{
 		assert(l && r);
 		for (size_t i = 0; i < N; i++) {
 			if (l->at(i) > r->at(i)) {
@@ -32,5 +36,6 @@ public:
 	}
 };
 
+} /* namespace pheet */
 
 #endif /* LESS_H_ */

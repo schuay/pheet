@@ -15,6 +15,9 @@
 #include "pheet/misc/assert.h"
 #include "test/msp/lib/ShortestPath/Path.h"
 
+namespace pheet
+{
+
 template <size_t N>
 class PriorityVector
 {
@@ -66,5 +69,7 @@ public:
 private:
 	std::vector<size_t>* m_w;
 };
+
+} /* namespace pheet */
 
 #endif /* WEIGHT_V_H_ */

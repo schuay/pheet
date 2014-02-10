@@ -12,6 +12,8 @@
 
 #define DATA_BLOCK_SIZE (100)
 
+namespace pheet
+{
 
 /**
  * A virtual array of infinite size
@@ -117,5 +119,6 @@ private:
 
 };
 
+} /* namespace pheet */
 
 #endif /* VIRTUAL_ARRAY_H_ */

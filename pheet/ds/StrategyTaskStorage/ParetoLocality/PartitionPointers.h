@@ -11,6 +11,9 @@
 #include <vector>
 #include "PivotQueue.h"
 
+namespace pheet
+{
+
 class PartitionPointers
 {
 public:
@@ -102,5 +105,7 @@ private:
 	size_t m_end;
 
 };
+
+} /* namespace pheet */
 
 #endif /* PARTITION_POINTERS_H_ */

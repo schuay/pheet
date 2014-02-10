@@ -10,6 +10,9 @@
 
 #include "pheet/misc/assert.h"
 
+namespace pheet
+{
+
 template <class T, size_t N>
 class VirtualArrayBlock
 {
@@ -81,5 +84,7 @@ private:
 	Self* m_prev;
 
 };
+
+} /* namespace pheet */
 
 #endif /* DATA_BLOCK_H_ */

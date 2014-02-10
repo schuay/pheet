@@ -11,6 +11,8 @@
 #include <pheet/misc/assert.h>
 #include <stdlib.h>
 
+namespace pheet
+{
 
 class PivotElement
 {
@@ -55,5 +57,7 @@ private:
 	const size_t m_pos;
 	size_t m_refcnt;
 };
+
+} /* namespace pheet */
 
 #endif /* PIVOT_ELEMENT_H_ */
