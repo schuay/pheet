@@ -25,8 +25,7 @@ public:
 	VirtualArray()
 		: m_block_cnt(1)
 	{
-		m_first = new Block();
-		m_last = m_first;
+		m_last = m_first = new Block();
 	}
 
 	~VirtualArray()
