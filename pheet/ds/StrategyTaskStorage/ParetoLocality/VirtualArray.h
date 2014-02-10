@@ -68,7 +68,7 @@ public:
 		return DATA_BLOCK_SIZE * (m_block_cnt - 1) + m_last->size();
 	}
 
-	constexpr size_t block_size()
+	constexpr size_t block_size() const
 	{
 		return DATA_BLOCK_SIZE;
 	}
