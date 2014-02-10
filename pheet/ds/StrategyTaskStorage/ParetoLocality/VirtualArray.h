@@ -31,9 +31,9 @@ public:
 
 	~VirtualArray()
 	{
-		while (m_first->next()) {
-			m_first = m_first->next();
-			delete m_first->prev();
+		while (m_first->next != nullptr) {
+			m_first = m_first->next;
+			delete m_first->prev;
 		}
 		delete m_first;
 	}
@@ -85,7 +85,7 @@ private:
 		size_t cnt = block_size();
 		//TODO: reduce asymptotic complexity
 		while (cnt <= idx) {
-			tmp = tmp->next();
+			tmp = tmp->next;
 			cnt += block_size();
 		}
 		return tmp;
@@ -106,8 +106,8 @@ private:
 	void add_block()
 	{
 		Block* tmp = new Block();
-		tmp->prev(m_last);
-		m_last->next(tmp);
+		tmp->prev = m_last;
+		m_last->next = tmp;
 		m_last = tmp;
 		++m_block_cnt;
 	}
