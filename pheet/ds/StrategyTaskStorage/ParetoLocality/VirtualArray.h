@@ -47,7 +47,7 @@ public:
 	//TODO: implement element access using iterators instead?
 	T& operator[](size_t idx)
 	{
-		assert(idx < size());
+		pheet_assert(idx < size());
 
 		Block* block =  find_block(idx);
 		return (*block)[idx % block_size()];

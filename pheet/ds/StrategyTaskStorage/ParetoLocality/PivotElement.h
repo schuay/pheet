@@ -8,7 +8,9 @@
 #ifndef PIVOT_ELEMENT_H_
 #define PIVOT_ELEMENT_H_
 
+#include <pheet/misc/assert.h>
 #include <stdlib.h>
+
 
 class PivotElement
 {
@@ -43,7 +45,7 @@ public:
 
 	void decrement_refcnt()
 	{
-		assert(m_refcnt > 0);
+		pheet_assert(m_refcnt > 0);
 		--m_refcnt;
 	}
 

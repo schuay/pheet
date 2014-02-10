@@ -123,7 +123,7 @@ push(Strategy&& strategy, T data)
 		size_t nb_offset = last->offset() + last->capacity();
 		Block* nb = new Block(m_array, nb_offset, &m_pivots);
 		nb->prev(last);
-		assert(!last->next());
+		pheet_assert(!last->next());
 		last->next(nb);
 		last = nb;
 

@@ -10,7 +10,6 @@
 
 #include "PivotElement.h"
 
-#include <assert.h>
 #include <vector>
 
 class PivotQueue
@@ -48,7 +47,7 @@ public:
 
 	PivotElement* get(size_t idx)
 	{
-		assert(idx < elements.size());
+		pheet_assert(idx < elements.size());
 		elements[idx]->increment_refcnt();
 		return elements[idx];
 	}
@@ -56,7 +55,7 @@ public:
 	void release(PivotElement* pivot)
 	{
 		size_t idx = pivot->pos();
-		assert(idx < elements.size());
+		pheet_assert(idx < elements.size());
 		pivot->decrement_refcnt();
 		if (pivot->refcnt() == 0) {
 			PivotElement* element = elements.back();

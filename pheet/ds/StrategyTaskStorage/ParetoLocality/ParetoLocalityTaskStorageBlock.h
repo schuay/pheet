@@ -36,7 +36,7 @@ public:
 	                               size_t lvl = 0)
 		: m_data(ary), m_offset(offset), m_size(0), m_lvl(lvl), m_pivots(pivots)
 	{
-		assert(ary != nullptr);
+		pheet_assert(ary != nullptr);
 		m_capacity = MAX_PARTITION_SIZE * pow(2, m_lvl);
 		m_partitions = new PartitionPointers(m_pivots, m_capacity);
 	}
@@ -57,9 +57,9 @@ public:
 
 	void put(Item* item)
 	{
-		assert(m_size < m_capacity);
+		pheet_assert(m_size < m_capacity);
 		//we only put data in a lvl 0 block
-		assert(m_lvl == 0);
+		pheet_assert(m_lvl == 0);
 		m_data->push(item);
 		m_partitions->increment_end();
 		++m_size;
@@ -110,7 +110,7 @@ public:
 				best = top();
 			}
 		}
-		assert(!(best && best->is_taken_or_dead())); //don't return dead or taken items
+		pheet_assert(!(best && best->is_taken_or_dead())); //don't return dead or taken items
 		return best;
 	}
 
@@ -127,10 +127,10 @@ public:
 
 	ParetoLocalityTaskStorageBlock* merge_next()
 	{
-		assert(m_next != nullptr);
-		assert(m_next ->lvl() == m_lvl);
+		pheet_assert(m_next != nullptr);
+		pheet_assert(m_next ->lvl() == m_lvl);
 		//we only merge full blocks
-		assert(m_size == m_capacity);
+		pheet_assert(m_size == m_capacity);
 
 		//expand this block to cover this as well as next block
 		++m_lvl;
@@ -201,7 +201,7 @@ private:
 	{
 		for (size_t i = m_partitions->dead(); i < m_capacity; i++) {
 			Item* item = data_at(i);
-			assert(!item || item->is_taken_or_dead());
+			pheet_assert(!item || item->is_taken_or_dead());
 			if (item && !item->is_taken()) {
 				item->take_and_delete();
 			}
@@ -216,7 +216,7 @@ private:
 
 	void partition(size_t depth, size_t left, size_t right)
 	{
-		assert(left < right);
+		pheet_assert(left < right);
 		size_t old_left = left;
 
 		//generate new pivot element if neccesarry
@@ -257,7 +257,7 @@ private:
 						//This is safe since left < right
 						m_partitions->dead(right);
 						right--;
-						assert(left <= right);
+						pheet_assert(left <= right);
 					} else {
 						//swap right with rightmost non-dead element
 						m_partitions->decrease_dead();
@@ -266,7 +266,7 @@ private:
 				} else if (!data_at(left) || data_at(left)->is_taken_or_dead()) {
 					/* left is dead. Note that left+1==dead may never occur while
 					 * left < right, since right < dead holds. */
-					assert(left + 1 < m_partitions->dead());
+					pheet_assert(left + 1 < m_partitions->dead());
 					/* swap left with rightmost non-dead element. This may swap
 					 * an element >=pivot to left, but we will not advance left.
 					 * Progress is made by putting one dead element into it'S final
@@ -284,7 +284,7 @@ private:
 			}
 		} while (left < right);
 
-		assert(left == right);
+		pheet_assert(left == right);
 
 		//check if left==right points to dead item
 		if (!data_at(left) || data_at(left)->is_taken_or_dead()) {
@@ -295,13 +295,13 @@ private:
 				swap(left, m_partitions->dead());
 			}
 		}
-		assert(data_at(left));
+		pheet_assert(data_at(left));
 
 		//check if item at left belongs to left or right partition
 		if (data_at(left)->strategy()->greater_priority(p_dim, p_val)) {
 			++left;
 		}
-		assert(left <= m_partitions->dead());
+		pheet_assert(left <= m_partitions->dead());
 
 		//check if the last partitioning step needs to be redone
 		if (!partition_failed(pivot, left)) {
@@ -382,7 +382,7 @@ private:
 
 	void swap(size_t left, size_t right)
 	{
-		assert(left <= right);
+		pheet_assert(left <= right);
 		if (left < right) {
 			m_data->swap(left + m_offset, right + m_offset);
 		}
@@ -391,7 +391,7 @@ private:
 	//TODO: use VirtualArray::get and ::set instead
 	Item*& data_at(size_t idx)
 	{
-		assert(idx < m_capacity);
+		pheet_assert(idx < m_capacity);
 		return (*m_data)[m_offset + idx];
 	}
 

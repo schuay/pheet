@@ -30,7 +30,7 @@ public:
 
 	bool fall_back()
 	{
-		assert(m_pivot_queue->size() >= m_idx.size() - 1);
+		pheet_assert(m_pivot_queue->size() >= m_idx.size() - 1);
 		if (m_idx.size() == 1) {
 			return false;
 		}
@@ -41,7 +41,7 @@ public:
 		m_pivot_queue->release(m_idx.back().second);
 		//remove the partition pointer
 		m_idx.pop_back();
-		assert(m_idx.size() > 0);
+		pheet_assert(m_idx.size() > 0);
 		m_last = m_idx.back().first;
 
 		return true;

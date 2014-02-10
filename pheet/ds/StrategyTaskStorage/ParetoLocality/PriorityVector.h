@@ -8,11 +8,11 @@
 #ifndef WEIGHT_V_H_
 #define WEIGHT_V_H_
 
-#include <assert.h>
 #include <cstdlib>
 #include <iostream>
 #include <vector>
 
+#include "pheet/misc/assert.h"
 #include "test/msp/lib/ShortestPath/Path.h"
 
 template <size_t N>
@@ -25,14 +25,14 @@ public:
 
 	PriorityVector(std::vector<size_t>* w)
 	{
-		assert(w->size() == N);
+		pheet_assert(w->size() == N);
 		m_w = w;
 	}
 
 	//TODO: this is just a temp quick and dirty fix
 	PriorityVector(sp::PathPtr path)
 	{
-		assert(path->degree() == N);
+		pheet_assert(path->degree() == N);
 		m_w = new std::vector<size_t>();
 		for (size_t i = 0; i < N; i++) {
 			m_w->push_back(path->weight()[i]);
@@ -59,7 +59,7 @@ public:
 
 	size_t at(size_t idx) const
 	{
-		assert(idx < N);
+		pheet_assert(idx < N);
 		return (*m_w)[idx];
 	}
 

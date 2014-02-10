@@ -8,7 +8,7 @@
 #ifndef DATA_BLOCK_H_
 #define DATA_BLOCK_H_
 
-#include <assert.h>
+#include "pheet/misc/assert.h"
 
 template <class T, size_t N>
 class VirtualArrayBlock
@@ -28,19 +28,19 @@ public:
 
 	void push(T item)
 	{
-		assert(m_size < N);
+		pheet_assert(m_size < N);
 		data[m_size++] = item;
 	}
 
 	T pop()
 	{
-		assert(m_size > 0);
+		pheet_assert(m_size > 0);
 		return data[--m_size];
 	}
 
 	T& operator[](size_t idx)
 	{
-		assert(idx < N);
+		pheet_assert(idx < N);
 		return data[idx];
 	}
 
