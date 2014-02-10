@@ -77,9 +77,11 @@ public:
 		Item* best = nullptr;
 
 		//iterate through items in right-most partition
-		const size_t end = std::min(m_partitions->end(), m_partitions->dead());
-		for (size_t i = m_partitions->last(); i < end; i++) {
-			Item* item = data_at(i);
+		const size_t end = m_offset + std::min(m_partitions->end(), m_partitions->dead());
+		auto it = m_data.iterator_to(m_offset + m_partitions->last());
+		const auto end_it = m_data.iterator_to(end);
+		for (; it != end_it; it++) {
+			Item* item = *it;
 			if (item == nullptr) {
 				continue;
 			}
@@ -92,7 +94,7 @@ public:
 				/* TODO: With multiple threads, this can lead to errors. */
 				item->take_and_delete();
 				delete item;
-				data_at(i) = nullptr;
+				*it = nullptr;
 				continue;
 			}
 
