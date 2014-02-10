@@ -82,15 +82,15 @@ public:
 				continue;
 			}
 
+			if (item->is_taken()) {
+				continue;
+			}
+
 			if (item->is_dead()) {
 				/* TODO: With multiple threads, this can lead to errors. */
 				item->take_and_delete();
 				delete item;
 				data_at(i) = nullptr;
-				continue;
-			}
-
-			if (item->is_taken()) {
 				continue;
 			}
 
