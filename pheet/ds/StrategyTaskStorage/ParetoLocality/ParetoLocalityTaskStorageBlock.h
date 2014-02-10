@@ -398,8 +398,12 @@ private:
 	PivotElement* generate_pivot(size_t left, size_t right, size_t pos)
 	{
 		std::mt19937 rng;
-		rng.seed(std::random_device()());
-
+		size_t seed = std::random_device()();
+		//quick and dirty fix to de-randomize tests when in debug mode
+#ifdef PHEET_DEBUG_MODE
+		seed = 42;
+#endif
+		rng.seed(seed);
 		std::uniform_int_distribution<std::mt19937::result_type> dist_e(left, right);
 
 		size_t upper = data_at(left)->strategy()->nr_dimensions() - 1;
