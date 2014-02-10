@@ -58,9 +58,14 @@ public:
 	{
 		//TODO: tmp should be the last element of a block (so that spy finds the
 		//element currently swapped out)
-		T tmp = get(left);
-		set(left, get(right));
-		set(right, tmp);
+		auto& l = operator [](left);
+		auto& r = operator [](right);
+
+		/* This is really a case for std::swap, but apparently some magic will be
+		 * going on here later. */
+		const T tmp = l;
+		l = r;
+		r = tmp;
 	}
 
 	size_t size() const
@@ -88,18 +93,6 @@ private:
 			cnt += block_size();
 		}
 		return tmp;
-	}
-
-	void set(size_t idx, T& item)
-	{
-		Block* block  = find_block(idx);
-		(*block)[idx % block_size()] = item;
-	}
-
-	T& get(size_t idx)
-	{
-		Block* block  = find_block(idx);
-		return (*block)[idx % block_size()];
 	}
 
 	void add_block()
