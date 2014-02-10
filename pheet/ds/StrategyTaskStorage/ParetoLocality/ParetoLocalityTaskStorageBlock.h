@@ -395,7 +395,6 @@ private:
 		return (*m_data)[m_offset + idx];
 	}
 
-	//TODO: move to class PivotQueue? Problem: need range of current elements
 	PivotElement* generate_pivot(size_t left, size_t right, size_t pos)
 	{
 		std::mt19937 rng;
