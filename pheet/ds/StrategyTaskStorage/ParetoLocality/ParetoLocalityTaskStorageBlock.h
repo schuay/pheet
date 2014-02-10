@@ -32,11 +32,10 @@ public:
 	typedef typename Item::T T;
 
 
-	ParetoLocalityTaskStorageBlock(VirtualArray<Item*>* ary, size_t offset, PivotQueue* pivots,
+	ParetoLocalityTaskStorageBlock(VirtualArray<Item*>& array, size_t offset, PivotQueue* pivots,
 	                               size_t lvl = 0)
-		: m_data(ary), m_offset(offset), m_size(0), m_lvl(lvl), m_pivots(pivots)
+		: m_data(array), m_offset(offset), m_size(0), m_lvl(lvl), m_pivots(pivots)
 	{
-		pheet_assert(ary != nullptr);
 		m_capacity = MAX_PARTITION_SIZE * pow(2, m_lvl);
 		m_partitions = new PartitionPointers(m_pivots, m_capacity);
 	}
@@ -60,7 +59,7 @@ public:
 		pheet_assert(m_size < m_capacity);
 		//we only put data in a lvl 0 block
 		pheet_assert(m_lvl == 0);
-		m_data->push(item);
+		m_data.push(item);
 		m_partitions->increment_end();
 		++m_size;
 	}
@@ -393,7 +392,7 @@ private:
 	{
 		pheet_assert(left <= right);
 		if (left < right) {
-			m_data->swap(left + m_offset, right + m_offset);
+			m_data.swap(left + m_offset, right + m_offset);
 		}
 	}
 
@@ -401,7 +400,7 @@ private:
 	Item*& data_at(size_t idx)
 	{
 		pheet_assert(idx < m_capacity);
-		return (*m_data)[m_offset + idx];
+		return m_data[m_offset + idx];
 	}
 
 	PivotElement* generate_pivot(size_t left, size_t right, size_t pos)
@@ -438,7 +437,7 @@ private:
 	}
 
 private:
-	VirtualArray<Item*>* m_data;
+	VirtualArray<Item*>& m_data;
 	size_t m_offset;
 	size_t m_capacity;
 	size_t m_size;

@@ -55,7 +55,7 @@ private:
 	TaskStorage* task_storage;
 	bool created_task_storage;
 
-	VirtualArray<Item*>* m_array;
+	VirtualArray<Item*> m_array;
 	PivotQueue m_pivots;
 	Block* first;
 	Block* last;
@@ -70,7 +70,6 @@ ParetoLocalityTaskStoragePlace(ParentTaskStoragePlace* parent_place)
 	: parent_place(parent_place)
 {
 
-	m_array = new VirtualArray<Item*>();
 	first = new Block(m_array, 0, &m_pivots);
 	last = first;
 	task_storage = TaskStorage::get(this, parent_place->get_central_task_storage(),
@@ -93,8 +92,6 @@ ParetoLocalityTaskStoragePlace<Pheet, TaskStorage, ParentTaskStoragePlace, Strat
 		delete last->next();
 	}
 	delete last;
-
-	delete m_array;
 }
 
 template < class Pheet,
