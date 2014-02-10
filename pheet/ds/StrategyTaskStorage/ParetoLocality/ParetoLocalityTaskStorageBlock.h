@@ -22,6 +22,9 @@
  */
 #define MAX_ATTEMPTS (3)
 
+namespace pheet
+{
+
 template<class Item, size_t MAX_PARTITION_SIZE>
 class ParetoLocalityTaskStorageBlock
 {
@@ -437,5 +440,7 @@ private:
 	ParetoLocalityTaskStorageBlock* m_prev = nullptr;
 
 };
+
+} /* namespace pheet */
 
 #endif /* PARETOLOCALITYTASKSTORAGEBLOCK_H_ */
