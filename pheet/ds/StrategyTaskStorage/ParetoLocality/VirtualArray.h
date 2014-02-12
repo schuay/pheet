@@ -194,17 +194,17 @@ public:
 		r = tmp;
 	}
 
-	size_t size() const
-	{
-		return DATA_BLOCK_SIZE * (m_block_cnt - 1) + m_last->size();
-	}
-
 	constexpr size_t block_size() const
 	{
 		return DATA_BLOCK_SIZE;
 	}
 
 private:
+	size_t size() const
+	{
+		return DATA_BLOCK_SIZE * (m_block_cnt - 1) + m_last->size();
+	}
+
 	Block* find_block(size_t idx) const
 	{
 		//find block that stores element at location idx
