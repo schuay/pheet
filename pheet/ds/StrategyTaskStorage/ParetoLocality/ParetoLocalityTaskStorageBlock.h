@@ -123,7 +123,12 @@ public:
 	 */
 	T take(Item* item)
 	{
-		return item->take();
+		T data = item->take();
+		/* TODO: we can delete item and set it's entry in the VirtualArray to
+		 * nullptr. But for this we need the item's index here*/
+		//delete item;
+		//data_at(i) = nullptr; //This is pseudo code
+		return data;
 	}
 
 	ParetoLocalityTaskStorageBlock* merge_next()
