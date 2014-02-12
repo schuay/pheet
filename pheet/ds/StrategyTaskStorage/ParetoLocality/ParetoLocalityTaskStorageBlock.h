@@ -225,9 +225,12 @@ private:
 
 	void drop_dead_items(size_t start, size_t end)
 	{
-		for (size_t i = start; i < end; i++) {
-			Item* item = data_at(i);
+		auto it = m_data.iterator_to(m_offset + m_partitions->dead());
+		const auto end = m_data.end();
+		for (; it != end; it++) {
+			Item* item = *it;
 			pheet_assert(!item || item->is_taken_or_dead());
+
 			if (item && !item->is_taken()) {
 				item->take_and_delete();
 			}
@@ -236,7 +239,7 @@ private:
 				delete item;
 			}
 			//TODO: make sure item is free'ed or reused
-			data_at(i) = nullptr;
+			*it = nullptr;
 		}
 	}
 
