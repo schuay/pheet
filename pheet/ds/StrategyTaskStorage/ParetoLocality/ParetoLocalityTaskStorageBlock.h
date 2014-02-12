@@ -59,7 +59,7 @@ public:
 		pheet_assert(m_size < m_capacity);
 		//we only put data in a lvl 0 block
 		pheet_assert(m_lvl == 0);
-		m_data.push(item);
+		data_at(m_size) = item;
 		m_partitions->increment_end();
 		++m_size;
 	}

@@ -117,7 +117,7 @@ public:
 	};
 
 	VirtualArray()
-		: m_block_cnt(1)
+		: m_block_cnt(1), m_capacity(0)
 	{
 		m_last = m_first = new Block();
 	}
@@ -139,7 +139,7 @@ public:
 
 	VirtualArrayIterator iterator_to(const size_t idx) const
 	{
-		if (idx >= size()) {
+		if (idx >= m_capacity) {
 			return end();
 		}
 
@@ -163,18 +163,35 @@ public:
 		return it;
 	}
 
-	void push(T item)
+	/**
+	 * Increase the capacity of this VirtualArray by the given value.
+	 *
+	 * After calling this method, accessing this VirtualArray at any position
+	 * smaller than previous capacity + value is legal.
+	 */
+	void increase_capacity(size_t value)
 	{
-		if (m_last->size() == m_last->capacity()) {
+		m_capacity += value;
+		while (m_block_cnt * block_size() < m_capacity) {
 			add_block();
 		}
-		m_last->push(item);
+	}
+
+	/**
+	 * Decrease the capacity of this VirtualArray by the given value.
+	 *
+	 * After calling this method, accessing this VirtualArray at any position
+	 * greater or equal to previous capacity - value is illegal.
+	 */
+	void decrease_capacity(size_t value)
+	{
+		m_capacity -= value;
 	}
 
 	//TODO: implement element access using iterators instead?
 	T& operator[](size_t idx)
 	{
-		pheet_assert(idx < size());
+		pheet_assert(idx < m_capacity);
 
 		Block* block = find_block(idx);
 		return (*block)[idx % block_size()];
@@ -200,11 +217,6 @@ public:
 	}
 
 private:
-	size_t size() const
-	{
-		return DATA_BLOCK_SIZE * (m_block_cnt - 1) + m_last->size();
-	}
-
 	Block* find_block(size_t idx) const
 	{
 		//find block that stores element at location idx
@@ -231,6 +243,7 @@ private:
 	Block* m_first;
 	Block* m_last;
 	size_t m_block_cnt;
+	size_t m_capacity;
 
 };
 
