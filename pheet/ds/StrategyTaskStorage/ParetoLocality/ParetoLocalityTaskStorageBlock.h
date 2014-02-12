@@ -280,14 +280,22 @@ private:
 				} else {
 					/* neither left nor right are dead. Swap left and right */
 					swap(left, right);
+					/* items at left and right are now at the correct position.
+					 * We thus may advance both indices. However, in case we
+					 * swapped when left + 1 == right, this will result in
+					 * left == right + 1. */
 					left++;
+					right--;
 				}
 			}
 		} while (left < right);
 
-		pheet_assert(left == right);
+		/* Partitioning finished when left <= right. Left == right +1 is the case
+		 * if the last swap was on indices s.t. left + 1 == right and both items
+		 * were not dead. */
+		pheet_assert(left == right || left == right + 1);
 
-		//check if left==right points to dead item
+		//check if left points to dead item
 		if (!data_at(left) || data_at(left)->is_taken_or_dead()) {
 			m_partitions->decrease_dead();
 			if (left == m_partitions->dead()) {
