@@ -31,6 +31,13 @@ public:
 		}
 	}
 
+	/**
+	 * Fall back using the previous partition as last partition, if there is one.
+	 *
+	 * The first partition pointer always points to the start of the first
+	 * partition, i.e., index 0. Thus, if we have 1 exactly one partition pointer
+	 * left, we cannot fall back.
+	 */
 	bool fall_back()
 	{
 		pheet_assert(m_pivot_queue->size() >= m_idx.size() - 1);
