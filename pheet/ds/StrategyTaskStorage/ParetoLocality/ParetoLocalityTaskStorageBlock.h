@@ -444,14 +444,15 @@ private:
 		rng.seed(seed);
 		std::uniform_int_distribution<std::mt19937::result_type> dist_e(left, right);
 
-		size_t upper = data_at(left)->strategy()->nr_dimensions() - 1;
+		Item* item = m_data[m_offset + left];
+		size_t upper = item->strategy()->nr_dimensions() - 1;
 		std::uniform_int_distribution<std::mt19937::result_type> dist_d(0, upper);
 
 		//TODO: sample
 		size_t attempts = 0;
 		while (attempts < MAX_ATTEMPTS) {
 			//random element from block in the range we need to partition
-			Item* item = data_at(dist_e(rng));
+			item = m_data[m_offset + dist_e(rng)];
 			if (item && !item->is_taken_or_dead()) {
 				//random dimension
 				size_t d = dist_d(rng);
