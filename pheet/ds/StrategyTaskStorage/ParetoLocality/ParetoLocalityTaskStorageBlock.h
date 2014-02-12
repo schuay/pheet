@@ -280,6 +280,7 @@ private:
 				} else {
 					/* neither left nor right are dead. Swap left and right */
 					swap(left, right);
+					left++;
 				}
 			}
 		} while (left < right);
