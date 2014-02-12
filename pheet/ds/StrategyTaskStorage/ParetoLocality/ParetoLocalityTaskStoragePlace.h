@@ -146,6 +146,7 @@ pop(BaseItem* /* boundary */)
 
 	for (Block* it = first; it != nullptr; it = it->next()) {
 		Item* const top = it->top();
+		//is the block empty?
 		if (top == nullptr) {
 			continue;
 		}

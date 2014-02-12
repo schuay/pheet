@@ -70,7 +70,8 @@ public:
 	 * Do not remove this item from the block. If such an item does not exist,
 	 * return nullptr.
 	 *
-	 * Any dead items that are inspected are cleaned up.
+	 * Any dead items that are inspected are cleaned up. Thus, if nullptr is
+	 * returned, the block can be destructed.
 	 */
 	Item* top()
 	{
@@ -109,6 +110,14 @@ public:
 			if (m_partitions->fall_back()) {
 				//call top() again, now operating on previous partition
 				best = top();
+			} else {
+				/* We called top() on the first (and only) partition and did not
+				 * get an active item back. Thus, we can clean up and free the
+				 * block. Note that items in the dead partition have already
+				 * been deleted during the last partition step. The block may
+				 * contain dead or taken items in the range [0, min(dead, end)[
+				 */
+				clean_up();
 			}
 		}
 		pheet_assert(!(best && best->is_taken_or_dead())); //don't return dead or taken items
@@ -200,12 +209,23 @@ public:
 
 private:
 
+	void clean_up()
+	{
+		size_t end = std::min(m_partitions->dead(), m_partitions->end());
+		drop_dead_items(0, end);
+	}
+
 	/**
 	 * Drop all items in the "dead tasks" partition
 	 */
 	void drop_dead_items()
 	{
-		for (size_t i = m_partitions->dead(); i < m_capacity; i++) {
+		drop_dead_items(m_partitions->dead(), m_capacity);
+	}
+
+	void drop_dead_items(size_t start, size_t end)
+	{
+		for (size_t i = start; i < end; i++) {
 			Item* item = data_at(i);
 			pheet_assert(!item || item->is_taken_or_dead());
 			if (item && !item->is_taken()) {
