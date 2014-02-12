@@ -148,6 +148,9 @@ pop(BaseItem* /* boundary */)
 		Item* const top = it->top();
 		//is the block empty?
 		if (top == nullptr) {
+			/* TODO: it->top() returned nullptr, thus no more active items are in
+			 * block it. The underlying VirtualArray can be reused/fred from
+			 * m_data[it->m_offset] to m_data[m_offset + it->m_capacity] */
 			continue;
 		}
 
