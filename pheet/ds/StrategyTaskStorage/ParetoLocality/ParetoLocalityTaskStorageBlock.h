@@ -243,15 +243,18 @@ private:
 		}
 	}
 
-	void partition(size_t depth, size_t left, size_t right)
+	void partition(size_t depth, size_t l /* TODO */, size_t r /* TODO */)
 	{
+		auto left = m_data.iterator_to(m_offset + l);
+		auto right = m_data.iterator_to(m_offset + r);
+
 		pheet_assert(left < right);
-		size_t old_left = left;
+		const auto old_left = left;
 
 		//generate new pivot element if neccesarry
 		PivotElement* pivot;
 		if (m_pivots->size() <= depth) {
-			pivot = generate_pivot(left, right, depth);
+			pivot = generate_pivot(l, r, depth);
 			if (pivot == nullptr) {
 				/* could not generate suitable pivot element -> Abort partitioning
 				 * Right-most partition will exceed MAX_PARTITION_SIZE
@@ -262,49 +265,51 @@ private:
 			pivot = m_pivots->get(depth);
 		}
 
-		size_t p_dim = pivot->dimension();
-		size_t p_val = pivot->value();
+		const size_t p_dim = pivot->dimension();
+		const size_t p_val = pivot->value();
 
 		do {
-			//TODO: try to call is_taken_or_dead as less as possible (may be expensive, since user implemented)
-			while (left < right && data_at(left) && !data_at(left)->is_taken_or_dead()
-			        && data_at(left)->strategy()->less_priority(p_dim, p_val)) {
-				++left;
+			//TODO: try to call is_taken_or_dead as little as possible (may be expensive, since user implemented)
+			while (left < right && *left && !left->is_taken_or_dead()
+			        && left->strategy()->less_priority(p_dim, p_val)) {
+				left++;
 			}
 
-			while (left < right && data_at(right) && !data_at(right)->is_taken_or_dead()
-			        && (data_at(right)->strategy()->greater_priority(p_dim, p_val)
-			            || data_at(right)->strategy()->equal_priority(p_dim, p_val))) {
+			while (left < right && *right && !right->is_taken_or_dead()
+			        && (right->strategy()->greater_priority(p_dim, p_val)
+			            || right->strategy()->equal_priority(p_dim, p_val))) {
 				--right;
 			}
 
 			if (left != right) {
-				if (!data_at(right) || data_at(right)->is_taken_or_dead()) {
+				if (!*right || right->is_taken_or_dead()) {
 					//right is dead
-					if (m_partitions->dead() - right == 1) {
+					if (m_partitions->dead() - right.index() + m_offset == 1) {
 						//element after right is dead too. Advance dead and right.
 						//This is safe since left < right
-						m_partitions->dead(right);
-						right--;
-						pheet_assert(left <= right);
+						m_partitions->dead(right.index() - m_offset);
+						pheet_assert(left < right);
+						--right;
 					} else {
 						//swap right with rightmost non-dead element
 						m_partitions->decrease_dead();
-						swap(right, m_partitions->dead());
+						auto dead = m_data.iterator_to(m_partitions->dead() + m_offset);
+						swap(right, dead);
 					}
-				} else if (!data_at(left) || data_at(left)->is_taken_or_dead()) {
+				} else if (!*left || left->is_taken_or_dead()) {
 					/* left is dead. Note that left+1==dead may never occur while
 					 * left < right, since right < dead holds. */
-					pheet_assert(left + 1 < m_partitions->dead());
+					pheet_assert(left.index() - m_offset + 1 < m_partitions->dead());
 					/* swap left with rightmost non-dead element. This may swap
 					 * an element >=pivot to left, but we will not advance left.
 					 * Progress is made by putting one dead element into it'S final
 					 * place */
 					m_partitions->decrease_dead();
-					swap(left, m_partitions->dead());
+					auto dead = m_data.iterator_to(m_partitions->dead() + m_offset);
+					swap(left, dead);
 					//if now right == dead, advance right
-					if (m_partitions->dead() == right) {
-						right--;
+					if (dead == right) {
+						--right;
 					}
 				} else {
 					/* neither left nor right are dead. Swap left and right */
@@ -314,7 +319,7 @@ private:
 					 * swapped when left + 1 == right, this will result in
 					 * left == right + 1. */
 					left++;
-					right--;
+					--right;
 				}
 			}
 		} while (left < right);
@@ -322,27 +327,28 @@ private:
 		/* Partitioning finished when left <= right. Left == right +1 is the case
 		 * if the last swap was on indices s.t. left + 1 == right and both items
 		 * were not dead. */
-		pheet_assert(left == right || left == right + 1);
+		pheet_assert(left == right || left.index() - m_offset == right.index() - m_offset + 1);
 
 		//check if left points to dead item
-		if (!data_at(left) || data_at(left)->is_taken_or_dead()) {
+		if (!*left || left->is_taken_or_dead()) {
 			m_partitions->decrease_dead();
-			if (left == m_partitions->dead()) {
+			auto dead = m_data.iterator_to(m_partitions->dead() + m_offset);
+			if (left == dead) {
 				--left;
 			} else {
-				swap(left, m_partitions->dead());
+				swap(left, dead);
 			}
 		}
-		pheet_assert(data_at(left));
+		pheet_assert(*left);
 
 		//check if item at left belongs to left or right partition
-		if (data_at(left)->strategy()->greater_priority(p_dim, p_val)) {
-			++left;
+		if (left->strategy()->greater_priority(p_dim, p_val)) {
+			left++;
 		}
-		pheet_assert(left <= m_partitions->dead());
+		pheet_assert(left.index() - m_offset <= m_partitions->dead());
 
 		//check if the last partitioning step needs to be redone
-		if (!partition_failed(pivot, left)) {
+		if (!partition_failed(pivot, left.index() - m_offset)) {
 			m_failed_attempts = 0;
 		} else {
 			/* partitioning failed. Reset the start of the section that needs
@@ -358,15 +364,24 @@ private:
 			++m_failed_attempts;
 		}
 
-		if ((m_partitions->dead() - left > MAX_PARTITION_SIZE) && m_failed_attempts < MAX_ATTEMPTS) {
+		if ((m_partitions->dead() - left.index() + m_offset > MAX_PARTITION_SIZE)
+		        && m_failed_attempts < MAX_ATTEMPTS) {
 			/* If partitioning succeeded but the resulting right-most (excluding
 			 * dead) partition is >MAX_PARTITION_SIZE, partition recursively */
 			if (m_failed_attempts == 0) {
 				++depth;
 			}
-			partition(depth, left, m_partitions->dead() - 1);
+			partition(depth, left.index() - m_offset, m_partitions->dead() - 1);
 		}
 		m_failed_attempts = 0;
+	}
+
+	void swap(typename VirtualArray<Item*>::VirtualArrayIterator& lhs,
+	          typename VirtualArray<Item*>::VirtualArrayIterator& rhs)
+	{
+		Item* item = *lhs;
+		*lhs = *rhs;
+		*rhs = item;
 	}
 
 	/**
@@ -416,21 +431,6 @@ private:
 		 * pivot element.
 		 */
 		return false;
-	}
-
-	void swap(size_t left, size_t right)
-	{
-		pheet_assert(left <= right);
-		if (left < right) {
-			m_data.swap(left + m_offset, right + m_offset);
-		}
-	}
-
-	//TODO: use VirtualArray::get and ::set instead
-	Item*& data_at(size_t idx)
-	{
-		pheet_assert(idx < m_capacity);
-		return m_data[m_offset + idx];
 	}
 
 	PivotElement* generate_pivot(size_t left, size_t right, size_t pos)

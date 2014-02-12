@@ -29,6 +29,7 @@ public:
 	class VirtualArrayIterator : public std::iterator<std::random_access_iterator_tag, T>
 	{
 		friend class VirtualArray<T>;
+
 	public:
 		VirtualArrayIterator() : m_block(nullptr), m_block_nr(0), m_idx(0)
 		{
@@ -87,6 +88,11 @@ public:
 			return m_block->operator [](m_idx);
 		}
 
+		T operator->() const
+		{
+			return m_block->operator [](m_idx);
+		}
+
 		bool operator==(const VirtualArrayIterator& that)
 		{
 			return (m_block == that.m_block && m_idx == that.m_idx);
@@ -108,7 +114,10 @@ public:
 			return (m_idx < that.m_idx);
 		}
 
-//		friend void swap(iterator& lhs, iterator& rhs);
+		size_t index() const
+		{
+			return m_block_nr * DATA_BLOCK_SIZE + m_idx;
+		}
 
 	private:
 		VirtualArray::Block* m_block;
