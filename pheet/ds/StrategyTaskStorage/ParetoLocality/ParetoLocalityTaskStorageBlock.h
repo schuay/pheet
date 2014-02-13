@@ -94,7 +94,10 @@ public:
 			if (item->is_dead()) {
 				/* TODO: With multiple threads, this can lead to errors. */
 				item->take_and_delete();
-				delete item;
+				/* TODO: we can not delete items, since another thread might
+				 * access them. Use a MemoryManager that governs the use of
+				 * Item instances */
+				//delete item;
 				*it = nullptr;
 				continue;
 			}
@@ -236,7 +239,10 @@ private:
 			}
 
 			if (item) {
-				delete item;
+				/* TODO: we can not delete items, since another thread might
+				 * access them. Use a MemoryManager that governs the use of
+				 * Item instances */
+				//delete item;
 			}
 			//TODO: make sure item is free'ed or reused
 			*it = nullptr;
