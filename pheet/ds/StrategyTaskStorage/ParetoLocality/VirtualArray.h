@@ -168,7 +168,7 @@ public:
 			it.m_block_nr = m_block_cnt;
 			return it;
 		} else {
-			return iterator_to(size());
+			return iterator_to(m_capacity);
 		}
 	}
 
