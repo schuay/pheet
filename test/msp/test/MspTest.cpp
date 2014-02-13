@@ -113,7 +113,7 @@ public:
 		MspPerformanceCounters<Strategy2Pheet> pc;
 		Sets q(graph, start->head());
 		{
-			typename Strategy2Pheet::Environment env(1);
+			typename Strategy2Pheet::Environment env;
 			Strategy2MspTask<Strategy2Pheet, ParetoLocalityTaskStorage> msp(graph, start, &q, pc);
 			msp();
 		}
