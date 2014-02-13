@@ -59,7 +59,7 @@ public:
 		pheet_assert(m_size < m_capacity);
 		//we only put data in a lvl 0 block
 		pheet_assert(m_lvl == 0);
-		data_at(m_size) = item;
+		m_data[m_size + m_offset] = item;
 		m_partitions->increment_end();
 		++m_size;
 	}
@@ -225,9 +225,9 @@ private:
 
 	void drop_dead_items(size_t start, size_t end)
 	{
-		auto it = m_data.iterator_to(m_offset + m_partitions->dead());
-		const auto end = m_data.end();
-		for (; it != end; it++) {
+		auto it = m_data.iterator_to(m_offset + start);
+		const auto end_it = m_data.iterator_to(m_offset + end);
+		for (; it != end_it; it++) {
 			Item* item = *it;
 			pheet_assert(!item || item->is_taken_or_dead());
 
