@@ -21,31 +21,13 @@ private:
 
 public:
 	VirtualArrayBlock<T, N>()
-		: next(nullptr), prev(nullptr), m_data {nullptr}, m_size(0)
-	{
-	}
-
-	void push(T item)
-	{
-		pheet_assert(m_size < N);
-		m_data[m_size++] = item;
-	}
-
-	T pop()
-	{
-		pheet_assert(m_size > 0);
-		return m_data[--m_size];
+		: next(nullptr), prev(nullptr), m_data {nullptr} {
 	}
 
 	T& operator[](const size_t idx)
 	{
 		pheet_assert(idx < N);
 		return m_data[idx];
-	}
-
-	size_t size() const
-	{
-		return m_size;
 	}
 
 	constexpr size_t capacity() const
@@ -59,8 +41,6 @@ public:
 
 private:
 	T m_data[N];
-	size_t m_size;
-
 };
 
 } /* namespace pheet */
