@@ -4,6 +4,7 @@ add_subdirectory(inarow)
 add_subdirectory(lupiv)
 add_subdirectory(msp)
 # add_subdirectory(n-queens) Currently broken.
+add_subdirectory(pheet)
 add_subdirectory(prefix_sum)
 add_subdirectory(set_bench)
 # add_subdirectory(sor) Needs additional configuration.
