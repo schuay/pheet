@@ -142,16 +142,11 @@ public:
 
 	VirtualArrayIterator begin() const
 	{
-		VirtualArrayIterator it;
-		it.m_block = m_first;
+		return iterator_to(0);
 	}
 
 	VirtualArrayIterator iterator_to(const size_t idx) const
 	{
-		if (idx >= m_capacity) {
-			return end();
-		}
-
 		Block* block = find_block(idx);
 
 		VirtualArrayIterator it;
@@ -165,11 +160,16 @@ public:
 		return it;
 	}
 
+	/** The iterator returned by end() points to the last accessible element + 1. */
 	VirtualArrayIterator end() const
 	{
-		VirtualArrayIterator it;
-		it.m_block_nr = m_block_cnt;
-		return it;
+		if (m_last->size() == m_last->capacity()) {
+			VirtualArrayIterator it;
+			it.m_block_nr = m_block_cnt;
+			return it;
+		} else {
+			return iterator_to(size());
+		}
 	}
 
 	/**
@@ -232,7 +232,7 @@ private:
 		Block* tmp = m_first;
 		size_t cnt = block_size();
 		//TODO: reduce asymptotic complexity
-		while (cnt <= idx) {
+		while (cnt <= idx && tmp != nullptr) {
 			tmp = tmp->next;
 			cnt += block_size();
 		}
