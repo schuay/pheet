@@ -1,5 +1,3 @@
-add_subdirectory(/usr/src/gtest gtest)
-
 include_directories(${GTEST_INCLUDE_DIR})
 add_executable(msp-test MspTest.cpp)
 target_link_libraries(msp-test

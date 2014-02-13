@@ -13,3 +13,5 @@ add_subdirectory(sssp)
 # add_subdirectory(tristrip) Needs additional configuration.
 # add_subdirectory(uts) Needs additional configuration
 add_subdirectory(util)
+
+add_subdirectory(/usr/src/gtest gtest)
