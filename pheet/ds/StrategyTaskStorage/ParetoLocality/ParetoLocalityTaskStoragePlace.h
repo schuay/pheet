@@ -109,7 +109,7 @@ push(Strategy&& strategy, T data)
 	if (!last->try_put(item)) {
 		//merge if neccessary
 		if (merge_required()) {
-			//merge recursivly, if previous block has same level
+			//merge recursively, if previous block has same level
 			while (merge_required()) {
 				last = last->prev()->merge_next();
 			}
