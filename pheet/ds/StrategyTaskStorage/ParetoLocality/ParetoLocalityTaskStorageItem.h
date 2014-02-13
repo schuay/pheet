@@ -112,8 +112,6 @@ strategy()
 {
 	return &m_strategy;
 }
-
-
 } /* namespace pheet */
 #endif /* PARETOLOCALITYTASKSTORAGEITEM_H_ */
 
