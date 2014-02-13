@@ -46,11 +46,13 @@ public:
 
 	SequentialTest(Graph const* graph,
 	               PathPtr const start)
-		: graph(graph), start(start) {
+		: graph(graph), start(start)
+	{
 	}
 
 	ShortestPaths*
-	operator()() {
+	operator()()
+	{
 		MspPerformanceCounters<SyncPheet> pc;
 		Sets q(graph, start->head());
 		SequentialMsp<SyncPheet> msp(graph, start, &q, pc);
@@ -71,11 +73,13 @@ public:
 
 	StrategyTest(Graph const* graph,
 	             PathPtr const start)
-		: graph(graph), start(start) {
+		: graph(graph), start(start)
+	{
 	}
 
 	ShortestPaths*
-	operator()() {
+	operator()()
+	{
 		MspPerformanceCounters<DistKPheet> pc;
 		Sets q(graph, start->head());
 		{
@@ -99,11 +103,13 @@ public:
 
 	Strategy2Test(Graph const* graph,
 	              PathPtr const start)
-		: graph(graph), start(start) {
+		: graph(graph), start(start)
+	{
 	}
 
 	ShortestPaths*
-	operator()() {
+	operator()()
+	{
 		MspPerformanceCounters<Strategy2Pheet> pc;
 		Sets q(graph, start->head());
 		{
@@ -130,7 +136,8 @@ protected:
 	                  size_t const edges,
 	                  size_t const degree,
 	                  size_t const weight_limit,
-	                  const int seed) {
+	                  const int seed)
+	{
 		g = Generator::directed("g", nodes, edges, true,
 		                        degree, weight_limit, seed);
 		ASSERT_NE(g, nullptr);
@@ -144,7 +151,8 @@ protected:
 		sp = gen();
 	}
 
-	virtual void TearDown() {
+	virtual void TearDown()
+	{
 		delete sp;
 		delete g;
 	}
@@ -182,7 +190,7 @@ reachable_nodes(const Node* start)
 	std::unordered_set<const Node*> set = { start };
 
 	std::stack<const Node*> stack;
-	for (const Edge * e : start->out_edges()) {
+	for (const Edge* e : start->out_edges()) {
 		stack.push(e->head());
 	}
 
@@ -195,7 +203,7 @@ reachable_nodes(const Node* start)
 		}
 
 		set.insert(n);
-		for (const Edge * e : n->out_edges()) {
+		for (const Edge* e : n->out_edges()) {
 			stack.push(e->head());
 		}
 	}
@@ -210,7 +218,7 @@ reachable_nodes(const Node* start)
 void
 test_optimal_paths_only(const ShortestPaths* sp)
 {
-	for (const auto & node_paths_pair : sp->paths) {
+	for (const auto& node_paths_pair : sp->paths) {
 		EXPECT_TRUE(is_optimal_path_set(node_paths_pair.second));
 	}
 }
@@ -225,7 +233,7 @@ test_all_reachable_nodes_present(const Node* start,
 {
 	std::unordered_set<const Node*> reachables = reachable_nodes(start);
 
-	for (const auto & node_paths_pair : sp->paths) {
+	for (const auto& node_paths_pair : sp->paths) {
 		reachables.erase(node_paths_pair.first);
 	}
 
