@@ -9,9 +9,11 @@
 
 #include "ParetoLocalityTaskStorageBlock.h"
 #include "ParetoLocalityTaskStorageItem.h"
+#include "ParetoLocalityTaskStorageItemReuseCheck.h"
 
-
+#include "pheet/memory/ItemReuse/ItemReuseMemoryManager.h"
 #include "pheet/misc/type_traits.h"
+
 
 #include <vector>
 
@@ -33,6 +35,9 @@ public:
 	typedef ParetoLocalityTaskStorageItem<Pheet, Self, BaseItem, Strategy> Item;
 	typedef ParetoLocalityTaskStorageBlock<Item, MAX_PARTITION_SIZE> Block;
 	typedef typename BaseItem::T T;
+	typedef ItemReuseMemoryManager<Pheet, Item, ParetoLocalityTaskStorageItemReuseCheck<Item>>
+	        ItemMemoryManager;
+
 
 	ParetoLocalityTaskStoragePlace(ParentTaskStoragePlace* parent_place);
 	~ParetoLocalityTaskStoragePlace();
@@ -54,6 +59,8 @@ private:
 	ParentTaskStoragePlace* parent_place;
 	TaskStorage* task_storage;
 	bool created_task_storage;
+
+	ItemMemoryManager items;
 
 	VirtualArray<Item*> m_array;
 	PivotQueue m_pivots;
@@ -103,10 +110,14 @@ void
 ParetoLocalityTaskStoragePlace<Pheet, TaskStorage, ParentTaskStoragePlace, Strategy>::
 push(Strategy&& strategy, T data)
 {
-	Item* item = new Item(std::forward < Strategy && > (strategy), data);
-	item->task_storage = task_storage;
+	Item& item = items.acquire_item();
+	item.data = data;
+	item.strategy(std::forward < Strategy && > (strategy));
+	item.task_storage = task_storage;
+	// Release the item so that other threads can see it.
+	item.taken.store(false, std::memory_order_release);
 
-	if (!last->try_put(item)) {
+	if (!last->try_put(&item)) {
 		//merge if neccessary
 		if (merge_required()) {
 			//merge recursively, if previous block has same level
@@ -126,10 +137,10 @@ push(Strategy&& strategy, T data)
 		last = nb;
 		m_array.increase_capacity(nb->capacity());
 		//put the item in the new block
-		last->put(item);
+		last->put(&item);
 	}
 
-	parent_place->push(item);
+	parent_place->push(&item);
 }
 
 template < class Pheet,

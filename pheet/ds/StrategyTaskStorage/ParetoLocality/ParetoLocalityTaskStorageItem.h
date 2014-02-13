@@ -19,6 +19,7 @@ class ParetoLocalityTaskStorageItem : public BaseItem
 public:
 	typedef typename BaseItem::T T;
 
+	ParetoLocalityTaskStorageItem();
 	ParetoLocalityTaskStorageItem(Strategy&& strategy, T data);
 	T take();
 	void take_and_delete();
@@ -26,10 +27,20 @@ public:
 	bool is_taken() const;
 	bool is_taken_or_dead();
 	Strategy* strategy();
+	void strategy(Strategy&& strategy);
 
 private:
 	Strategy m_strategy;
 };
+
+template < class Pheet,
+           class Place,
+           class BaseItem,
+           class Strategy >
+ParetoLocalityTaskStorageItem<Pheet, Place, BaseItem, Strategy>::
+ParetoLocalityTaskStorageItem()
+{}
+
 
 template < class Pheet,
            class Place,
@@ -112,6 +123,18 @@ strategy()
 {
 	return &m_strategy;
 }
+
+template < class Pheet,
+           class Place,
+           class BaseItem,
+           class Strategy >
+void
+ParetoLocalityTaskStorageItem<Pheet, Place, BaseItem, Strategy>::
+strategy(Strategy&& strategy)
+{
+	m_strategy = std::move(strategy);
+}
+
 } /* namespace pheet */
 #endif /* PARETOLOCALITYTASKSTORAGEITEM_H_ */
 
